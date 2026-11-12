@@ -6,6 +6,7 @@ import { nutrientsFor } from '@/lib/nutrition';
 import { splitName } from '@/lib/foods';
 import type { Meal } from '@/lib/types';
 import { Empty, PageHeader, Segmented, cx, fmt } from '@/components/ui';
+import { FoodVisual } from '@/components/FoodIcon';
 import { useStreak } from './Today';
 
 type Range = '7' | '30' | '90';
@@ -50,7 +51,7 @@ export default function Insights() {
 
   return (
     <div className="animate-fade-up">
-      <PageHeader eyebrow="Analytics" title="Insights" right={<Segmented value={range} onChange={setRange} options={[{ value: '7', label: '7D' }, { value: '30', label: '30D' }, { value: '90', label: '90D' }]} />} />
+      <PageHeader title="Progress" right={<Segmented value={range} onChange={setRange} options={[{ value: '7', label: '7D' }, { value: '30', label: '30D' }, { value: '90', label: '90D' }]} />} />
 
       {data.loggedDays === 0 ? (
         <Empty icon={<BarChart3 size={22} />} title="Not enough data yet" body="Log food for a few days to see your trends." />
@@ -65,24 +66,24 @@ export default function Insights() {
 
           <section className="card p-5">
             <div className="mb-4 flex items-baseline justify-between">
-              <h2 className="font-semibold tracking-tight">Daily protein</h2>
-              <span className="flex items-center gap-1.5 text-xs text-silver"><span className="inline-block h-0 w-4 border-t-2 border-dashed border-silver" /> goal</span>
+              <h2 className="text-lg font-extrabold tracking-tight">Daily protein</h2>
+              <span className="flex items-center gap-1.5 text-xs font-bold text-silver"><span className="inline-block h-0 w-4 border-t-2 border-dashed border-silver" /> goal</span>
             </div>
             <BarChart series={data.series} />
           </section>
 
           <section className="card p-5">
-            <h2 className="mb-4 font-semibold tracking-tight">By meal</h2>
+            <h2 className="mb-4 text-lg font-extrabold tracking-tight">By meal</h2>
             <div className="space-y-3">
               {(Object.entries(data.perMeal) as [Meal, number][]).map(([meal, p]) => {
                 const share = data.total ? p / data.total : 0;
                 return (
                   <div key={meal}>
                     <div className="mb-1.5 flex justify-between text-sm">
-                      <span className="capitalize text-silver">{meal}</span>
+                      <span className="font-bold capitalize">{meal}</span>
                       <span className="tabular-nums">{fmt(share * 100)}% <span className="text-dim">· {fmt(p)} g</span></span>
                     </div>
-                    <div className="h-2 overflow-hidden rounded-full bg-line">
+                    <div className="h-2.5 overflow-hidden rounded-full bg-raised">
                       <div className="h-full rounded-full bg-accent" style={{ width: `${share * 100}%` }} />
                     </div>
                   </div>
@@ -92,14 +93,14 @@ export default function Insights() {
           </section>
 
           <section className="card p-5">
-            <h2 className="mb-3 font-semibold tracking-tight">Top protein sources</h2>
-            <ol className="divide-y divide-line/50">
+            <h2 className="mb-3 text-lg font-extrabold tracking-tight">Top protein sources</h2>
+            <ol>
               {data.top.map((f, i) => (
-                <li key={f.name} className="flex items-center gap-3 py-2.5">
-                  <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-raised text-xs font-semibold text-silver">{i + 1}</span>
-                  <span className="min-w-0 flex-1 truncate text-sm">{splitName(f.name).title}</span>
+                <li key={f.name + i} className="flex items-center gap-3 py-2.5">
+                  <FoodVisual name={f.name} size={40} />
+                  <span className="min-w-0 flex-1 truncate text-sm font-bold">{splitName(f.name).title}</span>
                   <span className="text-xs text-dim">{f.count}×</span>
-                  <span className="w-16 text-right text-sm font-semibold tabular-nums">{fmt(f.protein)} g</span>
+                  <span className="num w-16 text-right font-extrabold">{fmt(f.protein)} g</span>
                 </li>
               ))}
             </ol>
@@ -112,10 +113,10 @@ export default function Insights() {
 
 function Kpi({ label, value, unit, sub }: { label: string; value: string; unit: string; sub: string }) {
   return (
-    <div className="card p-4">
-      <p className="eyebrow">{label}</p>
-      <p className="mt-2 text-3xl font-semibold tracking-tight tabular-nums">{value}<span className="ml-1 text-sm font-normal text-silver">{unit}</span></p>
-      <p className="mt-1 truncate text-xs text-dim">{sub}</p>
+    <div className="card p-5">
+      <p className="num text-[34px] font-extrabold leading-none">{value}<span className="ml-0.5 text-sm font-bold text-silver">{unit}</span></p>
+      <p className="mt-2 text-sm font-bold">{label}</p>
+      <p className="mt-0.5 truncate text-xs font-medium text-silver">{sub}</p>
     </div>
   );
 }
@@ -129,7 +130,7 @@ function BarChart({ series }: { series: { date: string; protein: number; goal: n
   const a = active != null ? series[active] : null;
   return (
     <div>
-      <p className="mb-3 h-5 text-sm text-silver tabular-nums">
+      <p className="num mb-3 h-5 text-sm font-semibold text-silver">
         {a ? <>{formatDay(a.date, { weekday: 'short', day: 'numeric', month: 'short' })} · <span className="font-semibold text-ink">{fmt(a.protein)} g</span> of {fmt(a.goal)} g</> : 'Tap a bar for details'}
       </p>
       <div className="relative" style={{ height: H }} onMouseLeave={() => setActive(null)}>
@@ -156,15 +157,15 @@ function BarChart({ series }: { series: { date: string; protein: number; goal: n
                 aria-label={`${s.date}: ${Math.round(s.protein)} g`}
               >
                 <div
-                  className={cx('w-full rounded-t-md transition-all', hit ? 'bg-accent' : 'bg-silver/40', active === i && 'brightness-125 ring-1 ring-ink/40')}
-                  style={{ height: `${Math.max(s.protein > 0 ? 2 : 0, (s.protein / max) * 100)}%`, borderRadius: n > 30 ? 2 : undefined }}
+                  className={cx('w-full transition-all', hit ? 'bg-accent' : 'bg-ink', active != null && active !== i && 'opacity-30')}
+                  style={{ height: `${Math.max(s.protein > 0 ? 2 : 0, (s.protein / max) * 100)}%`, borderRadius: n > 30 ? 3 : n > 7 ? 6 : 999 }}
                 />
               </button>
             );
           })}
         </div>
       </div>
-      <div className="mt-2 flex text-[10px] text-dim" style={{ gap: n > 30 ? 1 : n > 7 ? 3 : 8 }}>
+      <div className="mt-2 flex text-[10px] font-bold text-dim" style={{ gap: n > 30 ? 1 : n > 7 ? 3 : 8 }}>
         {series.map((s, i) => (
           <span key={s.date} className="flex-1 text-center">
             {showLabel(i) ? (n <= 7 ? fromKey(s.date).toLocaleDateString(undefined, { weekday: 'narrow' }) : fromKey(s.date).getDate()) : ''}

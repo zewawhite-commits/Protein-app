@@ -1,38 +1,28 @@
-import { UtensilsCrossed } from 'lucide-react';
 import type { LogEntry } from '@/lib/types';
 import { nutrientsFor } from '@/lib/nutrition';
 import { splitName } from '@/lib/foods';
-import { usePhotoUrl } from '@/lib/hooks';
-import { formatTime } from '@/lib/dates';
+import { useFoodLookup } from '@/lib/hooks';
+import { FoodVisual } from './FoodIcon';
 import { StateBadge, fmt } from './ui';
 
-export function Thumb({ photoId, size = 48 }: { photoId?: string; size?: number }) {
-  const url = usePhotoUrl(photoId);
-  return (
-    <div className="grid shrink-0 place-items-center overflow-hidden rounded-2xl bg-raised text-dim border border-line/60" style={{ width: size, height: size }}>
-      {url ? <img src={url} alt="" className="h-full w-full object-cover" /> : <UtensilsCrossed size={size * 0.38} />}
-    </div>
-  );
-}
-
-export function EntryRow({ entry, onClick, showTime = true }: { entry: LogEntry; onClick?: () => void; showTime?: boolean }) {
-  const p = nutrientsFor(entry.food.per100, entry.grams).protein;
+export function EntryRow({ entry, onClick }: { entry: LogEntry; onClick?: () => void }) {
+  const lookup = useFoodLookup();
+  const n = nutrientsFor(entry.food.per100, entry.grams);
   const { title } = splitName(entry.food.name);
   return (
-    <button onClick={onClick} className="flex w-full items-center gap-3 rounded-2xl p-2 -mx-2 text-left transition hover:bg-raised/60 active:bg-raised">
-      <Thumb photoId={entry.photoId} />
+    <button onClick={onClick} className="flex w-full items-center gap-3.5 rounded-[22px] p-3 text-left transition active:scale-[.99] active:bg-raised/60">
+      <FoodVisual name={entry.food.name} category={lookup(entry.foodId)?.category} photoId={entry.photoId} size={56} />
       <div className="min-w-0 flex-1">
-        <p className="truncate font-medium">{title}</p>
-        <div className="mt-0.5 flex items-center gap-2 text-xs text-silver">
-          <span className="tabular-nums">{fmt(entry.grams, 1)} g</span>
-          {entry.food.state !== 'na' && <StateBadge state={entry.food.state} className="!py-0 !text-[9px]" />}
-          {showTime && <span className="text-dim">{formatTime(entry.loggedAt)}</span>}
-        </div>
+        <p className="line-clamp-2 font-bold leading-snug">{title}</p>
+        <p className="num mt-1 flex items-center gap-1.5 text-xs font-medium text-silver">
+          <StateBadge state={entry.food.state} className="shrink-0" />
+          {fmt(entry.grams)} g{n.kcal != null && <> · {fmt(n.kcal)} kcal</>}
+        </p>
       </div>
-      <p className="text-right">
-        <span className="text-lg font-semibold tabular-nums">{fmt(p, 1)}</span>
-        <span className="text-xs text-silver"> g</span>
-      </p>
+      <div className="text-right">
+        <p className="num text-lg font-extrabold leading-none">{fmt(n.protein, 1)}<span className="text-xs font-bold text-silver">g</span></p>
+        <p className="mt-1 text-[10px] font-semibold text-dim">protein</p>
+      </div>
     </button>
   );
 }

@@ -33,10 +33,10 @@ export default function Admin() {
     <div className="animate-fade-up">
       <header className="pt-safe pb-5">
         <div className="flex items-center gap-3">
-          <Link to="/profile" className="grid h-10 w-10 place-items-center rounded-full border border-line bg-surface" aria-label="Back"><ArrowLeft size={18} /></Link>
+          <Link to="/profile" className="grid h-11 w-11 place-items-center rounded-full bg-surface" aria-label="Back"><ArrowLeft size={18} /></Link>
           <div>
             <p className="eyebrow">Admin</p>
-            <h1 className="text-[24px] font-semibold tracking-tight">Nutrition records</h1>
+            <h1 className="text-[26px] font-extrabold tracking-tight">Nutrition records</h1>
           </div>
         </div>
       </header>
@@ -44,21 +44,21 @@ export default function Admin() {
       <div className="grid grid-cols-2 gap-3">
         <div className="card p-4">
           <p className="eyebrow">USDA records</p>
-          <p className="mt-2 text-3xl font-semibold tabular-nums">{fmt(stats?.total)}</p>
+          <p className="mt-2 text-3xl font-extrabold num">{fmt(stats?.total)}</p>
           <p className="mt-1 text-xs text-dim">
             {stats ? `${fmt(stats.by.raw)} raw · ${fmt(stats.by.cooked)} cooked · ${fmt(stats.by.dry)} dry` : 'Loading…'}
           </p>
         </div>
         <div className="card p-4">
           <p className="eyebrow">Custom records</p>
-          <p className="mt-2 text-3xl font-semibold tabular-nums">{custom.filter((c) => !c.archived).length}</p>
+          <p className="mt-2 text-3xl font-extrabold num">{custom.filter((c) => !c.archived).length}</p>
           <p className="mt-1 text-xs text-dim">{custom.filter((c) => c.archived).length} archived</p>
         </div>
       </div>
 
       <div className="mt-6 flex items-center justify-between">
         <Segmented value={view} onChange={setView} options={[{ value: 'custom', label: 'Custom' }, { value: 'usda', label: 'USDA' }]} />
-        {view === 'custom' && <button onClick={() => setEditing('new')} className="btn-primary !h-10 !px-4 text-sm"><Plus size={16} /> New record</button>}
+        {view === 'custom' && <button onClick={() => setEditing('new')} className="btn-primary !h-11 !px-5 text-sm"><Plus size={16} /> New record</button>}
       </div>
 
       {view === 'custom' ? (
@@ -74,7 +74,7 @@ export default function Admin() {
                 <p className="truncate font-medium">{f.name}</p>
                 <div className="mt-1 flex items-center gap-2 text-xs text-silver">
                   <StateBadge state={f.state} />
-                  <span className="tabular-nums">{fmt(f.per100.protein, 1)} g / 100 g</span>
+                  <span className="num">{fmt(f.per100.protein, 1)} g / 100 g</span>
                 </div>
                 <p className="mt-1 truncate text-[11px] text-dim">Source: {f.sourceNote}</p>
               </div>
@@ -87,7 +87,7 @@ export default function Admin() {
         </div>
       ) : (
         <div className="mt-4">
-          <p className="mb-3 flex items-start gap-2 rounded-2xl border border-line bg-raised/50 p-3 text-xs leading-relaxed text-silver">
+          <p className="mb-3 flex items-start gap-2 rounded-[20px] bg-raised p-3.5 text-xs font-medium leading-relaxed text-silver">
             <Lock size={14} className="mt-0.5 shrink-0" />
             USDA records are read-only so they always match the published source. To correct or add a food, create a custom record and cite its source.
           </p>
@@ -95,13 +95,13 @@ export default function Admin() {
             <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-dim" />
             <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search USDA records" className="field !rounded-full pl-10" />
           </div>
-          <div className="card divide-y divide-line/50 overflow-hidden">
+          <div className="card overflow-hidden p-1.5">
             {usdaResults.map((f) => (
-              <a key={f.id} href={fdcUrl(f.fdcId!)} target="_blank" rel="noreferrer" className="flex items-center gap-3 px-4 py-3 hover:bg-raised/50">
+              <a key={f.id} href={fdcUrl(f.fdcId!)} target="_blank" rel="noreferrer" className="flex items-center gap-3 rounded-[22px] px-3.5 py-3 hover:bg-raised/60">
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium">{splitName(f.name).title}</p>
                   <p className="truncate text-xs text-silver">{splitName(f.name).detail || f.category}</p>
-                  <p className="mt-1 text-[11px] text-dim tabular-nums">
+                  <p className="mt-1 text-[11px] text-dim num">
                     FDC {f.fdcId} · {STATE_LABEL[f.state]} · P {fmt(f.per100.protein, 2)} · F {fmt(f.per100.fat, 2)} · C {fmt(f.per100.carbs, 2)} · {fmt(f.per100.kcal)} kcal
                   </p>
                 </div>
@@ -193,7 +193,7 @@ function CustomFoodForm({ initial, categories, onDone }: { initial?: CustomFood;
         <div className="grid grid-cols-2 gap-2">
           {([['protein', 'Protein (g) *'], ['kcal', 'Energy (kcal)'], ['carbs', 'Carbohydrate (g)'], ['fat', 'Fat (g)'], ['fiber', 'Fibre (g)']] as const).map(([k, l]) => (
             <label key={k} className="block">
-              <span className="mb-1 block text-xs text-silver">{l}</span>
+              <span className="mb-1 block text-xs font-semibold text-silver">{l}</span>
               <input className="field" inputMode="decimal" value={v[k]} onChange={(e) => setV({ ...v, [k]: e.target.value.replace(/[^\d.,]/g, '') })} />
             </label>
           ))}
@@ -221,7 +221,7 @@ function CustomFoodForm({ initial, categories, onDone }: { initial?: CustomFood;
       </div>
 
       {errors.length > 0 && (
-        <ul className="space-y-1 rounded-2xl border border-danger/30 bg-danger/10 p-3 text-xs text-danger">
+        <ul className="space-y-1 rounded-[20px] bg-danger/10 p-3.5 text-xs font-semibold text-danger">
           {errors.map((e) => <li key={e}>{e}</li>)}
         </ul>
       )}

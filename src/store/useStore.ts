@@ -32,7 +32,7 @@ interface State {
   resetAll: () => void;
 }
 
-const defaultSettings: Settings = { theme: 'dark', bodyUnit: 'kg', adminMode: false };
+const defaultSettings: Settings = { theme: 'system', bodyUnit: 'kg', adminMode: false };
 
 export const useStore = create<State>()(
   persist(

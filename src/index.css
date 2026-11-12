@@ -2,43 +2,50 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Design tokens — charcoal, black, ivory, silver, electric blue. */
+/*
+ * Design tokens. Palette: ivory, black, charcoal, silver + electric blue.
+ * "primary" is the action colour (black on ivory, ivory on black).
+ * "accent" (electric blue) is reserved for progress and goal states.
+ */
 :root,
-[data-theme='dark'] {
-  --bg: 10 10 11;          /* near-black */
-  --surface: 21 21 23;     /* charcoal */
-  --raised: 31 32 35;      /* lifted charcoal */
-  --line: 44 45 50;        /* hairlines */
-  --ink: 244 241 234;      /* ivory */
-  --silver: 168 171 178;   /* secondary text */
-  --dim: 108 111 118;      /* tertiary text */
-  --accent: 47 107 255;    /* electric blue */
-  --accent-soft: 47 107 255;
-  --danger: 255 92 92;
-  --warn: 232 186 96;
-  color-scheme: dark;
+[data-theme='light'] {
+  --bg: 246 244 239;        /* warm ivory */
+  --surface: 255 255 255;   /* cards */
+  --raised: 241 239 234;    /* tiles inside cards */
+  --line: 231 228 221;      /* hairlines, empty ring track */
+  --ink: 14 14 16;          /* black text */
+  --silver: 128 130 137;    /* secondary text */
+  --dim: 172 173 178;       /* tertiary text */
+  --primary: 14 14 16;      /* buttons, FAB */
+  --on-primary: 255 255 255;
+  --accent: 30 108 255;     /* electric blue */
+  --danger: 222 60 60;
+  --warn: 196 140 40;
+  --shadow: 0 1px 2px rgb(20 20 25 / 0.04), 0 8px 24px -6px rgb(20 20 25 / 0.08);
+  color-scheme: light;
 }
 
-[data-theme='light'] {
-  --bg: 247 245 239;       /* ivory */
-  --surface: 255 255 255;
-  --raised: 239 237 231;
-  --line: 222 219 211;
-  --ink: 17 18 20;         /* black */
-  --silver: 92 95 102;
-  --dim: 140 142 148;
-  --accent: 30 86 240;
-  --accent-soft: 30 86 240;
-  --danger: 214 48 48;
-  --warn: 176 122 20;
-  color-scheme: light;
+[data-theme='dark'] {
+  --bg: 8 8 9;
+  --surface: 22 22 24;
+  --raised: 32 32 35;
+  --line: 44 44 48;
+  --ink: 245 242 234;       /* ivory */
+  --silver: 142 144 150;
+  --dim: 96 98 104;
+  --primary: 245 242 234;
+  --on-primary: 10 10 11;
+  --accent: 56 128 255;
+  --danger: 255 100 100;
+  --warn: 230 180 90;
+  --shadow: 0 0 0 1px rgb(255 255 255 / 0.04), 0 12px 32px -12px rgb(0 0 0 / 0.6);
+  color-scheme: dark;
 }
 
 @layer base {
   html { -webkit-tap-highlight-color: transparent; }
   body {
     @apply bg-bg text-ink font-sans antialiased;
-    font-feature-settings: 'cv11', 'ss01', 'tnum';
     overscroll-behavior-y: none;
   }
   input, select, textarea, button { font: inherit; color: inherit; }
@@ -48,17 +55,19 @@
 }
 
 @layer components {
-  .card { @apply bg-surface rounded-3xl border border-line/60 shadow-card; }
-  .btn { @apply inline-flex items-center justify-center gap-2 rounded-2xl px-5 h-12 font-semibold tracking-tight transition active:scale-[.98] disabled:opacity-40 disabled:pointer-events-none; }
-  .btn-primary { @apply btn bg-accent text-white shadow-glow hover:brightness-110; }
-  .btn-ghost { @apply btn bg-raised text-ink hover:bg-line/70; }
-  .chip { @apply inline-flex items-center gap-1.5 h-9 px-3.5 rounded-full border border-line bg-surface text-sm text-silver whitespace-nowrap transition; }
-  .chip-on { @apply bg-accent border-accent text-white; }
-  .field { @apply w-full h-12 rounded-2xl bg-raised border border-line px-4 text-ink placeholder:text-dim outline-none focus:border-accent transition; }
-  .label { @apply block text-xs font-medium uppercase tracking-[.08em] text-dim mb-2; }
-  .eyebrow { @apply text-[11px] font-semibold uppercase tracking-[.14em] text-dim; }
-  .pb-nav { padding-bottom: calc(env(safe-area-inset-bottom) + 6.5rem); }
-  .pt-safe { padding-top: max(env(safe-area-inset-top), 1rem); }
+  .card { @apply bg-surface rounded-[28px]; box-shadow: var(--shadow); }
+  .tile { @apply bg-raised rounded-[20px]; }
+  .btn { @apply inline-flex items-center justify-center gap-2 rounded-full px-6 h-14 font-bold tracking-tight transition active:scale-[.98] disabled:opacity-30 disabled:pointer-events-none; }
+  .btn-primary { @apply btn bg-primary text-on-primary; }
+  .btn-ghost { @apply btn bg-raised text-ink; }
+  .chip { @apply inline-flex items-center gap-1.5 h-10 px-4 rounded-full bg-raised text-sm font-semibold text-silver whitespace-nowrap transition active:scale-[.97]; }
+  .chip-on { @apply bg-primary text-on-primary; }
+  .field { @apply w-full h-14 rounded-2xl bg-raised px-4 text-ink font-medium placeholder:text-dim placeholder:font-normal outline-none ring-0 focus:ring-2 focus:ring-ink/80 transition; }
+  .label { @apply block text-sm font-bold mb-2; }
+  .eyebrow { @apply text-[13px] font-bold text-silver; }
+  .num { font-variant-numeric: tabular-nums; letter-spacing: -0.03em; }
+  .pb-nav { padding-bottom: calc(env(safe-area-inset-bottom) + 7rem); }
+  .pt-safe { padding-top: max(env(safe-area-inset-top), 1.25rem); }
 }
 
 .no-scrollbar::-webkit-scrollbar { display: none; }

@@ -58,11 +58,11 @@ export function useDay(date: string) {
 export function useThemeSync() {
   const theme = useStore((s) => s.settings.theme);
   useEffect(() => {
-    const mq = matchMedia('(prefers-color-scheme: light)');
+    const mq = matchMedia('(prefers-color-scheme: dark)');
     const apply = () => {
-      const t = theme === 'system' ? (mq.matches ? 'light' : 'dark') : theme;
+      const t = theme === 'system' ? (mq.matches ? 'dark' : 'light') : theme;
       document.documentElement.dataset.theme = t;
-      document.querySelector('meta[name="theme-color"]')?.setAttribute('content', t === 'light' ? '#F7F5EF' : '#0A0A0B');
+      document.querySelector('meta[name="theme-color"]')?.setAttribute('content', t === 'light' ? '#F6F4EF' : '#080809');
     };
     apply();
     mq.addEventListener('change', apply);

@@ -149,12 +149,43 @@ export const STATE_LABEL: Record<PrepState, string> = {
   na: 'As sold',
 };
 
-/** Friendlier display name: USDA descriptions are "Main, qualifier, qualifier". */
+/** Segments of USDA descriptions that add no meaning for a person logging food. */
+const FILLER = /^(broilers? or fryers|broiler|all classes|mature seeds|regular|enriched|unenriched|without salt|with salt|without added salt|not fortified|year round average|all grades|separable lean and fat|separable lean only|trimmed to 0" fat|trimmed to 1\/8" fat|choice|select|prime|fresh|Includes foods for USDA's Food Distribution Program)$/i;
+/** Group words USDA puts first ("Fish, salmon…"); dropped when the next segment names the food. */
+const GROUP_PREFIX = /^(fish|crustaceans|mollusks|cereals|beverages|nuts|seeds|spices|snacks|game meat)$/i;
+/** Preparation segments — shown next to the raw/cooked badge instead of in the title. */
+const PREP = /\b(raw|cooked|uncooked|dry|roasted|boiled|baked|grilled|broiled|fried|pan-fried|pan-browned|braised|stewed|steamed|simmered|microwaved|poached|scrambled|toasted|heated|rotisserie|blanched|dry heat|moist heat|drained|unprepared|prepared)\b/i;
+
+/**
+ * Turn a USDA description into a short title and a detail line, e.g.
+ * "Chicken, broilers or fryers, breast, meat only, cooked, roasted"
+ *   → { title: "Chicken breast, meat only", detail: "roasted", prep: "cooked, roasted" }
+ */
 export function splitName(name: string): { title: string; detail: string } {
   const clean = name.replace(/\s*\(Includes foods for USDA's Food Distribution Program\)/i, '');
-  const parts = clean.split(', ');
-  if (parts.length <= 2) return { title: clean, detail: '' };
-  return { title: parts.slice(0, 2).join(', '), detail: parts.slice(2).join(', ') };
+  let parts = clean.split(/,\s*/).filter((p) => p && !FILLER.test(p));
+  if (parts.length > 1 && GROUP_PREFIX.test(parts[0])) parts = parts.slice(1);
+  const core = parts.filter((p) => !PREP.test(p));
+  const prep = parts.filter((p) => PREP.test(p) && !/^(raw|cooked|dry|uncooked)$/i.test(p));
+  if (!core.length) return { title: cap(clean), detail: '' };
+  // "Chicken" + "breast" reads better as "Chicken breast".
+  let title = core[0];
+  let rest = core.slice(1);
+  if (rest.length && rest[0].split(' ').length <= 2 && title.split(' ').length <= 2 && !/\d|%|\(/.test(rest[0])) {
+    const word = rest[0];
+    const isPart = PART.test(word) || (/^egg$/i.test(title) && /^(white|yolk)$/i.test(word));
+    // Cuts/parts follow the food ("Chicken breast"); descriptors lead it ("Greek yogurt", "White rice").
+    title = isPart ? `${title} ${word.toLowerCase()}` : `${word} ${title.toLowerCase()}`;
+    rest = rest.slice(1);
+  }
+  const extra = rest.slice(0, 2);
+  return {
+    title: cap([title, ...extra].join(', ')),
+    detail: [...rest.slice(2), ...prep].join(', '),
+  };
 }
+
+const PART = /^(breast|thigh|leg|wing|drumstick|back|neck|giblets|liver|heart|kidney|tongue|loin|tenderloin|sirloin|ribeye|rib|ribs|chuck|brisket|round|shank|shoulder|fillet|fillets|steak|chop|chops|ham|belly|flank|skirt)$/i;
+const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 export const fdcUrl = (fdcId: number) => `https://fdc.nal.usda.gov/food-details/${fdcId}/nutrients`;

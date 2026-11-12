@@ -76,7 +76,7 @@ export function ProfileForm({ initial, submitLabel, onSaved }: { initial?: Profi
         <span className="label">Daily protein goal</span>
         <div className="grid grid-cols-2 gap-2">
           {([['perKg', 'Per body weight'], ['fixed', 'Fixed grams']] as const).map(([v, l]) => (
-            <button type="button" key={v} onClick={() => setMode(v)} className={cx('chip justify-center !h-11', mode === v && 'chip-on')}>{l}</button>
+            <button type="button" key={v} onClick={() => setMode(v)} className={cx('chip justify-center !h-12', mode === v && 'chip-on')}>{l}</button>
           ))}
         </div>
 
@@ -84,9 +84,9 @@ export function ProfileForm({ initial, submitLabel, onSaved }: { initial?: Profi
           <div className="mt-4">
             <div className="grid grid-cols-4 gap-2">
               {PRESETS.map((p) => (
-                <button type="button" key={p.v} onClick={() => setPerKg(String(p.v))} className={cx('flex h-16 flex-col items-center justify-center rounded-2xl border transition', Number(perKg) === p.v ? 'border-accent bg-accent/10' : 'border-line bg-raised')}>
-                  <span className="font-semibold tabular-nums">{p.label}</span>
-                  <span className="text-[10px] text-dim">{p.note || 'g/kg'}</span>
+                <button type="button" key={p.v} onClick={() => setPerKg(String(p.v))} className={cx('flex h-16 flex-col items-center justify-center rounded-[20px] transition', Number(perKg) === p.v ? 'bg-primary text-on-primary' : 'bg-raised')}>
+                  <span className="num text-lg font-extrabold">{p.label}</span>
+                  <span className="text-[10px] font-semibold opacity-60">{p.note || 'g/kg'}</span>
                 </button>
               ))}
             </div>
@@ -94,8 +94,8 @@ export function ProfileForm({ initial, submitLabel, onSaved }: { initial?: Profi
               <input className="field pr-16" inputMode="decimal" value={perKg} onChange={(e) => setPerKg(e.target.value.replace(/[^\d.,]/g, ''))} aria-label="Grams per kg" />
               <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-silver">g / kg</span>
             </div>
-            <p className="mt-2 text-xs leading-relaxed text-dim">
-              For reference: the adult RDA is 0.8 g/kg; the International Society of Sports Nutrition suggests 1.4–2.0 g/kg for people who exercise. Your needs may differ — check with a health professional.
+            <p className="mt-2 text-xs font-medium leading-relaxed text-silver">
+              Adult RDA: 0.8 g/kg. Active people: 1.4–2.0 g/kg (ISSN). Check with a health professional.
             </p>
           </div>
         ) : (
@@ -106,10 +106,10 @@ export function ProfileForm({ initial, submitLabel, onSaved }: { initial?: Profi
         )}
       </div>
 
-      <div className="flex items-center justify-between rounded-3xl border border-accent/25 bg-accent/10 p-5">
+      <div className="flex items-center justify-between rounded-[24px] bg-raised p-5">
         <div>
-          <p className="eyebrow !text-accent">Your daily goal</p>
-          <p className="mt-1 text-4xl font-semibold tracking-tight tabular-nums">{valid ? fmt(goal) : '—'}<span className="ml-1 text-lg text-silver">g</span></p>
+          <p className="num text-[44px] font-extrabold leading-none">{valid ? fmt(goal) : '—'}<span className="text-lg text-silver">g</span></p>
+          <p className="mt-1.5 text-sm font-bold">Daily protein goal</p>
         </div>
         {mode === 'perKg' && !weightKg && <p className="max-w-[9rem] text-right text-xs text-silver">Enter your body weight to calculate</p>}
       </div>
