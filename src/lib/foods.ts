@@ -1,0 +1,160 @@
+/**
+ * Food database: loads the USDA SR Legacy extract (public/data/foods.json)
+ * and merges user/admin custom records. Search is local and offline.
+ */
+import type { CustomFood, Food, PrepState } from './types';
+
+interface FoodsFile {
+  version: number;
+  source: { name: string; release: string; url: string; citation: string; basis: string };
+  generatedAt: string;
+  categories: Record<string, string>;
+  quickPicks: number[];
+  foods: [number, string, number, PrepState, number, number | null, number | null, number | null, number | null, [string, number][]][];
+}
+
+export interface FoodDb {
+  foods: Food[];
+  byId: Map<string, Food>;
+  quickPicks: Food[];
+  source: FoodsFile['source'];
+  categories: string[];
+}
+
+interface Indexed {
+  food: Food;
+  lower: string;
+  words: string[];
+}
+
+let dbPromise: Promise<FoodDb> | null = null;
+let index: Indexed[] = [];
+let quickPickIds = new Set<string>();
+
+/** Processed / prepared categories rank below whole foods for the same words. */
+const PROCESSED_CATEGORIES = new Set([
+  'Sausages and Luncheon Meats', 'Fast Foods', 'Restaurant Foods', 'Meals, Entrees, and Side Dishes', 'Snacks', 'Sweets', 'Baked Products',
+]);
+const GROUP_WORDS = new Set(['fish', 'crustaceans', 'mollusks', 'cereals', 'beverages', 'nuts', 'seeds', 'game', 'spices', 'snacks']);
+const PROCESSED_WORDS = /\b(breaded|battered|tenders|nuggets|patties|roll|deli|luncheon|canned|frozen|sliced|nugget|salad|includes foods for usda)\b/;
+
+export function loadFoodDb(): Promise<FoodDb> {
+  if (!dbPromise) {
+    dbPromise = fetch('/data/foods.json')
+      .then((r) => {
+        if (!r.ok) throw new Error(`Could not load food database (${r.status})`);
+        return r.json() as Promise<FoodsFile>;
+      })
+      .then((file) => {
+        const foods: Food[] = file.foods.map(([fdcId, name, cat, state, protein, kcal, fat, carbs, fiber, portions]) => ({
+          id: `usda:${fdcId}`,
+          fdcId,
+          name,
+          category: file.categories[cat] ?? 'Other',
+          state,
+          per100: { protein, kcal, fat, carbs, fiber },
+          portions: portions.map(([label, grams]) => ({ label, grams })),
+          source: 'usda-sr',
+        }));
+        const byId = new Map(foods.map((f) => [f.id, f]));
+        index = foods.map(toIndexed);
+        quickPickIds = new Set(file.quickPicks.map((id) => `usda:${id}`));
+        return {
+          foods,
+          byId,
+          quickPicks: file.quickPicks.map((id) => byId.get(`usda:${id}`)!).filter(Boolean),
+          source: file.source,
+          categories: Object.values(file.categories),
+        };
+      })
+      .catch((e) => {
+        dbPromise = null;
+        throw e;
+      });
+  }
+  return dbPromise;
+}
+
+const tokenize = (s: string) => s.toLowerCase().normalize('NFKD').replace(/[^\p{L}\p{N}%]+/gu, ' ').trim().split(/\s+/).filter(Boolean);
+
+function toIndexed(food: Food): Indexed {
+  return { food, lower: food.name.toLowerCase(), words: tokenize(food.name) };
+}
+
+/** Everyday words → the vocabulary USDA uses. */
+const SYNONYMS: Record<string, string> = {
+  chickpea: 'chickpeas', mince: 'ground', minced: 'ground', prawn: 'shrimp', prawns: 'shrimp',
+  yoghurt: 'yogurt', porridge: 'oats', courgette: 'squash', aubergine: 'eggplant', eggs: 'egg', oat: 'oats',
+};
+
+export interface SearchOptions {
+  state?: PrepState | 'all';
+  limit?: number;
+  custom?: CustomFood[];
+}
+
+/** Word-prefix search; every query word must match the start of some word in the name. */
+export function searchFoods(query: string, opts: SearchOptions = {}): Food[] {
+  const { state = 'all', limit = 60, custom = [] } = opts;
+  const terms = tokenize(query).map((t) => SYNONYMS[t] ?? t);
+  if (!terms.length) return [];
+  const pool: Indexed[] = [...custom.filter((c) => !c.archived).map(toIndexed), ...index];
+  const scored: { f: Food; s: number }[] = [];
+  for (const it of pool) {
+    if (state !== 'all' && it.food.state !== state) continue;
+    let score = 0;
+    let ok = true;
+    for (let i = 0; i < terms.length; i++) {
+      const t = terms[i];
+      const pos = it.words.findIndex((w) => w.startsWith(t) || (t.length > 3 && w.startsWith(t.replace(/s$/, ''))));
+      if (pos === -1) { ok = false; break; }
+      // Earlier matches are more relevant; the first word is the food's main name in USDA naming.
+      // USDA prefixes many foods with a group word ("Fish, salmon…"); treat the word after it as the main name.
+      const lead = pos === 0 || (pos === 1 && GROUP_WORDS.has(it.words[0]));
+      score += lead ? 30 : Math.max(0, 12 - pos);
+      if (it.words[pos] === t) score += 6;
+    }
+    if (!ok) continue;
+    score -= it.words.length * 0.4; // prefer plainer descriptions
+    if (it.food.source === 'custom') score += 8;
+    if (quickPickIds.has(it.food.id)) score += 14;
+    if (PROCESSED_CATEGORIES.has(it.food.category)) score -= 10;
+    if (PROCESSED_WORDS.test(it.lower)) score -= 5;
+    if (/\b(meat only|skinless|boneless|lean)\b/.test(it.lower)) score += 3;
+    scored.push({ f: it.food, s: score });
+  }
+  scored.sort((a, b) => b.s - a.s || a.f.name.length - b.f.name.length);
+  return scored.slice(0, limit).map((x) => x.f);
+}
+
+/**
+ * For a raw/dry record, find the matching cooked records (and vice versa) so the user
+ * can log the state they actually weighed. Matches on the description up to the state word.
+ */
+export function counterparts(food: Food, all: Food[]): Food[] {
+  if (food.state === 'na') return [];
+  const m = food.name.match(/^(.*?),\s*(raw|cooked|dry|uncooked|unprepared)\b/i);
+  const base = (m ? m[1] : food.name.split(',').slice(0, 2).join(',')).toLowerCase();
+  const want: PrepState[] = food.state === 'cooked' ? ['raw', 'dry'] : ['cooked'];
+  return all
+    .filter((f) => f.id !== food.id && want.includes(f.state) && f.name.toLowerCase().startsWith(base))
+    .sort((a, b) => a.name.length - b.name.length)
+    .slice(0, 6);
+}
+
+export const STATE_LABEL: Record<PrepState, string> = {
+  raw: 'Raw',
+  cooked: 'Cooked',
+  dry: 'Dry / uncooked',
+  na: 'As sold',
+};
+
+/** Friendlier display name: USDA descriptions are "Main, qualifier, qualifier". */
+export function splitName(name: string): { title: string; detail: string } {
+  const clean = name.replace(/\s*\(Includes foods for USDA's Food Distribution Program\)/i, '');
+  const parts = clean.split(', ');
+  if (parts.length <= 2) return { title: clean, detail: '' };
+  return { title: parts.slice(0, 2).join(', '), detail: parts.slice(2).join(', ') };
+}
+
+export const fdcUrl = (fdcId: number) => `https://fdc.nal.usda.gov/food-details/${fdcId}/nutrients`;
