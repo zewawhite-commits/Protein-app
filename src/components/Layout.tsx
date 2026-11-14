@@ -6,7 +6,7 @@ import { APP_NAME } from './fx';
 const tabs = [
   { to: '/', label: 'Home', icon: House },
   { to: '/insights', label: 'Progress', icon: BarChart3 },
-  { to: '/groups', label: 'Groups', icon: Users },
+  { to: '/feed', label: 'Feed', icon: Users },
   { to: '/coach', label: 'Coach', icon: Sparkles },
   { to: '/profile', label: 'Profile', icon: UserRound },
 ] as const;

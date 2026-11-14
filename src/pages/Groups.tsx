@@ -13,7 +13,7 @@ import { cropSquare, getPhoto, resizeImage } from '@/lib/photos';
 import type { Meal } from '@/lib/types';
 import {
   REACTIONS, addComment, ago, comments as loadComments, createGroup, deletePost, feed, joinGroup, leaveGroup, members as loadMembers,
-  inviteUrl, joinPublicGroup, myGroups, myProfile, pendingJoin, publicGroups, myUserId, sharePost, toggleReaction, uploadAvatar, upsertMyProfile, usernameAvailable,
+  COMMUNITY_ID, inviteUrl, joinCommunity, joinPublicGroup, myGroups, myProfile, pendingJoin, publicGroups, myUserId, sharePost, toggleReaction, uploadAvatar, upsertMyProfile, usernameAvailable,
   type Comment, type Group, type Member, type MyProfile, type Post, type PublicGroup, type PublicProfile, type Reaction,
 } from '@/lib/social';
 import { SignInButtons } from '@/components/SignIn';
@@ -535,7 +535,7 @@ function ShareSheet({ open, groupId, onClose, onShared }: { open: boolean; group
           <p className="num px-2 pb-1 text-sm text-silver">{fmt(t.kcal)} kcal · {fmt(t.protein)} g protein · {fmt(t.carbs)} g carbs · {fmt(t.fat)} g fat</p>
         </div>
       )}
-      <button onClick={share} disabled={busy || !canPost} className="btn-primary mt-5 w-full">{busy ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />} Post to group</button>
+      <button onClick={share} disabled={busy || !canPost} className="btn-primary mt-5 w-full">{busy ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />} Post</button>
     </Sheet>
   );
 }
@@ -674,5 +674,104 @@ function CommentsSheet({ post, onClose }: { post: Post | null; onClose: () => vo
         <button onClick={send} disabled={busy || !text.trim()} className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-primary text-on-primary disabled:opacity-40" aria-label="Send"><Send size={18} /></button>
       </div>
     </Sheet>
+  );
+}
+
+/** Community feed: everyone's journey posts in one place (Cal AI-style). */
+export function CommunityFeedPage() {
+  const session = useSession();
+  return (
+    <div className="animate-fade-up pb-6">
+      <header className="pt-safe pb-4">
+        <h1 className="text-[30px] font-extrabold tracking-tight">Feed</h1>
+        <p className="text-sm text-silver">Real journeys from the Provora community</p>
+      </header>
+      {!accountsEnabled ? <FeedPreview note="The feed will open once accounts are switched on for this app." />
+        : session === undefined ? <Loading />
+        : !session ? <FeedPreview signIn />
+        : <CommunityFeed />}
+    </div>
+  );
+}
+
+function FeedPreview({ signIn, note }: { signIn?: boolean; note?: string }) {
+  return (
+    <>
+      <div className="card p-6">
+        <p className="text-[22px] font-extrabold leading-tight">Share your journey</p>
+        <p className="mt-1 text-[15px] text-silver">Post meals, progress and wins. Cheer others on — people who share stick with it.</p>
+        {signIn ? <div className="mt-5"><SignInButtons /></div> : <p className="mt-5 rounded-2xl bg-raised p-4 text-sm text-silver">{note}</p>}
+      </div>
+      <p className="mb-3 mt-6 px-1 text-sm font-semibold text-silver">Example posts</p>
+      <div className="pointer-events-none space-y-4">
+        {EXAMPLES.map((p) => <PostCard key={p.id} post={p} onReact={() => undefined} onOpen={() => undefined} onDelete={() => undefined} />)}
+      </div>
+    </>
+  );
+}
+
+function CommunityFeed() {
+  const profile = useStore((s) => s.profile);
+  const streak = useStreak();
+  const [mine, setMine] = useState<MyProfile | null | undefined>(undefined);
+  const [editing, setEditing] = useState(false);
+  const [posts, setPosts] = useState<Post[] | null>(null);
+  const [me, setMe] = useState<string>();
+  const [sharing, setSharing] = useState(false);
+  const [openPost, setOpenPost] = useState<Post | null>(null);
+  const [person, setPerson] = useState<{ id: string; profile: PublicProfile } | null>(null);
+  const [error, setError] = useState('');
+
+  const load = useCallback(async () => {
+    try {
+      const [p, uid] = await Promise.all([feed(COMMUNITY_ID, 50), myUserId()]);
+      setPosts(p); setMe(uid);
+    } catch (e) { setError((e as Error).message); setPosts([]); }
+  }, []);
+
+  useEffect(() => { myProfile().then(setMine, (e: Error) => { setError(e.message); setMine(null); }); }, []);
+  useEffect(() => {
+    if (!mine?.username) return;
+    joinCommunity().then(load, (e: Error) => { setError(e.message); setPosts([]); });
+    void upsertMyProfile({ streak }).catch(() => undefined);
+  }, [mine, load, streak]);
+
+  async function react(post: Post, emoji: Reaction) {
+    if (!me) return;
+    haptic();
+    const on = !post.reactions.some((r) => r.emoji === emoji && r.user_id === me);
+    setPosts((ps) => ps?.map((p) => (p.id !== post.id ? p : { ...p, reactions: on ? [...p.reactions, { emoji, user_id: me }] : p.reactions.filter((r) => !(r.emoji === emoji && r.user_id === me)) })) ?? null);
+    try { await toggleReaction(post.id, emoji, on); } catch (e) { toast((e as Error).message); void load(); }
+  }
+
+  if (error && (error.includes('relation') || error.includes('function') || error.includes('schema'))) {
+    return <p className="card p-5 text-sm text-danger">The feed isn’t set up on the server yet (run supabase/social.sql in Supabase).</p>;
+  }
+  if (mine === undefined) return <Loading />;
+  if (!mine?.username || editing) {
+    return <ProfileEditor initial={mine} defaultName={profile?.name ?? ''} onSaved={async () => { setMine(await myProfile()); setEditing(false); }} onCancel={mine?.username ? () => setEditing(false) : undefined} />;
+  }
+
+  return (
+    <>
+      <button onClick={() => { haptic(); setSharing(true); }} className="card mb-5 flex w-full items-center gap-3 p-3 text-left">
+        <Avatar name={mine.display_name} color={mine.avatar} photoUrl={mine.photoUrl} size={44} />
+        <span className="flex-1 text-[15px] text-dim">Share a meal, a win or your progress…</span>
+        <span className="grid h-10 w-10 place-items-center rounded-full bg-primary text-on-primary"><Plus size={18} /></span>
+      </button>
+      {posts === null ? <Loading /> : posts.length === 0 ? (
+        <div className="card p-6 text-center">
+          <p className="font-bold">Be the first to post</p>
+          <p className="mt-1 text-sm text-silver">Share today’s meal or where you’re starting from.</p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {posts.map((p) => <PostCard key={p.id} post={p} me={me} onAuthor={() => setPerson({ id: p.user_id, profile: p.author! })} onReact={(e) => react(p, e)} onOpen={() => setOpenPost(p)} onDelete={async () => { await deletePost(p); toast('Post deleted'); void load(); }} />)}
+        </div>
+      )}
+      <ShareSheet open={sharing} groupId={COMMUNITY_ID} onClose={() => setSharing(false)} onShared={() => { setSharing(false); void load(); }} />
+      <CommentsSheet post={openPost} onClose={() => { setOpenPost(null); void load(); }} />
+      <PersonSheet groupId={COMMUNITY_ID} person={person} me={me} onClose={() => setPerson(null)} onEdit={() => { setPerson(null); setEditing(true); }} />
+    </>
   );
 }

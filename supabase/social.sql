@@ -261,3 +261,20 @@ $$;
 
 revoke all on function public.create_group(text, boolean, text), public.public_groups(), public.join_public_group(uuid) from public, anon;
 grant execute on function public.create_group(text, boolean, text), public.public_groups(), public.join_public_group(uuid) to authenticated;
+
+-- ---------- Community feed (one public feed everyone shares) ----------
+alter table public.groups alter column created_by drop not null;
+insert into public.groups (id, name, invite_code, created_by, is_public, description)
+values ('00000000-0000-0000-0000-00000000c0de', 'Community', 'PROVRA', null, true, 'Everyone’s journeys')
+on conflict (id) do nothing;
+
+-- Join the community feed (no member cap).
+create or replace function public.join_community()
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  if auth.uid() is null then raise exception 'Sign in first'; end if;
+  insert into group_members (group_id, user_id) values ('00000000-0000-0000-0000-00000000c0de', auth.uid()) on conflict do nothing;
+end;
+$$;
+revoke all on function public.join_community() from public, anon;
+grant execute on function public.join_community() to authenticated;

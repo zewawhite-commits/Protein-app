@@ -257,3 +257,10 @@ export const pendingJoin = {
   set: (code: string) => { try { localStorage.setItem(PENDING, code.toUpperCase()); } catch { /* ignore */ } },
   clear: () => { try { localStorage.removeItem(PENDING); } catch { /* ignore */ } },
 };
+
+// ---------- Community feed ----------
+export const COMMUNITY_ID = '00000000-0000-0000-0000-00000000c0de';
+export async function joinCommunity() {
+  const { error } = await db().rpc('join_community');
+  fail(error);
+}

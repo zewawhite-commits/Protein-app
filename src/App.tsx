@@ -19,6 +19,7 @@ const Snap = lazy(() => import('./pages/Snap'));
 const Premium = lazy(() => import('./pages/Premium'));
 const Coach = lazy(() => import('./pages/Coach'));
 const Groups = lazy(() => import('./pages/Groups'));
+const Feed = lazy(() => import('./pages/Groups').then((m) => ({ default: m.CommunityFeedPage })));
 
 export default function App() {
   useThemeSync();
@@ -38,6 +39,7 @@ export default function App() {
           <Route path="insights" element={<Insights />} />
           <Route path="coach" element={<Coach />} />
           <Route path="groups" element={<Groups />} />
+          <Route path="feed" element={<Feed />} />
           <Route path="profile" element={<Profile />} />
           <Route path="admin" element={<Admin />} />
         </Route>
