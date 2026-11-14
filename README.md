@@ -139,3 +139,6 @@ src/pages/                Today, AddFood, Snap (camera + AI), History, Insights,
 - U.S. Department of Agriculture, Agricultural Research Service. FoodData Central: SR Legacy (2018) and FNDDS 2021–2023 (2024). Public domain. https://fdc.nal.usda.gov/
 - Vincent A. et al. 2020. FAO/INFOODS Food Composition Table for Western Africa (2019). Rome, FAO. © FAO 2020. Reuse is permitted for non-commercial products with acknowledgement; **commercial use requires permission from FAO** (copyright@fao.org).
 - Open Food Facts, https://world.openfoodfacts.org — Open Database License (ODbL); product data contributed by its community.
+
+### Groups journey
+Signed out: a preview (how it works + example posts) with sign-in. Invite links (`/groups?join=CODE`) are remembered through sign-in and offer a one-tap join. Signed in: set up a profile (photo, name, @username), then discover public groups, join with a code or link, or create a private/public group. Inside a group: Feed, Chat and Members tabs.

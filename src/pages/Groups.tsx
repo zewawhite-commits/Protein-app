@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Check, ChevronDown, Copy, Crown, Dumbbell, Flame, Heart, Loader2, LogOut, MessageCircle, Plus, RefreshCw, Send, Share2, Sparkles, ThumbsUp, Trash2, UserRound, Users, Utensils, ImagePlus, X } from 'lucide-react';
+import { Check, ChevronDown, Copy, Crown, Dumbbell, Flame, Globe2, Heart, ImagePlus, Link2, Loader2, Lock, LogOut, MessageCircle, Plus, RefreshCw, Send, Share2, Sparkles, ThumbsUp, Trash2, UserRound, Users, Utensils, X } from 'lucide-react';
 import { AVATAR_COLORS, Avatar } from '@/components/Avatar';
 import { GroupChat } from '@/components/GroupChat';
+import { useSearchParams } from 'react-router-dom';
 import { useStore } from '@/store/useStore';
 import { accountsEnabled, useSession } from '@/lib/account';
 import { useDay } from '@/lib/hooks';
@@ -12,8 +13,8 @@ import { cropSquare, getPhoto, resizeImage } from '@/lib/photos';
 import type { Meal } from '@/lib/types';
 import {
   REACTIONS, addComment, ago, comments as loadComments, createGroup, deletePost, feed, joinGroup, leaveGroup, members as loadMembers,
-  myGroups, myProfile, myUserId, sharePost, toggleReaction, uploadAvatar, upsertMyProfile, usernameAvailable,
-  type Comment, type Group, type Member, type MyProfile, type Post, type PublicProfile, type Reaction,
+  inviteUrl, joinPublicGroup, myGroups, myProfile, pendingJoin, publicGroups, myUserId, sharePost, toggleReaction, uploadAvatar, upsertMyProfile, usernameAvailable,
+  type Comment, type Group, type Member, type MyProfile, type Post, type PublicGroup, type PublicProfile, type Reaction,
 } from '@/lib/social';
 import { SignInButtons } from '@/components/SignIn';
 import { FoodVisual } from '@/components/FoodIcon';
@@ -28,27 +29,16 @@ const MEAL_LABEL: Record<Meal, string> = { breakfast: 'Breakfast', lunch: 'Lunch
 
 export default function Groups() {
   const session = useSession();
-  if (!accountsEnabled) {
-    return (
-      <Shell>
-        <Intro />
-        <p className="card mt-4 p-5 text-sm text-silver">Groups need accounts, which aren’t switched on for this app yet.</p>
-      </Shell>
-    );
-  }
+  const [params, setParams] = useSearchParams();
+  // An invite link (?join=CODE) is remembered so it still works after signing in.
+  useEffect(() => {
+    const code = params.get('join');
+    if (code) { pendingJoin.set(code); setParams({}, { replace: true }); }
+  }, [params, setParams]);
+
+  if (!accountsEnabled) return <Shell><Preview note="Groups will open once accounts are switched on for this app." /></Shell>;
   if (session === undefined) return <Shell><Loading /></Shell>;
-  if (!session) {
-    return (
-      <Shell>
-        <Intro />
-        <div className="card mt-4 p-5">
-          <p className="text-[17px] font-bold">Sign in to join groups</p>
-          <p className="mb-4 mt-1 text-sm text-silver">Share meals with friends, cheer each other on and keep your streaks going together.</p>
-          <SignInButtons />
-        </div>
-      </Shell>
-    );
-  }
+  if (!session) return <Shell><Preview signIn /></Shell>;
   return <Shell><Signed /></Shell>;
 }
 
@@ -63,13 +53,50 @@ function Shell({ children }: { children: React.ReactNode }) {
   );
 }
 
-function Intro() {
+const STEPS = [
+  { icon: Users, title: 'Join or create a group', body: 'Join a public group, or create a private one and share an invite link.' },
+  { icon: Send, title: 'Post your meals', body: 'Share a meal with its calories and macros — or a photo, a win, a tip.' },
+  { icon: MessageCircle, title: 'Chat and cheer', body: 'React, comment, chat and keep each other’s streaks going.' },
+];
+
+const EXAMPLES: Post[] = [
+  { id: 'x1', group_id: '', user_id: 'a', title: 'Grilled chicken, rice and greens', caption: 'Post-gym dinner', meal: 'dinner', kcal: 612, protein: 48, carbs: 55, fat: 19, photo_path: null, created_at: new Date(Date.now() - 3600e3).toISOString(), author: { display_name: 'Maya', avatar: 'violet', streak: 21, username: 'maya_moves' }, reactions: [{ emoji: '🔥', user_id: 'b' }, { emoji: '💪', user_id: 'c' }], commentCount: 3 },
+  { id: 'x2', group_id: '', user_id: 'b', title: 'Down 4 kg this month!', caption: 'Logging every meal really works.', meal: null, kcal: null, protein: null, carbs: null, fat: null, photo_path: null, created_at: new Date(Date.now() - 5 * 3600e3).toISOString(), author: { display_name: 'Leo', avatar: 'teal', streak: 9, username: 'leo_lifts' }, reactions: [{ emoji: '❤️', user_id: 'a' }, { emoji: '👏', user_id: 'c' }, { emoji: '👏', user_id: 'd' }], commentCount: 5 },
+];
+
+/** What Groups is, before signing in: how it works, example posts and one clear button. */
+function Preview({ signIn, note }: { signIn?: boolean; note?: string }) {
+  const invited = pendingJoin.get();
   return (
-    <div className="card overflow-hidden p-5">
-      <div className="flex -space-x-2">{['Ava Moore', 'Ben Cole', 'Kemi Ade', 'Leo Park'].map((n, i) => <Avatar key={n} name={n} color={Object.keys(AVATAR_COLORS)[i]} size={52} className="ring-4 ring-surface" />)}</div>
-      <p className="mt-4 text-[20px] font-extrabold leading-snug">Grow with friends</p>
-      <p className="mt-1 text-sm text-silver">Create a private group, invite friends with a code, post your meals and react to theirs.</p>
-    </div>
+    <>
+      {invited && (
+        <div className="mb-4 flex items-center gap-3 rounded-[22px] bg-accent/10 p-4 text-accent">
+          <Users size={20} /><p className="text-sm font-bold">You’ve been invited to a group. Sign in to join — it only takes a moment.</p>
+        </div>
+      )}
+      <div className="card p-6">
+        <div className="flex -space-x-2">{['Ava Moore', 'Ben Cole', 'Kemi Ade', 'Leo Park'].map((n, i) => <Avatar key={n} name={n} color={Object.keys(AVATAR_COLORS)[i]} size={52} className="ring-4 ring-surface" />)}</div>
+        <p className="mt-4 text-[24px] font-extrabold leading-tight">Grow with friends</p>
+        <p className="mt-1 text-[15px] text-silver">People who track with friends stick with it. Share meals, chat and keep each other going.</p>
+        <ol className="mt-5 space-y-4">
+          {STEPS.map((s, i) => (
+            <li key={s.title} className="flex gap-3">
+              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary text-on-primary"><s.icon size={18} /></span>
+              <div><p className="font-bold">{i + 1}. {s.title}</p><p className="text-sm text-silver">{s.body}</p></div>
+            </li>
+          ))}
+        </ol>
+        {signIn ? (
+          <div className="mt-6"><SignInButtons /></div>
+        ) : (
+          <p className="mt-6 rounded-2xl bg-raised p-4 text-sm text-silver">{note}</p>
+        )}
+      </div>
+      <p className="mb-3 mt-6 px-1 text-sm font-semibold text-silver">What the feed looks like · examples</p>
+      <div className="pointer-events-none space-y-4 opacity-95">
+        {EXAMPLES.map((p) => <PostCard key={p.id} post={p} onReact={() => undefined} onOpen={() => undefined} onDelete={() => undefined} />)}
+      </div>
+    </>
   );
 }
 
@@ -84,49 +111,72 @@ function Signed() {
   const [active, setActive] = useState<string | null>(() => { try { return localStorage.getItem(GROUP_KEY); } catch { return null; } });
   const [error, setError] = useState('');
   const [avatar, setAvatar] = useState(() => { try { return localStorage.getItem('provora-avatar') ?? 'blue'; } catch { return 'blue'; } });
+  const [hub, setHub] = useState(false);
+  const [invite, setInvite] = useState<string | null>(pendingJoin.get());
 
   const reload = useCallback(async () => {
     try {
       const list = await myGroups();
       setGroups(list);
       setActive((a) => (a && list.some((g) => g.id === a) ? a : list[0]?.id ?? null));
+      return list;
     } catch (e) {
       setError((e as Error).message);
       setGroups([]);
+      return [];
     }
   }, []);
 
   const [mine, setMine] = useState<MyProfile | null | undefined>(undefined);
   const [editing, setEditing] = useState(false);
   useEffect(() => { void reload(); myProfile().then(setMine, () => setMine(null)); }, [reload]);
-  // Keep the streak and colour up to date for group mates (name and username are set in the profile editor).
   useEffect(() => {
     if (!mine) return;
     void upsertMyProfile({ avatar, streak }).catch(() => undefined);
   }, [mine, avatar, streak]);
   useEffect(() => { try { if (active) localStorage.setItem(GROUP_KEY, active); } catch { /* ignore */ } }, [active]);
 
+  async function acceptInvite() {
+    if (!invite) return;
+    try {
+      const g = await joinGroup(invite);
+      haptic([10, 30, 10]);
+      toast(`You joined “${g.name}”`);
+      await reload();
+      setActive(g.id); setHub(false);
+    } catch (e) {
+      toast((e as Error).message);
+    } finally {
+      pendingJoin.clear(); setInvite(null);
+    }
+  }
+
   if (groups === null || mine === undefined) return <Loading />;
+  if (error && !groups.length) return <p className="card p-5 text-sm text-danger">{error.includes('relation') || error.includes('function') || error.includes('schema') ? 'Groups aren’t set up on the server yet (run supabase/social.sql in Supabase).' : error}</p>;
   if (!mine?.username || editing) {
     return (
-      <ProfileEditor
-        initial={mine}
-        defaultName={profile?.name ?? ''}
-        onSaved={async () => { setMine(await myProfile()); setEditing(false); }}
-        onCancel={mine?.username ? () => setEditing(false) : undefined}
-      />
+      <>
+        {!mine?.username && <p className="mb-3 px-1 text-sm font-semibold text-silver">Step 1 of 2 · your profile</p>}
+        <ProfileEditor
+          initial={mine}
+          defaultName={profile?.name ?? ''}
+          onSaved={async () => { setMine(await myProfile()); setEditing(false); }}
+          onCancel={mine?.username ? () => setEditing(false) : undefined}
+        />
+      </>
     );
   }
-  if (error && !groups.length) return <p className="card p-5 text-sm text-danger">{error.includes('relation') || error.includes('function') ? 'Groups aren’t set up on the server yet (run supabase/social.sql).' : error}</p>;
   const group = groups.find((g) => g.id === active);
+  const opened = (g: Group) => { void reload().then(() => { setActive(g.id); setHub(false); }); };
 
   return (
     <>
-      {!groups.length || !group ? (
-        <>
-          <Intro />
-          <CreateOrJoin onDone={(g) => { setActive(g.id); void reload(); }} />
-        </>
+      <Sheet open={!!invite} onClose={() => { pendingJoin.clear(); setInvite(null); }} title="Join group?">
+        <p className="text-sm text-silver">You were invited with code <b className="text-ink">{invite}</b>.</p>
+        <button onClick={acceptInvite} className="btn-primary mt-4 w-full"><Users size={18} /> Join group</button>
+      </Sheet>
+      {!groups.length || !group || hub ? (
+        <GroupsHub hasGroups={groups.length > 0} onOpened={opened} onBack={group ? () => setHub(false) : undefined} />
       ) : (
         <GroupView
           key={group.id}
@@ -137,23 +187,70 @@ function Signed() {
           onSwitch={setActive}
           onChanged={reload}
           onEditProfile={() => setEditing(true)}
+          onDiscover={() => setHub(true)}
         />
       )}
     </>
   );
 }
 
-function CreateOrJoin({ onDone }: { onDone: (g: Group) => void }) {
-  const [mode, setMode] = useState<'create' | 'join'>('create');
+/** Find a group: discover public groups, join with a code or link, or create one. */
+function GroupsHub({ hasGroups, onOpened, onBack }: { hasGroups: boolean; onOpened: (g: Group) => void; onBack?: () => void }) {
+  const [list, setList] = useState<PublicGroup[] | null>(null);
+  const [busy, setBusy] = useState<string | null>(null);
+  useEffect(() => { publicGroups().then(setList, () => setList([])); }, []);
+  async function join(g: PublicGroup) {
+    setBusy(g.id);
+    try { const joined = await joinPublicGroup(g.id); haptic([10, 30, 10]); toast(`You joined “${joined.name}”`); onOpened(joined); }
+    catch (e) { toast((e as Error).message); }
+    finally { setBusy(null); }
+  }
+  return (
+    <>
+      {onBack && <button onClick={onBack} className="chip mb-4 !h-10"><ChevronDown size={16} className="rotate-90" /> Back to my group</button>}
+      {!hasGroups && <p className="mb-3 px-1 text-sm font-semibold text-silver">Step 2 of 2 · find your people</p>}
+      <p className="mb-2 px-1 text-[17px] font-bold">Discover groups</p>
+      {list === null ? <Loading /> : list.length === 0 ? (
+        <p className="card p-5 text-sm text-silver">No public groups yet — create the first one below and make it public.</p>
+      ) : (
+        <div className="card p-2">
+          {list.map((g) => (
+            <div key={g.id} className="flex items-center gap-3 p-2.5">
+              <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-raised"><Globe2 size={20} /></span>
+              <div className="min-w-0 flex-1">
+                <p className="truncate font-bold">{g.name}</p>
+                <p className="truncate text-sm text-silver">{g.members} member{g.members === 1 ? '' : 's'}{g.description ? ` · ${g.description}` : ''}</p>
+              </div>
+              {g.joined ? <span className="chip !h-9 !text-silver">Joined</span> : (
+                <button onClick={() => join(g)} disabled={busy === g.id} className="chip !h-9 !bg-primary !text-on-primary">{busy === g.id ? <Loader2 size={14} className="animate-spin" /> : 'Join'}</button>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+      <p className="mb-2 mt-6 px-1 text-[17px] font-bold">Join with an invite</p>
+      <CreateOrJoin initial="join" onDone={onOpened} />
+      <p className="mb-2 mt-6 px-1 text-[17px] font-bold">Start your own</p>
+      <CreateOrJoin initial="create" onDone={onOpened} />
+    </>
+  );
+}
+
+function CreateOrJoin({ onDone, initial }: { onDone: (g: Group) => void; initial: 'create' | 'join' }) {
+  const mode = initial;
   const [name, setName] = useState('');
+  const [about, setAbout] = useState('');
+  const [isPublic, setIsPublic] = useState(false);
   const [code, setCode] = useState('');
   const [busy, setBusy] = useState(false);
+  // Accept a full invite link as well as a bare code.
+  const cleanCode = (v: string) => (v.match(/join=([A-Za-z0-9]+)/)?.[1] ?? v).toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
   async function go() {
     setBusy(true);
     try {
-      const g = mode === 'create' ? await createGroup(name) : await joinGroup(code);
+      const g = mode === 'create' ? await createGroup(name, isPublic, about) : await joinGroup(code);
       haptic([10, 30, 10]);
-      toast(mode === 'create' ? `“${g.name}” created — invite friends with code ${g.invite_code}` : `You joined “${g.name}”`);
+      toast(mode === 'create' ? `“${g.name}” created — invite friends from the share button` : `You joined “${g.name}”`);
       onDone(g);
     } catch (e) {
       toast((e as Error).message);
@@ -162,12 +259,21 @@ function CreateOrJoin({ onDone }: { onDone: (g: Group) => void }) {
     }
   }
   return (
-    <div className="card mt-4 p-5">
-      <Segmented full value={mode} onChange={setMode} options={[{ value: 'create', label: 'Create a group' }, { value: 'join', label: 'Join with code' }]} />
+    <div className="card p-5">
       {mode === 'create' ? (
-        <input className="field mt-4" value={name} onChange={(e) => setName(e.target.value)} maxLength={40} placeholder="Group name, e.g. Shred Squad" />
+        <>
+          <input className="field" value={name} onChange={(e) => setName(e.target.value)} maxLength={40} placeholder="Group name, e.g. Shred Squad" />
+          <input className="field mt-2" value={about} onChange={(e) => setAbout(e.target.value)} maxLength={140} placeholder="What’s it about? (optional)" />
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            {([[false, 'Private', 'Invite only', Lock], [true, 'Public', 'Anyone can join', Globe2]] as const).map(([v, l, sub, Icon]) => (
+              <button key={l} onClick={() => setIsPublic(v)} className={cx('rounded-2xl p-3 text-left transition', isPublic === v ? 'bg-primary text-on-primary' : 'bg-raised')}>
+                <Icon size={17} /><p className="mt-1 font-bold">{l}</p><p className="text-xs opacity-70">{sub}</p>
+              </button>
+            ))}
+          </div>
+        </>
       ) : (
-        <input className="field mt-4 text-center text-xl font-bold uppercase tracking-[0.3em]" value={code} onChange={(e) => setCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))} maxLength={6} placeholder="ABC123" />
+        <input className="field text-center text-xl font-bold uppercase tracking-[0.3em]" value={code} onChange={(e) => setCode(cleanCode(e.target.value))} placeholder="CODE or link" />
       )}
       <button onClick={go} disabled={busy || (mode === 'create' ? !name.trim() : code.length !== 6)} className="btn-primary mt-3 w-full">
         {busy ? <Loader2 size={18} className="animate-spin" /> : mode === 'create' ? <Plus size={18} /> : <Users size={18} />}
@@ -177,11 +283,11 @@ function CreateOrJoin({ onDone }: { onDone: (g: Group) => void }) {
   );
 }
 
-function GroupView({ group, groups, avatar, onAvatar, onSwitch, onChanged, onEditProfile }: {
-  group: Group; groups: Group[]; avatar: string; onAvatar: (a: string) => void; onSwitch: (id: string) => void; onChanged: () => void; onEditProfile: () => void;
+function GroupView({ group, groups, avatar, onAvatar, onSwitch, onChanged, onEditProfile, onDiscover }: {
+  group: Group; groups: Group[]; avatar: string; onAvatar: (a: string) => void; onSwitch: (id: string) => void; onChanged: () => void; onEditProfile: () => void; onDiscover: () => void;
 }) {
   const [person, setPerson] = useState<{ id: string; profile: PublicProfile } | null>(null);
-  const [tab, setTab] = useState<'feed' | 'chat'>('feed');
+  const [tab, setTab] = useState<'feed' | 'chat' | 'members'>('feed');
   const [posts, setPosts] = useState<Post[] | null>(null);
   const [people, setPeople] = useState<Member[]>([]);
   const [me, setMe] = useState<string>();
@@ -234,9 +340,21 @@ function GroupView({ group, groups, avatar, onAvatar, onSwitch, onChanged, onEdi
         ))}
       </div>
 
-      <div className="mb-4"><Segmented full value={tab} onChange={(v) => { haptic(); setTab(v); }} options={[{ value: 'feed', label: 'Feed' }, { value: 'chat', label: 'Chat' }]} /></div>
+      <div className="mb-4"><Segmented full value={tab} onChange={(v) => { haptic(); setTab(v); }} options={[{ value: 'feed', label: 'Feed' }, { value: 'chat', label: 'Chat' }, { value: 'members', label: 'Members' }]} /></div>
 
-      {tab === 'chat' ? <GroupChat groupId={group.id} me={me} /> : <>
+      {tab === 'members' ? (
+        <div className="card p-2">
+          {people.map((m, i) => (
+            <button key={m.user_id} onClick={() => setPerson({ id: m.user_id, profile: m })} className="flex w-full items-center gap-3 rounded-2xl p-2.5 text-left active:bg-raised/60">
+              <span className="num w-6 text-center font-bold text-silver">{i + 1}</span>
+              <Avatar name={m.display_name} color={m.avatar} photoUrl={m.photoUrl} size={44} />
+              <div className="min-w-0 flex-1"><p className="truncate font-bold">{m.user_id === me ? 'You' : m.display_name}</p><p className="truncate text-sm text-silver">{m.username ? `@${m.username}` : ''}{m.role === 'owner' ? ' · owner' : ''}</p></div>
+              <span className="num flex items-center gap-1 font-bold"><Flame size={15} className="text-[rgb(var(--carbs))]" />{m.streak}</span>
+            </button>
+          ))}
+          <button onClick={() => setSettings(true)} className="btn-ghost m-2 !h-12 w-[calc(100%-1rem)]"><Share2 size={17} /> Invite friends</button>
+        </div>
+      ) : tab === 'chat' ? <GroupChat groupId={group.id} me={me} /> : <>
       <button onClick={() => { haptic(); setSharing(true); }} className="btn-primary mb-5 w-full"><Plus size={18} /> New post</button>
 
       {posts === null ? <Loading /> : posts.length === 0 ? (
@@ -265,18 +383,26 @@ function GroupView({ group, groups, avatar, onAvatar, onSwitch, onChanged, onEdi
             </button>
           ))}
         </div>
-        <p className="mb-2 mt-6 text-sm font-semibold text-silver">Create or join another</p>
-        <CreateOrJoin onDone={(g) => { setSwitching(false); onSwitch(g.id); onChanged(); }} />
+        <button onClick={() => { setSwitching(false); onDiscover(); }} className="btn-primary mt-4 w-full"><Globe2 size={18} /> Discover, join or create a group</button>
       </Sheet>
 
       <Sheet open={settings} onClose={() => setSettings(false)} title="Invite friends">
-        <p className="text-sm text-silver">Share this code. Friends open Provora → Groups → Join with code.</p>
-        <button onClick={() => { void navigator.clipboard?.writeText(group.invite_code); haptic(); toast('Code copied'); }} className="card mt-3 flex w-full items-center justify-center gap-3 p-5">
-          <span className="num text-[34px] font-extrabold tracking-[0.25em]">{group.invite_code}</span><Copy size={20} className="text-silver" />
+        <p className="text-sm text-silver">Send the invite link — friends tap it, sign in and they’re in. Or they can enter the code.</p>
+        <button
+          onClick={() => {
+            const url = inviteUrl(group.invite_code);
+            if ('share' in navigator) void navigator.share({ title: 'Join my Provora group', text: `Join “${group.name}” on Provora`, url }).catch(() => undefined);
+            else { void (navigator as Navigator).clipboard?.writeText(url); toast('Invite link copied'); }
+            haptic();
+          }}
+          className="btn-primary mt-4 w-full"
+        >
+          <Share2 size={18} /> Share invite link
         </button>
-        {'share' in navigator && (
-          <button onClick={() => void navigator.share({ title: 'Join my Provora group', text: `Join “${group.name}” on Provora with code ${group.invite_code}`, url: location.origin }).catch(() => undefined)} className="btn-ghost mt-3 w-full"><Share2 size={18} /> Share invite</button>
-        )}
+        <button onClick={() => { void navigator.clipboard?.writeText(inviteUrl(group.invite_code)); haptic(); toast('Invite link copied'); }} className="btn-ghost mt-2 w-full"><Link2 size={17} /> Copy link</button>
+        <button onClick={() => { void navigator.clipboard?.writeText(group.invite_code); haptic(); toast('Code copied'); }} className="card mt-3 flex w-full items-center justify-center gap-3 p-4">
+          <span className="text-sm font-semibold text-silver">Code</span><span className="num text-[28px] font-extrabold tracking-[0.25em]">{group.invite_code}</span><Copy size={18} className="text-silver" />
+        </button>
         <button onClick={() => { setSettings(false); onEditProfile(); }} className="btn-ghost mt-6 w-full"><UserRound size={18} /> Edit my profile</button>
         <p className="mb-2 mt-6 text-sm font-semibold text-silver">Colour (when you have no photo)</p>
         <div className="flex flex-wrap gap-2">

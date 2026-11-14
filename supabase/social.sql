@@ -213,3 +213,51 @@ create policy "messages: delete own" on public.messages for delete using (user_i
 do $$ begin
   alter publication supabase_realtime add table public.messages;
 exception when others then null; end $$;
+
+-- ---------- Public groups (discoverable, one-tap join) ----------
+alter table public.groups add column if not exists is_public boolean not null default false;
+alter table public.groups add column if not exists description text check (char_length(description) <= 140);
+drop policy if exists "groups: public read" on public.groups;
+create policy "groups: public read" on public.groups for select using (is_public);
+
+drop function if exists public.create_group(text);
+create or replace function public.create_group(p_name text, p_public boolean default false, p_description text default null)
+returns public.groups language plpgsql security definer set search_path = public as $$
+declare g groups;
+begin
+  if auth.uid() is null then raise exception 'Sign in first'; end if;
+  if (select count(*) from groups where created_by = auth.uid()) >= 20 then raise exception 'Group limit reached'; end if;
+  insert into groups (name, created_by, is_public, description) values (trim(p_name), auth.uid(), coalesce(p_public, false), nullif(trim(p_description), ''))
+  returning * into g;
+  insert into group_members (group_id, user_id, role) values (g.id, auth.uid(), 'owner');
+  return g;
+end;
+$$;
+
+-- Public groups with member counts, biggest first.
+create or replace function public.public_groups()
+returns table (id uuid, name text, description text, members bigint, joined boolean)
+language sql stable security definer set search_path = public as $$
+  select g.id, g.name, g.description, count(m.user_id) as members, bool_or(m.user_id = auth.uid()) as joined
+  from groups g left join group_members m on m.group_id = g.id
+  where g.is_public
+  group by g.id
+  order by members desc, g.created_at
+  limit 50;
+$$;
+
+create or replace function public.join_public_group(p_id uuid)
+returns public.groups language plpgsql security definer set search_path = public as $$
+declare g groups;
+begin
+  if auth.uid() is null then raise exception 'Sign in first'; end if;
+  select * into g from groups where id = p_id and is_public;
+  if g.id is null then raise exception 'Group not found'; end if;
+  if (select count(*) from group_members where group_id = g.id) >= 5000 then raise exception 'This group is full'; end if;
+  insert into group_members (group_id, user_id) values (g.id, auth.uid()) on conflict do nothing;
+  return g;
+end;
+$$;
+
+revoke all on function public.create_group(text, boolean, text), public.public_groups(), public.join_public_group(uuid) from public, anon;
+grant execute on function public.create_group(text, boolean, text), public.public_groups(), public.join_public_group(uuid) to authenticated;

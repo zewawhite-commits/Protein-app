@@ -8,7 +8,8 @@ import { supabase } from './account';
 export const REACTIONS = ['🔥', '💪', '👏', '😋', '❤️'] as const;
 export type Reaction = (typeof REACTIONS)[number];
 
-export interface Group { id: string; name: string; invite_code: string; created_by: string; created_at: string }
+export interface Group { id: string; name: string; invite_code: string; created_by: string; created_at: string; is_public?: boolean; description?: string | null }
+export interface PublicGroup { id: string; name: string; description: string | null; members: number; joined: boolean }
 export interface PublicProfile { display_name: string; avatar: string; streak: number; username?: string | null; photoUrl?: string }
 export interface Member extends PublicProfile { user_id: string; role: 'owner' | 'member' }
 export interface Post {
@@ -76,8 +77,8 @@ export async function myGroups(): Promise<Group[]> {
   return (data ?? []) as Group[];
 }
 
-export async function createGroup(name: string): Promise<Group> {
-  const { data, error } = await db().rpc('create_group', { p_name: name.trim().slice(0, 40) });
+export async function createGroup(name: string, isPublic = false, description = ''): Promise<Group> {
+  const { data, error } = await db().rpc('create_group', { p_name: name.trim().slice(0, 40), p_public: isPublic, p_description: description.trim().slice(0, 140) || null });
   fail(error);
   return data as Group;
 }
@@ -233,3 +234,26 @@ export function onMessages(groupId: string, cb: () => void): () => void {
     .subscribe();
   return () => { void supabase?.removeChannel(channel); };
 }
+
+// ---------- Discover & invites ----------
+export async function publicGroups(): Promise<PublicGroup[]> {
+  const { data, error } = await db().rpc('public_groups');
+  fail(error);
+  return ((data ?? []) as PublicGroup[]).map((g) => ({ ...g, members: Number(g.members), joined: !!g.joined }));
+}
+
+export async function joinPublicGroup(id: string): Promise<Group> {
+  const { data, error } = await db().rpc('join_public_group', { p_id: id });
+  fail(error);
+  return data as Group;
+}
+
+/** Link that opens Groups and joins with this code (after sign-in if needed). */
+export const inviteUrl = (code: string) => `${location.origin}${import.meta.env.BASE_URL}groups?join=${encodeURIComponent(code)}`;
+
+const PENDING = 'provora-pending-join';
+export const pendingJoin = {
+  get: (): string | null => { try { return localStorage.getItem(PENDING); } catch { return null; } },
+  set: (code: string) => { try { localStorage.setItem(PENDING, code.toUpperCase()); } catch { /* ignore */ } },
+  clear: () => { try { localStorage.removeItem(PENDING); } catch { /* ignore */ } },
+};
