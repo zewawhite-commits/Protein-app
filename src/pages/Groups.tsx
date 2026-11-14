@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Check, ChevronDown, Copy, Crown, Dumbbell, Flame, Globe2, Heart, ImagePlus, Link2, Loader2, Lock, LogOut, MessageCircle, Plus, RefreshCw, Send, Share2, Sparkles, ThumbsUp, Trash2, UserRound, Users, Utensils, X } from 'lucide-react';
+import { ArrowLeft, Check, ChevronDown, Copy, Crown, Dumbbell, Flame, Globe2, Heart, ImagePlus, Link2, Loader2, Lock, LogOut, MessageCircle, Plus, RefreshCw, Send, Share2, Sparkles, ThumbsUp, Trash2, UserRound, Users, Utensils, X } from 'lucide-react';
 import { AVATAR_COLORS, Avatar } from '@/components/Avatar';
 import { GroupChat } from '@/components/GroupChat';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useStore } from '@/store/useStore';
 import { accountsEnabled, useSession } from '@/lib/account';
 import { useDay } from '@/lib/hooks';
@@ -45,7 +45,8 @@ export default function Groups() {
 function Shell({ children }: { children: React.ReactNode }) {
   return (
     <div className="animate-fade-up pb-6">
-      <header className="pt-safe pb-4">
+      <header className="pt-safe flex items-center gap-3 pb-4">
+        <Link to="/feed" className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-surface" style={{ boxShadow: 'var(--shadow)' }} aria-label="Back to feed"><ArrowLeft size={20} /></Link>
         <h1 className="text-[30px] font-extrabold tracking-tight">Groups</h1>
       </header>
       {children}
@@ -111,12 +112,12 @@ function Signed() {
   const [active, setActive] = useState<string | null>(() => { try { return localStorage.getItem(GROUP_KEY); } catch { return null; } });
   const [error, setError] = useState('');
   const [avatar, setAvatar] = useState(() => { try { return localStorage.getItem('provora-avatar') ?? 'blue'; } catch { return 'blue'; } });
-  const [hub, setHub] = useState(false);
+  const [hub, setHub] = useState(() => new URLSearchParams(location.search).has('new'));
   const [invite, setInvite] = useState<string | null>(pendingJoin.get());
 
   const reload = useCallback(async () => {
     try {
-      const list = await myGroups();
+      const list = (await myGroups()).filter((g) => g.id !== COMMUNITY_ID);
       setGroups(list);
       setActive((a) => (a && list.some((g) => g.id === a) ? a : list[0]?.id ?? null));
       return list;
@@ -209,6 +210,13 @@ function GroupsHub({ hasGroups, onOpened, onBack }: { hasGroups: boolean; onOpen
     <>
       {onBack && <button onClick={onBack} className="chip mb-4 !h-10"><ChevronDown size={16} className="rotate-90" /> Back to my group</button>}
       {!hasGroups && <p className="mb-3 px-1 text-sm font-semibold text-silver">Step 2 of 2 · find your people</p>}
+      {new URLSearchParams(location.search).get('new') === 'create' && (
+        <>
+          <p className="mb-2 px-1 text-[17px] font-bold">Create a group</p>
+          <CreateOrJoin initial="create" onDone={onOpened} />
+          <div className="h-6" />
+        </>
+      )}
       <p className="mb-2 px-1 text-[17px] font-bold">Discover groups</p>
       {list === null ? <Loading /> : list.length === 0 ? (
         <p className="card p-5 text-sm text-silver">No public groups yet — create the first one below and make it public.</p>
@@ -230,8 +238,12 @@ function GroupsHub({ hasGroups, onOpened, onBack }: { hasGroups: boolean; onOpen
       )}
       <p className="mb-2 mt-6 px-1 text-[17px] font-bold">Join with an invite</p>
       <CreateOrJoin initial="join" onDone={onOpened} />
-      <p className="mb-2 mt-6 px-1 text-[17px] font-bold">Start your own</p>
-      <CreateOrJoin initial="create" onDone={onOpened} />
+      {new URLSearchParams(location.search).get('new') !== 'create' && (
+        <>
+          <p className="mb-2 mt-6 px-1 text-[17px] font-bold">Start your own</p>
+          <CreateOrJoin initial="create" onDone={onOpened} />
+        </>
+      )}
     </>
   );
 }
@@ -759,6 +771,7 @@ function CommunityFeed() {
         <span className="flex-1 text-[15px] text-dim">Share a meal, a win or your progress…</span>
         <span className="grid h-10 w-10 place-items-center rounded-full bg-primary text-on-primary"><Plus size={18} /></span>
       </button>
+      <GroupsStrip />
       {posts === null ? <Loading /> : posts.length === 0 ? (
         <div className="card p-6 text-center">
           <p className="font-bold">Be the first to post</p>
@@ -773,5 +786,38 @@ function CommunityFeed() {
       <CommentsSheet post={openPost} onClose={() => { setOpenPost(null); void load(); }} />
       <PersonSheet groupId={COMMUNITY_ID} person={person} me={me} onClose={() => setPerson(null)} onEdit={() => { setPerson(null); setEditing(true); }} />
     </>
+  );
+}
+
+/** On the Feed: your groups as bubbles, plus "New group" and "Find groups". */
+function GroupsStrip() {
+  const nav = useNavigate();
+  const [list, setList] = useState<Group[] | null>(null);
+  useEffect(() => { myGroups().then((g) => setList(g.filter((x) => x.id !== COMMUNITY_ID)), () => setList([])); }, []);
+  const open = (id: string) => { try { localStorage.setItem(GROUP_KEY, id); } catch { /* ignore */ } haptic(); nav('/groups'); };
+  return (
+    <section className="mb-5">
+      <div className="mb-2 flex items-baseline justify-between px-1">
+        <p className="text-[17px] font-bold">Your groups</p>
+        <button onClick={() => { haptic(); nav('/groups?new=1'); }} className="text-sm font-semibold text-accent">Find groups</button>
+      </div>
+      <div className="-mx-5 flex gap-3 overflow-x-auto px-5 pb-1 no-scrollbar">
+        <button onClick={() => { haptic(); nav('/groups?new=create'); }} className="w-20 shrink-0 text-center">
+          <span className="mx-auto grid h-16 w-16 place-items-center rounded-full border-2 border-dashed border-line text-silver"><Plus size={22} /></span>
+          <span className="mt-1.5 block text-xs font-bold">New group</span>
+        </button>
+        {(list ?? []).map((g, i) => (
+          <button key={g.id} onClick={() => open(g.id)} className="w-20 shrink-0 text-center">
+            <Avatar name={g.name} color={Object.keys(AVATAR_COLORS)[i % Object.keys(AVATAR_COLORS).length]} size={64} className="mx-auto" />
+            <span className="mt-1.5 block truncate text-xs font-bold">{g.name}</span>
+          </button>
+        ))}
+        {list && list.length === 0 && (
+          <div className="flex min-w-[200px] items-center rounded-[20px] bg-surface px-4 text-sm text-silver" style={{ boxShadow: 'var(--shadow)' }}>
+            Make a private group with friends, or join one.
+          </div>
+        )}
+      </div>
+    </section>
   );
 }
