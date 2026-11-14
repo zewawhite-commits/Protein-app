@@ -39,7 +39,7 @@ export default function Snap() {
   useEffect(() => () => {
     const id = photoRef.current;
     // Handing the photo to manual search (/add?photo=…) keeps it; that page cleans up instead.
-    if (window.location.pathname.startsWith('/add')) return;
+    if (window.location.pathname.startsWith(`${import.meta.env.BASE_URL}add`)) return;
     if (id && !useStore.getState().entries.some((e) => e.photoId === id)) void deletePhoto(id);
   }, []);
 

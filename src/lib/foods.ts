@@ -62,7 +62,7 @@ const PROCESSED_WORDS = /\b(breaded|battered|tenders|nuggets|patties|roll|deli|l
 
 export function loadFoodDb(): Promise<FoodDb> {
   if (!dbPromise) {
-    dbPromise = fetch('/data/foods.json')
+    dbPromise = fetch(`${import.meta.env.BASE_URL}data/foods.json`)
       .then((r) => {
         if (!r.ok) throw new Error(`Could not load food database (${r.status})`);
         return r.json() as Promise<FoodsFile>;
