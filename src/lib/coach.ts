@@ -7,6 +7,7 @@ import type Anthropic from '@anthropic-ai/sdk';
 import { RECOGNITION_MODEL } from './recognition';
 
 export interface ChatTurn { role: 'user' | 'assistant'; content: string }
+export interface ChatImage { data: string; mediaType: 'image/jpeg' | 'image/png' | 'image/webp' }
 
 /** What the app tells the coach about the person and their day (all optional). */
 export interface CoachContext {
@@ -59,6 +60,7 @@ How to answer:
 - Use the profile and today's numbers you are given (targets and totals were calculated by the app from food-composition databases). You may refer to those numbers. Do not invent other numbers.
 - NEVER state nutrient values for specific foods (no "an egg has 6 g protein", no calories per food). The app shows verified numbers for any food you put in "foods". Say things like "eggs are a great protein source" instead.
 - When suggesting what to eat, put each concrete food or simple dish in "foods" (max 5): "name" in English, "localName" if there is a common local name (else ""), "searchQueries" = 2–3 short queries phrased like food-composition database entries, most specific first, naming the main ingredient and its form (e.g. ["moi moi", "cowpeas mature seeds cooked", "black-eyed peas cooked"]), "portionGrams" = a typical single portion in grams as eaten (0 if not applicable). Leave "foods" empty when no food suggestion fits.
+- Photos: the person may attach a photo of a meal or food label. Say briefly what you see (names of foods, cooking style), then answer their question. Put each food you can see in "foods" with "portionGrams" as your rough visual estimate (the app labels it as an estimate and asks them to weigh). If you can't tell what something is, say so and ask. If the photo isn't food, say so kindly.
 - Prefer local, affordable, culturally familiar foods for the person's country, and respect their diet strictly.
 - Safety: you are not a doctor. For medical conditions, medicines, allergies, pregnancy complications, or symptoms, give general information only and suggest a doctor or registered dietitian. Never recommend eating below about 1,200 kcal a day, fasting for many days, or extreme restriction. If someone mentions disordered eating, self-harm or feeling unsafe, respond with care, don't give weight-loss advice, and encourage them to reach out to a professional or local helpline.
 - Stay on food, nutrition, eating habits, training nutrition, hydration and using the app. Politely steer other topics back.
@@ -80,7 +82,7 @@ function contextText(c: CoachContext): string {
   ].join('\n');
 }
 
-export async function coachWithClient(client: Anthropic, turns: ChatTurn[], context: CoachContext): Promise<CoachReply> {
+export async function coachWithClient(client: Anthropic, turns: ChatTurn[], context: CoachContext, image?: ChatImage): Promise<CoachReply> {
   const response = await client.beta.messages.create({
     model: RECOGNITION_MODEL,
     max_tokens: 8000,
@@ -92,7 +94,12 @@ export async function coachWithClient(client: Anthropic, turns: ChatTurn[], cont
       { type: 'text', text: SYSTEM, cache_control: { type: 'ephemeral' } },
       { type: 'text', text: contextText(context) },
     ],
-    messages: turns.map((t) => ({ role: t.role, content: t.content })),
+    // A photo goes with the latest user message only (earlier photos are not re-sent).
+    messages: turns.map((t, i) =>
+      image && i === turns.length - 1
+        ? { role: t.role, content: [{ type: 'image' as const, source: { type: 'base64' as const, media_type: image.mediaType, data: image.data } }, { type: 'text' as const, text: t.content }] }
+        : { role: t.role, content: t.content },
+    ),
   });
   if (response.stop_reason === 'refusal') return { reply: 'Sorry — I can’t help with that one. Ask me anything about food and your goals.', foods: [] };
   if (response.stop_reason === 'max_tokens') throw new Error('The answer was too long — try a narrower question.');

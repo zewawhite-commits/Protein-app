@@ -4,10 +4,10 @@ import { createStore, del, get, keys, set } from 'idb-keyval';
 const store = createStore('protein-photos', 'photos');
 const MAX_EDGE = 1280;
 
-export async function resizeImage(file: Blob): Promise<Blob> {
+export async function resizeImage(file: Blob, maxEdge = MAX_EDGE): Promise<Blob> {
   const bitmap = await createImageBitmap(file).catch(() => null);
   if (!bitmap) return file;
-  const scale = Math.min(1, MAX_EDGE / Math.max(bitmap.width, bitmap.height));
+  const scale = Math.min(1, maxEdge / Math.max(bitmap.width, bitmap.height));
   const w = Math.round(bitmap.width * scale);
   const h = Math.round(bitmap.height * scale);
   const canvas = document.createElement('canvas');
@@ -27,3 +27,13 @@ export async function savePhoto(file: Blob): Promise<string> {
 export const getPhoto = (id: string) => get<Blob>(id, store);
 export const deletePhoto = (id: string) => del(id, store);
 export const allPhotoIds = () => keys<string>(store);
+
+/** Blob → base64 (no data: prefix). */
+export function blobToBase64(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(String(r.result).split(',')[1] ?? '');
+    r.onerror = () => reject(r.error);
+    r.readAsDataURL(blob);
+  });
+}

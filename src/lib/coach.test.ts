@@ -28,4 +28,13 @@ describe('coach', () => {
     expect(req.system[1].text).toContain('2500 kcal');
     expect(req.messages).toEqual([{ role: 'user', content: 'Breakfast?' }]);
   });
+
+  it('attaches a photo to the latest message only', async () => {
+    let req: any;
+    const client = { beta: { messages: { create: async (r: unknown) => { req = r; return { stop_reason: 'end_turn', content: [{ type: 'text', text: '{"reply":"I see jollof rice.","foods":[]}' }] }; } } } } as unknown as Anthropic;
+    await coachWithClient(client, [{ role: 'user', content: 'hi' }, { role: 'assistant', content: 'hello' }, { role: 'user', content: 'What is this?' }], {}, { data: 'AAAA', mediaType: 'image/jpeg' });
+    expect(req.messages[0].content).toBe('hi');
+    expect(req.messages[2].content[0]).toMatchObject({ type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: 'AAAA' } });
+    expect(req.messages[2].content[1]).toEqual({ type: 'text', text: 'What is this?' });
+  });
 });
