@@ -76,7 +76,7 @@ export default function Admin() {
                   <StateBadge state={f.state} />
                   <span className="num">{fmt(f.per100.protein, 1)} g / 100 g</span>
                 </div>
-                <p className="mt-1 truncate text-[11px] text-dim">Source: {f.sourceNote}</p>
+                <p className="mt-1 truncate text-[12px] text-dim">Source: {f.sourceNote}</p>
               </div>
               <button onClick={() => setEditing(f)} className="grid h-9 w-9 place-items-center rounded-full bg-raised text-silver" aria-label="Edit"><Pencil size={15} /></button>
               <button onClick={() => archive(f.id, !f.archived)} className="grid h-9 w-9 place-items-center rounded-full bg-raised text-silver" aria-label={f.archived ? 'Restore' : 'Archive'}>
@@ -101,7 +101,7 @@ export default function Admin() {
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium">{splitName(f.name).title}</p>
                   <p className="truncate text-xs text-silver">{splitName(f.name).detail || f.category}</p>
-                  <p className="mt-1 text-[11px] text-dim num">
+                  <p className="mt-1 text-[12px] text-dim num">
                     {sourceInfo(f).label} · {STATE_LABEL[f.state]} · P {fmt(f.per100.protein, 2)} · F {fmt(f.per100.fat, 2)} · C {fmt(f.per100.carbs, 2)} · {fmt(f.per100.kcal)} kcal
                   </p>
                 </div>

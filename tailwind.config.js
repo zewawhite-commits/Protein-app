@@ -18,6 +18,12 @@ export default {
         danger: v('danger'),
         warn: v('warn'),
       },
+      // Readable minimums: body text 14px with generous line spacing.
+      fontSize: {
+        xs: ['13px', { lineHeight: '1.5' }],
+        sm: ['14px', { lineHeight: '1.6' }],
+        base: ['16px', { lineHeight: '1.6' }],
+      },
       fontFamily: { sans: ['"Plus Jakarta Sans Variable"', 'ui-sans-serif', 'system-ui', 'sans-serif'] },
       keyframes: {
         'fade-up': { from: { opacity: 0, transform: 'translateY(6px)' }, to: { opacity: 1, transform: 'none' } },

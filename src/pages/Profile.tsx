@@ -139,7 +139,7 @@ function Mini({ label, value }: { label: string; value: string }) {
   return (
     <div className="tile py-3">
       <p className="num text-lg font-bold">{value}</p>
-      <p className="text-[11px] font-semibold text-silver">{label}</p>
+      <p className="text-[12px] font-semibold text-silver">{label}</p>
     </div>
   );
 }
@@ -181,7 +181,7 @@ function PremiumCard() {
         <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-on-primary/10"><Sparkles size={22} className="text-accent" /></span>
         <div className="min-w-0 flex-1">
           <p className="font-semibold">{active ? `${premium!.tier === 'pro' ? 'Pro' : 'Plus'} is active` : 'Upgrade to Plus or Pro'}</p>
-          <p className="truncate text-[13px] opacity-70">
+          <p className="truncate text-[14px] opacity-70">
             {active ? `${premium!.email} · until ${new Date(premium!.exp).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}` : 'AI photo recognition for every meal'}
           </p>
         </div>

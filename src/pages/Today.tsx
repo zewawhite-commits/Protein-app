@@ -199,15 +199,15 @@ function HeroCard({ totals, goal, targets, entries }: { totals: Totals; goal: nu
           <div className="mt-4 grid grid-cols-2 gap-2.5">
             {perMeal.map((m) => (
               <div key={m.key} className="tile p-3">
-                <p className="truncate text-[11px] font-semibold text-silver">{m.label}</p>
+                <p className="truncate text-[12px] font-semibold text-silver">{m.label}</p>
                 <p className="num mt-1 text-lg font-bold leading-none">{fmt(m.kcal)}<span className="text-xs text-silver"> kcal</span></p>
-                <p className="num mt-1.5 text-[11px] text-silver">
+                <p className="num mt-1.5 text-[12px] text-silver">
                   <span className="text-accent">P {fmt(m.protein)}</span> · C {fmt(m.carbs)} · F {fmt(m.fat)}
                 </p>
               </div>
             ))}
           </div>
-          <p className="mt-3 text-center text-[11px] font-medium text-dim">Protein · carbs · fat in grams</p>
+          <p className="mt-3 text-center text-[12px] font-medium text-dim">Protein · carbs · fat in grams</p>
         </div>
       </div>
 
@@ -230,7 +230,7 @@ function HeroCard({ totals, goal, targets, entries }: { totals: Totals; goal: nu
           <MacroBar label="Fibre" value={totals.fiber} target={targets?.fiber} color="fiber" incomplete={totals.incomplete.fiber} />
         </div>
         <div className="mt-4"><NutrientList values={totals} incomplete={totals.incomplete} /></div>
-        <p className="mt-3 text-[11px] leading-snug text-dim">{DV_NOTE}</p>
+        <p className="mt-3 text-[12px] leading-snug text-dim">{DV_NOTE}</p>
       </Sheet>
     </section>
   );
@@ -269,13 +269,13 @@ function WeekStrip({ date, onSelect }: { date: string; onSelect: (d: string) => 
         const future = d > today;
         return (
           <button key={d} onClick={() => !future && onSelect(d)} disabled={future} className="flex flex-col items-center gap-2">
-            <span className={cx('text-[11px] font-semibold', sel ? 'text-ink' : 'text-dim')}>
+            <span className={cx('text-[12px] font-semibold', sel ? 'text-ink' : 'text-dim')}>
               {fromKey(d).toLocaleDateString(undefined, { weekday: 'short' })}
             </span>
             <Ring value={future ? 0 : v} size={40} stroke={3} dashed={future || v === 0} color={hit ? 'accent' : 'ink'} track="line">
               <span
                 className={cx(
-                  'num grid h-[30px] w-[30px] place-items-center rounded-full text-[13px] font-bold',
+                  'num grid h-[30px] w-[30px] place-items-center rounded-full text-[14px] font-bold',
                   sel ? 'bg-primary text-on-primary' : future ? 'text-dim' : 'text-ink',
                 )}
               >

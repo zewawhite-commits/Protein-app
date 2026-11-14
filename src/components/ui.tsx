@@ -104,7 +104,7 @@ export function StateBadge({ state, className }: { state: PrepState; className?:
   return (
     <span
       className={cx(
-        'inline-flex h-5 items-center rounded-full px-2 text-[10px] font-semibold uppercase tracking-wide',
+        'inline-flex h-5 items-center rounded-full px-2 text-[12px] font-semibold uppercase tracking-wide',
         state === 'cooked' ? 'bg-ink text-bg' : state === 'raw' ? 'bg-accent/10 text-accent' : 'bg-raised text-silver',
         className,
       )}
@@ -159,7 +159,7 @@ export function Empty({ icon, title, body, action }: { icon: ReactNode; title: s
 
 export function Pill({ children, className }: { children: ReactNode; className?: string }) {
   return (
-    <span className={cx('inline-flex h-9 items-center gap-1.5 rounded-full bg-surface px-3.5 text-[13px] font-semibold', className)} style={{ boxShadow: 'var(--shadow)' }}>
+    <span className={cx('inline-flex h-9 items-center gap-1.5 rounded-full bg-surface px-3.5 text-[14px] font-semibold', className)} style={{ boxShadow: 'var(--shadow)' }}>
       {children}
     </span>
   );

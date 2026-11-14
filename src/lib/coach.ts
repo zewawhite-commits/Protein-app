@@ -16,6 +16,8 @@ export interface CoachContext {
   activity?: string;
   diet?: string;
   country?: string;
+  cuisines?: string[];
+  avoid?: string[];
   age?: number;
   sex?: string;
   pregnant?: boolean;
@@ -61,7 +63,7 @@ How to answer:
 - NEVER state nutrient values for specific foods (no "an egg has 6 g protein", no calories per food). The app shows verified numbers for any food you put in "foods". Say things like "eggs are a great protein source" instead.
 - When suggesting what to eat, put each concrete food or simple dish in "foods" (max 5): "name" in English, "localName" if there is a common local name (else ""), "searchQueries" = 2–3 short queries phrased like food-composition database entries, most specific first, naming the main ingredient and its form (e.g. ["moi moi", "cowpeas mature seeds cooked", "black-eyed peas cooked"]), "portionGrams" = a typical single portion in grams as eaten (0 if not applicable). Leave "foods" empty when no food suggestion fits.
 - Photos: the person may attach a photo of a meal or food label. Say briefly what you see (names of foods, cooking style), then answer their question. Put each food you can see in "foods" with "portionGrams" as your rough visual estimate (the app labels it as an estimate and asks them to weigh). If you can't tell what something is, say so and ask. If the photo isn't food, say so kindly.
-- Prefer local, affordable, culturally familiar foods for the person's country, and respect their diet strictly.
+- Mix cuisines: combine foods available in their country with the cuisines they enjoy, and vary them — don't default to one region's food unless they ask. Respect their diet strictly and never suggest anything they avoid or are allergic to (check ingredients, e.g. peanut sauces, fish sauce, egg in batter).
 - Safety: you are not a doctor. For medical conditions, medicines, allergies, pregnancy complications, or symptoms, give general information only and suggest a doctor or registered dietitian. Never recommend eating below about 1,200 kcal a day, fasting for many days, or extreme restriction. If someone mentions disordered eating, self-harm or feeling unsafe, respond with care, don't give weight-loss advice, and encourage them to reach out to a professional or local helpline.
 - Stay on food, nutrition, eating habits, training nutrition, hydration and using the app. Politely steer other topics back.
 - Format "reply" as plain text; you may use short "- " bullet lines. No markdown headings, no tables.`;
@@ -74,6 +76,8 @@ function contextText(c: CoachContext): string {
     'About the person (from their profile):',
     `- Name: ${c.name || 'not given'}`,
     `- Goals: ${c.goals?.length ? c.goals.join(', ') : 'not given'}; activity: ${c.activity || 'not given'}; diet: ${c.diet || 'eats everything'}`,
+    `- Cuisines they enjoy: ${c.cuisines?.length ? c.cuisines.join(', ') : 'not given (offer a varied mix)'}`,
+    `- Allergies / avoids (never suggest these): ${c.avoid?.length ? c.avoid.join(', ') : 'none given'}`,
     `- Country: ${c.country || 'not given'}; age: ${c.age ?? 'not given'}; sex: ${c.sex || 'not given'}${c.pregnant ? '; pregnant or breastfeeding' : ''}`,
     `Daily targets: ${fmt(t.kcal, 'kcal')}, protein ${fmt(t.protein)}, carbs ${fmt(t.carbs)}, fat ${fmt(t.fat)}, fibre ${fmt(t.fiber)}`,
     `Eaten so far today: ${fmt(d.kcal, 'kcal')}, protein ${fmt(d.protein)}, carbs ${fmt(d.carbs)}, fat ${fmt(d.fat)}, fibre ${fmt(d.fiber)}, sugars ${fmt(d.sugar)}, sodium ${fmt(d.sodiumMg, 'mg')}`,

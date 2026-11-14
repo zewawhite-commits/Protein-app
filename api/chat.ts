@@ -22,6 +22,8 @@ function cleanContext(raw: unknown): CoachContext {
     activity: str(c.activity, 20),
     diet: str(c.diet, 20),
     country: str(c.country, 60),
+    cuisines: Array.isArray(c.cuisines) ? c.cuisines.map((g: unknown) => String(g).slice(0, 30)).slice(0, 26) : undefined,
+    avoid: Array.isArray(c.avoid) ? c.avoid.map((g: unknown) => String(g).slice(0, 30)).slice(0, 20) : undefined,
     age: num(c.age, 120),
     sex: str(c.sex, 15),
     pregnant: c.pregnant === true,

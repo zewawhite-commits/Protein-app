@@ -3,9 +3,11 @@ import { ArrowLeft, Check, Bike, Dumbbell, Flame, HeartPulse, Leaf, Loader2, Mai
 import { useStore } from '@/store/useStore';
 import { accountsEnabled, sendPhoneCode, signInWithEmail, signInWithGoogle, toE164, useSession, verifyPhoneCode } from '@/lib/account';
 import { DIAL_CODES } from '@/lib/dialCodes';
+import { COUNTRY_DATA } from '@/lib/countries';
 import { GoogleIcon } from '@/components/BrandIcons';
 import { primaryGoal, suggestGramsPerKg, suggestionReason } from '@/lib/goals';
 import { COUNTRIES } from '@/lib/countries';
+import { AVOIDS, CUISINES } from '@/lib/cuisines';
 import { dailyGoal, fromKg, round1, toKg } from '@/lib/nutrition';
 import { dailyTargets } from '@/lib/energy';
 import type { ActivityLevel, Diet, FitnessGoal } from '@/lib/types';
@@ -34,7 +36,7 @@ const DIETS: Option<Diet>[] = [
   { value: 'vegan', label: 'Vegan', sub: 'Plants only', icon: Leaf },
 ];
 
-const STEPS = 6;
+const STEPS = 7;
 
 export default function Onboarding() {
   const session = useSession();
@@ -46,6 +48,8 @@ export default function Onboarding() {
   const [goals, setGoals] = useState<FitnessGoal[]>([]);
   const [activity, setActivity] = useState<ActivityLevel>();
   const [diet, setDiet] = useState<Diet>();
+  const [cuisines, setCuisines] = useState<string[]>([]);
+  const [avoid, setAvoid] = useState<string[]>([]);
   const [name, setName] = useState('');
   const [age, setAge] = useState('');
   const [sex, setSex] = useState<'female' | 'male' | 'unspecified'>('unspecified');
@@ -103,6 +107,8 @@ export default function Onboarding() {
       activity,
       diet,
       heightCm: heightOk ? Math.round(heightNum) : undefined,
+      cuisines: cuisines.length ? cuisines : undefined,
+      avoid: avoid.length ? avoid : undefined,
       calorieMode: 'auto',
     });
   }
@@ -146,6 +152,27 @@ export default function Onboarding() {
           </Question>
         )}
         {step === 4 && (
+          <Question title="What do you like to eat?" sub="Pick every cuisine you enjoy — we’ll mix ideas from all of them.">
+            <div className="flex flex-wrap gap-2">
+              {CUISINES.map((c) => (
+                <button key={c} onClick={() => { haptic(); setCuisines((cur) => (cur.includes(c) ? cur.filter((x) => x !== c) : [...cur, c])); }} className={cx('chip !h-11', cuisines.includes(c) && 'chip-on')}>
+                  {cuisines.includes(c) && <Check size={15} strokeWidth={3} />}{c}
+                </button>
+              ))}
+            </div>
+            <p className="label mt-6">Allergies or foods you avoid</p>
+            <div className="flex flex-wrap gap-2">
+              {AVOIDS.map((c) => (
+                <button key={c} onClick={() => { haptic(); setAvoid((cur) => (cur.includes(c) ? cur.filter((x) => x !== c) : [...cur, c])); }} className={cx('chip !h-11', avoid.includes(c) && '!bg-danger/15 !text-danger')}>
+                  {avoid.includes(c) && <Check size={15} strokeWidth={3} />}{c}
+                </button>
+              ))}
+            </div>
+            <div className="flex-1" />
+            <button onClick={next} className="btn-primary mt-6 w-full">{cuisines.length ? `Continue · ${cuisines.length} picked` : 'Skip for now'}</button>
+          </Question>
+        )}
+        {step === 5 && (
           <Question title="About you" sub="This helps us set the right target for you.">
             <div className="grid grid-cols-[1fr_6.5rem] gap-3">
               <div>
@@ -206,7 +233,7 @@ export default function Onboarding() {
             <button onClick={() => { setGPerKg(suggestGramsPerKg(primaryGoal(goals.length ? goals : ['health'], activity ?? 'active'), activity ?? 'active', person)); next(); }} disabled={!weightKg || !ageOk || !!heightError} className="btn-primary mt-6 w-full">Continue</button>
           </Question>
         )}
-        {step === 5 && goal && activity && (
+        {step === 6 && goal && activity && (
           <Question title="Your daily target" sub="Based on your answers. Adjust it any time in Profile.">
             <div className="card mt-2 flex flex-col items-center p-6 text-center">
               <AnimatedRing>
@@ -241,11 +268,11 @@ export default function Onboarding() {
                     <div key={l} className="rounded-2xl bg-raised px-1 py-2">
                       <span className={cx('mx-auto mb-1 block h-1.5 w-6 rounded-full', c)} />
                       <p className="num text-[15px] font-bold">{fmt(v)}g</p>
-                      <p className="text-[11px] text-silver">{l}</p>
+                      <p className="text-[12px] text-silver">{l}</p>
                     </div>
                   ))}
                 </div>
-                <p className="mt-2 text-[11px] leading-snug text-dim">Calories estimated with the Mifflin–St Jeor equation{goals.includes('fatloss') && !(sex === 'female' && pregnant) ? ', about 20% below maintenance for fat loss' : goals.includes('muscle') ? ', about 10% above maintenance for muscle gain' : ''}.</p>
+                <p className="mt-2 text-[12px] leading-snug text-dim">Calories estimated with the Mifflin–St Jeor equation{goals.includes('fatloss') && !(sex === 'female' && pregnant) ? ', about 20% below maintenance for fat loss' : goals.includes('muscle') ? ', about 10% above maintenance for muscle gain' : ''}.</p>
               </div>
             ) : (
               <p className="mt-3 rounded-2xl bg-raised p-3 text-center text-xs text-silver">Add your height and age to also get calorie, carb and fat targets.</p>
@@ -294,7 +321,13 @@ function Choice<T>({ option, selected, onClick, multi }: { option: Option<T>; se
 
 function Welcome({ signedIn, email, onStart }: { signedIn: boolean; email?: string; onStart: () => void }) {
   const [mode, setMode] = useState<'choose' | 'email' | 'sent' | 'phone' | 'code'>('choose');
-  const [dial, setDial] = useState('+234');
+  // Default to the phone's region (e.g. en-GB → United Kingdom), else Nigeria.
+  const [dialLabel, setDialLabel] = useState(() => {
+    const region = (navigator.language.split('-')[1] ?? '').toUpperCase();
+    const i = COUNTRY_DATA.findIndex(([iso]) => iso === region);
+    return DIAL_CODES[i >= 0 ? i : COUNTRY_DATA.findIndex(([iso]) => iso === 'NG')][0];
+  });
+  const dial = DIAL_CODES.find(([l]) => l === dialLabel)?.[1] ?? '+234';
   const [phone, setPhone] = useState('');
   const [code, setCode] = useState('');
   const fullPhone = toE164(dial, phone);
@@ -347,8 +380,8 @@ function Welcome({ signedIn, email, onStart }: { signedIn: boolean; email?: stri
       ) : mode === 'phone' ? (
         <div className="grid gap-2">
           <div className="flex gap-2">
-            <select value={dial} onChange={(e) => setDial(e.target.value)} className="field !w-28 shrink-0 !px-2 text-sm" aria-label="Country code">
-              {DIAL_CODES.map(([label, c]) => <option key={label} value={c}>{label.split(' ')[0]} {c}</option>)}
+            <select value={dialLabel} onChange={(e) => setDialLabel(e.target.value)} className="field !w-28 shrink-0 !px-2 text-sm" aria-label="Country code">
+              {DIAL_CODES.map(([label, c]) => <option key={label} value={label}>{label} {c}</option>)}
             </select>
             <input type="tel" inputMode="tel" autoComplete="tel-national" className="field flex-1" placeholder="801 234 5678" value={phone} onChange={(e) => setPhone(e.target.value)} />
           </div>

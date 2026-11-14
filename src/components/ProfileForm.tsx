@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { Profile } from '@/lib/types';
 import { dailyGoal, fromKg, round1, toKg } from '@/lib/nutrition';
 import { dailyTargets, estimateKcal } from '@/lib/energy';
+import { AVOIDS, CUISINES } from '@/lib/cuisines';
 import { useStore } from '@/store/useStore';
 import { Segmented, cx, fmt } from './ui';
 
@@ -28,6 +29,9 @@ export function ProfileForm({ initial, submitLabel, onSaved }: { initial?: Profi
   const [perKg, setPerKg] = useState(String(initial?.gramsPerKg ?? 1.6));
   const [fixed, setFixed] = useState(String(initial?.goalGrams ?? 140));
   const [age, setAge] = useState(initial?.age ? String(initial.age) : '');
+  const [cuisines, setCuisines] = useState<string[]>(initial?.cuisines ?? []);
+  const [avoid, setAvoid] = useState<string[]>(initial?.avoid ?? []);
+  const toggle = (set: typeof setCuisines, v: string) => set((cur) => (cur.includes(v) ? cur.filter((x) => x !== v) : [...cur, v]));
   const [height, setHeight] = useState(initial?.heightCm ? String(initial.heightCm) : '');
   const [kcalMode, setKcalMode] = useState<'auto' | 'fixed'>(initial?.calorieMode ?? 'auto');
   const [kcalFixed, setKcalFixed] = useState(initial?.calorieGoal ? String(initial.calorieGoal) : '');
@@ -44,6 +48,8 @@ export function ProfileForm({ initial, submitLabel, onSaved }: { initial?: Profi
     // Keep everything else from onboarding (goals, sex, country, diet…).
     ...(initial ?? {}),
     age: ageNum || undefined,
+    cuisines: cuisines.length ? cuisines : undefined,
+    avoid: avoid.length ? avoid : undefined,
     heightCm: heightNum || undefined,
     calorieMode: kcalMode,
     calorieGoal: Number(kcalFixed) || undefined,
@@ -123,7 +129,7 @@ export function ProfileForm({ initial, submitLabel, onSaved }: { initial?: Profi
               {PRESETS.map((p) => (
                 <button type="button" key={p.v} onClick={() => setPerKg(String(p.v))} className={cx('flex h-16 flex-col items-center justify-center rounded-[20px] transition', Number(perKg) === p.v ? 'bg-primary text-on-primary' : 'bg-raised')}>
                   <span className="num text-lg font-bold">{p.label}</span>
-                  <span className="text-[10px] font-semibold opacity-60">{p.note || 'g/kg'}</span>
+                  <span className="text-[12px] font-semibold opacity-60">{p.note || 'g/kg'}</span>
                 </button>
               ))}
             </div>
@@ -171,6 +177,17 @@ export function ProfileForm({ initial, submitLabel, onSaved }: { initial?: Profi
         {targets && (
           <p className="num mt-2 text-xs text-silver">Carbs {fmt(targets.carbs)} g · Fat {fmt(targets.fat)} g · Fibre {fmt(targets.fiber)} g</p>
         )}
+      </div>
+
+      <div>
+        <span className="label">Cuisines you enjoy</span>
+        <div className="flex flex-wrap gap-2">
+          {CUISINES.map((c) => <button type="button" key={c} onClick={() => toggle(setCuisines, c)} className={cx('chip !h-9', cuisines.includes(c) && 'chip-on')}>{c}</button>)}
+        </div>
+        <span className="label mt-4">Allergies or foods you avoid</span>
+        <div className="flex flex-wrap gap-2">
+          {AVOIDS.map((c) => <button type="button" key={c} onClick={() => toggle(setAvoid, c)} className={cx('chip !h-9', avoid.includes(c) && '!bg-danger/15 !text-danger')}>{c}</button>)}
+        </div>
       </div>
 
       <button type="submit" disabled={!valid} className="btn-primary w-full">{submitLabel}</button>

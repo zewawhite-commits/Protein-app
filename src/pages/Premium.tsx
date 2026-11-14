@@ -201,7 +201,7 @@ function TierCard({ tier, selected, onClick, price, sub, badge, scans }: { tier:
       <div className="flex items-start justify-between gap-3">
         <span className="flex items-center gap-2 text-lg font-semibold">
           {info.name}
-          {badge && <span className="rounded-full bg-accent px-2 py-0.5 text-[11px] font-semibold text-white">{badge}</span>}
+          {badge && <span className="rounded-full bg-accent px-2 py-0.5 text-[12px] font-semibold text-white">{badge}</span>}
         </span>
         <span className="text-right">
           <span className="num block text-xl font-bold">{price}</span>

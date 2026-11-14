@@ -124,7 +124,7 @@ export default function Snap() {
 
       {phase === 'results' && (
         <>
-          <p className="mt-4 px-1 text-[13px] font-medium leading-relaxed text-silver">
+          <p className="mt-4 px-1 text-[14px] font-medium leading-relaxed text-silver">
             Tap the closest match, then weigh. AI identifies the food — protein always comes from the database record.
             {note && <span className="mt-1 block text-ink/80">{note}</span>}
           </p>
@@ -232,7 +232,7 @@ function ItemCard({ match, done, onPick, manualUrl, onLogIngredients }: { match:
           {sub && <p className="mt-0.5 text-xs font-medium text-silver">{sub}</p>}
         </div>
         <div className="flex shrink-0 items-center gap-1.5">
-          {item.estimatedGrams > 0 && <span className="rounded-full border border-dashed border-silver/50 px-2.5 py-1 text-[11px] font-medium text-silver" title="Rough AI estimate from the photo">est. ~{item.estimatedGrams} g</span>}
+          {item.estimatedGrams > 0 && <span className="rounded-full border border-dashed border-silver/50 px-2.5 py-1 text-[12px] font-medium text-silver" title="Rough AI estimate from the photo">est. ~{item.estimatedGrams} g</span>}
           {done && <span className="grid h-7 w-7 place-items-center rounded-full bg-accent text-white"><Check size={15} strokeWidth={3} /></span>}
         </div>
       </div>
@@ -254,15 +254,15 @@ function ItemCard({ match, done, onPick, manualUrl, onLogIngredients }: { match:
                 <FoodVisual name={f.name} category={f.category} fdcId={f.fdcId} size={42} />
                 <div className="min-w-0 flex-1">
                   <p className="line-clamp-2 text-sm font-semibold leading-snug">{title}</p>
-                  <p className="mt-0.5 flex items-center gap-1.5 truncate text-[11px] font-medium text-silver">
+                  <p className="mt-0.5 flex items-center gap-1.5 truncate text-[12px] font-medium text-silver">
                     <StateBadge state={f.state} />
                     <span>{SOURCE_SHORT[f.source]}</span>
                     {detail && <span className="truncate">· {detail}</span>}
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="num text-[15px] font-bold leading-none">{fmt(f.per100.protein, 1)}<span className="text-[11px] text-silver">g</span></p>
-                  <p className="mt-0.5 text-[10px] text-dim">/100g</p>
+                  <p className="num text-[15px] font-bold leading-none">{fmt(f.per100.protein, 1)}<span className="text-[12px] text-silver">g</span></p>
+                  <p className="mt-0.5 text-[12px] text-dim">/100g</p>
                 </div>
                 <ChevronRight size={15} className="text-dim" />
               </button>
@@ -387,7 +387,7 @@ function IngredientList({ match, onLog }: { match: MatchedItem; onLog: (rows: { 
           <div key={i} className={cx('rounded-2xl bg-raised/70 p-3 transition', !r.on && 'opacity-45')}>
             <div className="flex items-center gap-2">
               <input type="checkbox" checked={r.on} onChange={(e) => update(i, { on: e.target.checked })} className="h-5 w-5 shrink-0 accent-[rgb(var(--accent))]" aria-label={`Include ${r.ing.name}`} />
-              <p className="flex-1 text-sm font-semibold">{r.ing.name}{!r.ing.visible && <span className="ml-1.5 rounded-full bg-warn/15 px-1.5 py-0.5 text-[10px] font-semibold text-warn">often hidden</span>}</p>
+              <p className="flex-1 text-sm font-semibold">{r.ing.name}{!r.ing.visible && <span className="ml-1.5 rounded-full bg-warn/15 px-1.5 py-0.5 text-[12px] font-semibold text-warn">often hidden</span>}</p>
               <div className="relative w-24">
                 <input inputMode="decimal" value={r.grams} onChange={(e) => update(i, { grams: e.target.value.replace(/[^\d.]/g, '') })} placeholder="0" disabled={!r.on} className="field !h-10 pr-7 text-right font-semibold" aria-label={`${r.ing.name} grams`} />
                 <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-silver">g</span>

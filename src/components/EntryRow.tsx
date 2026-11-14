@@ -22,7 +22,7 @@ export function EntryRow({ entry, onClick }: { entry: LogEntry; onClick?: () => 
       </div>
       <div className="text-right">
         <p className="num text-lg font-bold leading-none">{n.kcal == null ? '—' : fmt(n.kcal)}</p>
-        <p className="mt-1 text-[10px] font-semibold text-dim">kcal</p>
+        <p className="mt-1 text-[12px] font-semibold text-dim">kcal</p>
       </div>
     </button>
   );

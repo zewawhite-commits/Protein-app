@@ -15,6 +15,8 @@ export interface IdeaRequest {
   age?: number;
   sex?: string;
   pregnant?: boolean;
+  cuisines?: string[];
+  avoid?: string[];
   remainingGrams: number;
   /** Foods already eaten today, to avoid repeats. */
   eatenToday?: string[];
@@ -53,7 +55,7 @@ const SYSTEM = `You suggest everyday foods that help someone reach their daily p
 
 Tailor suggestions to the person: their goals (e.g. building muscle → protein-dense meals around training; losing fat → lean, filling, lower-energy options; older adults → easy-to-eat protein spread across meals), activity level, and age. If they are pregnant or breastfeeding, avoid foods commonly advised against in pregnancy (e.g. raw or undercooked fish, meat or eggs, unpasteurised dairy, high-mercury fish).
 
-Suggest 5 foods or simple dishes that people commonly eat in the user's country (use local, affordable, culturally familiar options first; include at least one quick snack). Respect the diet strictly. Avoid repeating foods already eaten today.
+Suggest 5 foods or simple dishes, mixing foods commonly eaten in the user's country with the cuisines they enjoy (vary them; affordable, familiar options; include at least one quick snack). Respect the diet strictly and never include anything they avoid or are allergic to. Avoid repeating foods already eaten today.
 
 For each idea:
 - "name": short English name.
@@ -67,6 +69,8 @@ export async function ideasWithClient(client: Anthropic, req: IdeaRequest): Prom
   const user = [
     `Country: ${req.country || 'not specified (suggest widely available foods)'}`,
     `Diet: ${req.diet || 'eats everything'}`,
+    `Cuisines they enjoy: ${req.cuisines?.length ? req.cuisines.join(', ') : 'not given (mix several)'}`,
+    `Avoid (allergies/preferences): ${req.avoid?.length ? req.avoid.join(', ') : 'none'}`,
     `Goals: ${req.goals?.length ? req.goals.join(', ') : 'general health'}`,
     `Activity: ${req.activity || 'not specified'}`,
     `Age: ${req.age ?? 'not specified'}${req.sex && req.sex !== 'unspecified' ? `, ${req.sex}` : ''}${req.pregnant ? ', pregnant or breastfeeding' : ''}`,

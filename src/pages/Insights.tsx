@@ -190,7 +190,7 @@ function BarChart({ series, unit, highlight }: { series: { date: string; protein
           })}
         </div>
       </div>
-      <div className="mt-2 flex text-[10px] font-semibold text-dim" style={{ gap: n > 30 ? 1 : n > 7 ? 3 : 8 }}>
+      <div className="mt-2 flex text-[12px] font-semibold text-dim" style={{ gap: n > 30 ? 1 : n > 7 ? 3 : 8 }}>
         {series.map((s, i) => (
           <span key={s.date} className="flex-1 text-center">
             {showLabel(i) ? (n <= 7 ? fromKey(s.date).toLocaleDateString(undefined, { weekday: 'narrow' }) : fromKey(s.date).getDate()) : ''}

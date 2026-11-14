@@ -64,7 +64,7 @@ export default function Coach() {
     return {
       name: profile?.name || undefined,
       goals: profile?.goals ?? (profile?.goal ? [profile.goal] : undefined),
-      activity: profile?.activity, diet: profile?.diet, country: profile?.country,
+      activity: profile?.activity, diet: profile?.diet, country: profile?.country, cuisines: profile?.cuisines, avoid: profile?.avoid,
       age: profile?.age, sex: profile?.sex, pregnant: profile?.pregnant,
       targets: { kcal: t?.kcal, protein: goal || undefined, carbs: t?.carbs, fat: t?.fat, fiber: t?.fiber },
       today: { kcal: totals.kcal, protein: totals.protein, carbs: totals.carbs, fat: totals.fat, fiber: totals.fiber, sugar: totals.sugar, sodiumMg: totals.sodium },
@@ -127,7 +127,7 @@ export default function Coach() {
             <p className="text-[15px] font-semibold">Hi{profile?.name ? ` ${profile.name}` : ''}! Ask me anything about food.</p>
             <p className="mt-1 text-sm text-silver">I can plan meals with foods from {profile?.country || 'where you live'}, check how today is going, or help you hit your targets. Numbers always come from the {APP_NAME} food database.</p>
             <div className="mt-4 flex flex-wrap gap-2">
-              {STARTERS.map((s) => <button key={s} onClick={() => (s.startsWith('📷') ? fileRef.current?.click() : send(s))} className="chip !h-9 !bg-raised text-[13px]">{s}</button>)}
+              {STARTERS.map((s) => <button key={s} onClick={() => (s.startsWith('📷') ? fileRef.current?.click() : send(s))} className="chip !h-9 !bg-raised text-[14px]">{s}</button>)}
             </div>
           </div>
         )}
@@ -193,7 +193,7 @@ export default function Coach() {
           <ArrowUp size={22} strokeWidth={2.5} />
         </button>
       </form>
-      <p className="mt-2 text-center text-[11px] text-dim">AI coach — general guidance, not medical advice.</p>
+      <p className="mt-2 text-center text-[12px] text-dim">AI coach — general guidance, not medical advice.</p>
 
       <FoodSheet food={open?.food ?? null} date={todayKey()} preset={{ aiEstimate: open?.grams }} onClose={() => setOpen(null)} />
     </div>
@@ -224,7 +224,7 @@ function FoodCards({ foods, onOpen, estimate }: { foods: CoachFood[]; onOpen: (f
               <p className="num text-xs text-silver">
                 {estimate && f.portionGrams ? `~${g} g (AI estimate)` : `${g} g${f.portionGrams ? ' portion' : ''}`} · {n?.kcal != null ? `${fmt(n.kcal)} kcal · ` : ''}<span className="text-accent">{fmt(n!.protein, 1)} g protein</span>
               </p>
-              <p className="truncate text-[11px] text-dim">Matched: {splitName(match.name).title}</p>
+              <p className="truncate text-[12px] text-dim">Matched: {splitName(match.name).title}</p>
             </div>
             <ChevronRight size={16} className="shrink-0 text-dim" />
           </button>
@@ -239,7 +239,7 @@ function FoodCards({ foods, onOpen, estimate }: { foods: CoachFood[]; onOpen: (f
           </Link>
         );
       })}
-      <p className="px-2 pb-1 pt-1 text-[11px] text-dim">Numbers from USDA / FAO records for the portion shown. Tap to log your real weight.</p>
+      <p className="px-2 pb-1 pt-1 text-[12px] text-dim">Numbers from USDA / FAO records for the portion shown. Tap to log your real weight.</p>
     </div>
   );
 }

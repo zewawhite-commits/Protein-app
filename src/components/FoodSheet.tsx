@@ -127,7 +127,7 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
         <FoodVisual name={food.name} category={food.category} fdcId={food.fdcId} size={60} className="!bg-surface" />
         <div className="min-w-0 flex-1">
           <p className="text-lg font-semibold leading-tight tracking-tight">{title}</p>
-          {detail && <p className="mt-0.5 line-clamp-2 text-[13px] font-medium text-silver">{detail}</p>}
+          {detail && <p className="mt-0.5 line-clamp-2 text-[14px] font-medium text-silver">{detail}</p>}
         </div>
         <button
           onClick={() => { haptic(); rememberFood(food); toggleFavorite(food.id); }}
@@ -141,14 +141,14 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
       {/* Weight */}
       <div className="card p-5">
         {!entry && (
-          <p className="mb-3 text-center text-[13px] font-medium text-silver">
+          <p className="mb-3 text-center text-[14px] font-medium text-silver">
             Weigh the <span className="font-semibold text-ink">edible part</span> — no bones, shells, skins or packaging.
           </p>
         )}
         {weighHint && !entry && (
           <div className="mb-4 flex items-center justify-center gap-2">
             <StateBadge state={food.state} />
-            <span className="flex items-center gap-1.5 text-[13px] font-semibold text-silver"><Scale size={14} /> {weighHint}</span>
+            <span className="flex items-center gap-1.5 text-[14px] font-semibold text-silver"><Scale size={14} /> {weighHint}</span>
           </div>
         )}
         <div className="flex items-center gap-3">
@@ -191,7 +191,7 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
       {/* Switch raw/cooked */}
       {alt.length > 0 && onSwitchFood && !entry && (
         <div>
-          <p className="mb-2 flex items-center gap-1.5 px-1 text-[13px] font-medium text-silver">
+          <p className="mb-2 flex items-center gap-1.5 px-1 text-[14px] font-medium text-silver">
             <ArrowLeftRight size={14} /> Weighed it {food.state === 'cooked' ? 'before cooking' : 'after cooking'}? Switch to:
           </p>
           <div className="-mx-5 flex gap-2 overflow-x-auto px-5 no-scrollbar">
@@ -210,21 +210,21 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
         <div className="flex items-center gap-4">
           <div className="min-w-0 flex-1">
             <p className="num text-[34px] font-bold leading-none">{n.kcal == null ? '—' : <CountUp value={n.kcal} duration={300} />}<span className="text-lg text-silver"> kcal</span></p>
-            <p className="mt-1 text-[13px] font-medium text-silver">in {fmt(g)} g</p>
+            <p className="mt-1 text-[14px] font-medium text-silver">in {fmt(g)} g</p>
           </div>
           <div className="flex flex-col items-center">
             <Ring value={day.goal ? after / day.goal : 0} size={58} stroke={6} color="accent" track="raised">
-              <span className="num text-[11px] font-bold">{day.goal ? fmt(Math.min(999, (after / day.goal) * 100)) : 0}%</span>
+              <span className="num text-[12px] font-bold">{day.goal ? fmt(Math.min(999, (after / day.goal) * 100)) : 0}%</span>
             </Ring>
-            <span className="mt-1 text-[10px] font-medium text-silver">protein goal</span>
+            <span className="mt-1 text-[12px] font-medium text-silver">protein goal</span>
           </div>
         </div>
         <div className="mt-4 grid grid-cols-4 gap-2 text-center">
           {([['Protein', n.protein, 'protein'], ['Carbs', n.carbs, 'carbs'], ['Fat', n.fat, 'fat'], ['Fibre', n.fiber, 'fiber']] as const).map(([l, v, c]) => (
             <div key={l} className="rounded-2xl bg-raised px-1 py-2">
               <span className={cx('mx-auto mb-1 block h-1.5 w-5 rounded-full', MACRO_COLOR[c])} />
-              <p className="num text-[15px] font-bold">{v == null ? '—' : fmt(v, v < 10 ? 1 : 0)}<span className="text-[11px] text-silver">g</span></p>
-              <p className="text-[11px] text-silver">{l}</p>
+              <p className="num text-[15px] font-bold">{v == null ? '—' : fmt(v, v < 10 ? 1 : 0)}<span className="text-[12px] text-silver">g</span></p>
+              <p className="text-[12px] text-silver">{l}</p>
             </div>
           ))}
         </div>
@@ -234,7 +234,7 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
         {showMore && (
           <div className="mt-1 animate-fade">
             <NutrientList compact values={Object.fromEntries(EXTRA_KEYS.map((k) => [k, scale(per100[k] ?? null, g)]))} />
-            <p className="mt-2 text-[11px] text-dim">% of the daily value (US FDA reference for adults).</p>
+            <p className="mt-2 text-[12px] text-dim">% of the daily value (US FDA reference for adults).</p>
           </div>
         )}
       </div>

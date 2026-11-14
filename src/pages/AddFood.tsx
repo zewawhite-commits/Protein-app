@@ -12,6 +12,7 @@ import { useStore } from '@/store/useStore';
 import type { Food, PrepState } from '@/lib/types';
 import { FoodSheet } from '@/components/FoodSheet';
 import { FoodVisual } from '@/components/FoodIcon';
+import { WorldFoods } from '@/components/WorldFoods';
 import { FOOD_PHOTOS } from '@/data/foodPhotos';
 import { StateBadge, cx, fmt } from '@/components/ui';
 
@@ -125,11 +126,13 @@ export default function AddFood() {
             <span className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-on-primary/10"><Camera size={26} /></span>
             <div>
               <p className="flex items-center gap-1.5 text-[17px] font-semibold">Snap your food <Sparkles size={15} className="text-accent" /></p>
-              <p className="mt-0.5 text-[13px] opacity-70">Any dish, any cuisine. AI identifies it — you confirm and weigh.</p>
+              <p className="mt-0.5 text-[14px] opacity-70">Any dish, any cuisine. AI identifies it — you confirm and weigh.</p>
             </div>
           </div>
         </Link>
       )}
+
+      {!searching && !photoId && <WorldFoods onSearch={(v) => { setQ(v); window.scrollTo({ top: 0, behavior: 'smooth' }); }} />}
 
       {error && <p className="card p-4 text-sm font-medium text-danger">{error}</p>}
       {!db && !error && (
@@ -152,7 +155,7 @@ export default function AddFood() {
       {searching && <WorldProducts query={dq} onPick={setSelected} localCount={results.length} />}
 
       {db && (
-        <p className="mt-6 text-center text-[11px] font-medium leading-relaxed text-dim">
+        <p className="mt-6 text-center text-[12px] font-medium leading-relaxed text-dim">
           {db.foods.length.toLocaleString()} foods from USDA FoodData Central and FAO/INFOODS · packaged products from Open Food Facts
         </p>
       )}
@@ -219,13 +222,13 @@ function FoodRow({ food, onClick }: { food: Food; onClick: () => void }) {
         <p className="line-clamp-2 font-semibold leading-snug">{title}</p>
         <div className="mt-1 flex min-w-0 items-center gap-1.5">
           <StateBadge state={food.state} className="shrink-0" />
-          {food.source !== 'usda-sr' && <span className="shrink-0 rounded-full bg-raised px-2 text-[10px] font-semibold uppercase leading-5 tracking-wide text-silver">{SOURCE_SHORT[food.source]}</span>}
+          {food.source !== 'usda-sr' && <span className="shrink-0 rounded-full bg-raised px-2 text-[12px] font-semibold uppercase leading-5 tracking-wide text-silver">{SOURCE_SHORT[food.source]}</span>}
           {detail && <span className="truncate text-xs text-silver">{detail}</span>}
         </div>
       </div>
       <div className="shrink-0 text-right">
         <p className="num text-lg font-bold leading-none">{fmt(food.per100.protein, 1)}<span className="text-xs font-medium text-silver">g</span></p>
-        <p className="mt-1 text-[10px] font-medium text-dim">per 100g</p>
+        <p className="mt-1 text-[12px] font-medium text-dim">per 100g</p>
       </div>
     </button>
     <button

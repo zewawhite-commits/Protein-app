@@ -80,7 +80,7 @@ function Days({ query }: { query: string }) {
                   </div>
                   <div className="text-right">
                     <p className={cx('num text-lg font-bold leading-none', hit && 'text-accent')}>{fmt(protein)}<span className="text-xs text-silver">/{fmt(goal)}g</span></p>
-                    <p className="mt-1 text-[10px] font-semibold text-dim">{es.length} items</p>
+                    <p className="mt-1 text-[12px] font-semibold text-dim">{es.length} items</p>
                   </div>
                   <ChevronRight size={16} className="shrink-0 text-dim" />
                 </Link>
@@ -117,7 +117,7 @@ function PhotoTile({ entry, onClick }: { entry: LogEntry; onClick: () => void })
       {url && <img src={url} alt={entry.food.name} className="h-full w-full object-cover transition group-hover:scale-105" />}
       <div className="absolute inset-x-2 bottom-2 rounded-[18px] bg-black/45 p-2.5 text-left text-white backdrop-blur-md">
         <p className="truncate text-xs font-semibold">{splitName(entry.food.name).title}</p>
-        <p className="num mt-0.5 text-[11px] font-semibold opacity-80">{fmt(p, 1)}g protein · {relativeDay(entry.date)}</p>
+        <p className="num mt-0.5 text-[12px] font-semibold opacity-80">{fmt(p, 1)}g protein · {relativeDay(entry.date)}</p>
       </div>
     </button>
   );

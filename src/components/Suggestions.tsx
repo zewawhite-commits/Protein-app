@@ -67,7 +67,7 @@ export function Suggestions({ remaining }: { remaining: number }) {
         body: JSON.stringify({
           country: profile?.country, diet: profile?.diet, remainingGrams: remaining, eatenToday,
           goals: profile?.goals ?? (profile?.goal ? [profile.goal] : undefined), activity: profile?.activity,
-          age: profile?.age, sex: profile?.sex, pregnant: profile?.pregnant,
+          age: profile?.age, sex: profile?.sex, pregnant: profile?.pregnant, cuisines: profile?.cuisines, avoid: profile?.avoid,
         }),
       });
       const isJson = res.headers.get('content-type')?.includes('application/json');
@@ -89,11 +89,11 @@ export function Suggestions({ remaining }: { remaining: number }) {
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="font-semibold">What to eat next</p>
-          <p className="num text-[13px] text-silver">{fmt(remaining)} g protein to go{ai.state === 'done' && profile?.country ? ` · ideas from ${profile.country}` : ''}</p>
+          <p className="num text-[14px] text-silver">{fmt(remaining)} g protein to go{ai.state === 'done' ? ' · ideas picked for you' : ''}</p>
         </div>
         {ai.state !== 'done' && (
           <button onClick={getIdeas} disabled={ai.state === 'loading'} className="chip !h-9 shrink-0 !bg-accent/10 !text-accent">
-            {ai.state === 'loading' ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />} {profile?.country ? 'Local ideas' : 'AI ideas'}
+            {ai.state === 'loading' ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />} AI ideas
           </button>
         )}
       </div>
@@ -121,7 +121,7 @@ export function Suggestions({ remaining }: { remaining: number }) {
           </Link>
         ))}
       </div>
-      <p className="mt-2 text-[11px] text-dim">{ai.state === 'done' ? 'Ideas by AI. Protein numbers from USDA / FAO records.' : 'High-protein foods from the database that fit your diet.'}</p>
+      <p className="mt-2 text-[12px] text-dim">{ai.state === 'done' ? 'Ideas by AI. Protein numbers from USDA / FAO records.' : 'High-protein foods from the database that fit your diet.'}</p>
     </section>
   );
 }
