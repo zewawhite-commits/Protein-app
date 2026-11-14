@@ -64,7 +64,7 @@ export function useThemeSync() {
     const apply = () => {
       const t = theme === 'system' ? (mq.matches ? 'dark' : 'light') : theme;
       document.documentElement.dataset.theme = t;
-      document.querySelector('meta[name="theme-color"]')?.setAttribute('content', t === 'light' ? '#F6F4EF' : '#080809');
+      document.querySelector('meta[name="theme-color"]')?.setAttribute('content', t === 'light' ? '#F7F7F9' : '#080809');
     };
     apply();
     mq.addEventListener('change', apply);

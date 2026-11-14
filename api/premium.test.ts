@@ -135,7 +135,7 @@ describe('tiers and accounts', () => {
   it('passes carry the tier of the plan bought', async () => {
     fakePaystack({ tx: paidTx({ plan_object: { plan_code: 'PLN_year', interval: 'annually' } }), subs: [sub('active', 300 * DAY, 'PLN_year')] });
     const res = await activate(post('https://app.test/x', { reference: 'ref123' }));
-    expect(await res.json()).toMatchObject({ tier: 'pro', scanLimit: 400 });
+    expect(await res.json()).toMatchObject({ tier: 'pro', scanLimit: 200 });
   });
 
   it('requires sign-in to subscribe when accounts are on', async () => {

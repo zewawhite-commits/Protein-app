@@ -1,7 +1,9 @@
 /** Food photos: downscaled to JPEG and kept in IndexedDB (not localStorage — too big). */
 import { createStore, del, get, keys, set } from 'idb-keyval';
 
-const store = createStore('protein-photos', 'photos');
+let _store: ReturnType<typeof createStore> | undefined;
+/** Created on first use (keeps modules importable where IndexedDB doesn't exist, e.g. tests). */
+const store = () => (_store ??= createStore('protein-photos', 'photos'));
 const MAX_EDGE = 1280;
 
 export async function resizeImage(file: Blob, maxEdge = MAX_EDGE): Promise<Blob> {
@@ -20,13 +22,13 @@ export async function resizeImage(file: Blob, maxEdge = MAX_EDGE): Promise<Blob>
 
 export async function savePhoto(file: Blob): Promise<string> {
   const id = crypto.randomUUID();
-  await set(id, await resizeImage(file), store);
+  await set(id, await resizeImage(file), store());
   return id;
 }
 
-export const getPhoto = (id: string) => get<Blob>(id, store);
-export const deletePhoto = (id: string) => del(id, store);
-export const allPhotoIds = () => keys<string>(store);
+export const getPhoto = (id: string) => get<Blob>(id, store());
+export const deletePhoto = (id: string) => del(id, store());
+export const allPhotoIds = () => keys<string>(store());
 
 /** Blob → base64 (no data: prefix). */
 export function blobToBase64(blob: Blob): Promise<string> {

@@ -1,3 +1,4 @@
+import { accessToken } from './account';
 /**
  * Browser side of photo recognition, plus matching AI suggestions to database records.
  * Nutrient values always come from the matched database record, never from the AI.
@@ -36,11 +37,12 @@ async function toBase64(blob: Blob): Promise<string> {
 export async function recognizePhoto(photo: Blob, premiumToken?: string): Promise<RecognitionResult> {
   const image = await toBase64(photo);
   const mediaType = photo.type || 'image/jpeg';
+  const userToken = premiumToken ? undefined : await accessToken();
   let res: Response;
   try {
     res = await fetch('/api/recognize', {
       method: 'POST',
-      headers: { 'content-type': 'application/json', ...(premiumToken && { authorization: `Bearer ${premiumToken}` }) },
+      headers: { 'content-type': 'application/json', ...(premiumToken && { authorization: `Bearer ${premiumToken}` }), ...(userToken && { 'x-user-token': userToken }) },
       body: JSON.stringify({ image, mediaType }),
     });
   } catch {

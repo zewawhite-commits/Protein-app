@@ -10,7 +10,8 @@
  *   PAYSTACK_PLAN_PRO_MONTHLY
  *   PAYSTACK_PLAN_PRO_YEARLY
  *   PREMIUM_TOKEN_SECRET        long random string used to sign Premium passes
- *   SCAN_LIMIT_PLUS / SCAN_LIMIT_PRO  photo scans per calendar month (default 100 / 400)
+ *   SCAN_LIMIT_PLUS / SCAN_LIMIT_PRO  photo scans per calendar month (default 60 / 200)
+ *   FREE_SCANS                        free scans per month for signed-in free users (default 3)
  *
  * Files in api/_lib are helpers, not routes.
  */
@@ -44,7 +45,12 @@ export function tierOf(planCode: string): Tier {
 
 export function scanLimit(tier: Tier): number {
   const v = Number(tier === 'pro' ? process.env.SCAN_LIMIT_PRO : process.env.SCAN_LIMIT_PLUS);
-  return Number.isFinite(v) && v > 0 ? v : tier === 'pro' ? 400 : 100;
+  return Number.isFinite(v) && v > 0 ? v : tier === 'pro' ? 200 : 60;
+}
+
+export function freeScans(): number {
+  const v = Number(process.env.FREE_SCANS);
+  return Number.isFinite(v) && v >= 0 ? v : 3;
 }
 
 export const paymentsEnabled = () => config().enabled;

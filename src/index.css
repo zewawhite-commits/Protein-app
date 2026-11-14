@@ -9,10 +9,10 @@
  */
 :root,
 [data-theme='light'] {
-  --bg: 246 244 239;        /* warm ivory */
+  --bg: 247 247 249;        /* clean cool white */
   --surface: 255 255 255;   /* cards */
-  --raised: 241 239 234;    /* tiles inside cards */
-  --line: 231 228 221;      /* hairlines, empty ring track */
+  --raised: 242 242 246;    /* tiles inside cards */
+  --line: 230 230 236;      /* hairlines, empty ring track */
   --ink: 14 14 16;          /* black text */
   --silver: 92 94 102;      /* secondary text */
   --dim: 138 140 147;       /* tertiary text */
@@ -23,7 +23,7 @@
   --warn: 196 140 40;
   --carbs: 240 152 40;      /* amber */
   --fat: 160 96 230;        /* violet */
-  --shadow: 0 1px 2px rgb(20 20 25 / 0.04), 0 8px 24px -6px rgb(20 20 25 / 0.08);
+  --shadow: 0 1px 2px rgb(20 20 30 / 0.04), 0 6px 20px -6px rgb(20 20 30 / 0.07), 0 0 0 1px rgb(20 20 30 / 0.03);
   color-scheme: light;
 }
 

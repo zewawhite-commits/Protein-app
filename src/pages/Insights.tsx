@@ -183,7 +183,7 @@ function BarChart({ series, unit, highlight }: { series: { date: string; protein
             points={series.flatMap((s, i) => [`${i},${H - (s.goal / max) * H}`, `${i + 1},${H - (s.goal / max) * H}`]).join(' ')}
           />
         </svg>
-        <div className="absolute inset-0 flex items-end" style={{ gap: n > 30 ? 1 : n > 7 ? 3 : 8 }}>
+        <div className="absolute inset-0 flex items-end" style={{ gap: n > 30 ? 1 : n > 7 ? 3 : 14 }}>
           {series.map((s, i) => {
             const hit = highlight && s.goal > 0 && s.protein >= s.goal;
             return (
@@ -196,14 +196,14 @@ function BarChart({ series, unit, highlight }: { series: { date: string; protein
               >
                 <div
                   className={cx('w-full transition-all', hit ? 'bg-accent' : 'bg-ink', active != null && active !== i && 'opacity-30')}
-                  style={{ height: `${Math.max(s.protein > 0 ? 2 : 0, (s.protein / max) * 100)}%`, borderRadius: n > 30 ? 3 : n > 7 ? 6 : 999 }}
+                  style={{ height: `${Math.max(s.protein > 0 ? 2 : 0, (s.protein / max) * 100)}%`, borderRadius: n > 30 ? 3 : n > 7 ? 6 : 12 }}
                 />
               </button>
             );
           })}
         </div>
       </div>
-      <div className="mt-2 flex text-[12px] font-semibold text-dim" style={{ gap: n > 30 ? 1 : n > 7 ? 3 : 8 }}>
+      <div className="mt-2 flex text-[12px] font-semibold text-dim" style={{ gap: n > 30 ? 1 : n > 7 ? 3 : 14 }}>
         {series.map((s, i) => (
           <span key={s.date} className="flex-1 text-center">
             {showLabel(i) ? (n <= 7 ? fromKey(s.date).toLocaleDateString(undefined, { weekday: 'narrow' }) : fromKey(s.date).getDate()) : ''}

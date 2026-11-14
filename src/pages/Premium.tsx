@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Camera, Check, Loader2, Lock, Mail, Sparkles } from 'lucide-react';
+import { ArrowLeft, Camera, Check, Loader2, Lock, Mail } from 'lucide-react';
 import { useStore } from '@/store/useStore';
+import { artUrl } from '@/data/foodArt';
 import { accountsEnabled, signInWithEmail, signInWithGoogle, useSession } from '@/lib/account';
 import { GoogleIcon } from '@/components/BrandIcons';
 import {
@@ -10,10 +11,17 @@ import {
 } from '@/lib/premium';
 import { Segmented, cx } from '@/components/ui';
 
+/** Planned prices, shown until live plans load from the payment provider (which sets the real charge). */
+const PREVIEW = [
+  { name: 'Free', perks: ['Calories, macros & 13,000+ foods', 'Groups, progress & weight', '3 AI scans a month'], year: '$0', month: '', perMonth: '' },
+  { name: 'Plus', perks: ['60 AI scans a month', 'AI coach & eating plans'], year: '$24.99/yr', month: '$6.99/mo', perMonth: '≈ $2.08/mo', best: true },
+  { name: 'Pro', perks: ['200 AI scans a month', 'Everything in Plus'], year: '$39.99/yr', month: '$10.99/mo', perMonth: '≈ $3.33/mo' },
+];
+
 const TIER_INFO: Record<'free' | Tier, { name: string; perks: string[] }> = {
-  free: { name: 'Free', perks: ['13,000+ foods worldwide', 'Weigh & log, history, progress', 'Photos with every meal'] },
-  plus: { name: 'Plus', perks: ['Everything in Free', 'AI photo recognition', 'Portion estimates'] },
-  pro: { name: 'Pro', perks: ['Everything in Plus', '4× more photo scans', 'Best for every meal, every day'] },
+  free: { name: 'Free', perks: ['13,000+ foods, calories & macros', 'Groups, progress & weight tracking', '3 AI photo scans a month'] },
+  plus: { name: 'Plus', perks: ['60 AI photo scans a month', 'AI coach chat & eating plans', 'AI meal ideas'] },
+  pro: { name: 'Pro', perks: ['200 AI photo scans a month', 'Everything in Plus', 'Best for logging every meal'] },
 };
 
 type Billing = 'monthly' | 'yearly';
@@ -85,11 +93,14 @@ export default function Premium() {
         </button>
       </header>
 
-      <div className="relative overflow-hidden rounded-[32px] bg-primary p-6 text-on-primary">
-        <div className="pointer-events-none absolute -right-12 -top-16 h-56 w-56 rounded-full bg-accent/50 blur-3xl" />
-        <span className="relative inline-flex items-center gap-1.5 rounded-full bg-on-primary/10 px-3 py-1 text-xs font-semibold"><Sparkles size={13} className="text-accent" /> Provora Plus & Pro</span>
-        <h1 className="relative mt-4 text-[30px] font-bold leading-[1.08] tracking-tight">Snap it.<br />We’ll find it.</h1>
-        <p className="relative mt-2 text-sm opacity-70">AI photo recognition for meals from anywhere in the world. Protein always comes from real food records.</p>
+      <div className="text-center">
+        <div className="mx-auto flex w-fit -space-x-3">
+          {['camera_with_flash', 'spiral_notepad', 'speech_balloon'].map((a) => (
+            <span key={a} className="grid h-20 w-20 place-items-center rounded-[26px] bg-surface ring-4 ring-bg" style={{ boxShadow: 'var(--shadow)' }}><img src={artUrl(a)} alt="" className="h-14 w-14" /></span>
+          ))}
+        </div>
+        <h1 className="mt-5 text-[32px] font-extrabold leading-[1.1] tracking-tight">Reach your goal faster</h1>
+        <p className="mx-auto mt-2 max-w-sm text-[15px] text-silver">Snap any meal, chat with your AI coach and get eating plans built for you. Nutrition numbers always come from real food records.</p>
       </div>
 
       {msg && <p className={cx('mt-4 rounded-2xl px-4 py-3 text-sm font-medium', msg.tone === 'ok' ? 'bg-accent/10 text-accent' : 'bg-danger/10 text-danger')}>{msg.text}</p>}
@@ -109,9 +120,24 @@ export default function Premium() {
       ) : catalog === undefined ? (
         <p className="mt-8 flex items-center justify-center gap-2 text-sm text-silver"><Loader2 size={16} className="animate-spin" /> Loading plans…</p>
       ) : catalog === null ? (
-        <div className="card mt-6 p-5 text-sm text-silver">
-          <p className="font-semibold text-ink">Plans aren’t available here yet</p>
-          <p className="mt-1">Subscriptions open once the app is set up with payments. Everything else is free — or use your own AI key in Profile → Photo recognition.</p>
+        <div className="mt-6">
+          <div className="grid gap-2.5">
+            {PREVIEW.map((t) => (
+              <div key={t.name} className={cx('card p-5', t.best && 'ring-2 ring-ink')}>
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="flex items-center gap-2 text-[18px] font-extrabold">{t.name}{t.best && <span className="rounded-full bg-primary px-2 py-0.5 text-xs font-bold text-on-primary">Most popular</span>}</p>
+                    <ul className="mt-2 space-y-1 text-sm text-silver">{t.perks.map((x) => <li key={x} className="flex items-center gap-2"><Check size={15} className="text-accent" strokeWidth={3} />{x}</li>)}</ul>
+                  </div>
+                  <div className="text-right">
+                    <p className="num text-[22px] font-extrabold">{t.year}</p>
+                    {t.month && <p className="num text-sm text-silver">{t.perMonth} · or {t.month}</p>}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <p className="mt-4 rounded-2xl bg-raised p-4 text-center text-sm text-silver">Subscriptions open soon. Everything in Free works now.</p>
         </div>
       ) : (
         <>
