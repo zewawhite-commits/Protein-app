@@ -1,6 +1,6 @@
 import { useDeferredValue, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Camera, Globe2, Heart, Loader2, Search, Sparkles, X } from 'lucide-react';
+import { ArrowLeft, Camera, ChevronRight, Globe2, Heart, Loader2, Search, X } from 'lucide-react';
 import { haptic, toast } from '@/components/fx';
 import { useFoodDb, useFoodLookup, usePhotoUrl } from '@/lib/hooks';
 import { SOURCE_SHORT, searchFoods, splitName } from '@/lib/foods';
@@ -14,7 +14,7 @@ import { FoodSheet } from '@/components/FoodSheet';
 import { FoodVisual } from '@/components/FoodIcon';
 import { WorldFoods } from '@/components/WorldFoods';
 import { SavedMealsList } from '@/components/SavedMeals';
-import { FOOD_PHOTOS } from '@/data/foodPhotos';
+import { artFor, artUrl } from '@/data/foodArt';
 import { StateBadge, cx, fmt } from '@/components/ui';
 
 const STATES: { value: PrepState | 'all'; label: string }[] = [
@@ -43,7 +43,7 @@ export default function AddFood() {
   const [q, setQ] = useState(params.get('q') ?? '');
   const dq = useDeferredValue(q);
   const [state, setState] = useState<PrepState | 'all'>('all');
-  const [tab, setTab] = useState<Tab>(recentIds.length ? 'recent' : 'picks');
+  const [tab, setTab] = useState<Tab>((params.get('tab') as Tab | null) ?? (recentIds.length ? 'recent' : 'picks'));
   const [selected, setSelected] = useState<Food | null>(null);
   const searching = !!dq.trim();
 
@@ -81,7 +81,7 @@ export default function AddFood() {
           <span className="absolute bottom-3 left-3 rounded-full bg-black/55 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur-md">Photo attached · pick the food</span>
         </div>
       ) : (
-        <h1 className="text-[30px] font-semibold leading-[1.08] tracking-tight">What did<br />you eat?</h1>
+        <h1 className="text-[32px] font-extrabold leading-[1.1] tracking-tight">What did you eat?</h1>
       )}
 
       <div className="sticky top-0 z-20 -mx-5 mt-4 bg-bg/90 px-5 pb-3 pt-2 backdrop-blur-xl">
@@ -121,15 +121,13 @@ export default function AddFood() {
       </div>
 
       {!searching && !photoId && (
-        <Link to={snapUrl} className="relative mb-4 mt-1 block overflow-hidden rounded-[28px] bg-primary p-5 text-on-primary transition active:scale-[.99]">
-          <div className="pointer-events-none absolute -right-10 -top-12 h-44 w-44 rounded-full bg-accent/50 blur-3xl" />
-          <div className="relative flex items-center gap-4">
-            <span className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-on-primary/10"><Camera size={26} /></span>
-            <div>
-              <p className="flex items-center gap-1.5 text-[17px] font-semibold">Snap your food <Sparkles size={15} className="text-accent" /></p>
-              <p className="mt-0.5 text-[14px] opacity-70">Any dish, any cuisine. AI identifies it — you confirm and weigh.</p>
-            </div>
+        <Link to={snapUrl} className="card mb-6 mt-2 flex items-center gap-4 p-4 transition active:scale-[.99]">
+          <span className="grid h-14 w-14 shrink-0 place-items-center rounded-[18px] bg-accent text-white"><Camera size={26} strokeWidth={2.2} /></span>
+          <div className="min-w-0 flex-1">
+            <p className="text-[17px] font-bold">Scan a meal</p>
+            <p className="mt-0.5 text-sm text-silver">Take a photo — we find the foods, you check and weigh.</p>
           </div>
+          <ChevronRight size={20} className="shrink-0 text-dim" />
         </Link>
       )}
 
@@ -144,7 +142,7 @@ export default function AddFood() {
 
       {!searching && tab === 'saved' && <SavedMealsList date={date} />}
       {db && list.length > 0 && !(tab === 'saved' && !searching) && (
-        <div className="card mt-1 p-1.5">
+        <div className="card mt-1 p-2">
           {list.map((f) => <FoodRow key={f.id} food={f} onClick={() => setSelected(f)} />)}
         </div>
       )}
@@ -205,7 +203,7 @@ function WorldProducts({ query, onPick, localCount }: { query: string; onPick: (
       ) : state.foods.length === 0 ? (
         <p className="px-1 py-3 text-sm text-silver">No products with protein data found.</p>
       ) : (
-        <div className="card p-1.5">{state.foods.map((f) => <FoodRow key={f.id} food={f} onClick={() => onPick(f)} />)}</div>
+        <div className="card p-2">{state.foods.map((f) => <FoodRow key={f.id} food={f} onClick={() => onPick(f)} />)}</div>
       )}
     </section>
   );
@@ -218,11 +216,11 @@ function FoodRow({ food, onClick }: { food: Food; onClick: () => void }) {
   const rememberFood = useStore((s) => s.rememberFood);
   return (
     <div className="flex items-center rounded-[22px] transition active:bg-raised/60">
-    <button onClick={onClick} className="flex min-w-0 flex-1 items-center gap-3.5 p-3 pr-1 text-left transition active:scale-[.99]">
-      <FoodVisual name={food.name} category={food.category} fdcId={food.fdcId} size={50} />
+    <button onClick={onClick} className="flex min-w-0 flex-1 items-center gap-4 p-3.5 pr-1 text-left transition active:scale-[.99]">
+      <FoodVisual name={food.name} category={food.category} fdcId={food.fdcId} size={54} />
       <div className="min-w-0 flex-1">
-        <p className="line-clamp-2 font-semibold leading-snug">{title}</p>
-        <div className="mt-1 flex min-w-0 items-center gap-1.5">
+        <p className="line-clamp-2 text-[16px] font-bold leading-snug">{title}</p>
+        <div className="mt-1.5 flex min-w-0 items-center gap-1.5">
           <StateBadge state={food.state} className="shrink-0" />
           {food.source !== 'usda-sr' && <span className="shrink-0 rounded-full bg-raised px-2 text-[12px] font-semibold uppercase leading-5 tracking-wide text-silver">{SOURCE_SHORT[food.source]}</span>}
           {detail && <span className="truncate text-xs text-silver">{detail}</span>}
@@ -245,24 +243,24 @@ function FoodRow({ food, onClick }: { food: Food; onClick: () => void }) {
   );
 }
 
-/** Big photo cards for popular foods (only those with a photo). */
+/** Big illustrated cards for popular high-protein foods. */
 function PhotoCards({ foods, onPick }: { foods: Food[]; onPick: (f: Food) => void }) {
-  const withPhoto = foods.filter((f) => f.fdcId && FOOD_PHOTOS[f.fdcId]);
-  if (!withPhoto.length) return null;
+  if (!foods.length) return null;
   return (
-    <div className="-mx-5 mb-4 flex snap-x gap-3 overflow-x-auto px-5 pb-1 no-scrollbar">
-      {withPhoto.map((f) => {
-        const photo = FOOD_PHOTOS[f.fdcId!];
+    <div className="-mx-5 mb-5 flex snap-x gap-3 overflow-x-auto px-5 pb-1 no-scrollbar">
+      {foods.slice(0, 10).map((f) => {
         const { title } = splitName(f.name);
         return (
-          <button key={f.id} onClick={() => { haptic(); onPick(f); }} className="relative h-52 w-40 shrink-0 snap-start overflow-hidden rounded-[24px] bg-raised text-left transition active:scale-[.97]" style={{ boxShadow: 'var(--shadow)' }}>
-            <img src={`${import.meta.env.BASE_URL}photos/${photo.file}`} alt={title} loading="lazy" className="absolute inset-0 h-full w-full object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
-            <div className="absolute inset-x-3 bottom-3 text-white">
-              <p className="line-clamp-2 text-[15px] font-semibold leading-tight">{title}</p>
-              <p className="num mt-1 text-xs opacity-80">{fmt(f.per100.protein, 1)} g protein / 100 g</p>
+          <button key={f.id} onClick={() => { haptic(); onPick(f); }} className="flex h-48 w-40 shrink-0 snap-start flex-col justify-between rounded-[26px] bg-surface p-4 text-left transition active:scale-[.97]" style={{ boxShadow: 'var(--shadow)' }}>
+            <div className="flex items-start justify-between">
+              <img src={artUrl(artFor(f.name, f.category))} alt="" loading="lazy" draggable={false} className="h-16 w-16" />
+              {f.state !== 'na' && <StateBadge state={f.state} />}
             </div>
-            {f.state !== 'na' && <StateBadge state={f.state} className="absolute left-3 top-3 !bg-white/90 !text-black" />}
+            <div>
+              <p className="line-clamp-2 text-[15px] font-bold leading-snug">{title}</p>
+              <p className="num mt-1 text-sm font-semibold text-accent">{fmt(f.per100.protein, 1)} g protein</p>
+              <p className="text-xs font-medium text-silver">per 100 g</p>
+            </div>
           </button>
         );
       })}

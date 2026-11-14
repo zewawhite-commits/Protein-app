@@ -9,7 +9,6 @@ import { nutrientsFor } from '@/lib/nutrition';
 import { todayKey } from '@/lib/dates';
 import type { DayPlan, PlanItem } from '@/lib/plan';
 import type { Food } from '@/lib/types';
-import { photoKeyFor } from '@/data/photoRules';
 import { useCoachContext } from '@/pages/Coach';
 import { FoodVisual } from './FoodIcon';
 import { FoodSheet } from './FoodSheet';
@@ -144,7 +143,7 @@ function PlanCard({ plan, savedId, onSave, onDelete }: { plan: DayPlan; savedId:
       </div>
 
       {matched.map((m, i) => (
-        <div key={i} className="card p-1.5">
+        <div key={i} className="card p-2">
           <p className="px-3 pb-1 pt-2.5 text-sm font-semibold text-silver">{MEAL_LABEL[m.meal]} · <span className="text-ink">{m.title}</span></p>
           {m.rows.map(({ it, food }, j) => <PlanRow key={j} item={it} food={food} onOpen={(f) => setOpen({ food: f, grams: it.grams })} />)}
         </div>
@@ -165,7 +164,7 @@ function PlanCard({ plan, savedId, onSave, onDelete }: { plan: DayPlan; savedId:
 
 function PlanRow({ item, food, onOpen }: { item: PlanItem; food?: Food; onOpen: (f: Food) => void }) {
   const title = item.localName && item.localName !== item.name ? item.localName : item.name;
-  const visualName = photoKeyFor(`${item.localName} ${item.name}`) ? `${item.localName} ${item.name}` : food?.name ?? item.name;
+  const visualName = `${item.localName} ${item.name}`;
   if (!food) {
     return (
       <Link to={`/add?q=${encodeURIComponent(item.searchQueries[0] ?? item.name)}`} className="flex items-center gap-3 rounded-[18px] p-2.5">
@@ -181,7 +180,7 @@ function PlanRow({ item, food, onOpen }: { item: PlanItem; food?: Food; onOpen: 
   const n = nutrientsFor(food.per100, item.grams);
   return (
     <button onClick={() => { haptic(); onOpen(food); }} className="flex w-full items-center gap-3 rounded-[18px] p-2.5 text-left transition active:bg-raised/60">
-      <FoodVisual name={visualName} category={food.category} fdcId={photoKeyFor(visualName) && visualName !== food.name ? undefined : food.fdcId} size={46} />
+      <FoodVisual name={visualName} category={food.category} size={48} />
       <div className="min-w-0 flex-1">
         <p className="truncate text-[15px] font-semibold">{title}{title !== item.name && <span className="font-normal text-silver"> · {item.name}</span>}</p>
         <p className="num text-xs text-silver">~{item.grams} g · {n.kcal != null ? `${fmt(n.kcal)} kcal · ` : ''}<span className="text-accent">{fmt(n.protein, 1)} g protein</span></p>

@@ -32,7 +32,7 @@ export function SaveMealButton({ entries }: { entries: LogEntry[] }) {
       <Sheet open={open} onClose={() => setOpen(false)} title="Save a meal">
         <p className="mb-3 text-sm text-silver">Keep a meal you eat often and log it again in one tap.</p>
         {meals.length > 1 && <Segmented full value={meal} onChange={setMeal} options={meals} />}
-        <div className="card mt-3 p-1.5">
+        <div className="card mt-3 p-2">
           {items.map((e) => (
             <div key={e.id} className="flex items-center gap-3 p-2">
               <FoodVisual name={e.food.name} fdcId={e.food.fdcId} size={40} />

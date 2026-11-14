@@ -3,8 +3,6 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { ChevronRight, Cloud, Database, Image as ImageIcon, Download, Moon, Pencil, ShieldCheck, Smartphone, Sparkles, Sun, Trash2, Upload } from 'lucide-react';
 import { useStore, exportData } from '@/store/useStore';
 import { isPremiumActive } from '@/lib/premium';
-import { FOOD_PHOTOS } from '@/data/foodPhotos';
-import { PHOTO_LIBRARY } from '@/data/photoLibrary';
 import { accountsEnabled, signInWithEmail, signInWithGoogle, signOut, useSession } from '@/lib/account';
 import { GoogleIcon } from '@/components/BrandIcons';
 import { dailyGoal, fromKg } from '@/lib/nutrition';
@@ -114,14 +112,7 @@ export default function Profile() {
             USDA FoodData Central — SR Legacy (2018) and FNDDS (2024). FAO/INFOODS Food Composition Table for Western Africa (2019), © FAO, used with acknowledgement for non-commercial use. Packaged products: Open Food Facts (ODbL), label data contributed by its community. Values are per 100 g and are never altered or estimated by this app.
           </p>
           <p className="mt-4 flex items-center gap-2 font-semibold text-ink"><ImageIcon size={16} className="text-accent" /> Food photos</p>
-          <p className="mt-1.5">Illustrations only, from Wikimedia Commons under free licences:</p>
-          <ul className="mt-1.5 space-y-1 text-xs">
-            {[...new Map([...Object.values(FOOD_PHOTOS), ...Object.values(PHOTO_LIBRARY)].map((p) => [p.file, p])).values()].map((p) => (
-              <li key={p.file}>
-                <a href={p.source} target="_blank" rel="noreferrer" className="underline decoration-line underline-offset-2">{p.file.replace(/^lib-|\.webp$/g, '').replace(/-/g, ' ')}</a> — {p.credit}, {p.license}
-              </li>
-            ))}
-          </ul>
+          <p className="mt-1.5">Food illustrations: Fluent Emoji 3D © Microsoft Corporation, MIT licence.</p>
           <p className="mt-4 flex items-center gap-2 font-semibold text-ink"><Smartphone size={16} className="text-accent" /> Install</p>
           <p className="mt-1.5">On iPhone: Share → Add to Home Screen. On Android: menu → Install app. Works offline once installed.</p>
         </div>

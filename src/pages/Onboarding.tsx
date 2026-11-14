@@ -321,13 +321,13 @@ function Choice<T>({ option, selected, onClick, multi }: { option: Option<T>; se
 
 function Welcome({ signedIn, email, onStart }: { signedIn: boolean; email?: string; onStart: () => void }) {
   const [mode, setMode] = useState<'choose' | 'email' | 'sent' | 'phone' | 'code'>('choose');
-  // Default to the phone's region (e.g. en-GB → United Kingdom), else Nigeria.
+  // Default to the phone's region (e.g. en-GB → United Kingdom), else the United Kingdom.
   const [dialLabel, setDialLabel] = useState(() => {
     const region = (navigator.language.split('-')[1] ?? '').toUpperCase();
     const i = COUNTRY_DATA.findIndex(([iso]) => iso === region);
-    return DIAL_CODES[i >= 0 ? i : COUNTRY_DATA.findIndex(([iso]) => iso === 'NG')][0];
+    return DIAL_CODES[i >= 0 ? i : COUNTRY_DATA.findIndex(([iso]) => iso === 'GB')][0];
   });
-  const dial = DIAL_CODES.find(([l]) => l === dialLabel)?.[1] ?? '+234';
+  const dial = DIAL_CODES.find(([l]) => l === dialLabel)?.[1] ?? '+44';
   const [phone, setPhone] = useState('');
   const [code, setCode] = useState('');
   const fullPhone = toE164(dial, phone);

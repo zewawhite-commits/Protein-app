@@ -15,6 +15,7 @@ import { Suggestions } from '@/components/Suggestions';
 import { FoodSheet } from '@/components/FoodSheet';
 import { NotificationBell } from '@/components/Notifications';
 import { SaveMealButton } from '@/components/SavedMeals';
+import { QuickActions } from '@/components/QuickActions';
 
 const MEALS: { key: Meal; label: string }[] = [
   { key: 'breakfast', label: 'Breakfast' },
@@ -91,6 +92,8 @@ export default function Today() {
         </Link>
       </div>
 
+      <QuickActions dateQuery={!isToday ? `?date=${date}` : ''} />
+
       <WeekStrip date={date} onSelect={setDate} />
 
       <div className="lg:grid lg:grid-cols-[1.1fr_1fr] lg:items-start lg:gap-8">
@@ -118,7 +121,7 @@ export default function Today() {
             </span>
           </Link>
         ) : (
-          <div className="card p-1.5">
+          <div className="card p-2">
             {[...entries].reverse().map((e) => <EntryRow key={e.id} entry={e} onClick={() => setEditing(e)} />)}
           </div>
         )}

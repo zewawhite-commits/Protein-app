@@ -53,7 +53,7 @@ Make a realistic, enjoyable day (breakfast, lunch, dinner and 1–2 snacks) for 
 - Respect their diet strictly and never include anything they avoid or are allergic to (check ingredients of dishes).
 - Use everyday, affordable foods and simple dishes; nothing extreme. Never plan below about 1,200 kcal. Pregnancy: avoid raw/undercooked fish, meat or eggs, unpasteurised dairy and high-mercury fish.
 
-For each item: "name" (English), "localName" (or ""), "searchQueries" (2–3 food-composition-style queries naming the main ingredient and its form, most specific first, e.g. ["jollof rice", "rice white cooked"]), and "grams" = the edible weight as eaten for a sensible portion.
+For each item: "name" (English), "localName" (or ""), "searchQueries" (2–3 food-composition-style queries naming the main ingredient and its form, most specific first, e.g. ["spaghetti bolognese", "spaghetti with meat sauce", "pasta cooked"]), and "grams" = the edible weight as eaten for a sensible portion.
 Do NOT state any nutrient values — the app calculates them from its database.
 "title": a short, friendly name for the day. "tips": 2–3 short practical tips (no numbers about nutrients).`;
 

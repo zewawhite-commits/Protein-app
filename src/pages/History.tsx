@@ -64,7 +64,7 @@ function Days({ query }: { query: string }) {
       {[...months.entries()].map(([month, list]) => (
         <section key={month}>
           <p className="mb-3 px-1 text-sm font-semibold text-silver">{month}</p>
-          <div className="card p-1.5">
+          <div className="card p-2">
             {list.map(({ date, list: es, protein, goal }) => {
               const v = goal ? protein / goal : 0;
               const hit = v >= 1;

@@ -24,6 +24,8 @@ export default {
         sm: ['14px', { lineHeight: '1.6' }],
         base: ['16px', { lineHeight: '1.6' }],
       },
+      // Heavier weights (variable font): text reads bolder and more modern.
+      fontWeight: { normal: '500', medium: '560', semibold: '670', bold: '760', extrabold: '840' },
       fontFamily: { sans: ['"Plus Jakarta Sans Variable"', 'ui-sans-serif', 'system-ui', 'sans-serif'] },
       keyframes: {
         'fade-up': { from: { opacity: 0, transform: 'translateY(6px)' }, to: { opacity: 1, transform: 'none' } },
