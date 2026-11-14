@@ -99,7 +99,7 @@ For a combined dish (soup, stew, curry, rice dish, salad, sandwich…), also lis
 Do not provide any nutrient values. If the photo contains no food (or only a menu, a person, etc.), set isFood to false and items to [] and explain briefly in "note".`;
 
 /** Run recognition with an Anthropic client (server-side key, or the user's own key in the browser). */
-export async function recognizeWithClient(client: Anthropic, imageBase64: string, mediaType: string): Promise<RecognitionResult> {
+export async function recognizeWithClient(client: Anthropic, imageBase64: string | null, mediaType: string, description?: string): Promise<RecognitionResult> {
   const response = await client.beta.messages.create({
     model: RECOGNITION_MODEL,
     max_tokens: 16000,
@@ -115,10 +115,12 @@ export async function recognizeWithClient(client: Anthropic, imageBase64: string
     messages: [
       {
         role: 'user',
-        content: [
-          { type: 'image', source: { type: 'base64', media_type: mediaType as 'image/jpeg', data: imageBase64 } },
-          { type: 'text', text: 'Identify the foods in this photo.' },
-        ],
+        content: imageBase64
+          ? [
+              { type: 'image', source: { type: 'base64', media_type: mediaType as 'image/jpeg', data: imageBase64 } },
+              { type: 'text', text: 'Identify the foods in this photo.' },
+            ]
+          : [{ type: 'text', text: `There is no photo. The person described what they ate: "${description ?? ''}". Identify each food from the description (treat it as if you had seen it). Use any amounts they give for estimatedGrams (convert cups, pieces, slices to grams); otherwise estimate a typical portion.` }],
       },
     ],
   });

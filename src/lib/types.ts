@@ -143,6 +143,8 @@ export interface Settings {
   bodyUnit: BodyUnit;
   adminMode: boolean;
   reminders?: Reminders;
+  /** Add calories burned by logged exercise to the day's calorie budget. */
+  addBurned?: boolean;
 }
 
 /** A meal the user saved to log again in one tap (food snapshots + the grams they weighed). */

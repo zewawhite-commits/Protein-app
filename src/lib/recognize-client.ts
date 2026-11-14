@@ -34,16 +34,23 @@ async function toBase64(blob: Blob): Promise<string> {
  * Recognition always goes through the app's server (/api/recognize), which holds the
  * Anthropic key. No AI key ever lives in the browser or on the phone.
  */
+/** Recognise foods from a typed description ("2 eggs and a slice of toast"). */
+export async function recognizeText(text: string, premiumToken?: string): Promise<RecognitionResult> {
+  return send({ text }, premiumToken);
+}
+
 export async function recognizePhoto(photo: Blob, premiumToken?: string): Promise<RecognitionResult> {
-  const image = await toBase64(photo);
-  const mediaType = photo.type || 'image/jpeg';
+  return send({ image: await toBase64(photo), mediaType: photo.type || 'image/jpeg' }, premiumToken);
+}
+
+async function send(payload: { image?: string; mediaType?: string; text?: string }, premiumToken?: string): Promise<RecognitionResult> {
   const userToken = premiumToken ? undefined : await accessToken();
   let res: Response;
   try {
     res = await fetch('/api/recognize', {
       method: 'POST',
       headers: { 'content-type': 'application/json', ...(premiumToken && { authorization: `Bearer ${premiumToken}` }), ...(userToken && { 'x-user-token': userToken }) },
-      body: JSON.stringify({ image, mediaType }),
+      body: JSON.stringify(payload),
     });
   } catch {
     throw new RecognitionUnavailableError();

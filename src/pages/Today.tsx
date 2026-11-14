@@ -16,6 +16,7 @@ import { FoodSheet } from '@/components/FoodSheet';
 import { NotificationBell } from '@/components/Notifications';
 import { SaveMealButton } from '@/components/SavedMeals';
 import { QuickActions } from '@/components/QuickActions';
+import { ExerciseList } from '@/components/LogMenu';
 
 const MEALS: { key: Meal; label: string }[] = [
   { key: 'breakfast', label: 'Breakfast' },
@@ -48,7 +49,12 @@ export default function Today() {
   const { entries, totals, goal } = useDay(date);
   const profile = useStore((s) => s.profile);
   const profileWeight = profile?.bodyWeightKg;
-  const targets = useMemo(() => (profile ? dailyTargets(profile, goal) : null), [profile, goal]);
+  const burned = useStore((s) => s.exercises.filter((e) => e.date === date).reduce((a, e) => a + e.kcal, 0));
+  const addBurned = useStore((s) => s.settings.addBurned ?? false);
+  const targets = useMemo(() => {
+    const t = profile ? dailyTargets(profile, goal) : null;
+    return t && addBurned && burned ? { ...t, kcal: t.kcal + burned } : t;
+  }, [profile, goal, addBurned, burned]);
   const lookup = useFoodLookup();
   const [editing, setEditing] = useState<LogEntry | null>(null);
   const { streak, weekHits } = useGoalStats(date);
@@ -98,7 +104,7 @@ export default function Today() {
 
       <div className="lg:grid lg:grid-cols-[1.1fr_1fr] lg:items-start lg:gap-8">
       <div>
-      <HeroCard totals={totals} goal={goal} targets={targets} entries={entries} />
+      <HeroCard totals={totals} goal={goal} targets={targets} entries={entries} burned={burned} addBurned={addBurned} />
       {isToday && <Suggestions remaining={Math.max(0, goal - totals.protein)} />}
       </div>
 
@@ -128,12 +134,14 @@ export default function Today() {
       </section>
       </div>
 
+      <ExerciseList date={date} />
+
       <FoodSheet food={editing ? entryAsFood(editing, lookup) : null} entry={editing ?? undefined} date={date} onClose={() => setEditing(null)} />
     </div>
   );
 }
 
-function HeroCard({ totals, goal, targets, entries }: { totals: Totals; goal: number; targets: Targets | null; entries: LogEntry[] }) {
+function HeroCard({ totals, goal, targets, entries, burned = 0, addBurned }: { totals: Totals; goal: number; targets: Targets | null; entries: LogEntry[]; burned?: number; addBurned?: boolean }) {
   const [page, setPage] = useState(0);
   const [allNutrients, setAllNutrients] = useState(false);
   const scroller = useRef<HTMLDivElement>(null);
@@ -164,6 +172,7 @@ function HeroCard({ totals, goal, targets, entries }: { totals: Totals; goal: nu
                   </p>
                   <p className="mt-2 text-[15px] font-semibold">{over ? 'Calories over' : 'Calories left'}</p>
                   <p className="num mt-1 text-xs text-silver">{fmt(totals.kcal)}{totals.incomplete.kcal && '*'} eaten of {fmt(targets.kcal)} kcal</p>
+                  {burned > 0 && <p className="num mt-0.5 text-xs font-semibold text-accent">{addBurned ? `incl. +${fmt(burned)} from exercise` : `${fmt(burned)} kcal burned`}</p>}
                 </>
               ) : (
                 <>

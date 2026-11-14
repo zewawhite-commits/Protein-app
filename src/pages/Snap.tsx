@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { Check, ChevronRight, ImagePlus, Loader2, RotateCcw, Search, Sparkles, X, Zap } from 'lucide-react';
+import { ArrowLeft, Check, ChevronRight, ImagePlus, Loader2, RotateCcw, Search, Sparkles, X, Zap } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 import { useFoodDb, usePhotoUrl } from '@/lib/hooks';
 import { deletePhoto, getPhoto, savePhoto } from '@/lib/photos';
-import { matchItems, sendFeedback, PremiumRequiredError, recognizePhoto, RecognitionUnavailableError, ScanLimitError, type MatchedItem } from '@/lib/recognize-client';
+import { matchItems, sendFeedback, PremiumRequiredError, recognizePhoto, recognizeText, RecognitionUnavailableError, ScanLimitError, type MatchedItem } from '@/lib/recognize-client';
 import { refreshPremium } from '@/lib/premium';
 import { SOURCE_SHORT, splitName } from '@/lib/foods';
 import { mealForNow, todayKey } from '@/lib/dates';
@@ -14,7 +14,7 @@ import { FoodVisual } from '@/components/FoodIcon';
 import { Segmented, StateBadge, cx, fmt } from '@/components/ui';
 import { haptic, toast } from '@/components/fx';
 
-type Phase = 'camera' | 'analyzing' | 'results' | 'unavailable' | 'premium' | 'limit' | 'error';
+type Phase = 'camera' | 'describe' | 'analyzing' | 'results' | 'unavailable' | 'premium' | 'limit' | 'error';
 
 export default function Snap() {
   const nav = useNavigate();
@@ -27,7 +27,8 @@ export default function Snap() {
   const entries = useStore((s) => s.entries);
   const { db } = useFoodDb();
 
-  const [phase, setPhase] = useState<Phase>('camera');
+  const [phase, setPhase] = useState<Phase>(params.get('mode') === 'describe' ? 'describe' : 'camera');
+  const [described, setDescribed] = useState('');
   const [photoId, setPhotoId] = useState<string>();
   const [error, setError] = useState('');
   const [note, setNote] = useState('');
@@ -46,17 +47,21 @@ export default function Snap() {
     if (id && !useStore.getState().entries.some((e) => e.photoId === id)) void deletePhoto(id);
   }, []);
 
-  async function analyse(file: Blob) {
-    const id = await savePhoto(file);
-    setPhotoId(id);
+  async function analyse(file: Blob | null, text?: string) {
+    let small: Blob | undefined;
+    if (file) {
+      const id = await savePhoto(file);
+      setPhotoId(id);
+      small = (await getPhoto(id)) ?? file;
+    }
     setPhase('analyzing');
     try {
-      const small = (await getPhoto(id)) ?? file;
       await refreshPremium();
-      const result = await recognizePhoto(small, useStore.getState().premium?.token ?? premiumToken);
+      const token = useStore.getState().premium?.token ?? premiumToken;
+      const result = small ? await recognizePhoto(small, token) : await recognizeText(text ?? '', token);
       await waitForDb();
       if (!result.isFood || !result.items.length) {
-        setError(result.note || 'No food found in this photo.');
+        setError(result.note || (file ? 'No food found in this photo.' : 'No food found in that description.'));
         setPhase('error');
         return;
       }
@@ -93,7 +98,25 @@ export default function Snap() {
 
   const manualUrl = (q = '') => `/add?${new URLSearchParams({ ...(q && { q }), ...(photoId && { photo: photoId }), ...(date !== todayKey() && { date }) })}`;
 
-  if (phase === 'camera') return <Camera onClose={back} onCapture={analyse} />;
+  if (phase === 'camera') return <Camera onClose={back} onCapture={(b) => void analyse(b)} />;
+  if (phase === 'describe') {
+    return (
+      <div className="mx-auto min-h-dvh max-w-lg animate-fade-up px-5 pb-12 md:max-w-2xl md:px-8">
+        <header className="pt-safe flex items-center pb-4">
+          <button onClick={back} className="grid h-11 w-11 place-items-center rounded-full bg-surface" style={{ boxShadow: 'var(--shadow)' }} aria-label="Back"><ArrowLeft size={20} /></button>
+        </header>
+        <h1 className="text-[30px] font-extrabold leading-tight tracking-tight">Describe your meal</h1>
+        <p className="mt-1 text-[15px] text-silver">Type what you ate — we’ll find each food. You check and weigh.</p>
+        <textarea autoFocus value={described} onChange={(e) => setDescribed(e.target.value)} maxLength={500} rows={4} placeholder="e.g. 2 scrambled eggs, a slice of wholemeal toast and a latte" className="field mt-5 !h-auto resize-none py-4 text-[17px]" />
+        <div className="mt-3 flex flex-wrap gap-2">
+          {['Chicken Caesar salad', 'Bowl of porridge with banana', 'Jollof rice and grilled chicken', 'Two slices of pepperoni pizza'].map((x) => (
+            <button key={x} onClick={() => setDescribed(x)} className="chip !h-9">{x}</button>
+          ))}
+        </div>
+        <button onClick={() => void analyse(null, described)} disabled={described.trim().length < 3} className="btn-primary mt-6 w-full">Find foods</button>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto min-h-dvh max-w-lg animate-fade-up px-5 md:max-w-2xl md:px-8 pb-12">

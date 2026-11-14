@@ -9,6 +9,7 @@ import type { CustomFood, Food, LogEntry, Meal, Profile, ProgressPhoto, SavedMea
 import { dailyGoal } from '@/lib/nutrition';
 import { todayKey } from '@/lib/dates';
 import { deletePhoto } from '@/lib/photos';
+import type { ExerciseEntry } from '@/lib/exercise';
 
 interface State {
   profile: Profile | null;
@@ -23,6 +24,9 @@ interface State {
   remoteFoods: Record<string, Food>;
   savedMeals: SavedMeal[];
   weights: WeightEntry[];
+  exercises: ExerciseEntry[];
+  addExercise: (e: Omit<ExerciseEntry, 'id'>) => void;
+  removeExercise: (id: string) => void;
   progressPhotos: ProgressPhoto[];
   logWeight: (kg: number, date?: string) => void;
   removeWeight: (date: string) => void;
@@ -68,8 +72,12 @@ export const useStore = create<State>()(
       savedMeals: [],
       savedPlans: [],
       weights: [],
+      exercises: [],
       progressPhotos: [],
       premium: null,
+
+      addExercise: (e) => set((s) => ({ exercises: [...s.exercises, { ...e, id: crypto.randomUUID() }] })),
+      removeExercise: (id) => set((s) => ({ exercises: s.exercises.filter((x) => x.id !== id) })),
 
       logWeight: (kg, date = todayKey()) =>
         set((s) => {
@@ -192,11 +200,12 @@ export const useStore = create<State>()(
           savedMeals: d.savedMeals ?? [],
           savedPlans: d.savedPlans ?? [],
           weights: d.weights ?? [],
+          exercises: d.exercises ?? [],
         });
       },
 
       resetAll: () =>
-        set({ profile: null, settings: defaultSettings, entries: [], customFoods: [], goalHistory: {}, recentFoodIds: [], favoriteFoodIds: [], remoteFoods: {}, savedMeals: [], savedPlans: [], weights: [], progressPhotos: [], premium: null }),
+        set({ profile: null, settings: defaultSettings, entries: [], customFoods: [], goalHistory: {}, recentFoodIds: [], favoriteFoodIds: [], remoteFoods: {}, savedMeals: [], savedPlans: [], weights: [], exercises: [], progressPhotos: [], premium: null }),
     }),
     {
       name: 'protein-app',
@@ -216,7 +225,7 @@ useStore.subscribe((s, prev) => {
   const changed =
     s.entries !== prev.entries || s.profile !== prev.profile || s.customFoods !== prev.customFoods ||
     s.goalHistory !== prev.goalHistory || s.favoriteFoodIds !== prev.favoriteFoodIds ||
-    s.savedMeals !== prev.savedMeals || s.savedPlans !== prev.savedPlans || s.weights !== prev.weights;
+    s.savedMeals !== prev.savedMeals || s.savedPlans !== prev.savedPlans || s.weights !== prev.weights || s.exercises !== prev.exercises;
   if (changed && s.lastModified === prev.lastModified) useStore.setState({ lastModified: Date.now() });
 });
 
@@ -231,7 +240,7 @@ export function goalOn(date: string, goalHistory: Record<string, number>, profil
 
 export function exportData() {
   // Premium passes and personal API keys are never written to backup files.
-  const { profile, settings, entries, customFoods, goalHistory, recentFoodIds, favoriteFoodIds, remoteFoods, savedMeals, savedPlans, weights } = useStore.getState();
+  const { profile, settings, entries, customFoods, goalHistory, recentFoodIds, favoriteFoodIds, remoteFoods, savedMeals, savedPlans, weights, exercises } = useStore.getState();
   const safeSettings = settings;
-  return { app: 'protein-app', exportedAt: new Date().toISOString(), profile, settings: safeSettings, entries, customFoods, goalHistory, recentFoodIds, favoriteFoodIds, remoteFoods, savedMeals, savedPlans, weights };
+  return { app: 'protein-app', exportedAt: new Date().toISOString(), profile, settings: safeSettings, entries, customFoods, goalHistory, recentFoodIds, favoriteFoodIds, remoteFoods, savedMeals, savedPlans, weights, exercises };
 }

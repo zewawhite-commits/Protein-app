@@ -47,19 +47,22 @@ export async function POST(request: Request): Promise<Response> {
       }
     }
   }
-  let body: { image?: string; mediaType?: string };
+  let body: { image?: string; mediaType?: string; text?: string };
   try {
     body = await request.json();
   } catch {
     return json({ error: 'Invalid JSON body.' }, 400);
   }
   const { image, mediaType = 'image/jpeg' } = body;
-  if (!image || typeof image !== 'string') return json({ error: 'Missing image.' }, 400);
-  if (!TYPES.has(mediaType)) return json({ error: 'Unsupported image type.' }, 415);
-  if ((image.length * 3) / 4 > MAX_BYTES) return json({ error: 'Image too large (max 5 MB).' }, 413);
+  const text = typeof body.text === 'string' ? body.text.trim().slice(0, 500) : '';
+  if (!text) {
+    if (!image || typeof image !== 'string') return json({ error: 'Missing image.' }, 400);
+    if (!TYPES.has(mediaType)) return json({ error: 'Unsupported image type.' }, 415);
+    if ((image.length * 3) / 4 > MAX_BYTES) return json({ error: 'Image too large (max 5 MB).' }, 413);
+  }
 
   try {
-    const result = await recognizeWithClient(new Anthropic(), image, mediaType);
+    const result = await recognizeWithClient(new Anthropic(), text ? null : image!, mediaType, text || undefined);
     return json(Number.isFinite(scansLeft) ? { ...result, scansLeft } : result, 200);
   } catch (e) {
     if (e instanceof Anthropic.RateLimitError) return json({ error: 'Busy — try again in a moment.' }, 429);

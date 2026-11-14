@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { LogMenu } from './LogMenu';
 import { BarChart3, Camera, House, Plus, Sparkles, UserRound, Users } from 'lucide-react';
 import { Ring, cx } from './ui';
 import { APP_NAME } from './fx';
@@ -20,6 +22,7 @@ export function Layout() {
   const loc = useLocation();
   const day = new URLSearchParams(loc.search).get('date');
   const q = day ? `?date=${day}` : '';
+  const [menu, setMenu] = useState(false);
   return (
     <div className="relative min-h-dvh">
       {/* Side menu (large screens) */}
@@ -74,7 +77,7 @@ export function Layout() {
           ))}
         </div>
         <button
-          onClick={() => nav(`/add${q}`)}
+          onClick={() => setMenu(true)}
           className="grid h-[68px] w-[68px] shrink-0 place-items-center rounded-full bg-primary text-on-primary transition active:scale-95"
           style={{ boxShadow: '0 10px 30px -8px rgb(0 0 0 / 0.45)' }}
           aria-label="Log food"
@@ -82,6 +85,7 @@ export function Layout() {
           <Plus size={28} strokeWidth={2.6} />
         </button>
       </nav>
+      <LogMenu open={menu} onClose={() => setMenu(false)} date={day ?? undefined} />
     </div>
   );
 }

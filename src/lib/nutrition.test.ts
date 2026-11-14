@@ -170,3 +170,12 @@ describe('goal weight and pace', () => {
     expect(est({ ...base, goalWeightKg: 85, paceKgPerWeek: 0.25, goals: ['muscle'] })).toBe(3030);
   });
 });
+
+import { burnedKcal } from './exercise';
+describe('exercise', () => {
+  it('estimates calories from MET × kg × hours', () => {
+    expect(burnedKcal('run', 'medium', 30, 80)).toBe(392); // 9.8 × 80 × 0.5
+    expect(burnedKcal('walk', 'low', 60, 70)).toBe(196);
+    expect(burnedKcal('run', 'high', 0, 80)).toBe(0);
+  });
+});
