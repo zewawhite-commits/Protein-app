@@ -1,9 +1,9 @@
 import { useState, type ReactNode } from 'react';
-import { ArrowLeft, Bike, Dumbbell, Flame, HeartPulse, Leaf, Loader2, Mail, Scale, Sofa, Trophy, Fish, Salad, Utensils, Footprints } from 'lucide-react';
+import { ArrowLeft, Check, Bike, Dumbbell, Flame, HeartPulse, Leaf, Loader2, Mail, Scale, Sofa, Trophy, Fish, Salad, Utensils, Footprints } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 import { accountsEnabled, signInWithEmail, signInWithGoogle, useSession } from '@/lib/account';
 import { GoogleIcon } from '@/components/BrandIcons';
-import { suggestGramsPerKg, suggestionReason } from '@/lib/goals';
+import { primaryGoal, suggestGramsPerKg, suggestionReason } from '@/lib/goals';
 import { dailyGoal, fromKg, round1, toKg } from '@/lib/nutrition';
 import type { ActivityLevel, Diet, FitnessGoal } from '@/lib/types';
 import { Ring, Segmented, cx, fmt } from '@/components/ui';
@@ -39,7 +39,7 @@ export default function Onboarding() {
   const updateSettings = useStore((s) => s.updateSettings);
 
   const [step, setStep] = useState(0);
-  const [goal, setGoal] = useState<FitnessGoal>();
+  const [goals, setGoals] = useState<FitnessGoal[]>([]);
   const [activity, setActivity] = useState<ActivityLevel>();
   const [diet, setDiet] = useState<Diet>();
   const [name, setName] = useState('');
@@ -53,9 +53,14 @@ export default function Onboarding() {
 
   function pickActivity(a: ActivityLevel) {
     setActivity(a);
-    setGPerKg(suggestGramsPerKg(goal ?? 'health', a));
+    setGPerKg(suggestGramsPerKg(primaryGoal(goals.length ? goals : ['health'], a), a));
     next();
   }
+
+  // The goal that sets the target (the one needing the most protein).
+  const goal: FitnessGoal | undefined = goals.length ? primaryGoal(goals, activity ?? 'active') : undefined;
+
+  const toggleGoal = (g: FitnessGoal) => setGoals((cur) => (cur.includes(g) ? cur.filter((x) => x !== g) : [...cur, g]));
 
   function finish() {
     if (!weightKg) return;
@@ -67,6 +72,7 @@ export default function Onboarding() {
       goalGrams: Math.round(weightKg * gPerKg),
       createdAt: Date.now(),
       goal,
+      goals,
       activity,
       diet,
     });
@@ -89,8 +95,12 @@ export default function Onboarding() {
 
       <div key={step} className="flex flex-1 animate-fade-up flex-col">
         {step === 1 && (
-          <Question title="What’s your main goal?" sub="We’ll suggest a daily protein target for it.">
-            {GOALS.map((o) => <Choice key={o.value} option={o} selected={goal === o.value} onClick={() => { setGoal(o.value); next(); }} />)}
+          <Question title="What are your goals?" sub="Pick all that apply. We’ll suggest a daily protein target.">
+            {GOALS.map((o) => <Choice key={o.value} option={o} multi selected={goals.includes(o.value)} onClick={() => toggleGoal(o.value)} />)}
+            <div className="flex-1" />
+            <button onClick={next} disabled={!goals.length} className="btn-primary mt-6 w-full">
+              Continue{goals.length > 1 ? ` · ${goals.length} goals` : ''}
+            </button>
           </Question>
         )}
         {step === 2 && (
@@ -155,7 +165,7 @@ function Question({ title, sub, children }: { title: string; sub: string; childr
   );
 }
 
-function Choice<T>({ option, selected, onClick }: { option: Option<T>; selected: boolean; onClick: () => void }) {
+function Choice<T>({ option, selected, onClick, multi }: { option: Option<T>; selected: boolean; onClick: () => void; multi?: boolean }) {
   const Icon = option.icon;
   return (
     <button
@@ -164,10 +174,15 @@ function Choice<T>({ option, selected, onClick }: { option: Option<T>; selected:
       style={{ boxShadow: 'var(--shadow)' }}
     >
       <span className={cx('grid h-12 w-12 shrink-0 place-items-center rounded-2xl', selected ? 'bg-primary text-on-primary' : 'bg-raised')}><Icon size={22} /></span>
-      <span>
+      <span className="flex-1">
         <span className="block font-semibold">{option.label}</span>
         <span className="block text-sm text-silver">{option.sub}</span>
       </span>
+      {multi && (
+        <span className={cx('grid h-6 w-6 shrink-0 place-items-center rounded-md border-2', selected ? 'border-ink bg-ink text-bg' : 'border-line')}>
+          {selected && <Check size={15} strokeWidth={3} />}
+        </span>
+      )}
     </button>
   );
 }

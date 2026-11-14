@@ -92,3 +92,11 @@ describe('goal suggestions', () => {
     expect(fitsDiet({ name: 'Tofu, firm' }, 'vegan')).toBe(true);
   });
 });
+
+import { primaryGoal } from './goals';
+describe('multiple goals', () => {
+  it('uses the goal that needs the most protein', () => {
+    expect(primaryGoal(['maintain', 'fatloss'], 'active')).toBe('fatloss');
+    expect(primaryGoal(['health', 'muscle'], 'light')).toBe('muscle');
+  });
+});

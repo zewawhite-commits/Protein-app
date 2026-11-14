@@ -81,6 +81,8 @@ export interface Profile {
   createdAt: number;
   /** Answers from onboarding (optional for profiles created before it existed). */
   goal?: FitnessGoal;
+  /** All goals the user picked (goal = the one that sets the target). */
+  goals?: FitnessGoal[];
   activity?: ActivityLevel;
   diet?: Diet;
 }

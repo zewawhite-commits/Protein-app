@@ -18,6 +18,11 @@ export function suggestGramsPerKg(goal: FitnessGoal, activity: ActivityLevel): n
   return Math.min(2.0, Math.max(BY_ACTIVITY[activity], floor));
 }
 
+/** With several goals, use the one that asks for the most protein. */
+export function primaryGoal(goals: FitnessGoal[], activity: ActivityLevel): FitnessGoal {
+  return goals.reduce((best, g) => (suggestGramsPerKg(g, activity) > suggestGramsPerKg(best, activity) ? g : best), goals[0] ?? 'health');
+}
+
 export function suggestionReason(goal: FitnessGoal, activity: ActivityLevel, gPerKg: number): string {
   if (gPerKg <= 0.8) return 'The adult Recommended Dietary Allowance (0.8 g/kg) covers the needs of most people who don’t train.';
   if (goal === 'muscle') return 'Around 1.6 g/kg is where extra protein stopped adding muscle gains in a large study of people who lift.';
