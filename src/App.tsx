@@ -1,4 +1,5 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
+import { refreshPremium } from './lib/premium';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { useStore } from './store/useStore';
 import { useThemeSync } from './lib/hooks';
@@ -12,9 +13,11 @@ import Onboarding from './pages/Onboarding';
 const Insights = lazy(() => import('./pages/Insights'));
 const Admin = lazy(() => import('./pages/Admin'));
 const Snap = lazy(() => import('./pages/Snap'));
+const Premium = lazy(() => import('./pages/Premium'));
 
 export default function App() {
   useThemeSync();
+  useEffect(() => { void refreshPremium(); }, []);
   const profile = useStore((s) => s.profile);
   if (!profile) return <Onboarding />;
   return (
@@ -28,6 +31,7 @@ export default function App() {
           <Route path="admin" element={<Admin />} />
         </Route>
         <Route path="snap" element={<Snap />} />
+        <Route path="premium" element={<Premium />} />
         <Route path="add" element={<div className="mx-auto max-w-lg px-5 pb-16"><AddFood /></div>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

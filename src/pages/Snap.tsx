@@ -4,7 +4,8 @@ import { Check, ChevronRight, ImagePlus, Loader2, RotateCcw, Search, Sparkles, X
 import { useStore } from '@/store/useStore';
 import { useFoodDb, usePhotoUrl } from '@/lib/hooks';
 import { deletePhoto, getPhoto, savePhoto } from '@/lib/photos';
-import { matchItems, recognizePhoto, RecognitionUnavailableError, type MatchedItem } from '@/lib/recognize-client';
+import { matchItems, PremiumRequiredError, recognizePhoto, RecognitionUnavailableError, type MatchedItem } from '@/lib/recognize-client';
+import { refreshPremium } from '@/lib/premium';
 import { SOURCE_SHORT, splitName } from '@/lib/foods';
 import { todayKey } from '@/lib/dates';
 import type { Food } from '@/lib/types';
@@ -12,7 +13,7 @@ import { FoodSheet } from '@/components/FoodSheet';
 import { FoodVisual } from '@/components/FoodIcon';
 import { StateBadge, cx, fmt } from '@/components/ui';
 
-type Phase = 'camera' | 'analyzing' | 'results' | 'unavailable' | 'error';
+type Phase = 'camera' | 'analyzing' | 'results' | 'unavailable' | 'premium' | 'error';
 
 export default function Snap() {
   const nav = useNavigate();
@@ -20,6 +21,7 @@ export default function Snap() {
   const date = params.get('date') ?? todayKey();
   const back = () => nav(date === todayKey() ? '/' : `/?date=${date}`);
   const apiKey = useStore((s) => s.settings.aiApiKey);
+  const premiumToken = useStore((s) => s.premium?.token);
   const custom = useStore((s) => s.customFoods);
   const entries = useStore((s) => s.entries);
   const { db } = useFoodDb();
@@ -49,7 +51,8 @@ export default function Snap() {
     setPhase('analyzing');
     try {
       const small = (await getPhoto(id)) ?? file;
-      const result = await recognizePhoto(small, apiKey);
+      await refreshPremium();
+      const result = await recognizePhoto(small, apiKey, useStore.getState().premium?.token ?? premiumToken);
       await waitForDb();
       if (!result.isFood || !result.items.length) {
         setError(result.note || 'No food found in this photo.');
@@ -60,7 +63,8 @@ export default function Snap() {
       setMatches(matchItems(result, custom));
       setPhase('results');
     } catch (e) {
-      if (e instanceof RecognitionUnavailableError) setPhase('unavailable');
+      if (e instanceof PremiumRequiredError) setPhase('premium');
+      else if (e instanceof RecognitionUnavailableError) setPhase('unavailable');
       else {
         setError((e as Error).message || 'Something went wrong.');
         setPhase('error');
@@ -151,6 +155,17 @@ export default function Snap() {
           <div className="mt-4 grid gap-2">
             <Link to={manualUrl()} className="btn-primary">Pick food manually</Link>
             <Link to="/profile#ai" className="btn-ghost">Set up recognition</Link>
+          </div>
+        </div>
+      )}
+
+      {phase === 'premium' && (
+        <div className="card mt-5 p-5">
+          <p className="flex items-center gap-2 font-semibold"><Sparkles size={18} className="text-accent" /> Photo recognition is Premium</p>
+          <p className="mt-2 text-sm leading-relaxed text-silver">Your photo is saved. Go Premium to have foods identified automatically, or pick the food yourself — that’s always free.</p>
+          <div className="mt-4 grid gap-2">
+            <Link to="/premium" className="btn-primary"><Sparkles size={17} /> See Premium</Link>
+            <Link to={manualUrl()} className="btn-ghost">Pick food manually</Link>
           </div>
         </div>
       )}

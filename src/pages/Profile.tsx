@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronRight, Database, Download, Moon, Pencil, ShieldCheck, Smartphone, Sparkles, Sun, Trash2, Upload } from 'lucide-react';
 import { useStore, exportData } from '@/store/useStore';
+import { isPremiumActive } from '@/lib/premium';
 import { dailyGoal, fromKg } from '@/lib/nutrition';
 import { allPhotoIds, deletePhoto } from '@/lib/photos';
 import type { Theme } from '@/lib/types';
@@ -78,6 +79,8 @@ export default function Profile() {
           <Segmented<Theme> value={settings.theme} onChange={(t) => updateSettings({ theme: t })} options={[{ value: 'dark', label: 'Dark' }, { value: 'light', label: 'Light' }, { value: 'system', label: 'Auto' }]} />
         </Row>
       </Group>
+
+      <PremiumCard />
 
       <AiSettings />
 
@@ -187,5 +190,24 @@ function AiSettings() {
         </p>
       </div>
     </section>
+  );
+}
+
+function PremiumCard() {
+  const premium = useStore((s) => s.premium);
+  const active = isPremiumActive(premium);
+  return (
+    <Link to="/premium" className="mt-6 block overflow-hidden rounded-[28px] bg-primary p-5 text-on-primary transition active:scale-[.99]">
+      <div className="flex items-center gap-4">
+        <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-on-primary/10"><Sparkles size={22} className="text-accent" /></span>
+        <div className="min-w-0 flex-1">
+          <p className="font-semibold">{active ? 'Premium is active' : 'Go Premium'}</p>
+          <p className="truncate text-[13px] opacity-70">
+            {active ? `${premium!.email} · until ${new Date(premium!.exp).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}` : 'AI photo recognition for every meal'}
+          </p>
+        </div>
+        <ChevronRight size={18} className="opacity-60" />
+      </div>
+    </Link>
   );
 }

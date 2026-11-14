@@ -21,6 +21,9 @@ interface State {
   favoriteFoodIds: string[];
   /** Products fetched live (Open Food Facts) that the user logged or starred, so recents/favourites resolve offline. */
   remoteFoods: Record<string, Food>;
+  /** Signed Premium pass from the server (Paystack subscription). */
+  premium: { token: string; exp: number; email: string; plan: string } | null;
+  setPremium: (p: State['premium']) => void;
 
   saveProfile: (p: Profile) => void;
   updateSettings: (s: Partial<Settings>) => void;
@@ -48,6 +51,9 @@ export const useStore = create<State>()(
       recentFoodIds: [],
       favoriteFoodIds: [],
       remoteFoods: {},
+      premium: null,
+
+      setPremium: (premium) => set({ premium }),
 
       saveProfile: (p) =>
         set((s) => ({ profile: p, goalHistory: { ...s.goalHistory, [todayKey()]: dailyGoal(p) } })),
@@ -140,7 +146,7 @@ export const useStore = create<State>()(
       },
 
       resetAll: () =>
-        set({ profile: null, settings: defaultSettings, entries: [], customFoods: [], goalHistory: {}, recentFoodIds: [], favoriteFoodIds: [], remoteFoods: {} }),
+        set({ profile: null, settings: defaultSettings, entries: [], customFoods: [], goalHistory: {}, recentFoodIds: [], favoriteFoodIds: [], remoteFoods: {}, premium: null }),
     }),
     { name: 'protein-app', version: 1 },
   ),
@@ -156,6 +162,7 @@ export function goalOn(date: string, goalHistory: Record<string, number>, profil
 }
 
 export function exportData() {
+  // Premium passes and personal API keys are never written to backup files.
   const { profile, settings, entries, customFoods, goalHistory, recentFoodIds, favoriteFoodIds, remoteFoods } = useStore.getState();
   // The personal API key is never written to backup files.
   const { aiApiKey: _omit, ...safeSettings } = settings;

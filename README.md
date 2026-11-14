@@ -19,6 +19,7 @@ A premium, mobile-first protein tracker. Weigh your food, pick it from the USDA 
 - **Insights** — 7/30/90-day charts against the goal, averages, days the goal was hit, best day, breakdown by meal, top protein sources.
 - **Food photos** — camera or gallery, downscaled and stored in IndexedDB.
 - **Profile** — dark, light or auto theme, JSON backup export and restore, delete all data.
+- **Premium** — Paystack subscription (monthly/yearly) unlocking AI photo recognition; prices come live from the Paystack plans.
 - **Admin** — browse USDA records (read-only, linked to FDC), and create, edit or archive custom records. Custom records require a cited source and pass sanity checks.
 
 ## Nutritional accuracy
@@ -50,6 +51,28 @@ Recognition uses Claude (model `claude-opus-5-5`) and needs an Anthropic API key
 - **Personal:** in the app, Profile → Photo recognition → paste your own key. It is stored on that device only and sent only to Anthropic.
 
 Each photo is one API call. Requests enable server-side refusal fallbacks (`fallbacks: "default"`).
+
+## Premium subscriptions (Paystack)
+
+Photo recognition through the server is a paid Premium feature when payments are configured. Everything else stays free.
+
+How it works, without a database:
+1. `/api/premium/checkout` starts a Paystack checkout for a plan (card, bank transfer, USSD).
+2. Paystack returns the customer to `/premium?reference=…`; `/api/premium/activate` verifies the payment with Paystack and issues a signed **Premium pass** (HMAC) valid until the subscription's next payment date (+3 days grace).
+3. The app sends the pass with recognition requests. When it nears expiry the app asks `/api/premium/activate` to renew it, which checks the live subscription status on Paystack (active / non-renewing / attention = paid; cancelled / completed = not).
+4. `/api/premium/manage` returns Paystack's page for updating the card or cancelling. Restore on a new device = email + payment reference from the Paystack receipt.
+
+Setup:
+1. Create a Paystack account and complete business verification.
+2. In Paystack → Plans, create a monthly and/or yearly plan in NGN; copy each plan code (`PLN_…`).
+3. In Vercel → Project → Settings → Environment Variables add:
+   - `PAYSTACK_SECRET_KEY` (test key `sk_test_…` first, live key later)
+   - `PAYSTACK_PLAN_MONTHLY` and/or `PAYSTACK_PLAN_YEARLY`
+   - `PREMIUM_TOKEN_SECRET` (any long random string, keep it secret)
+   - `ANTHROPIC_API_KEY`
+4. Redeploy. Test with Paystack's test cards, then switch to the live secret key.
+
+Without these variables the app runs free, and the Premium page says Premium isn't available. On GitHub Pages (static hosting, no `api/`) Premium is not available.
 
 ## Deploy (get a link for your phone)
 

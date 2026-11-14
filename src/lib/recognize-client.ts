@@ -8,6 +8,13 @@ import type { RecognitionResult, RecognizedItem } from './recognition';
 import { searchFoods } from './foods';
 import type { CustomFood, Food } from './types';
 
+/** Server recognition requires Premium and the user has no personal key. */
+export class PremiumRequiredError extends Error {
+  constructor(message = 'Photo recognition is a Premium feature.') {
+    super(message);
+  }
+}
+
 export class RecognitionUnavailableError extends Error {
   constructor() {
     super('Photo recognition is not set up yet.');
@@ -21,7 +28,7 @@ async function toBase64(blob: Blob): Promise<string> {
   return btoa(bin);
 }
 
-export async function recognizePhoto(photo: Blob, userApiKey?: string): Promise<RecognitionResult> {
+export async function recognizePhoto(photo: Blob, userApiKey?: string, premiumToken?: string): Promise<RecognitionResult> {
   const image = await toBase64(photo);
   const mediaType = photo.type || 'image/jpeg';
 
@@ -29,16 +36,21 @@ export async function recognizePhoto(photo: Blob, userApiKey?: string): Promise<
   try {
     const res = await fetch('/api/recognize', {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
+      headers: { 'content-type': 'application/json', ...(premiumToken && { authorization: `Bearer ${premiumToken}` }) },
       body: JSON.stringify({ image, mediaType }),
     });
     const isJson = res.headers.get('content-type')?.includes('application/json');
     if (res.ok && isJson) return (await res.json()) as RecognitionResult;
-    if (isJson && res.status !== 501) {
+    if (isJson && res.status === 402) {
+      const { error } = (await res.json()) as { error?: string };
+      if (!userApiKey) throw new PremiumRequiredError(error);
+      // Not Premium, but the user has their own key: fall through to it.
+    } else if (isJson && res.status !== 501) {
       const { error } = (await res.json()) as { error?: string };
       throw new Error(error || `Recognition failed (${res.status}).`);
     }
   } catch (e) {
+    if (e instanceof PremiumRequiredError) throw e;
     if (!(e instanceof TypeError) && !userApiKey) throw e; // TypeError = network/no endpoint
   }
 
