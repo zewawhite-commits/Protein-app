@@ -164,3 +164,31 @@ create policy "post photos: upload own" on storage.objects for insert
 drop policy if exists "post photos: delete own" on storage.objects;
 create policy "post photos: delete own" on storage.objects for delete
   using (bucket_id = 'post-photos' and (storage.foldername(name))[2] = auth.uid()::text);
+
+-- ---------- Profiles v2: usernames and profile photos ----------
+alter table public.profiles_public add column if not exists username text;
+alter table public.profiles_public add column if not exists photo_path text check (char_length(photo_path) <= 200);
+do $$ begin
+  alter table public.profiles_public add constraint profiles_username_format check (username ~ '^[a-z0-9_]{3,20}$');
+exception when duplicate_object then null; end $$;
+create unique index if not exists profiles_username_unique on public.profiles_public (username);
+
+-- Is a username free? (callable before anyone shares a group)
+create or replace function public.username_available(p_username text)
+returns boolean language sql stable security definer set search_path = public as $$
+  select not exists (select 1 from profiles_public where username = lower(trim(p_username)) and user_id <> coalesce(auth.uid(), '00000000-0000-0000-0000-000000000000'));
+$$;
+revoke all on function public.username_available(text) from public, anon;
+grant execute on function public.username_available(text) to authenticated;
+
+-- Profile photos: public bucket (anyone with the link can view), each user writes only their own folder.
+insert into storage.buckets (id, name, public) values ('avatars', 'avatars', true) on conflict (id) do nothing;
+drop policy if exists "avatars: upload own" on storage.objects;
+create policy "avatars: upload own" on storage.objects for insert
+  with check (bucket_id = 'avatars' and (storage.foldername(name))[1] = auth.uid()::text);
+drop policy if exists "avatars: update own" on storage.objects;
+create policy "avatars: update own" on storage.objects for update
+  using (bucket_id = 'avatars' and (storage.foldername(name))[1] = auth.uid()::text);
+drop policy if exists "avatars: delete own" on storage.objects;
+create policy "avatars: delete own" on storage.objects for delete
+  using (bucket_id = 'avatars' and (storage.foldername(name))[1] = auth.uid()::text);

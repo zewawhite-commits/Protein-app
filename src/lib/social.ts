@@ -9,17 +9,18 @@ export const REACTIONS = ['🔥', '💪', '👏', '😋', '❤️'] as const;
 export type Reaction = (typeof REACTIONS)[number];
 
 export interface Group { id: string; name: string; invite_code: string; created_by: string; created_at: string }
-export interface Member { user_id: string; role: 'owner' | 'member'; display_name: string; avatar: string; streak: number }
+export interface PublicProfile { display_name: string; avatar: string; streak: number; username?: string | null; photoUrl?: string }
+export interface Member extends PublicProfile { user_id: string; role: 'owner' | 'member' }
 export interface Post {
   id: string; group_id: string; user_id: string; title: string; caption: string | null; meal: string | null;
   kcal: number | null; protein: number | null; carbs: number | null; fat: number | null;
   photo_path: string | null; created_at: string;
-  author?: { display_name: string; avatar: string };
+  author?: PublicProfile;
   photoUrl?: string;
   reactions: { emoji: Reaction; user_id: string }[];
   commentCount: number;
 }
-export interface Comment { id: string; post_id: string; user_id: string; body: string; created_at: string; author?: { display_name: string; avatar: string } }
+export interface Comment { id: string; post_id: string; user_id: string; body: string; created_at: string; author?: PublicProfile }
 
 function db() {
   if (!supabase) throw new Error('Accounts aren’t set up on this server yet.');
@@ -31,11 +32,42 @@ export async function myUserId(): Promise<string | undefined> {
   return (await supabase?.auth.getSession())?.data.session?.user.id;
 }
 
-export async function upsertMyProfile(p: { display_name: string; avatar: string; streak: number }) {
+export async function upsertMyProfile(p: Partial<{ display_name: string; avatar: string; streak: number; username: string; photo_path: string | null }>) {
   const uid = await myUserId();
   if (!uid) return;
   const { error } = await db().from('profiles_public').upsert({ user_id: uid, ...p, updated_at: new Date().toISOString() });
+  if (error?.message.includes('profiles_username_unique')) throw new Error('That username is taken.');
+  if (error?.message.includes('profiles_username_format')) throw new Error('Usernames: 3–20 letters, numbers or _.');
   fail(error);
+}
+
+export interface MyProfile { display_name: string; avatar: string; username: string | null; photoUrl?: string; photo_path: string | null }
+
+export async function myProfile(): Promise<MyProfile | null> {
+  const uid = await myUserId();
+  if (!uid) return null;
+  const { data, error } = await db().from('profiles_public').select('display_name, avatar, username, photo_path').eq('user_id', uid).maybeSingle();
+  fail(error);
+  return data ? { ...data, photoUrl: avatarUrl(data.photo_path) } as MyProfile : null;
+}
+
+export async function usernameAvailable(name: string): Promise<boolean> {
+  const { data, error } = await db().rpc('username_available', { p_username: name });
+  fail(error);
+  return data as boolean;
+}
+
+export const avatarUrl = (path?: string | null) => (path && supabase ? supabase.storage.from('avatars').getPublicUrl(path).data.publicUrl : undefined);
+
+/** Upload a new profile photo (square-cropped by the caller) and save it on the profile. */
+export async function uploadAvatar(photo: Blob): Promise<string> {
+  const uid = await myUserId();
+  if (!uid) throw new Error('Sign in first.');
+  const path = `${uid}/${crypto.randomUUID()}.jpg`;
+  const { error } = await db().storage.from('avatars').upload(path, photo, { contentType: 'image/jpeg' });
+  fail(error);
+  await upsertMyProfile({ photo_path: path });
+  return path;
 }
 
 export async function myGroups(): Promise<Group[]> {
@@ -72,17 +104,19 @@ export async function members(groupId: string): Promise<Member[]> {
 }
 
 async function profilesFor(ids: string[]) {
-  const map = new Map<string, { display_name: string; avatar: string; streak: number }>();
+  const map = new Map<string, PublicProfile>();
   if (!ids.length) return map;
-  const { data, error } = await db().from('profiles_public').select('user_id, display_name, avatar, streak').in('user_id', [...new Set(ids)]);
+  const { data, error } = await db().from('profiles_public').select('user_id, display_name, avatar, streak, username, photo_path').in('user_id', [...new Set(ids)]);
   fail(error);
-  for (const p of data ?? []) map.set(p.user_id, { display_name: p.display_name, avatar: p.avatar, streak: p.streak });
+  for (const p of data ?? []) map.set(p.user_id, { display_name: p.display_name, avatar: p.avatar, streak: p.streak, username: p.username, photoUrl: avatarUrl(p.photo_path) });
   return map;
 }
 
-/** Latest posts in a group, with authors, photo links, reactions and comment counts. */
-export async function feed(groupId: string, limit = 30): Promise<Post[]> {
-  const { data, error } = await db().from('posts').select('*').eq('group_id', groupId).order('created_at', { ascending: false }).limit(limit);
+/** Latest posts in a group (optionally by one person), with authors, photos, reactions and comment counts. */
+export async function feed(groupId: string, limit = 30, userId?: string): Promise<Post[]> {
+  let q = db().from('posts').select('*').eq('group_id', groupId);
+  if (userId) q = q.eq('user_id', userId);
+  const { data, error } = await q.order('created_at', { ascending: false }).limit(limit);
   fail(error);
   const posts = (data ?? []) as Post[];
   if (!posts.length) return [];
@@ -96,7 +130,7 @@ export async function feed(groupId: string, limit = 30): Promise<Post[]> {
   fail(reacts.error); fail(comments.error);
   return posts.map((p) => ({
     ...p,
-    author: profiles.get(p.user_id) ?? { display_name: 'Member', avatar: '' },
+    author: profiles.get(p.user_id) ?? { display_name: 'Member', avatar: '', streak: 0 },
     photoUrl: p.photo_path ? urls.get(p.photo_path) : undefined,
     reactions: (reacts.data ?? []).filter((r) => r.post_id === p.id) as Post['reactions'],
     commentCount: (comments.data ?? []).filter((c) => c.post_id === p.id).length,
@@ -152,7 +186,7 @@ export async function comments(postId: string): Promise<Comment[]> {
   fail(error);
   const list = (data ?? []) as Comment[];
   const profiles = await profilesFor(list.map((c) => c.user_id));
-  return list.map((c) => ({ ...c, author: profiles.get(c.user_id) ?? { display_name: 'Member', avatar: '' } }));
+  return list.map((c) => ({ ...c, author: profiles.get(c.user_id) ?? { display_name: 'Member', avatar: '', streak: 0 } }));
 }
 
 export async function addComment(postId: string, body: string) {

@@ -15,7 +15,8 @@ export const AVATAR_COLORS: Record<string, string> = {
 const initials = (name: string) => name.trim().split(/\s+/).slice(0, 2).map((w) => w[0]?.toUpperCase() ?? '').join('') || '·';
 
 /** Initials on a colour — clean and consistent (no emoji). Unknown/old values fall back by name. */
-export function Avatar({ name, color, size = 44, className }: { name: string; color?: string; size?: number; className?: string }) {
+export function Avatar({ name, color, photoUrl, size = 44, className }: { name: string; color?: string; photoUrl?: string; size?: number; className?: string }) {
+  if (photoUrl) return <img src={photoUrl} alt={name} className={cx('shrink-0 rounded-full object-cover', className)} style={{ width: size, height: size }} />;
   const keys = Object.keys(AVATAR_COLORS);
   const key = color && AVATAR_COLORS[color] ? color : keys[[...name].reduce((h, c) => h + c.charCodeAt(0), 0) % keys.length];
   return (
