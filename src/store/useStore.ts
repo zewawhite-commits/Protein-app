@@ -5,7 +5,7 @@
  */
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { CustomFood, Food, LogEntry, Meal, Profile, SavedMeal, SavedPlan, Settings } from '@/lib/types';
+import type { CustomFood, Food, LogEntry, Meal, Profile, ProgressPhoto, SavedMeal, SavedPlan, Settings, WeightEntry } from '@/lib/types';
 import { dailyGoal } from '@/lib/nutrition';
 import { todayKey } from '@/lib/dates';
 import { deletePhoto } from '@/lib/photos';
@@ -22,6 +22,12 @@ interface State {
   /** Products fetched live (Open Food Facts) that the user logged or starred, so recents/favourites resolve offline. */
   remoteFoods: Record<string, Food>;
   savedMeals: SavedMeal[];
+  weights: WeightEntry[];
+  progressPhotos: ProgressPhoto[];
+  logWeight: (kg: number, date?: string) => void;
+  removeWeight: (date: string) => void;
+  addProgressPhoto: (p: Omit<ProgressPhoto, 'id'>) => void;
+  removeProgressPhoto: (id: string) => void;
   savedPlans: SavedPlan[];
   saveMeal: (name: string, entries: LogEntry[]) => SavedMeal;
   removeSavedMeal: (id: string) => void;
@@ -61,7 +67,25 @@ export const useStore = create<State>()(
       remoteFoods: {},
       savedMeals: [],
       savedPlans: [],
+      weights: [],
+      progressPhotos: [],
       premium: null,
+
+      logWeight: (kg, date = todayKey()) =>
+        set((s) => {
+          const weights = [...s.weights.filter((w) => w.date !== date), { date, kg: Math.round(kg * 10) / 10 }].sort((a, b) => a.date.localeCompare(b.date));
+          const latest = weights[weights.length - 1];
+          // The newest weigh-in becomes the profile weight (targets follow it).
+          const profile = s.profile && latest ? { ...s.profile, bodyWeightKg: latest.kg } : s.profile;
+          return { weights, profile, goalHistory: profile ? { ...s.goalHistory, [todayKey()]: dailyGoal(profile) } : s.goalHistory };
+        }),
+      removeWeight: (date) => set((s) => ({ weights: s.weights.filter((w) => w.date !== date) })),
+      addProgressPhoto: (p) => set((s) => ({ progressPhotos: [...s.progressPhotos, { ...p, id: crypto.randomUUID() }].sort((a, b) => a.date.localeCompare(b.date)) })),
+      removeProgressPhoto: (id) => set((s) => {
+        const ph = s.progressPhotos.find((x) => x.id === id);
+        if (ph) void deletePhoto(ph.photoId);
+        return { progressPhotos: s.progressPhotos.filter((x) => x.id !== id) };
+      }),
 
       saveMeal: (name, list) => {
         const meal: SavedMeal = { id: crypto.randomUUID(), name: name.trim() || 'My meal', createdAt: Date.now(), items: list.map((e) => ({ foodId: e.foodId, food: e.food, grams: e.grams })) };
@@ -167,11 +191,12 @@ export const useStore = create<State>()(
           remoteFoods: d.remoteFoods ?? {},
           savedMeals: d.savedMeals ?? [],
           savedPlans: d.savedPlans ?? [],
+          weights: d.weights ?? [],
         });
       },
 
       resetAll: () =>
-        set({ profile: null, settings: defaultSettings, entries: [], customFoods: [], goalHistory: {}, recentFoodIds: [], favoriteFoodIds: [], remoteFoods: {}, savedMeals: [], savedPlans: [], premium: null }),
+        set({ profile: null, settings: defaultSettings, entries: [], customFoods: [], goalHistory: {}, recentFoodIds: [], favoriteFoodIds: [], remoteFoods: {}, savedMeals: [], savedPlans: [], weights: [], progressPhotos: [], premium: null }),
     }),
     {
       name: 'protein-app',
@@ -191,7 +216,7 @@ useStore.subscribe((s, prev) => {
   const changed =
     s.entries !== prev.entries || s.profile !== prev.profile || s.customFoods !== prev.customFoods ||
     s.goalHistory !== prev.goalHistory || s.favoriteFoodIds !== prev.favoriteFoodIds ||
-    s.savedMeals !== prev.savedMeals || s.savedPlans !== prev.savedPlans;
+    s.savedMeals !== prev.savedMeals || s.savedPlans !== prev.savedPlans || s.weights !== prev.weights;
   if (changed && s.lastModified === prev.lastModified) useStore.setState({ lastModified: Date.now() });
 });
 
@@ -206,7 +231,7 @@ export function goalOn(date: string, goalHistory: Record<string, number>, profil
 
 export function exportData() {
   // Premium passes and personal API keys are never written to backup files.
-  const { profile, settings, entries, customFoods, goalHistory, recentFoodIds, favoriteFoodIds, remoteFoods, savedMeals, savedPlans } = useStore.getState();
+  const { profile, settings, entries, customFoods, goalHistory, recentFoodIds, favoriteFoodIds, remoteFoods, savedMeals, savedPlans, weights } = useStore.getState();
   const safeSettings = settings;
-  return { app: 'protein-app', exportedAt: new Date().toISOString(), profile, settings: safeSettings, entries, customFoods, goalHistory, recentFoodIds, favoriteFoodIds, remoteFoods, savedMeals, savedPlans };
+  return { app: 'protein-app', exportedAt: new Date().toISOString(), profile, settings: safeSettings, entries, customFoods, goalHistory, recentFoodIds, favoriteFoodIds, remoteFoods, savedMeals, savedPlans, weights };
 }

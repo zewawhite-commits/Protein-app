@@ -158,3 +158,9 @@ export interface SavedPlan {
   createdAt: number;
   plan: import('./plan').DayPlan;
 }
+
+/** A body-weight log entry (kg), one per day. */
+export interface WeightEntry { date: string; kg: number }
+
+/** A progress photo (image kept on this device in IndexedDB). */
+export interface ProgressPhoto { id: string; photoId: string; date: string; kg?: number }

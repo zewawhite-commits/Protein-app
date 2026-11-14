@@ -9,6 +9,8 @@ import type { Meal } from '@/lib/types';
 import { Empty, PageHeader, Segmented, cx, fmt } from '@/components/ui';
 import { FoodVisual } from '@/components/FoodIcon';
 import { useStreak } from './Today';
+import { AverageCalories, WeightAndStreak, WeightChart } from '@/components/ProgressTop';
+import { ProgressPhotos } from '@/components/ProgressPhotos';
 
 type Range = '7' | '30' | '90';
 type Metric = 'kcal' | 'protein' | 'carbs' | 'fat';
@@ -70,8 +72,19 @@ export default function Insights() {
 
   return (
     <div className="animate-fade-up">
-      <PageHeader title="Progress" right={<Segmented value={range} onChange={setRange} options={[{ value: '7', label: '7D' }, { value: '30', label: '30D' }, { value: '90', label: '90D' }]} />} />
+      <PageHeader title="Progress" />
 
+      <div className="mb-6 space-y-4">
+        <WeightAndStreak />
+        <WeightChart />
+        <ProgressPhotos />
+        <AverageCalories />
+      </div>
+
+      <div className="mb-3 flex items-center justify-between px-1">
+        <h2 className="text-xl font-bold">Nutrition trends</h2>
+        <Segmented value={range} onChange={setRange} options={[{ value: '7', label: '7D' }, { value: '30', label: '30D' }, { value: '90', label: '90D' }]} />
+      </div>
       <div className="mb-4"><Segmented full value={metric} onChange={setMetric} options={METRICS.map(({ value, label }) => ({ value, label }))} /></div>
 
       {data.loggedDays === 0 ? (
