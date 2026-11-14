@@ -24,13 +24,6 @@ export async function signInWithGoogle() {
   if (error) throw error;
 }
 
-/** Sign in with Apple (needs the Apple provider enabled in Supabase; requires an Apple Developer account). */
-export async function signInWithApple() {
-  if (!supabase) return;
-  const { error } = await supabase.auth.signInWithOAuth({ provider: 'apple', options: { redirectTo: appUrl() } });
-  if (error) throw error;
-}
-
 /** Sends a one-time sign-in link to the email address. */
 export async function signInWithEmail(email: string) {
   if (!supabase) return;

@@ -3,8 +3,8 @@ import { Link } from 'react-router-dom';
 import { ChevronRight, Cloud, Database, Download, Moon, Pencil, ShieldCheck, Smartphone, Sparkles, Sun, Trash2, Upload } from 'lucide-react';
 import { useStore, exportData } from '@/store/useStore';
 import { isPremiumActive } from '@/lib/premium';
-import { accountsEnabled, signInWithApple, signInWithEmail, signInWithGoogle, signOut, useSession } from '@/lib/account';
-import { AppleIcon, GoogleIcon } from '@/components/BrandIcons';
+import { accountsEnabled, signInWithEmail, signInWithGoogle, signOut, useSession } from '@/lib/account';
+import { GoogleIcon } from '@/components/BrandIcons';
 import { dailyGoal, fromKg } from '@/lib/nutrition';
 import { allPhotoIds, deletePhoto } from '@/lib/photos';
 import type { Theme } from '@/lib/types';
@@ -238,8 +238,7 @@ function AccountCard() {
           <>
             <p className="font-semibold">Save your data to an account</p>
             <p className="mt-0.5 text-xs text-silver">Use the app on any phone and never lose your log.</p>
-            <button onClick={() => signInWithApple().catch((e: Error) => setNote(e.message))} className="btn mt-3 w-full bg-ink text-bg"><AppleIcon /> Continue with Apple</button>
-            <button onClick={() => signInWithGoogle().catch((e: Error) => setNote(e.message))} className="btn mt-2 w-full bg-raised text-ink"><GoogleIcon /> Continue with Google</button>
+            <button onClick={() => signInWithGoogle().catch((e: Error) => setNote(e.message))} className="btn mt-3 w-full bg-raised text-ink"><GoogleIcon /> Continue with Google</button>
             <div className="mt-2 flex gap-2">
               <input type="email" inputMode="email" className="field !h-12 flex-1" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
               <button

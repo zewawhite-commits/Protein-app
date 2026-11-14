@@ -60,7 +60,7 @@ Optional sign-in with Google or an email link. Signed-in users' data (profile, l
 
 1. Create a free project at https://supabase.com.
 2. SQL Editor → paste and run `supabase/schema.sql` (tables, row-level security, scan counter).
-3. Authentication → Providers → enable **Google** (needs a Google Cloud OAuth client; Supabase shows the redirect URL to paste there), **Apple** (needs an Apple Developer account, $99/year: a Services ID and a Sign in with Apple key) and keep **Email** on.
+3. Authentication → Providers → enable **Google** (needs a Google Cloud OAuth client; Supabase shows the redirect URL to paste there) and keep **Email** on.
 4. Authentication → URL Configuration → add your app URL(s) to Redirect URLs.
 5. App (public) settings — in Vercel env vars, and as GitHub Actions *variables* for Pages:
    `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` (Project Settings → API).

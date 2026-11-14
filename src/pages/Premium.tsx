@@ -2,8 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Camera, Check, Loader2, Lock, Mail, Sparkles } from 'lucide-react';
 import { useStore } from '@/store/useStore';
-import { accountsEnabled, signInWithApple, signInWithEmail, signInWithGoogle, useSession } from '@/lib/account';
-import { AppleIcon, GoogleIcon } from '@/components/BrandIcons';
+import { accountsEnabled, signInWithEmail, signInWithGoogle, useSession } from '@/lib/account';
+import { GoogleIcon } from '@/components/BrandIcons';
 import {
   activate, fetchPlans, formatPrice, intervalLabel, isPremiumActive, manageSubscription, restoreForAccount, startCheckout,
   type PlanInfo, type Tier,
@@ -147,7 +147,6 @@ export default function Premium() {
             <div className="mt-6">
               <p className="mb-3 text-center text-sm text-silver">Create a free account to subscribe — your plan follows you to any phone.</p>
               <div className="grid gap-2.5">
-                <button disabled={busy} onClick={() => run(signInWithApple)} className="btn bg-ink text-bg"><AppleIcon /> Continue with Apple</button>
                 <button disabled={busy} onClick={() => run(signInWithGoogle)} className="btn bg-surface text-ink" style={{ boxShadow: 'var(--shadow)' }}><GoogleIcon /> Continue with Google</button>
                 <div className="flex gap-2">
                   <input type="email" inputMode="email" className="field flex-1" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />

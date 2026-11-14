@@ -1,8 +1,8 @@
 import { useState, type ReactNode } from 'react';
 import { ArrowLeft, Bike, Dumbbell, Flame, HeartPulse, Leaf, Loader2, Mail, Scale, Sofa, Trophy, Fish, Salad, Utensils, Footprints } from 'lucide-react';
 import { useStore } from '@/store/useStore';
-import { accountsEnabled, signInWithApple, signInWithEmail, signInWithGoogle, useSession } from '@/lib/account';
-import { AppleIcon, GoogleIcon } from '@/components/BrandIcons';
+import { accountsEnabled, signInWithEmail, signInWithGoogle, useSession } from '@/lib/account';
+import { GoogleIcon } from '@/components/BrandIcons';
 import { suggestGramsPerKg, suggestionReason } from '@/lib/goals';
 import { dailyGoal, fromKg, round1, toKg } from '@/lib/nutrition';
 import type { ActivityLevel, Diet, FitnessGoal } from '@/lib/types';
@@ -230,9 +230,6 @@ function Welcome({ signedIn, email, onStart }: { signedIn: boolean; email?: stri
         </div>
       ) : (
         <div className="grid gap-2.5">
-          <button disabled={busy} onClick={() => run(signInWithApple)} className="btn bg-ink text-bg">
-            <AppleIcon /> Continue with Apple
-          </button>
           <button disabled={busy} onClick={() => run(signInWithGoogle)} className="btn bg-surface text-ink" style={{ boxShadow: 'var(--shadow)' }}>
             <GoogleIcon /> Continue with Google
           </button>
