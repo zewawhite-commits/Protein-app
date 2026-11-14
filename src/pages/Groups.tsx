@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Check, ChevronDown, Copy, Crown, Dumbbell, Flame, Heart, Loader2, LogOut, MessageCircle, Plus, RefreshCw, Send, Share2, Sparkles, ThumbsUp, Trash2, UserRound, Users, Utensils, ImagePlus, X } from 'lucide-react';
 import { AVATAR_COLORS, Avatar } from '@/components/Avatar';
+import { GroupChat } from '@/components/GroupChat';
 import { useStore } from '@/store/useStore';
 import { accountsEnabled, useSession } from '@/lib/account';
 import { useDay } from '@/lib/hooks';
@@ -180,6 +181,7 @@ function GroupView({ group, groups, avatar, onAvatar, onSwitch, onChanged, onEdi
   group: Group; groups: Group[]; avatar: string; onAvatar: (a: string) => void; onSwitch: (id: string) => void; onChanged: () => void; onEditProfile: () => void;
 }) {
   const [person, setPerson] = useState<{ id: string; profile: PublicProfile } | null>(null);
+  const [tab, setTab] = useState<'feed' | 'chat'>('feed');
   const [posts, setPosts] = useState<Post[] | null>(null);
   const [people, setPeople] = useState<Member[]>([]);
   const [me, setMe] = useState<string>();
@@ -232,6 +234,9 @@ function GroupView({ group, groups, avatar, onAvatar, onSwitch, onChanged, onEdi
         ))}
       </div>
 
+      <div className="mb-4"><Segmented full value={tab} onChange={(v) => { haptic(); setTab(v); }} options={[{ value: 'feed', label: 'Feed' }, { value: 'chat', label: 'Chat' }]} /></div>
+
+      {tab === 'chat' ? <GroupChat groupId={group.id} me={me} /> : <>
       <button onClick={() => { haptic(); setSharing(true); }} className="btn-primary mb-5 w-full"><Plus size={18} /> New post</button>
 
       {posts === null ? <Loading /> : posts.length === 0 ? (
@@ -245,6 +250,8 @@ function GroupView({ group, groups, avatar, onAvatar, onSwitch, onChanged, onEdi
           {posts.map((p) => <PostCard key={p.id} post={p} me={me} onAuthor={() => setPerson({ id: p.user_id, profile: p.author! })} onReact={(e) => react(p, e)} onOpen={() => setOpenPost(p)} onDelete={async () => { await deletePost(p); toast('Post deleted'); void load(); }} />)}
         </div>
       )}
+
+      </>}
 
       <ShareSheet open={sharing} groupId={group.id} onClose={() => setSharing(false)} onShared={() => { setSharing(false); void load(); }} />
       <CommentsSheet post={openPost} onClose={() => { setOpenPost(null); void load(); }} />

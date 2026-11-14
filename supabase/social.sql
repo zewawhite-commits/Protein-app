@@ -192,3 +192,24 @@ create policy "avatars: update own" on storage.objects for update
 drop policy if exists "avatars: delete own" on storage.objects;
 create policy "avatars: delete own" on storage.objects for delete
   using (bucket_id = 'avatars' and (storage.foldername(name))[1] = auth.uid()::text);
+
+-- ---------- Group chat ----------
+create table if not exists public.messages (
+  id         uuid primary key default gen_random_uuid(),
+  group_id   uuid not null references public.groups (id) on delete cascade,
+  user_id    uuid not null references auth.users (id) on delete cascade,
+  body       text not null check (char_length(body) between 1 and 1000),
+  created_at timestamptz not null default now()
+);
+create index if not exists messages_group_time on public.messages (group_id, created_at desc);
+alter table public.messages enable row level security;
+drop policy if exists "messages: members read" on public.messages;
+create policy "messages: members read" on public.messages for select using (public.is_member(group_id));
+drop policy if exists "messages: members send" on public.messages;
+create policy "messages: members send" on public.messages for insert with check (user_id = auth.uid() and public.is_member(group_id));
+drop policy if exists "messages: delete own" on public.messages;
+create policy "messages: delete own" on public.messages for delete using (user_id = auth.uid());
+-- Live updates (Supabase Realtime respects the read policy above).
+do $$ begin
+  alter publication supabase_realtime add table public.messages;
+exception when others then null; end $$;

@@ -204,3 +204,32 @@ export function ago(iso: string, now = Date.now()): string {
   if (s < 86400) return `${Math.floor(s / 3600)}h`;
   return `${Math.floor(s / 86400)}d`;
 }
+
+// ---------- Group chat ----------
+export interface Message { id: string; group_id: string; user_id: string; body: string; created_at: string; author?: PublicProfile }
+
+/** Latest messages in a group (oldest first), with authors. */
+export async function messages(groupId: string, limit = 60): Promise<Message[]> {
+  const { data, error } = await db().from('messages').select('*').eq('group_id', groupId).order('created_at', { ascending: false }).limit(limit);
+  fail(error);
+  const list = ((data ?? []) as Message[]).reverse();
+  const profiles = await profilesFor(list.map((m) => m.user_id));
+  return list.map((m) => ({ ...m, author: profiles.get(m.user_id) ?? { display_name: 'Member', avatar: '', streak: 0 } }));
+}
+
+export async function sendMessage(groupId: string, body: string) {
+  const uid = await myUserId();
+  if (!uid) throw new Error('Sign in first.');
+  const { error } = await db().from('messages').insert({ group_id: groupId, user_id: uid, body: body.trim().slice(0, 1000) });
+  fail(error);
+}
+
+/** Live new messages for a group. Returns an unsubscribe function. */
+export function onMessages(groupId: string, cb: () => void): () => void {
+  if (!supabase) return () => undefined;
+  const channel = supabase
+    .channel(`messages:${groupId}`)
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `group_id=eq.${groupId}` }, () => cb())
+    .subscribe();
+  return () => { void supabase?.removeChannel(channel); };
+}
