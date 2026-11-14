@@ -4,14 +4,15 @@ import { Check, ChevronRight, ImagePlus, Loader2, RotateCcw, Search, Sparkles, X
 import { useStore } from '@/store/useStore';
 import { useFoodDb, usePhotoUrl } from '@/lib/hooks';
 import { deletePhoto, getPhoto, savePhoto } from '@/lib/photos';
-import { matchItems, PremiumRequiredError, recognizePhoto, RecognitionUnavailableError, ScanLimitError, type MatchedItem } from '@/lib/recognize-client';
+import { matchItems, sendFeedback, PremiumRequiredError, recognizePhoto, RecognitionUnavailableError, ScanLimitError, type MatchedItem } from '@/lib/recognize-client';
 import { refreshPremium } from '@/lib/premium';
 import { SOURCE_SHORT, splitName } from '@/lib/foods';
-import { todayKey } from '@/lib/dates';
+import { mealForNow, todayKey } from '@/lib/dates';
 import type { Food } from '@/lib/types';
 import { FoodSheet } from '@/components/FoodSheet';
 import { FoodVisual } from '@/components/FoodIcon';
-import { StateBadge, cx, fmt } from '@/components/ui';
+import { Segmented, StateBadge, cx, fmt } from '@/components/ui';
+import { haptic, toast } from '@/components/fx';
 
 type Phase = 'camera' | 'analyzing' | 'results' | 'unavailable' | 'premium' | 'limit' | 'error';
 
@@ -21,6 +22,7 @@ export default function Snap() {
   const date = params.get('date') ?? todayKey();
   const back = () => nav(date === todayKey() ? '/' : `/?date=${date}`);
   const premiumToken = useStore((s) => s.premium?.token);
+  const addEntry = useStore((s) => s.addEntry);
   const custom = useStore((s) => s.customFoods);
   const entries = useStore((s) => s.entries);
   const { db } = useFoodDb();
@@ -132,7 +134,19 @@ export default function Snap() {
                 key={i}
                 match={m}
                 done={logged.has(i)}
-                onPick={(food) => setPick({ food, grams: m.item.estimatedGrams || undefined, label: m.item.name, index: i })}
+                onPick={(food) => {
+                  sendFeedback([{ aiName: m.item.name, localName: m.item.localName, cuisine: m.item.cuisine, chosenFoodId: food.id, chosenName: food.name, rank: m.candidates.findIndex((c) => c.id === food.id), kind: 'item' }]);
+                  setPick({ food, grams: m.item.estimatedGrams || undefined, label: m.item.name, index: i });
+                }}
+                onLogIngredients={(rows) => {
+                  sendFeedback(rows.map((r) => {
+                    const ing = m.ingredients.find((x) => x.candidates.some((c) => c.id === r.food.id));
+                    return { aiName: ing?.ingredient.name ?? r.food.name, cuisine: m.item.cuisine, chosenFoodId: r.food.id, chosenName: r.food.name, rank: ing ? ing.candidates.findIndex((c) => c.id === r.food.id) : -1, kind: 'ingredient' as const };
+                  }));
+                  rows.forEach((r, k) => addEntry({ date, meal: mealForNow(), food: r.food, grams: r.grams, photoId: k === 0 ? photoId : undefined, note: `Part of ${m.item.name}` }));
+                  setLogged((s) => new Set(s).add(i));
+                  toast(`Added ${rows.length} ingredient${rows.length > 1 ? 's' : ''} from ${m.item.name}`);
+                }}
                 manualUrl={manualUrl(m.item.searchQueries[0] ?? m.item.name)}
               />
             ))}
@@ -203,9 +217,11 @@ export default function Snap() {
   );
 }
 
-function ItemCard({ match, done, onPick, manualUrl }: { match: MatchedItem; done: boolean; onPick: (f: Food) => void; manualUrl: string }) {
+function ItemCard({ match, done, onPick, manualUrl, onLogIngredients }: { match: MatchedItem; done: boolean; onPick: (f: Food) => void; manualUrl: string; onLogIngredients: (rows: { food: Food; grams: number }[]) => void }) {
   const { item, candidates } = match;
   const [open, setOpen] = useState(false);
+  const hasIngredients = match.ingredients.length > 0;
+  const [mode, setMode] = useState<'dish' | 'ingredients'>('dish');
   const shown = open ? candidates : candidates.slice(0, 2);
   const sub = useMemo(() => [item.localName && item.localName !== item.name ? item.localName : '', item.cuisine].filter(Boolean).join(' · '), [item]);
   return (
@@ -216,18 +232,26 @@ function ItemCard({ match, done, onPick, manualUrl }: { match: MatchedItem; done
           {sub && <p className="mt-0.5 text-xs font-medium text-silver">{sub}</p>}
         </div>
         <div className="flex shrink-0 items-center gap-1.5">
-          {item.estimatedGrams > 0 && <span className="rounded-full bg-raised px-2.5 py-1 text-[11px] font-semibold text-silver">~{item.estimatedGrams} g</span>}
+          {item.estimatedGrams > 0 && <span className="rounded-full border border-dashed border-silver/50 px-2.5 py-1 text-[11px] font-medium text-silver" title="Rough AI estimate from the photo">est. ~{item.estimatedGrams} g</span>}
           {done && <span className="grid h-7 w-7 place-items-center rounded-full bg-accent text-white"><Check size={15} strokeWidth={3} /></span>}
         </div>
       </div>
 
-      {candidates.length > 0 ? (
+      {hasIngredients && (
+        <div className="mt-3">
+          <Segmented full value={mode} onChange={(m) => { haptic(); setMode(m); }} options={[{ value: 'dish', label: 'Whole dish' }, { value: 'ingredients', label: `By ingredient (${match.ingredients.length})` }]} />
+        </div>
+      )}
+
+      {mode === 'ingredients' ? (
+        <IngredientList match={match} onLog={onLogIngredients} />
+      ) : candidates.length > 0 ? (
         <div className="-mx-2 mt-2">
           {shown.map((f) => {
             const { title, detail } = splitName(f.name);
             return (
               <button key={f.id} onClick={() => onPick(f)} className="flex w-full items-center gap-3 rounded-2xl p-2 text-left transition active:bg-raised/70">
-                <FoodVisual name={f.name} category={f.category} size={42} />
+                <FoodVisual name={f.name} category={f.category} fdcId={f.fdcId} size={42} />
                 <div className="min-w-0 flex-1">
                   <p className="line-clamp-2 text-sm font-semibold leading-snug">{title}</p>
                   <p className="mt-0.5 flex items-center gap-1.5 truncate text-[11px] font-medium text-silver">
@@ -342,6 +366,46 @@ function Camera({ onClose, onCapture }: { onClose: () => void; onCapture: (b: Bl
 
       <input ref={fileRef} type="file" accept="image/*" hidden onChange={(e) => e.target.files?.[0] && onCapture(e.target.files[0])} />
       <input ref={captureRef} type="file" accept="image/*" capture="environment" hidden onChange={(e) => e.target.files?.[0] && onCapture(e.target.files[0])} />
+    </div>
+  );
+}
+
+/** Confirm or correct each ingredient of a mixed dish and enter its weight. */
+function IngredientList({ match, onLog }: { match: MatchedItem; onLog: (rows: { food: Food; grams: number }[]) => void }) {
+  const [rows, setRows] = useState(() =>
+    match.ingredients.map((m) => ({ ing: m.ingredient, options: m.candidates, choice: 0, grams: '', on: true })),
+  );
+  const update = (i: number, patch: Partial<(typeof rows)[number]>) => setRows((r) => r.map((x, j) => (j === i ? { ...x, ...patch } : x)));
+  const ready = rows.filter((r) => r.on && r.options[r.choice] && Number(r.grams) > 0);
+  const total = ready.reduce((sum, r) => sum + (r.options[r.choice].per100.protein * Number(r.grams)) / 100, 0);
+  return (
+    <div className="mt-3 space-y-2">
+      <p className="text-[12px] text-silver">Untick what isn’t in your dish, pick the closest match and enter what you used (edible weight).</p>
+      {rows.map((r, i) => {
+        const food = r.options[r.choice];
+        return (
+          <div key={i} className={cx('rounded-2xl bg-raised/70 p-3 transition', !r.on && 'opacity-45')}>
+            <div className="flex items-center gap-2">
+              <input type="checkbox" checked={r.on} onChange={(e) => update(i, { on: e.target.checked })} className="h-5 w-5 shrink-0 accent-[rgb(var(--accent))]" aria-label={`Include ${r.ing.name}`} />
+              <p className="flex-1 text-sm font-semibold">{r.ing.name}{!r.ing.visible && <span className="ml-1.5 rounded-full bg-warn/15 px-1.5 py-0.5 text-[10px] font-semibold text-warn">often hidden</span>}</p>
+              <div className="relative w-24">
+                <input inputMode="decimal" value={r.grams} onChange={(e) => update(i, { grams: e.target.value.replace(/[^\d.]/g, '') })} placeholder="0" disabled={!r.on} className="field !h-10 pr-7 text-right font-semibold" aria-label={`${r.ing.name} grams`} />
+                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-silver">g</span>
+              </div>
+            </div>
+            {r.on && (food ? (
+              <select value={r.choice} onChange={(e) => update(i, { choice: Number(e.target.value) })} className="mt-2 w-full truncate rounded-xl bg-surface px-3 py-2 text-xs" aria-label={`Database match for ${r.ing.name}`}>
+                {r.options.map((o, j) => <option key={o.id} value={j}>{splitName(o.name).title} — {fmt(o.per100.protein, 1)} g/100 g ({SOURCE_SHORT[o.source]})</option>)}
+              </select>
+            ) : (
+              <p className="mt-2 text-xs text-dim">No database match yet — add it separately with search.</p>
+            ))}
+          </div>
+        );
+      })}
+      <button onClick={() => { haptic(12); onLog(ready.map((r) => ({ food: r.options[r.choice], grams: Number(r.grams) }))); }} disabled={!ready.length} className="btn-primary mt-1 w-full !h-12 text-sm">
+        {ready.length ? `Add ${ready.length} ingredient${ready.length > 1 ? 's' : ''} · ${fmt(total, 1)} g protein` : 'Enter at least one weight'}
+      </button>
     </div>
   );
 }

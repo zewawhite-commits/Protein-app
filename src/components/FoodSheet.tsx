@@ -121,7 +121,7 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
     <div className="space-y-4">
       {/* Food */}
       <div className="flex items-center gap-3.5">
-        <FoodVisual name={food.name} category={food.category} size={60} className="!bg-surface" />
+        <FoodVisual name={food.name} category={food.category} fdcId={food.fdcId} size={60} className="!bg-surface" />
         <div className="min-w-0 flex-1">
           <p className="text-lg font-semibold leading-tight tracking-tight">{title}</p>
           {detail && <p className="mt-0.5 line-clamp-2 text-[13px] font-medium text-silver">{detail}</p>}

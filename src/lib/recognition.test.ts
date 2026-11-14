@@ -12,7 +12,7 @@ beforeAll(async () => {
 }, 30_000); // parsing the 13k-food database can be slow on a busy machine
 
 const item = (over: Partial<RecognitionResult['items'][number]>) => ({
-  name: '', localName: '', cuisine: '', searchQueries: [], state: 'cooked' as const, estimatedGrams: 0, confidence: 'high' as const, ...over,
+  name: '', localName: '', cuisine: '', searchQueries: [], state: 'cooked' as const, estimatedGrams: 0, confidence: 'high' as const, ingredients: [], ...over,
 });
 
 describe('international database coverage', () => {

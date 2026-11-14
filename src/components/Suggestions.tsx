@@ -102,7 +102,7 @@ export function Suggestions({ remaining }: { remaining: number }) {
       <div className="-mx-2 mt-3">
         {rows.map((r) => (
           <Link key={r.key} to={`/add?q=${encodeURIComponent(r.query)}`} onClick={() => haptic()} className="flex items-center gap-3 rounded-2xl p-2 transition active:bg-raised/60">
-            <FoodVisual name={r.food?.name ?? r.title} category={r.food?.category} size={44} />
+            <FoodVisual name={r.food?.name ?? r.title} category={r.food?.category} fdcId={r.food?.fdcId} size={44} />
             <div className="min-w-0 flex-1">
               <p className="truncate text-[15px] font-semibold">{r.title}{r.sub && <span className="font-normal text-silver"> · {r.sub}</span>}</p>
               {r.why && <p className="line-clamp-2 text-xs text-silver">{r.why}</p>}

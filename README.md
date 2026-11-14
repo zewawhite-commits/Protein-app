@@ -45,12 +45,18 @@ npm run build:foods -- --sr /tmp/usda/FoodData_Central_sr_legacy_food_csv_2018-0
   --fndds /tmp/usda/FoodData_Central_survey_food_csv_2024-10-31 --wafct /tmp/wafct.json
 ```
 
+## AI features (all server-side)
+
+- **Photo recognition** (`api/recognize.ts`): names each food, its local name and cuisine; for mixed dishes it lists likely ingredients (including hidden ones such as cooking oil) so users can log them one by one. Portion sizes are only offered as a labelled estimate; the weight field is always what the user enters.
+- **Meal ideas** (`api/recommend.ts`): suggests foods eaten in the user's country to close the day's protein gap — names only; the app looks each one up and calculates protein and grams.
+- **Learning from corrections** (`api/feedback.ts`): stores, anonymously, which database record people chose for an AI suggestion (table `recognition_feedback`) for human review. Never treated as verified data.
+- No AI key is ever stored in the app or on phones.
+
 ## Photo recognition setup
 
 Recognition uses Claude (model `claude-opus-5-5`) and needs an Anthropic API key. Either:
 
 - **Hosted (recommended):** deploy to Vercel and set `ANTHROPIC_API_KEY` in the project's Environment Variables. The app calls `api/recognize.ts`, so the key never reaches phones.
-- **Personal:** in the app, Profile → Photo recognition → paste your own key. It is stored on that device only and sent only to Anthropic.
 
 Each photo is one API call. Requests enable server-side refusal fallbacks (`fallbacks: "default"`).
 

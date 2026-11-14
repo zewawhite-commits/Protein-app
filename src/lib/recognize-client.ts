@@ -2,7 +2,7 @@
  * Browser side of photo recognition, plus matching AI suggestions to database records.
  * Nutrient values always come from the matched database record, never from the AI.
  */
-import type { RecognitionResult, RecognizedItem } from './recognition';
+import type { RecognitionResult, RecognizedIngredient, RecognizedItem } from './recognition';
 import { searchFoods } from './foods';
 import type { CustomFood, Food } from './types';
 
@@ -55,24 +55,44 @@ export async function recognizePhoto(photo: Blob, premiumToken?: string): Promis
   throw new Error(data.error || `Recognition failed (${res.status}).`);
 }
 
-export interface MatchedItem {
-  item: RecognizedItem;
+export interface MatchedIngredient {
+  ingredient: RecognizedIngredient;
   candidates: Food[];
 }
 
-/** Look each recognised item up in the local databases. Prefers records in the same raw/cooked state. */
-export function matchItems(result: RecognitionResult, custom: CustomFood[]): MatchedItem[] {
-  return result.items.map((item) => {
-    const seen = new Set<string>();
-    const candidates: Food[] = [];
-    const queries = [...item.searchQueries, item.localName, item.name].filter(Boolean);
-    for (const q of queries) {
-      const sameState = item.state !== 'na' ? searchFoods(q, { custom, state: item.state, limit: 3 }) : [];
-      for (const f of [...sameState, ...searchFoods(q, { custom, limit: 3 })]) {
-        if (!seen.has(f.id)) { seen.add(f.id); candidates.push(f); }
-      }
-      if (candidates.length >= 5) break;
+export interface MatchedItem {
+  item: RecognizedItem;
+  candidates: Food[];
+  ingredients: MatchedIngredient[];
+}
+
+function candidatesFor(queries: string[], state: RecognizedItem['state'], custom: CustomFood[], max: number): Food[] {
+  const seen = new Set<string>();
+  const out: Food[] = [];
+  for (const q of queries) {
+    const sameState = state !== 'na' ? searchFoods(q, { custom, state, limit: 3 }) : [];
+    for (const f of [...sameState, ...searchFoods(q, { custom, limit: 3 })]) {
+      if (!seen.has(f.id)) { seen.add(f.id); out.push(f); }
     }
-    return { item, candidates: candidates.slice(0, 5) };
-  });
+    if (out.length >= max) break;
+  }
+  return out.slice(0, max);
+}
+
+/** Look each recognised item (and its ingredients) up in the local databases. Prefers records in the same raw/cooked state. */
+export function matchItems(result: RecognitionResult, custom: CustomFood[]): MatchedItem[] {
+  return result.items.map((item) => ({
+    item,
+    candidates: candidatesFor([...item.searchQueries, item.localName, item.name].filter(Boolean), item.state, custom, 5),
+    ingredients: (item.ingredients ?? []).map((ingredient) => ({
+      ingredient,
+      candidates: candidatesFor([...ingredient.searchQueries, ingredient.name].filter(Boolean), ingredient.state, custom, 3),
+    })),
+  }));
+}
+
+/** Fire-and-forget: tell the server which record the person chose (anonymous, for review). */
+export function sendFeedback(items: { aiName: string; localName?: string; cuisine?: string; chosenFoodId: string; chosenName: string; rank: number; kind: 'item' | 'ingredient' }[]) {
+  if (!items.length) return;
+  void fetch('/api/feedback', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ items }), keepalive: true }).catch(() => {});
 }

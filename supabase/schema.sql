@@ -54,3 +54,18 @@ end;
 $$;
 
 revoke all on function public.use_scan(text, integer) from public, anon, authenticated;
+
+-- Anonymous record of which database entry people chose for an AI-recognised food.
+-- For human review only (improving coverage of international foods) — never treated as verified data.
+create table if not exists public.recognition_feedback (
+  id             bigint generated always as identity primary key,
+  created_at     timestamptz not null default now(),
+  ai_name        text not null,
+  local_name     text,
+  cuisine        text,
+  chosen_food_id text not null,
+  chosen_name    text,
+  candidate_rank integer,           -- position of the chosen record in our suggestions (-1 = found by search)
+  kind           text not null default 'item'
+);
+alter table public.recognition_feedback enable row level security;   -- server-only; no client access

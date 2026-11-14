@@ -53,7 +53,7 @@ export default function Today() {
     <div className="animate-fade-up">
       <header className="pt-safe pb-4">
         <div className="flex items-center justify-between">
-          <span className="flex items-center gap-2">
+          <span className="flex items-center gap-2 lg:invisible">
             <Ring value={0.72} size={26} stroke={4} color="accent" track="line" />
             <span className="text-[19px] font-bold tracking-tight">{APP_NAME}</span>
           </span>

@@ -11,7 +11,7 @@ export function EntryRow({ entry, onClick }: { entry: LogEntry; onClick?: () => 
   const { title } = splitName(entry.food.name);
   return (
     <button onClick={onClick} className="flex w-full items-center gap-3.5 rounded-[22px] p-3 text-left transition active:scale-[.99] active:bg-raised/60">
-      <FoodVisual name={entry.food.name} category={lookup(entry.foodId)?.category} photoId={entry.photoId} size={56} />
+      <FoodVisual name={entry.food.name} category={lookup(entry.foodId)?.category} photoId={entry.photoId} fdcId={entry.food.fdcId} size={56} />
       <div className="min-w-0 flex-1">
         <p className="line-clamp-2 font-semibold leading-snug">{title}</p>
         <p className="num mt-1 flex items-center gap-1.5 text-xs font-medium text-silver">

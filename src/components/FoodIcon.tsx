@@ -3,6 +3,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { usePhotoUrl } from '@/lib/hooks';
+import { FOOD_PHOTOS } from '@/data/foodPhotos';
 import { cx } from './ui';
 
 /** USDA category (or name keyword) → icon, so every food has a visual even without a photo. */
@@ -73,15 +74,17 @@ export function iconFor(name: string, category?: string): LucideIcon {
 }
 
 /** Rounded-square visual: the entry's photo if there is one, otherwise a category icon. */
-export function FoodVisual({ name, category, photoId, size = 52, className }: { name: string; category?: string; photoId?: string; size?: number; className?: string }) {
-  const url = usePhotoUrl(photoId);
+export function FoodVisual({ name, category, photoId, fdcId, size = 52, className }: { name: string; category?: string; photoId?: string; fdcId?: number; size?: number; className?: string }) {
+  const own = usePhotoUrl(photoId);
+  const stock = fdcId && FOOD_PHOTOS[fdcId] ? `${import.meta.env.BASE_URL}photos/${FOOD_PHOTOS[fdcId].file}` : undefined;
+  const url = own ?? stock;
   const Icon = iconFor(name, category);
   return (
     <div
       className={cx('grid shrink-0 place-items-center overflow-hidden bg-raised text-ink', className)}
       style={{ width: size, height: size, borderRadius: size * 0.32 }}
     >
-      {url ? <img src={url} alt="" className="h-full w-full object-cover" /> : <Icon size={size * 0.42} strokeWidth={1.9} />}
+      {url ? <img src={url} alt="" loading="lazy" className="h-full w-full object-cover" /> : <Icon size={size * 0.42} strokeWidth={1.9} />}
     </div>
   );
 }

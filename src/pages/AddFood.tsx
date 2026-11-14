@@ -214,7 +214,7 @@ function FoodRow({ food, onClick }: { food: Food; onClick: () => void }) {
   return (
     <div className="flex items-center rounded-[22px] transition active:bg-raised/60">
     <button onClick={onClick} className="flex min-w-0 flex-1 items-center gap-3.5 p-3 pr-1 text-left transition active:scale-[.99]">
-      <FoodVisual name={food.name} category={food.category} size={50} />
+      <FoodVisual name={food.name} category={food.category} fdcId={food.fdcId} size={50} />
       <div className="min-w-0 flex-1">
         <p className="line-clamp-2 font-semibold leading-snug">{title}</p>
         <div className="mt-1 flex min-w-0 items-center gap-1.5">

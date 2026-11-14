@@ -23,6 +23,16 @@ export interface RecognizedItem {
   /** Rough visual portion estimate in grams (0 = cannot tell). An AI guess — never used without the user confirming. */
   estimatedGrams: number;
   confidence: 'high' | 'medium' | 'low';
+  /** For combined dishes: the likely ingredients, so the user can log them one by one. Empty for single foods. */
+  ingredients: RecognizedIngredient[];
+}
+
+export interface RecognizedIngredient {
+  name: string;
+  searchQueries: string[];
+  state: 'raw' | 'cooked' | 'dry' | 'na';
+  /** false for things you usually can't see in the photo (cooking oil, stock, ground seeds). */
+  visible: boolean;
 }
 
 export interface RecognitionResult {
@@ -48,8 +58,22 @@ const SCHEMA = {
           state: { type: 'string', enum: ['raw', 'cooked', 'dry', 'na'] },
           estimatedGrams: { type: 'number' },
           confidence: { type: 'string', enum: ['high', 'medium', 'low'] },
+          ingredients: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                name: { type: 'string' },
+                searchQueries: { type: 'array', items: { type: 'string' } },
+                state: { type: 'string', enum: ['raw', 'cooked', 'dry', 'na'] },
+                visible: { type: 'boolean' },
+              },
+              required: ['name', 'searchQueries', 'state', 'visible'],
+              additionalProperties: false,
+            },
+          },
         },
-        required: ['name', 'localName', 'cuisine', 'searchQueries', 'state', 'estimatedGrams', 'confidence'],
+        required: ['name', 'localName', 'cuisine', 'searchQueries', 'state', 'estimatedGrams', 'confidence', 'ingredients'],
         additionalProperties: false,
       },
     },
@@ -69,6 +93,8 @@ Recognise dishes from any cuisine. Use the specific dish name in English in "nam
 
 "state": cooked if visibly cooked, raw if raw, dry for dry uncooked grains/pasta, na otherwise.
 "estimatedGrams": your best visual estimate of the edible weight shown, or 0 if you cannot judge. The user will weigh the food; this is only a starting point.
+
+For a combined dish (soup, stew, curry, rice dish, salad, sandwich…), also list its likely main ingredients in "ingredients" (3–8 items), each with database-style "searchQueries" and its state as it is in the dish. Include ingredients that are usually present but hard to see, such as cooking oil, palm oil, stock fish, crayfish or ground melon seeds, and mark those "visible": false. For single foods, return "ingredients": [].
 
 Do not provide any nutrient values. If the photo contains no food, set isFood to false and items to [].`;
 
@@ -111,6 +137,12 @@ export function sanitize(raw: RecognitionResult): RecognitionResult {
     cuisine: String(i.cuisine ?? '').slice(0, 40),
     searchQueries: (i.searchQueries ?? []).map((q) => String(q).slice(0, 60)).filter(Boolean).slice(0, 4),
     estimatedGrams: Number.isFinite(i.estimatedGrams) ? Math.max(0, Math.min(2000, Math.round(i.estimatedGrams))) : 0,
+    ingredients: (i.ingredients ?? []).slice(0, 10).map((g) => ({
+      name: String(g.name ?? '').slice(0, 60),
+      searchQueries: (g.searchQueries ?? []).map((q) => String(q).slice(0, 60)).filter(Boolean).slice(0, 3),
+      state: (['raw', 'cooked', 'dry', 'na'] as const).includes(g.state) ? g.state : 'na',
+      visible: g.visible !== false,
+    })).filter((g) => g.name),
   }));
   return { isFood: !!raw.isFood, items, note: String(raw.note ?? '').slice(0, 200) };
 }
