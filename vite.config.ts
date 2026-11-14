@@ -15,8 +15,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['icons/icon.svg', 'icons/apple-touch-icon.png'],
       manifest: {
-        name: 'Protein — precise protein tracking',
-        short_name: 'Protein',
+        name: 'Provora — protein, precisely',
+        short_name: 'Provora',
         description: 'Weigh food, log protein, hit your daily goal. Nutrition data from USDA FoodData Central.',
         theme_color: '#F6F4EF',
         background_color: '#F6F4EF',

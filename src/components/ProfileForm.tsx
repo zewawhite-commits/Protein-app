@@ -28,7 +28,9 @@ export function ProfileForm({ initial, submitLabel, onSaved }: { initial?: Profi
   const [fixed, setFixed] = useState(String(initial?.goalGrams ?? 140));
 
   const weightNum = Number(weight.replace(',', '.'));
-  const weightKg = weightNum > 0 ? toKg(weightNum, unit) : null;
+  const [minW, maxW] = unit === 'kg' ? [25, 300] : [55, 660];
+  const weightKg = weightNum >= minW && weightNum <= maxW ? toKg(weightNum, unit) : null;
+  const weightError = weight && !weightKg ? `Enter a weight between ${minW} and ${maxW} ${unit}.` : '';
   const draft: Profile = {
     name: name.trim(),
     bodyWeightKg: weightKg ? round1(weightKg) : null,
@@ -70,6 +72,7 @@ export function ProfileForm({ initial, submitLabel, onSaved }: { initial?: Profi
           <input id="pf-weight" className="field pr-12" inputMode="decimal" value={weight} onChange={(e) => setWeight(e.target.value.replace(/[^\d.,]/g, ''))} placeholder={unit === 'kg' ? '75' : '165'} />
           <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-silver">{unit}</span>
         </div>
+        {weightError && <p className="mt-2 text-sm text-danger">{weightError}</p>}
       </div>
 
       <div>

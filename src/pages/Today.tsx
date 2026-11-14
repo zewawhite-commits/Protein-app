@@ -7,6 +7,7 @@ import { addDays, fromKey, relativeDay, todayKey, weekOf } from '@/lib/dates';
 import { sumEntries } from '@/lib/nutrition';
 import type { Food, LogEntry, Meal } from '@/lib/types';
 import { Pill, Ring, cx, fmt } from '@/components/ui';
+import { APP_NAME, CountUp } from '@/components/fx';
 import { EntryRow } from '@/components/EntryRow';
 import { FoodSheet } from '@/components/FoodSheet';
 
@@ -48,15 +49,20 @@ export default function Today() {
 
   return (
     <div className="animate-fade-up">
-      <header className="pt-safe flex items-center justify-between pb-5">
-        <Pill>
-          <span className="h-2 w-2 rounded-full bg-accent" />
-          {weekHits} of 7 days on goal
-        </Pill>
-        <Pill>
-          <Flame size={15} className="text-accent" fill="currentColor" fillOpacity={0.2} />
-          <span className="num">{streak}</span>
-        </Pill>
+      <header className="pt-safe pb-4">
+        <div className="flex items-center justify-between">
+          <span className="flex items-center gap-2">
+            <Ring value={0.72} size={26} stroke={4} color="accent" track="line" />
+            <span className="text-[19px] font-bold tracking-tight">{APP_NAME}</span>
+          </span>
+          <Pill>
+            <Flame size={15} className="text-accent" fill="currentColor" fillOpacity={0.2} />
+            <span className="num">{streak}</span>
+          </Pill>
+        </div>
+        <p className="mt-4 flex items-center gap-2 text-sm font-medium text-silver">
+          <span className="h-2 w-2 rounded-full bg-accent" /> {weekHits} of 7 days on goal this week
+        </p>
       </header>
 
       <WeekStrip date={date} onSelect={setDate} />
@@ -122,7 +128,7 @@ function HeroCard(props: {
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0">
               <p className="flex items-baseline">
-                <span className="num text-[64px] font-extrabold leading-[0.9]">{fmt(protein)}</span>
+                <CountUp value={Math.round(protein)} className={cx('num font-extrabold leading-[0.9]', protein >= 1000 ? 'text-[48px]' : 'text-[64px]')} />
                 <span className="num ml-1 text-lg font-bold text-silver">/{fmt(goal)}g</span>
               </p>
               <p className="mt-2 text-[15px] font-semibold">Protein eaten</p>
@@ -266,3 +272,4 @@ export function useGoalStats(date = todayKey()) {
 }
 
 export const useStreak = () => useGoalStats().streak;
+

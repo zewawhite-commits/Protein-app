@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { ArrowLeft, Check, Bike, Dumbbell, Flame, HeartPulse, Leaf, Loader2, Mail, Scale, Sofa, Trophy, Fish, Salad, Utensils, Footprints } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 import { accountsEnabled, signInWithEmail, signInWithGoogle, useSession } from '@/lib/account';
@@ -7,6 +7,7 @@ import { primaryGoal, suggestGramsPerKg, suggestionReason } from '@/lib/goals';
 import { dailyGoal, fromKg, round1, toKg } from '@/lib/nutrition';
 import type { ActivityLevel, Diet, FitnessGoal } from '@/lib/types';
 import { Ring, Segmented, cx, fmt } from '@/components/ui';
+import { CountUp, haptic } from '@/components/fx';
 
 type Option<T> = { value: T; label: string; sub: string; icon: typeof Dumbbell };
 
@@ -47,7 +48,10 @@ export default function Onboarding() {
   const [gPerKg, setGPerKg] = useState(1.6);
 
   const weightNum = Number(weight.replace(',', '.'));
-  const weightKg = weightNum > 20 ? toKg(weightNum, unit) : null;
+  const [minW, maxW] = unit === 'kg' ? [25, 300] : [55, 660];
+  const weightOk = weightNum >= minW && weightNum <= maxW;
+  const weightKg = weightOk ? toKg(weightNum, unit) : null;
+  const weightError = weight && !weightOk ? `Enter a weight between ${minW} and ${maxW} ${unit}.` : '';
   const next = () => setStep((s) => Math.min(STEPS - 1, s + 1));
   const back = () => setStep((s) => Math.max(0, s - 1));
 
@@ -122,9 +126,10 @@ export default function Onboarding() {
               <Segmented value={unit} onChange={(u) => { if (weightNum) setWeight(String(round1(fromKg(toKg(weightNum, unit), u)))); updateSettings({ bodyUnit: u }); }} options={[{ value: 'kg', label: 'kg' }, { value: 'lb', label: 'lb' }]} />
             </div>
             <div className="relative mt-2">
-              <input id="ob-weight" className="field !h-16 pr-14 text-2xl font-semibold" inputMode="decimal" value={weight} onChange={(e) => setWeight(e.target.value.replace(/[^\d.,]/g, ''))} placeholder={unit === 'kg' ? '75' : '165'} />
+              <input id="ob-weight" className={cx('field !h-16 pr-14 text-2xl font-semibold', weightError && '!ring-2 !ring-danger')} inputMode="decimal" maxLength={5} value={weight} onChange={(e) => setWeight(e.target.value.replace(/[^\d.,]/g, ''))} placeholder={unit === 'kg' ? '75' : '165'} aria-invalid={!!weightError} aria-describedby="ob-weight-err" />
               <span className="pointer-events-none absolute right-5 top-1/2 -translate-y-1/2 text-lg text-silver">{unit}</span>
             </div>
+            <p id="ob-weight-err" className="mt-2 min-h-5 text-sm text-danger">{weightError}</p>
             <div className="flex-1" />
             <button onClick={next} disabled={!weightKg} className="btn-primary mt-8 w-full">Continue</button>
           </Question>
@@ -132,22 +137,30 @@ export default function Onboarding() {
         {step === 5 && goal && activity && (
           <Question title="Your daily target" sub="Based on your answers. Adjust it any time in Profile.">
             <div className="card mt-2 flex flex-col items-center p-6 text-center">
-              <Ring value={1} size={150} stroke={12} color="accent" track="raised">
+              <AnimatedRing>
                 <div>
-                  <p className="num text-[44px] font-extrabold leading-none">{fmt(total)}<span className="text-xl text-silver">g</span></p>
+                  <p className={cx('num font-extrabold leading-none', fmt(total).length > 3 ? 'text-[30px]' : 'text-[40px]')}>
+                    <CountUp value={total} /><span className="text-lg text-silver">g</span>
+                  </p>
                   <p className="mt-1 text-xs font-medium text-silver">protein / day</p>
                 </div>
-              </Ring>
-              <div className="mt-5 flex items-center gap-3">
-                <button onClick={() => setGPerKg((v) => Math.max(0.8, round1(v - 0.1)))} className="grid h-10 w-10 place-items-center rounded-full bg-raised text-lg font-semibold" aria-label="Lower">−</button>
-                <span className="num w-24 text-lg font-semibold">{gPerKg.toFixed(1)} g/kg</span>
-                <button onClick={() => setGPerKg((v) => Math.min(2.5, round1(v + 0.1)))} className="grid h-10 w-10 place-items-center rounded-full bg-raised text-lg font-semibold" aria-label="Higher">+</button>
+              </AnimatedRing>
+              <div className="mt-5 flex w-full items-center gap-3">
+                <button onClick={() => { haptic(); setGPerKg((v) => Math.max(0.8, round1(v - 0.1))); }} className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-raised text-lg font-semibold transition active:scale-90" aria-label="Lower">−</button>
+                <input
+                  type="range" min={0.8} max={2.5} step={0.1} value={gPerKg}
+                  onChange={(e) => { setGPerKg(Number(e.target.value)); haptic(5); }}
+                  className="h-2 flex-1 cursor-pointer appearance-none rounded-full bg-raised accent-[rgb(var(--accent))]"
+                  aria-label="Grams of protein per kilogram"
+                />
+                <button onClick={() => { haptic(); setGPerKg((v) => Math.min(2.5, round1(v + 0.1))); }} className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-raised text-lg font-semibold transition active:scale-90" aria-label="Higher">+</button>
               </div>
+              <p className="num mt-2 text-sm font-semibold">{gPerKg.toFixed(1)} g per kg of body weight</p>
               <p className="mt-4 text-sm leading-relaxed text-silver">{suggestionReason(goal, activity, suggestGramsPerKg(goal, activity))}</p>
             </div>
             <p className="mt-3 text-center text-xs text-dim">A starting point, not medical advice. Check with a health professional if you have a medical condition.</p>
             <div className="flex-1" />
-            <button onClick={finish} className="btn-primary mt-8 w-full">Start tracking</button>
+            <button onClick={() => { haptic([10, 40, 10]); finish(); }} className="btn-primary mt-8 w-full">Start tracking</button>
           </Question>
         )}
       </div>
@@ -169,8 +182,8 @@ function Choice<T>({ option, selected, onClick, multi }: { option: Option<T>; se
   const Icon = option.icon;
   return (
     <button
-      onClick={onClick}
-      className={cx('flex items-center gap-4 rounded-[22px] border-2 bg-surface p-4 text-left transition active:scale-[.99]', selected ? 'border-ink' : 'border-transparent')}
+      onClick={() => { haptic(); onClick(); }}
+      className={cx('flex items-center gap-4 rounded-[22px] border-2 bg-surface p-4 text-left transition active:scale-[.98]', selected ? 'border-ink' : 'border-transparent')}
       style={{ boxShadow: 'var(--shadow)' }}
     >
       <span className={cx('grid h-12 w-12 shrink-0 place-items-center rounded-2xl', selected ? 'bg-primary text-on-primary' : 'bg-raised')}><Icon size={22} /></span>
@@ -209,7 +222,7 @@ function Welcome({ signedIn, email, onStart }: { signedIn: boolean; email?: stri
     <div className="relative mx-auto flex min-h-dvh max-w-lg flex-col px-5 pb-8">
       <div className="pt-safe mt-10 flex items-center gap-3 animate-fade-up">
         <Ring value={0.72} size={40} stroke={5} color="ink" track="line" />
-        <span className="text-lg font-semibold tracking-tight">Protein</span>
+        <span className="text-lg font-semibold tracking-tight">Provora</span>
       </div>
       <h1 className="mt-12 animate-fade-up text-[44px] font-extrabold leading-[1.02] tracking-tight">
         Weigh it.<br />Snap it.<br /><span className="text-accent">Hit your number.</span>
@@ -257,4 +270,14 @@ function Welcome({ signedIn, email, onStart }: { signedIn: boolean; email?: stri
       )}
     </div>
   );
+}
+
+/** Ring that fills up when the screen appears. */
+function AnimatedRing({ children }: { children: ReactNode }) {
+  const [v, setV] = useState(0);
+  useEffect(() => {
+    const t = setTimeout(() => setV(1), 80);
+    return () => clearTimeout(t);
+  }, []);
+  return <Ring value={v} size={160} stroke={12} color="accent" track="raised">{children}</Ring>;
 }

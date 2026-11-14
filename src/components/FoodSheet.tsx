@@ -6,9 +6,10 @@ import { counterparts, sourceInfo, splitName } from '@/lib/foods';
 import { deletePhoto, savePhoto } from '@/lib/photos';
 import { useFoodDb, usePhotoUrl, useDay } from '@/lib/hooks';
 import { useStore } from '@/store/useStore';
-import { mealForNow } from '@/lib/dates';
+import { mealForNow, todayKey } from '@/lib/dates';
 import { Ring, Segmented, Sheet, StateBadge, cx, fmt } from './ui';
 import { FoodVisual } from './FoodIcon';
+import { haptic, toast } from './fx';
 
 const MEALS: { value: Meal; label: string }[] = [
   { value: 'breakfast', label: 'Breakfast' },
@@ -96,8 +97,18 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
   function save() {
     if (g <= 0) { inputRef.current?.focus(); return; }
     savedRef.current = true;
+    const crossesGoal = day.goal > 0 && before + (entry ? nutrientsFor(entry.food.per100, entry.grams).protein : 0) < day.goal && after >= day.goal;
     if (entry) updateEntry(entry.id, { grams: round1(g), meal, photoId });
-    else addEntry({ date, meal, food, grams: round1(g), photoId });
+    else {
+      const added = addEntry({ date, meal, food, grams: round1(g), photoId });
+      haptic(12);
+      if (!crossesGoal)
+        toast(`Added ${fmt(n.protein, 1)} g protein`, { action: { label: 'Undo', run: () => useStore.getState().removeEntry(added.id) } });
+    }
+    if (crossesGoal) {
+      haptic([20, 60, 20]);
+      toast(`Goal hit! ${fmt(after)} g of protein${date === todayKey() ? ' today' : ''}`, { tone: 'celebrate', ms: 4500 });
+    }
     onSaved?.();
     onClose();
   }

@@ -87,7 +87,7 @@ export default function Premium() {
 
       <div className="relative overflow-hidden rounded-[32px] bg-primary p-6 text-on-primary">
         <div className="pointer-events-none absolute -right-12 -top-16 h-56 w-56 rounded-full bg-accent/50 blur-3xl" />
-        <span className="relative inline-flex items-center gap-1.5 rounded-full bg-on-primary/10 px-3 py-1 text-xs font-semibold"><Sparkles size={13} className="text-accent" /> Protein Plus & Pro</span>
+        <span className="relative inline-flex items-center gap-1.5 rounded-full bg-on-primary/10 px-3 py-1 text-xs font-semibold"><Sparkles size={13} className="text-accent" /> Provora Plus & Pro</span>
         <h1 className="relative mt-4 text-[30px] font-bold leading-[1.08] tracking-tight">Snap it.<br />We’ll find it.</h1>
         <p className="relative mt-2 text-sm opacity-70">AI photo recognition for meals from anywhere in the world. Protein always comes from real food records.</p>
       </div>
