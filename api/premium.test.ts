@@ -146,6 +146,33 @@ describe('tiers and accounts', () => {
     expect(res.status).toBe(401);
     expect(await res.json()).toMatchObject({ signIn: true });
   });
+
+  it('lets phone-only accounts subscribe with a receipt email, and remembers it', async () => {
+    process.env.STORAGE_SUPABASE_URL = 'https://proj.supabase.co';
+    process.env.STORAGE_SUPABASE_SERVICE_ROLE_KEY = 'service-role';
+    const calls: string[] = [];
+    let initBody: Record<string, unknown> = {};
+    vi.stubGlobal('fetch', async (input: string | URL | Request, init?: RequestInit) => {
+      const url = String(input instanceof Request ? input.url : input);
+      calls.push(`${init?.method ?? 'GET'} ${url}`);
+      if (url.endsWith('/auth/v1/user')) return new Response(JSON.stringify({ id: '7f1c2e7a-3b4d-4c5e-8f9a-0b1c2d3e4f5a', phone: '2348012345678', email: '', app_metadata: {} }), { status: 200 });
+      if (url.includes('/auth/v1/admin/users/7f1c2e7a-3b4d-4c5e-8f9a-0b1c2d3e4f5a')) return new Response(JSON.stringify({ id: '7f1c2e7a-3b4d-4c5e-8f9a-0b1c2d3e4f5a' }), { status: 200 });
+      if (url.endsWith('/transaction/initialize')) {
+        initBody = JSON.parse(String(init?.body));
+        return new Response(JSON.stringify({ status: true, data: { authorization_url: 'https://checkout.paystack.com/abc', reference: 'r' } }), { status: 200 });
+      }
+      return new Response('{}', { status: 404 });
+    });
+    const noEmail = await checkout(post('https://x/api', { plan: 'plus_monthly' }, 'jwt'));
+    expect(noEmail.status).toBe(400);
+    expect(await noEmail.json()).toMatchObject({ needEmail: true });
+    const res = await checkout(post('https://x/api', { email: 'Me@Mail.com', plan: 'plus_monthly' }, 'jwt'));
+    expect(res.status).toBe(200);
+    expect(initBody).toMatchObject({ email: 'me@mail.com', metadata: { user_id: '7f1c2e7a-3b4d-4c5e-8f9a-0b1c2d3e4f5a' } });
+    expect(calls.filter((c) => c.includes('/admin/users/'))).toEqual(['PUT https://proj.supabase.co/auth/v1/admin/users/7f1c2e7a-3b4d-4c5e-8f9a-0b1c2d3e4f5a']);
+    delete process.env.STORAGE_SUPABASE_URL;
+    delete process.env.STORAGE_SUPABASE_SERVICE_ROLE_KEY;
+  });
 });
 
 describe('recognition is Premium-gated when payments are on', () => {

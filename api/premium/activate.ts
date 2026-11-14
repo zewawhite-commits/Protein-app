@@ -16,6 +16,7 @@ export async function POST(request: Request): Promise<Response> {
     if (body.account) {
       const user = await userFromToken(bearer(request));
       if (!user) return json({ error: 'Sign in first.' }, 401);
+      if (!user.email) return json({ error: 'No subscription on this account yet.' }, 402);
       const cid = await customerIdByEmail(user.email);
       const pass = cid ? await issuePass({ email: user.email, cid, plan: '', uid: user.id }) : null;
       return pass ? json(pass) : json({ error: 'No active subscription for this account.' }, 402);

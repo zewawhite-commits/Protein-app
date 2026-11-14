@@ -6,6 +6,7 @@
  */
 import { createClient } from '@supabase/supabase-js';
 import { json } from './_lib/premium';
+import { supabaseServiceKey, supabaseUrl } from './_lib/accounts';
 
 interface Item { aiName: string; localName?: string; cuisine?: string; chosenFoodId: string; chosenName: string; rank: number; kind: 'item' | 'ingredient' }
 
@@ -15,8 +16,8 @@ export async function POST(request: Request): Promise<Response> {
   const body = (await request.json().catch(() => null)) as { items?: Item[] } | null;
   const items = Array.isArray(body?.items) ? body!.items.slice(0, 20) : [];
   if (!items.length) return json({ error: 'Nothing to record.' }, 400);
-  const url = process.env.SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const url = supabaseUrl();
+  const key = supabaseServiceKey();
   if (!url || !key) return json({ stored: 0 });
   const rows = items
     .map((i) => ({

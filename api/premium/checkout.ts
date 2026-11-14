@@ -3,7 +3,7 @@
  * → { url } of Paystack's hosted checkout. Paystack redirects back to /premium?reference=…
  */
 import { bearer, config, fail, json, paystack, type PlanId } from '../_lib/premium';
-import { accountsConfigured, userFromToken } from '../_lib/accounts';
+import { accountsConfigured, saveBillingEmail, userFromToken } from '../_lib/accounts';
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -20,8 +20,13 @@ export async function POST(request: Request): Promise<Response> {
   if (accountsConfigured()) {
     const user = await userFromToken(bearer(request));
     if (!user) return json({ error: 'Sign in to subscribe.', signIn: true }, 401);
-    email = user.email;
     userId = user.id;
+    if (user.email) email = user.email;
+    else {
+      // Signed in by phone: Paystack needs an email for receipts, so use (and remember) the one they typed.
+      if (!email || !EMAIL.test(email) || email.length > 200) return json({ error: 'Enter an email for your receipt.', needEmail: true }, 400);
+      await saveBillingEmail(user.id, email).catch(() => undefined);
+    }
   }
   if (!email || !EMAIL.test(email) || email.length > 200) return json({ error: 'Enter a valid email address.' }, 400);
 

@@ -156,13 +156,13 @@ export default function Premium() {
             </div>
           ) : !restoring ? (
             <>
-              {!accountsEnabled && (
+              {(!accountsEnabled || (session && !session.user.email)) && (
                 <>
                   <label className="label mt-6" htmlFor="pm-email">Email for your receipt</label>
                   <input id="pm-email" type="email" inputMode="email" autoComplete="email" className="field" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
                 </>
               )}
-              <button onClick={() => chosen && run(() => startCheckout(email.trim(), chosen.id))} disabled={!chosen || (!session && !validEmail) || busy} className="btn-primary mt-5 w-full">
+              <button onClick={() => chosen && run(() => startCheckout(email.trim(), chosen.id))} disabled={!chosen || ((!session || !session.user.email) && !validEmail) || busy} className="btn-primary mt-5 w-full">
                 {busy ? <Loader2 size={18} className="animate-spin" /> : <Lock size={16} />} Get {TIER_INFO[tier].name}{chosen ? ` · ${formatPrice(chosen)}` : ''}
               </button>
               <p className="mt-3 text-center text-xs text-silver">Secure payment by Paystack · card, bank transfer or USSD · cancel any time</p>
