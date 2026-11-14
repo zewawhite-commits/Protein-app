@@ -4,6 +4,8 @@ import {
 } from 'lucide-react';
 import { usePhotoUrl } from '@/lib/hooks';
 import { FOOD_PHOTOS } from '@/data/foodPhotos';
+import { PHOTO_LIBRARY } from '@/data/photoLibrary';
+import { photoKeyFor } from '@/data/photoRules';
 import { cx } from './ui';
 
 /** USDA category (or name keyword) → icon, so every food has a visual even without a photo. */
@@ -76,7 +78,10 @@ export function iconFor(name: string, category?: string): LucideIcon {
 /** Rounded-square visual: the entry's photo if there is one, otherwise a category icon. */
 export function FoodVisual({ name, category, photoId, fdcId, size = 52, className }: { name: string; category?: string; photoId?: string; fdcId?: number; size?: number; className?: string }) {
   const own = usePhotoUrl(photoId);
-  const stock = fdcId && FOOD_PHOTOS[fdcId] ? `${import.meta.env.BASE_URL}photos/${FOOD_PHOTOS[fdcId].file}` : undefined;
+  const exact = fdcId ? FOOD_PHOTOS[fdcId] : undefined;
+  const key = exact ? undefined : photoKeyFor(name);
+  const file = exact?.file ?? (key ? PHOTO_LIBRARY[key].file : undefined);
+  const stock = file ? `${import.meta.env.BASE_URL}photos/${file}` : undefined;
   const url = own ?? stock;
   const Icon = iconFor(name, category);
   return (

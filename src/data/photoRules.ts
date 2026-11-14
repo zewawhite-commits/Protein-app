@@ -19,7 +19,7 @@ const DISHES: [RegExp, string][] = [
 ];
 
 /** Things that are ingredients or extracts rather than the food itself. */
-const NOT_THE_FOOD = /\b(broth|stock|bouillon|oil|fat|gravy|baby|babyfood|infant|flour|starch|sauce|seasoning|extract|powder(?! protein)|dehydrated|substitute|imitation|flavou?red? drink)\b/;
+const NOT_THE_FOOD = /^(oil|fat|lard|shortening|margarine)\b|\b(broth|stock|bouillon|gravy|baby|babyfood|infant|flour|starch|sauce|seasoning|extract|powder(?! protein)|dehydrated|substitute|imitation|flavou?red? drink)\b/;
 
 const FOODS: [RegExp, string][] = [
   [/protein (shake|powder|bar)|\bwhey\b|\bsmoothie/, 'shake'],
