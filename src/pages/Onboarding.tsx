@@ -1,7 +1,8 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { ArrowLeft, Check, Bike, Dumbbell, Flame, HeartPulse, Leaf, Loader2, Mail, Scale, Sofa, Trophy, Fish, Salad, Utensils, Footprints } from 'lucide-react';
+import { ArrowLeft, Check, Bike, Dumbbell, Flame, HeartPulse, Leaf, Loader2, Mail, Phone, Scale, Sofa, Trophy, Fish, Salad, Utensils, Footprints } from 'lucide-react';
 import { useStore } from '@/store/useStore';
-import { accountsEnabled, signInWithEmail, signInWithGoogle, useSession } from '@/lib/account';
+import { accountsEnabled, sendPhoneCode, signInWithEmail, signInWithGoogle, toE164, useSession, verifyPhoneCode } from '@/lib/account';
+import { DIAL_CODES } from '@/lib/dialCodes';
 import { GoogleIcon } from '@/components/BrandIcons';
 import { primaryGoal, suggestGramsPerKg, suggestionReason } from '@/lib/goals';
 import { COUNTRIES } from '@/lib/countries';
@@ -239,7 +240,11 @@ function Choice<T>({ option, selected, onClick, multi }: { option: Option<T>; se
 }
 
 function Welcome({ signedIn, email, onStart }: { signedIn: boolean; email?: string; onStart: () => void }) {
-  const [mode, setMode] = useState<'choose' | 'email' | 'sent'>('choose');
+  const [mode, setMode] = useState<'choose' | 'email' | 'sent' | 'phone' | 'code'>('choose');
+  const [dial, setDial] = useState('+234');
+  const [phone, setPhone] = useState('');
+  const [code, setCode] = useState('');
+  const fullPhone = toE164(dial, phone);
   const [addr, setAddr] = useState('');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
@@ -286,6 +291,29 @@ function Welcome({ signedIn, email, onStart }: { signedIn: boolean; email?: stri
           <p className="mt-1 text-sm text-silver">We sent a sign-in link to {addr}. Open it on this phone.</p>
           <button onClick={() => setMode('choose')} className="mt-4 text-sm font-semibold text-silver">Use another way</button>
         </div>
+      ) : mode === 'phone' ? (
+        <div className="grid gap-2">
+          <div className="flex gap-2">
+            <select value={dial} onChange={(e) => setDial(e.target.value)} className="field !w-28 shrink-0 !px-2 text-sm" aria-label="Country code">
+              {DIAL_CODES.map(([label, c]) => <option key={label} value={c}>{label.split(' ')[0]} {c}</option>)}
+            </select>
+            <input type="tel" inputMode="tel" autoComplete="tel-national" className="field flex-1" placeholder="801 234 5678" value={phone} onChange={(e) => setPhone(e.target.value)} />
+          </div>
+          <button disabled={busy || fullPhone.replace(/\D/g, '').length < 8} onClick={() => run(() => sendPhoneCode(fullPhone), () => setMode('code'))} className="btn-primary">
+            {busy && <Loader2 size={18} className="animate-spin" />} Text me a code
+          </button>
+          <p className="text-center text-xs text-dim">We’ll send a 6-digit code to {fullPhone}. Standard SMS rates may apply.</p>
+          <button onClick={() => setMode('choose')} className="text-sm font-semibold text-silver">Back</button>
+        </div>
+      ) : mode === 'code' ? (
+        <div className="grid gap-2">
+          <p className="text-center text-sm text-silver">Enter the code sent to {fullPhone}</p>
+          <input inputMode="numeric" autoComplete="one-time-code" maxLength={6} className="field text-center text-2xl font-semibold tracking-[0.4em]" value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))} placeholder="••••••" />
+          <button disabled={busy || code.length < 6} onClick={() => run(() => verifyPhoneCode(fullPhone, code))} className="btn-primary">
+            {busy && <Loader2 size={18} className="animate-spin" />} Verify
+          </button>
+          <button onClick={() => run(() => sendPhoneCode(fullPhone))} className="text-sm font-semibold text-silver">Send a new code</button>
+        </div>
       ) : mode === 'email' ? (
         <div className="grid gap-2">
           <input type="email" inputMode="email" autoComplete="email" className="field" placeholder="you@example.com" value={addr} onChange={(e) => setAddr(e.target.value)} />
@@ -298,6 +326,9 @@ function Welcome({ signedIn, email, onStart }: { signedIn: boolean; email?: stri
         <div className="grid gap-2.5">
           <button disabled={busy} onClick={() => run(signInWithGoogle)} className="btn bg-surface text-ink" style={{ boxShadow: 'var(--shadow)' }}>
             <GoogleIcon /> Continue with Google
+          </button>
+          <button onClick={() => setMode('phone')} className="btn bg-surface text-ink" style={{ boxShadow: 'var(--shadow)' }}>
+            <Phone size={18} /> Continue with phone
           </button>
           <button onClick={() => setMode('email')} className="btn bg-surface text-ink" style={{ boxShadow: 'var(--shadow)' }}>
             <Mail size={18} /> Continue with email

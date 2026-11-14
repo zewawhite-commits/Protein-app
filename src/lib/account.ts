@@ -9,6 +9,7 @@
 import { createClient, type Session, type SupabaseClient } from '@supabase/supabase-js';
 import { useEffect, useState } from 'react';
 import { exportData, useStore } from '@/store/useStore';
+export { toE164 } from './dialCodes';
 
 const url = import.meta.env.VITE_SUPABASE_URL as string | undefined;
 const anon = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
@@ -28,6 +29,19 @@ export async function signInWithGoogle() {
 export async function signInWithEmail(email: string) {
   if (!supabase) return;
   const { error } = await supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: appUrl() } });
+  if (error) throw error;
+}
+
+/** Sends a one-time code by SMS. `phone` in international format, e.g. +2348012345678. */
+export async function sendPhoneCode(phone: string) {
+  if (!supabase) return;
+  const { error } = await supabase.auth.signInWithOtp({ phone });
+  if (error) throw error;
+}
+
+export async function verifyPhoneCode(phone: string, token: string) {
+  if (!supabase) return;
+  const { error } = await supabase.auth.verifyOtp({ phone, token, type: 'sms' });
   if (error) throw error;
 }
 

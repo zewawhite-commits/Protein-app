@@ -63,7 +63,11 @@ export function Suggestions({ remaining }: { remaining: number }) {
       const res = await fetch('/api/recommend', {
         method: 'POST',
         headers: { 'content-type': 'application/json', ...(premiumToken && { authorization: `Bearer ${premiumToken}` }) },
-        body: JSON.stringify({ country: profile?.country, diet: profile?.diet, remainingGrams: remaining, eatenToday }),
+        body: JSON.stringify({
+          country: profile?.country, diet: profile?.diet, remainingGrams: remaining, eatenToday,
+          goals: profile?.goals ?? (profile?.goal ? [profile.goal] : undefined), activity: profile?.activity,
+          age: profile?.age, sex: profile?.sex, pregnant: profile?.pregnant,
+        }),
       });
       const isJson = res.headers.get('content-type')?.includes('application/json');
       if (!isJson || res.status === 404 || res.status === 501) throw new Error('AI ideas aren’t switched on yet — here are great options from the database.');

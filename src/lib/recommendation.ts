@@ -10,6 +10,11 @@ import { RECOGNITION_MODEL } from './recognition';
 export interface IdeaRequest {
   country?: string;
   diet?: string;
+  goals?: string[];
+  activity?: string;
+  age?: number;
+  sex?: string;
+  pregnant?: boolean;
   remainingGrams: number;
   /** Foods already eaten today, to avoid repeats. */
   eatenToday?: string[];
@@ -46,6 +51,8 @@ const SCHEMA = {
 
 const SYSTEM = `You suggest everyday foods that help someone reach their daily protein goal.
 
+Tailor suggestions to the person: their goals (e.g. building muscle → protein-dense meals around training; losing fat → lean, filling, lower-energy options; older adults → easy-to-eat protein spread across meals), activity level, and age. If they are pregnant or breastfeeding, avoid foods commonly advised against in pregnancy (e.g. raw or undercooked fish, meat or eggs, unpasteurised dairy, high-mercury fish).
+
 Suggest 5 foods or simple dishes that people commonly eat in the user's country (use local, affordable, culturally familiar options first; include at least one quick snack). Respect the diet strictly. Avoid repeating foods already eaten today.
 
 For each idea:
@@ -60,6 +67,9 @@ export async function ideasWithClient(client: Anthropic, req: IdeaRequest): Prom
   const user = [
     `Country: ${req.country || 'not specified (suggest widely available foods)'}`,
     `Diet: ${req.diet || 'eats everything'}`,
+    `Goals: ${req.goals?.length ? req.goals.join(', ') : 'general health'}`,
+    `Activity: ${req.activity || 'not specified'}`,
+    `Age: ${req.age ?? 'not specified'}${req.sex && req.sex !== 'unspecified' ? `, ${req.sex}` : ''}${req.pregnant ? ', pregnant or breastfeeding' : ''}`,
     `Protein still needed today: about ${Math.round(req.remainingGrams)} g`,
     `Already eaten today: ${req.eatenToday?.length ? req.eatenToday.slice(0, 15).join('; ') : 'nothing yet'}`,
   ].join('\n');

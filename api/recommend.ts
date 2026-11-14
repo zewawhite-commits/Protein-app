@@ -20,6 +20,11 @@ export async function POST(request: Request): Promise<Response> {
     country: typeof body.country === 'string' ? body.country.slice(0, 60) : undefined,
     diet: typeof body.diet === 'string' ? body.diet.slice(0, 30) : undefined,
     remainingGrams: body.remainingGrams,
+    goals: Array.isArray(body.goals) ? body.goals.map((g) => String(g).slice(0, 20)).slice(0, 5) : undefined,
+    activity: typeof body.activity === 'string' ? body.activity.slice(0, 20) : undefined,
+    age: typeof body.age === 'number' && body.age >= 13 && body.age <= 110 ? Math.round(body.age) : undefined,
+    sex: typeof body.sex === 'string' ? body.sex.slice(0, 15) : undefined,
+    pregnant: body.pregnant === true,
     eatenToday: Array.isArray(body.eatenToday) ? body.eatenToday.map((s) => String(s).slice(0, 60)).slice(0, 15) : [],
   };
   try {

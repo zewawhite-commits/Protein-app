@@ -108,3 +108,12 @@ describe('age and pregnancy', () => {
     expect(suggestGramsPerKg('muscle', 'active', { age: 70 })).toBe(1.6);
   });
 });
+
+import { toE164 } from './dialCodes';
+describe('phone numbers', () => {
+  it('formats international numbers', () => {
+    expect(toE164('+234', '0801 234 5678')).toBe('+2348012345678');
+    expect(toE164('+44', '07700 900123')).toBe('+447700900123');
+    expect(toE164('+234', '+1 (415) 555-0100')).toBe('+14155550100');
+  });
+});
