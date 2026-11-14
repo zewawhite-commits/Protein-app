@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { ChevronRight, Cloud, Database, Download, Moon, Pencil, ShieldCheck, Smartphone, Sparkles, Sun, Trash2, Upload } from 'lucide-react';
 import { useStore, exportData } from '@/store/useStore';
 import { isPremiumActive } from '@/lib/premium';
@@ -18,7 +18,9 @@ export default function Profile() {
   const entries = useStore((s) => s.entries);
   const importData = useStore((s) => s.importData);
   const resetAll = useStore((s) => s.resetAll);
-  const [editing, setEditing] = useState(false);
+  const [params, setParams] = useSearchParams();
+  const [editing, setEditingState] = useState(params.get('edit') === '1');
+  const setEditing = (v: boolean) => { setEditingState(v); if (!v && params.get('edit')) setParams({}, { replace: true }); };
   const [msg, setMsg] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 

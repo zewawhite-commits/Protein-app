@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Camera, ChevronDown, ExternalLink, ImagePlus, Minus, Plus, Star, Trash2, ArrowLeftRight, Scale } from 'lucide-react';
+import { Camera, ChevronDown, ExternalLink, Heart, ImagePlus, Minus, Plus, Trash2, ArrowLeftRight, Scale } from 'lucide-react';
 import type { Food, LogEntry, Meal } from '@/lib/types';
 import { nutrientsFor, round1 } from '@/lib/nutrition';
 import { counterparts, sourceInfo, splitName } from '@/lib/foods';
@@ -9,7 +9,7 @@ import { useStore } from '@/store/useStore';
 import { mealForNow, todayKey } from '@/lib/dates';
 import { Ring, Segmented, Sheet, StateBadge, cx, fmt } from './ui';
 import { FoodVisual } from './FoodIcon';
-import { haptic, toast } from './fx';
+import { CountUp, haptic, toast } from './fx';
 
 const MEALS: { value: Meal; label: string }[] = [
   { value: 'breakfast', label: 'Breakfast' },
@@ -125,11 +125,11 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
           {detail && <p className="mt-0.5 line-clamp-2 text-[13px] font-medium text-silver">{detail}</p>}
         </div>
         <button
-          onClick={() => { rememberFood(food); toggleFavorite(food.id); }}
+          onClick={() => { haptic(); rememberFood(food); toggleFavorite(food.id); }}
           aria-label={isFav ? 'Remove from favourites' : 'Add to favourites'}
           className={cx('grid h-11 w-11 shrink-0 place-items-center rounded-full', isFav ? 'bg-primary text-on-primary' : 'bg-surface text-ink')}
         >
-          <Star size={18} strokeWidth={2.2} fill={isFav ? 'currentColor' : 'none'} />
+          <Heart size={18} strokeWidth={2.2} fill={isFav ? 'currentColor' : 'none'} />
         </button>
       </div>
 
@@ -178,24 +178,32 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
 
       {/* Switch raw/cooked */}
       {alt.length > 0 && onSwitchFood && !entry && (
-        <div className="-mx-5 flex gap-2 overflow-x-auto px-5 no-scrollbar">
-          {alt.slice(0, 4).map((a) => (
-            <button key={a.id} onClick={() => onSwitchFood(a)} className="chip shrink-0 !bg-surface !text-ink">
-              <ArrowLeftRight size={14} className="shrink-0" />
-              <span className="max-w-[14rem] truncate">Use {diffLabel(food.name, a.name)}</span>
-            </button>
-          ))}
+        <div>
+          <p className="mb-2 flex items-center gap-1.5 px-1 text-[13px] font-medium text-silver">
+            <ArrowLeftRight size={14} /> Weighed it {food.state === 'cooked' ? 'before cooking' : 'after cooking'}? Switch to:
+          </p>
+          <div className="-mx-5 flex gap-2 overflow-x-auto px-5 no-scrollbar">
+            {alt.slice(0, 4).map((a) => (
+              <button key={a.id} onClick={() => { haptic(); onSwitchFood(a); }} className="chip shrink-0 !bg-surface !text-ink" style={{ boxShadow: 'var(--shadow)' }}>
+                <StateBadge state={a.state} />
+                <span className="max-w-[12rem] truncate">{prettyDiff(food.name, a.name)}</span>
+              </button>
+            ))}
+          </div>
         </div>
       )}
 
       {/* Result */}
       <div className="card flex items-center gap-4 p-5">
-        <Ring value={day.goal ? after / day.goal : 0} size={64} stroke={7} color={after >= day.goal ? 'accent' : 'ink'} track="raised">
-          <span className="num text-xs font-bold">{day.goal ? fmt(Math.min(999, (after / day.goal) * 100)) : 0}%</span>
-        </Ring>
+        <div className="flex flex-col items-center">
+          <Ring value={day.goal ? after / day.goal : 0} size={64} stroke={7} color={after >= day.goal ? 'accent' : 'ink'} track="raised">
+            <span className="num text-xs font-bold">{day.goal ? fmt(Math.min(999, (after / day.goal) * 100)) : 0}%</span>
+          </Ring>
+          <span className="mt-1 text-[10px] font-medium text-silver">of daily goal</span>
+        </div>
         <div className="min-w-0 flex-1">
-          <p className="num text-[34px] font-bold leading-none">{fmt(n.protein, 1)}<span className="text-lg text-silver">g</span></p>
-          <p className="mt-1 text-[13px] font-semibold">protein</p>
+          <p className="num text-[34px] font-bold leading-none"><CountUp value={n.protein} digits={1} duration={300} /><span className="text-lg text-silver">g</span></p>
+          <p className="mt-1 text-[13px] font-medium text-silver">protein in {fmt(g)} g</p>
         </div>
         <div className="num space-y-0.5 text-right text-[13px] font-semibold text-silver">
           <p><span className="font-semibold text-ink">{fmt(n.kcal)}</span> kcal</p>
@@ -259,8 +267,18 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
             <Trash2 size={20} />
           </button>
         )}
+        {!entry && (
+          <button
+            onClick={() => { haptic(); rememberFood(food); toggleFavorite(food.id); toast(isFav ? 'Removed from favourites' : 'Saved to favourites ♥'); }}
+            className={cx('btn !h-14 !w-14 !px-0', isFav ? 'bg-accent/10 text-accent' : 'bg-surface text-ink')}
+            style={{ boxShadow: 'var(--shadow)' }}
+            aria-label={isFav ? 'Remove from favourites' : 'Save to favourites'}
+          >
+            <Heart size={20} fill={isFav ? 'currentColor' : 'none'} />
+          </button>
+        )}
         <button onClick={save} disabled={g <= 0 || busy} className="btn-primary flex-1">
-          {entry ? 'Save changes' : 'Add to log'}
+          {entry ? 'Save changes' : `Add ${fmt(n.protein, 1)} g to ${MEALS.find((m) => m.value === meal)?.label ?? 'log'}`}
         </button>
       </div>
     </div>
@@ -272,4 +290,12 @@ function diffLabel(base: string, other: string): string {
   const have = new Set(base.split(', '));
   const diff = other.split(', ').filter((p) => !have.has(p));
   return diff.join(', ') || other;
+}
+
+/** Short label for what differs besides the raw/cooked badge, e.g. "Fresh", "Roasted", or "Plain". */
+function prettyDiff(base: string, other: string): string {
+  const parts = diffLabel(base, other).split(/,\s*/).filter((p) => !/^(raw|cooked|uncooked|dry)$/i.test(p.trim()));
+  let label = parts.join(', ').trim() || 'Plain';
+  if (label.length > 28) label = label.slice(0, 28).replace(/[ ,]+\S*$/, '') + '…';
+  return label.charAt(0).toUpperCase() + label.slice(1);
 }

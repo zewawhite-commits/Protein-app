@@ -40,6 +40,7 @@ export default function Today() {
   const date = params.get('date') ?? today;
   const setDate = (d: string) => setParams(d === today ? {} : { date: d }, { replace: true });
   const { entries, totals, goal } = useDay(date);
+  const profileWeight = useStore((s) => s.profile?.bodyWeightKg);
   const lookup = useFoodLookup();
   const [editing, setEditing] = useState<LogEntry | null>(null);
   const { streak, weekHits } = useGoalStats(date);
@@ -64,6 +65,13 @@ export default function Today() {
           <span className="h-2 w-2 rounded-full bg-accent" /> {weekHits} of 7 days on goal this week
         </p>
       </header>
+
+      {(goal > 400 || (profileWeight ?? 0) > 300) && (
+        <Link to="/profile?edit=1" className="mb-4 flex items-center gap-3 rounded-[22px] bg-danger/10 p-4 text-danger">
+          <span className="flex-1 text-sm font-medium">Your daily target ({fmt(goal)} g) looks too high — your body weight may be mistyped. Tap to fix it.</span>
+          <span className="rounded-full bg-danger px-3 py-1.5 text-xs font-semibold text-white">Fix</span>
+        </Link>
+      )}
 
       <WeekStrip date={date} onSelect={setDate} />
 

@@ -1,6 +1,7 @@
 import { useDeferredValue, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Camera, Globe2, Loader2, Search, Sparkles, X } from 'lucide-react';
+import { ArrowLeft, Camera, Globe2, Heart, Loader2, Search, Sparkles, X } from 'lucide-react';
+import { haptic, toast } from '@/components/fx';
 import { useFoodDb, useFoodLookup, usePhotoUrl } from '@/lib/hooks';
 import { SOURCE_SHORT, searchFoods, splitName } from '@/lib/foods';
 import { searchProducts } from '@/lib/openFoodFacts';
@@ -141,7 +142,7 @@ export default function AddFood() {
       )}
       {db && list.length === 0 && !searching && (
         <p className="py-12 text-center text-sm font-medium text-silver">
-          {tab === 'recent' ? 'Foods you log show up here.' : tab === 'favs' ? 'Star a food to keep it here.' : tab === 'custom' ? 'No custom foods yet.' : 'Nothing here.'}
+          {tab === 'recent' ? 'Foods you log show up here.' : tab === 'favs' ? 'Tap ♥ on any food to keep it here for quick logging.' : tab === 'custom' ? 'No custom foods yet.' : 'Nothing here.'}
         </p>
       )}
 
@@ -204,8 +205,12 @@ function WorldProducts({ query, onPick, localCount }: { query: string; onPick: (
 
 function FoodRow({ food, onClick }: { food: Food; onClick: () => void }) {
   const { title, detail } = food.source === 'off' ? { title: food.name, detail: '' } : splitName(food.name);
+  const isFav = useStore((s) => s.favoriteFoodIds.includes(food.id));
+  const toggleFavorite = useStore((s) => s.toggleFavorite);
+  const rememberFood = useStore((s) => s.rememberFood);
   return (
-    <button onClick={onClick} className="flex w-full items-center gap-3.5 rounded-[22px] p-3 text-left transition active:scale-[.99] active:bg-raised/60">
+    <div className="flex items-center rounded-[22px] transition active:bg-raised/60">
+    <button onClick={onClick} className="flex min-w-0 flex-1 items-center gap-3.5 p-3 pr-1 text-left transition active:scale-[.99]">
       <FoodVisual name={food.name} category={food.category} size={50} />
       <div className="min-w-0 flex-1">
         <p className="line-clamp-2 font-semibold leading-snug">{title}</p>
@@ -220,5 +225,14 @@ function FoodRow({ food, onClick }: { food: Food; onClick: () => void }) {
         <p className="mt-1 text-[10px] font-medium text-dim">per 100g</p>
       </div>
     </button>
+    <button
+      onClick={() => { haptic(); rememberFood(food); toggleFavorite(food.id); toast(isFav ? 'Removed from favourites' : 'Saved to favourites ♥'); }}
+      className={cx('grid h-11 w-11 shrink-0 place-items-center rounded-full transition active:scale-90', isFav ? 'text-accent' : 'text-dim')}
+      aria-label={isFav ? 'Remove from favourites' : 'Save to favourites'}
+      aria-pressed={isFav}
+    >
+      <Heart size={19} fill={isFav ? 'currentColor' : 'none'} />
+    </button>
+    </div>
   );
 }
