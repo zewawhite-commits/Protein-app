@@ -139,3 +139,23 @@ describe('calorie targets', () => {
     expect(t).toMatchObject({ kcal: 2000, protein: 120, fat: 67, carbs: 229, fiber: 28, estimated: false });
   });
 });
+
+import { computeNudges, dueReminder } from './nudges';
+import { sumEntries as sumE } from './nutrition';
+describe('notifications', () => {
+  const at = (h: number, m = 0) => { const d = new Date(2026, 10, 14, h, m); return d; };
+  it('nudges for unlogged meals after their time and celebrates goals', () => {
+    const none = computeNudges({ date: 'd', now: at(15), entries: [], totals: sumE([]), proteinGoal: 120, targets: null, streak: 0 });
+    expect(none.map((n) => n.id)).toEqual(['d:meal:breakfast', 'd:meal:lunch']);
+    const e = { id: '1', date: 'd', loggedAt: 0, meal: 'breakfast' as const, foodId: 'x', grams: 500, food: { name: 'Chicken', state: 'cooked' as const, source: 'usda-sr' as const, per100: { protein: 30, kcal: 165, fat: 4, carbs: 0, fiber: 0 } } };
+    const won = computeNudges({ date: 'd', now: at(10), entries: [e], totals: sumE([e]), proteinGoal: 120, targets: null, streak: 4 });
+    expect(won.map((n) => n.id)).toEqual(['d:win:protein', 'd:win:streak']);
+  });
+  it('sends each meal reminder once, within two hours', () => {
+    const times = { breakfast: '09:00', lunch: '13:00', dinner: '19:00' };
+    expect(dueReminder(at(9, 5), [], times, [])).toBe('breakfast');
+    expect(dueReminder(at(9, 5), [], times, ['breakfast'])).toBeNull();
+    expect(dueReminder(at(12), [], times, [])).toBeNull();
+    expect(dueReminder(at(19, 30), [], times, [])).toBe('dinner');
+  });
+});

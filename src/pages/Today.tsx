@@ -13,6 +13,7 @@ import { APP_NAME, CountUp } from '@/components/fx';
 import { EntryRow } from '@/components/EntryRow';
 import { Suggestions } from '@/components/Suggestions';
 import { FoodSheet } from '@/components/FoodSheet';
+import { NotificationBell } from '@/components/Notifications';
 
 const MEALS: { key: Meal; label: string }[] = [
   { key: 'breakfast', label: 'Breakfast' },
@@ -60,10 +61,13 @@ export default function Today() {
             <Ring value={0.72} size={26} stroke={4} color="accent" track="line" />
             <span className="text-[19px] font-bold tracking-tight">{APP_NAME}</span>
           </span>
-          <Pill>
-            <Flame size={15} className="text-accent" fill="currentColor" fillOpacity={0.2} />
-            <span className="num">{streak}</span>
-          </Pill>
+          <span className="flex items-center gap-2">
+            <Pill>
+              <Flame size={15} className="text-accent" fill="currentColor" fillOpacity={0.2} />
+              <span className="num">{streak}</span>
+            </Pill>
+            <NotificationBell />
+          </span>
         </div>
         <p className="mt-4 flex items-center gap-2 text-sm font-medium text-silver">
           <span className="h-2 w-2 rounded-full bg-accent" /> {weekHits} of 7 days on goal this week

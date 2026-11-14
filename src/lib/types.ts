@@ -121,8 +121,17 @@ export type FitnessGoal = 'muscle' | 'fatloss' | 'maintain' | 'performance' | 'h
 export type ActivityLevel = 'sedentary' | 'light' | 'active' | 'athlete';
 export type Diet = 'all' | 'pescatarian' | 'vegetarian' | 'vegan';
 
+export interface Reminders {
+  enabled: boolean;
+  /** Local times, HH:MM. */
+  breakfast: string;
+  lunch: string;
+  dinner: string;
+}
+
 export interface Settings {
   theme: Theme;
   bodyUnit: BodyUnit;
   adminMode: boolean;
+  reminders?: Reminders;
 }

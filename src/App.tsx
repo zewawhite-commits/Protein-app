@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect } from 'react';
 import { refreshPremium } from './lib/premium';
 import { useCloudSync } from './lib/account';
 import { Confetti, Toaster } from './components/fx';
+import { useMealReminders } from './components/Notifications';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { useStore } from './store/useStore';
 import { useThemeSync } from './lib/hooks';
@@ -22,6 +23,7 @@ export default function App() {
   useThemeSync();
   useEffect(() => { void refreshPremium(); }, []);
   useCloudSync();
+  useMealReminders();
   const profile = useStore((s) => s.profile);
   if (!profile) return <Onboarding />;
   return (
