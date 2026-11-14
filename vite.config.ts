@@ -9,8 +9,17 @@ const base = process.env.BASE_PATH ?? '/';
 // Public Supabase settings. Accept our own names, or the ones Vercel's Supabase
 // integration creates (SUPABASE_URL / SUPABASE_ANON_KEY / NEXT_PUBLIC_*).
 const env = process.env;
-const supabaseUrl = env.VITE_SUPABASE_URL || env.NEXT_PUBLIC_SUPABASE_URL || env.SUPABASE_URL || '';
-const supabaseAnon = env.VITE_SUPABASE_ANON_KEY || env.NEXT_PUBLIC_SUPABASE_ANON_KEY || env.SUPABASE_ANON_KEY || '';
+// Vercel's Supabase integration may add a custom prefix (e.g. STORAGE_SUPABASE_URL), so match by suffix.
+const bySuffix = (...suffixes: string[]) => {
+  for (const sfx of suffixes) {
+    const key = Object.keys(env).sort((a, b) => a.length - b.length).find((k) => k.endsWith(sfx) && env[k]);
+    if (key) return env[key]!;
+  }
+  return '';
+};
+const supabaseUrl = env.VITE_SUPABASE_URL || bySuffix('SUPABASE_URL');
+// Only public keys — never the service-role/secret key.
+const supabaseAnon = env.VITE_SUPABASE_ANON_KEY || bySuffix('SUPABASE_ANON_KEY', 'SUPABASE_PUBLISHABLE_KEY');
 
 export default defineConfig({
   base,
