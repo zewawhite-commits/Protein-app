@@ -88,6 +88,18 @@ export async function refreshPremium(force = false): Promise<void> {
   }
 }
 
+/** Prices shown in the app (always US dollars), by plan id. */
+export const USD_PRICES: Record<string, number> = { plus_monthly: 6.99, plus_yearly: 24.99, pro_monthly: 10.99, pro_yearly: 39.99 };
+
+/** Price as shown to people: the dollar price for known plans, otherwise the provider's own. */
+export function displayPrice(p: PlanInfo): string {
+  const usd = USD_PRICES[p.id];
+  return usd != null ? `$${usd.toFixed(2)}` : formatPrice(p);
+}
+
+/** True when checkout will be in a different currency than the dollar price shown. */
+export const chargedInOtherCurrency = (p?: PlanInfo) => !!p && USD_PRICES[p.id] != null && p.currency !== 'USD';
+
 export function formatPrice(p: PlanInfo): string {
   try {
     const whole = Number.isInteger(p.amount);

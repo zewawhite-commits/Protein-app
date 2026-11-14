@@ -5,7 +5,7 @@ import { useStore } from '@/store/useStore';
 import { accountsEnabled, signInWithEmail, signInWithGoogle, useSession } from '@/lib/account';
 import { GoogleIcon } from '@/components/BrandIcons';
 import {
-  activate, fetchPlans, formatPrice, intervalLabel, isPremiumActive, manageSubscription, restoreForAccount, startCheckout,
+  activate, chargedInOtherCurrency, displayPrice, fetchPlans, formatPrice, USD_PRICES, intervalLabel, isPremiumActive, manageSubscription, restoreForAccount, startCheckout,
   type PlanInfo, type Tier,
 } from '@/lib/premium';
 import { Segmented, cx } from '@/components/ui';
@@ -152,14 +152,15 @@ export default function Premium() {
               const p = planFor(t, billingNow);
               if (!p) return null;
               const monthly = planFor(t, 'monthly');
-              const save = billingNow === 'yearly' && monthly && monthly.currency === p.currency ? Math.round((1 - p.amount / (monthly.amount * 12)) * 100) : 0;
+              const amt = (x: PlanInfo) => USD_PRICES[x.id] ?? x.amount;
+              const save = billingNow === 'yearly' && monthly ? Math.round((1 - amt(p) / (amt(monthly) * 12)) * 100) : 0;
               return (
                 <TierCard
                   key={t}
                   tier={t}
                   selected={tier === t}
                   onClick={() => setTier(t)}
-                  price={formatPrice(p)}
+                  price={displayPrice(p)}
                   sub={`per ${intervalLabel(p.interval)}`}
                   badge={save > 0 ? `Save ${save}%` : t === 'pro' ? 'Most scans' : undefined}
                   scans={p.scans}
@@ -188,9 +189,9 @@ export default function Premium() {
                 </>
               )}
               <button onClick={() => chosen && run(() => startCheckout(email.trim(), chosen.id))} disabled={!chosen || ((!session || !session.user.email) && !validEmail) || busy} className="btn-primary mt-5 w-full">
-                {busy ? <Loader2 size={18} className="animate-spin" /> : <Lock size={16} />} Get {TIER_INFO[tier].name}{chosen ? ` · ${formatPrice(chosen)}` : ''}
+                {busy ? <Loader2 size={18} className="animate-spin" /> : <Lock size={16} />} Get {TIER_INFO[tier].name}{chosen ? ` · ${displayPrice(chosen)}` : ''}
               </button>
-              <p className="mt-3 text-center text-xs text-silver">Secure payment by Paystack · card, bank transfer or USSD · cancel any time</p>
+              <p className="mt-3 text-center text-xs text-silver">Secure payment by Paystack · cancel any time{chargedInOtherCurrency(chosen) && <><br />Charged as {formatPrice(chosen!)}; your bank converts it to your currency.</>}</p>
               <button onClick={() => (session ? run(restoreForAccount, 'Your plan is restored on this phone.') : setRestoring(true))} className="mt-4 w-full text-center text-sm font-semibold text-silver">
                 Already subscribed? Restore
               </button>
