@@ -1,25 +1,47 @@
 /**
- * Food database: loads the USDA SR Legacy extract (public/data/foods.json)
- * and merges user/admin custom records. Search is local and offline.
+ * Food database: loads public/data/foods.json (USDA SR Legacy + USDA FNDDS +
+ * FAO/INFOODS West Africa, built by scripts/build-foods.mjs) and merges custom
+ * records. Search is local and offline.
  */
-import type { CustomFood, Food, PrepState } from './types';
+import type { CustomFood, Food, FoodSource, PrepState } from './types';
+
+type SourceCode = 's' | 'f' | 'w';
+interface SourceInfo { name: string; release: string; citation: string }
 
 interface FoodsFile {
   version: number;
-  source: { name: string; release: string; url: string; citation: string; basis: string };
+  sources: Record<SourceCode, SourceInfo>;
+  basis: string;
   generatedAt: string;
   categories: Record<string, string>;
   quickPicks: number[];
-  foods: [number, string, number, PrepState, number, number | null, number | null, number | null, number | null, [string, number][]][];
+  foods: [number | string, string, number, PrepState, number, number | null, number | null, number | null, number | null, [string, number][], SourceCode][];
 }
 
 export interface FoodDb {
   foods: Food[];
   byId: Map<string, Food>;
   quickPicks: Food[];
-  source: FoodsFile['source'];
+  sources: SourceInfo[];
   categories: string[];
 }
+
+const SOURCE_OF: Record<SourceCode, FoodSource> = { s: 'usda-sr', f: 'usda-fndds', w: 'fao-wafct' };
+
+/** Human-readable source line and link for a record. */
+export function sourceInfo(food: Pick<Food, 'source' | 'fdcId' | 'ref' | 'sourceNote'>): { label: string; url?: string } {
+  switch (food.source) {
+    case 'usda-sr': return { label: `USDA SR Legacy · FDC ${food.fdcId}`, url: fdcUrl(food.fdcId!) };
+    case 'usda-fndds': return { label: `USDA FNDDS · FDC ${food.fdcId}`, url: fdcUrl(food.fdcId!) };
+    case 'fao-wafct': return { label: `FAO/INFOODS West Africa 2019 · ${food.ref}`, url: 'https://www.fao.org/infoods/infoods/tables-and-databases/faoinfoods-databases/en/' };
+    case 'off': return { label: `Open Food Facts · ${food.ref} (product label)`, url: `https://world.openfoodfacts.org/product/${food.ref}` };
+    default: return { label: `Custom · ${food.sourceNote ?? ''}` };
+  }
+}
+
+export const SOURCE_SHORT: Record<FoodSource, string> = {
+  'usda-sr': 'USDA', 'usda-fndds': 'USDA dish', 'fao-wafct': 'FAO W. Africa', off: 'Product', custom: 'Mine',
+};
 
 interface Indexed {
   food: Food;
@@ -46,16 +68,20 @@ export function loadFoodDb(): Promise<FoodDb> {
         return r.json() as Promise<FoodsFile>;
       })
       .then((file) => {
-        const foods: Food[] = file.foods.map(([fdcId, name, cat, state, protein, kcal, fat, carbs, fiber, portions]) => ({
-          id: `usda:${fdcId}`,
-          fdcId,
-          name,
-          category: file.categories[cat] ?? 'Other',
-          state,
-          per100: { protein, kcal, fat, carbs, fiber },
-          portions: portions.map(([label, grams]) => ({ label, grams })),
-          source: 'usda-sr',
-        }));
+        const foods: Food[] = file.foods.map(([key, name, cat, state, protein, kcal, fat, carbs, fiber, portions, src]) => {
+          const usda = src !== 'w';
+          return {
+            id: usda ? `usda:${key}` : `wafct:${key}`,
+            fdcId: usda ? Number(key) : undefined,
+            ref: usda ? undefined : String(key),
+            name,
+            category: file.categories[cat] ?? 'Other',
+            state,
+            per100: { protein, kcal, fat, carbs, fiber },
+            portions: portions.map(([label, grams]) => ({ label, grams })),
+            source: SOURCE_OF[src],
+          };
+        });
         const byId = new Map(foods.map((f) => [f.id, f]));
         index = foods.map(toIndexed);
         quickPickIds = new Set(file.quickPicks.map((id) => `usda:${id}`));
@@ -63,8 +89,8 @@ export function loadFoodDb(): Promise<FoodDb> {
           foods,
           byId,
           quickPicks: file.quickPicks.map((id) => byId.get(`usda:${id}`)!).filter(Boolean),
-          source: file.source,
-          categories: Object.values(file.categories),
+          sources: Object.values(file.sources),
+          categories: [...new Set(Object.values(file.categories))],
         };
       })
       .catch((e) => {
@@ -75,7 +101,7 @@ export function loadFoodDb(): Promise<FoodDb> {
   return dbPromise;
 }
 
-const tokenize = (s: string) => s.toLowerCase().normalize('NFKD').replace(/[^\p{L}\p{N}%]+/gu, ' ').trim().split(/\s+/).filter(Boolean);
+const tokenize = (s: string) => s.toLowerCase().normalize('NFKD').replace(/\p{M}/gu, '').replace(/[^\p{L}\p{N}%]+/gu, ' ').trim().split(/\s+/).filter(Boolean);
 
 function toIndexed(food: Food): Indexed {
   return { food, lower: food.name.toLowerCase(), words: tokenize(food.name) };

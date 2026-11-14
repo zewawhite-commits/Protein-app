@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Camera, ChevronDown, ExternalLink, ImagePlus, Minus, Plus, Star, Trash2, ArrowLeftRight, Scale } from 'lucide-react';
 import type { Food, LogEntry, Meal } from '@/lib/types';
 import { nutrientsFor, round1 } from '@/lib/nutrition';
-import { counterparts, fdcUrl, splitName } from '@/lib/foods';
+import { counterparts, sourceInfo, splitName } from '@/lib/foods';
 import { deletePhoto, savePhoto } from '@/lib/photos';
 import { useFoodDb, usePhotoUrl, useDay } from '@/lib/hooks';
 import { useStore } from '@/store/useStore';
@@ -24,28 +24,31 @@ interface Props {
   onClose: () => void;
   onSaved?: () => void;
   onSwitchFood?: (f: Food) => void;
+  /** Starting values from the photo flow: the meal photo and an AI portion estimate (a suggestion only). */
+  preset?: { photoId?: string; grams?: number; aiLabel?: string };
 }
 
-export function FoodSheet({ food, date, entry, onClose, onSaved, onSwitchFood }: Props) {
+export function FoodSheet({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Props) {
   return (
     <Sheet open={!!food} onClose={onClose} title={entry ? 'Edit entry' : 'Add food'}>
-      {food && <Body key={food.id + (entry?.id ?? '')} food={food} date={date} entry={entry} onClose={onClose} onSaved={onSaved} onSwitchFood={onSwitchFood} />}
+      {food && <Body key={food.id + (entry?.id ?? '')} food={food} date={date} entry={entry} onClose={onClose} onSaved={onSaved} onSwitchFood={onSwitchFood} preset={preset} />}
     </Sheet>
   );
 }
 
-function Body({ food, date, entry, onClose, onSaved, onSwitchFood }: Props & { food: Food }) {
+function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Props & { food: Food }) {
   const addEntry = useStore((s) => s.addEntry);
   const updateEntry = useStore((s) => s.updateEntry);
   const removeEntry = useStore((s) => s.removeEntry);
   const favs = useStore((s) => s.favoriteFoodIds);
   const toggleFavorite = useStore((s) => s.toggleFavorite);
+  const rememberFood = useStore((s) => s.rememberFood);
   const { db } = useFoodDb();
   const day = useDay(date);
 
-  const [grams, setGrams] = useState(entry ? String(entry.grams) : '100');
+  const [grams, setGrams] = useState(entry ? String(entry.grams) : preset?.grams ? String(preset.grams) : '100');
   const [meal, setMeal] = useState<Meal>(entry?.meal ?? mealForNow());
-  const [photoId, setPhotoId] = useState<string | undefined>(entry?.photoId);
+  const [photoId, setPhotoId] = useState<string | undefined>(entry?.photoId ?? preset?.photoId);
   const [busy, setBusy] = useState(false);
   const [showSource, setShowSource] = useState(false);
   const photoUrl = usePhotoUrl(photoId);
@@ -107,11 +110,11 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood }: Props & { f
       <div className="flex items-center gap-3.5">
         <FoodVisual name={food.name} category={food.category} size={60} className="!bg-surface" />
         <div className="min-w-0 flex-1">
-          <p className="text-lg font-extrabold leading-tight tracking-tight">{title}</p>
+          <p className="text-lg font-semibold leading-tight tracking-tight">{title}</p>
           {detail && <p className="mt-0.5 line-clamp-2 text-[13px] font-medium text-silver">{detail}</p>}
         </div>
         <button
-          onClick={() => toggleFavorite(food.id)}
+          onClick={() => { rememberFood(food); toggleFavorite(food.id); }}
           aria-label={isFav ? 'Remove from favourites' : 'Add to favourites'}
           className={cx('grid h-11 w-11 shrink-0 place-items-center rounded-full', isFav ? 'bg-primary text-on-primary' : 'bg-surface text-ink')}
         >
@@ -121,10 +124,15 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood }: Props & { f
 
       {/* Weight */}
       <div className="card p-5">
+        {preset?.aiLabel && !entry && (
+          <p className="mb-3 rounded-2xl bg-accent/10 px-3 py-2 text-center text-xs font-semibold text-accent">
+            {preset.aiLabel}
+          </p>
+        )}
         {weighHint && !entry && (
           <div className="mb-4 flex items-center justify-center gap-2">
             <StateBadge state={food.state} />
-            <span className="flex items-center gap-1.5 text-[13px] font-bold text-silver"><Scale size={14} /> {weighHint}</span>
+            <span className="flex items-center gap-1.5 text-[13px] font-semibold text-silver"><Scale size={14} /> {weighHint}</span>
           </div>
         )}
         <div className="flex items-center gap-3">
@@ -141,7 +149,7 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood }: Props & { f
               className="num min-w-0 bg-transparent text-center text-[56px] font-extrabold leading-none outline-none"
               style={{ width: `${Math.max(2, grams.length) + 0.5}ch` }}
             />
-            <span className="text-2xl font-extrabold text-silver">g</span>
+            <span className="text-2xl font-semibold text-silver">g</span>
           </label>
           <button onClick={() => bump(5)} className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-raised" aria-label="Plus 5 grams"><Plus size={20} strokeWidth={2.6} /></button>
         </div>
@@ -172,16 +180,16 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood }: Props & { f
       {/* Result */}
       <div className="card flex items-center gap-4 p-5">
         <Ring value={day.goal ? after / day.goal : 0} size={64} stroke={7} color={after >= day.goal ? 'accent' : 'ink'} track="raised">
-          <span className="num text-xs font-extrabold">{day.goal ? fmt(Math.min(999, (after / day.goal) * 100)) : 0}%</span>
+          <span className="num text-xs font-bold">{day.goal ? fmt(Math.min(999, (after / day.goal) * 100)) : 0}%</span>
         </Ring>
         <div className="min-w-0 flex-1">
-          <p className="num text-[34px] font-extrabold leading-none">{fmt(n.protein, 1)}<span className="text-lg text-silver">g</span></p>
-          <p className="mt-1 text-[13px] font-bold">protein</p>
+          <p className="num text-[34px] font-bold leading-none">{fmt(n.protein, 1)}<span className="text-lg text-silver">g</span></p>
+          <p className="mt-1 text-[13px] font-semibold">protein</p>
         </div>
         <div className="num space-y-0.5 text-right text-[13px] font-semibold text-silver">
-          <p><span className="font-extrabold text-ink">{fmt(n.kcal)}</span> kcal</p>
-          <p><span className="font-extrabold text-ink">{fmt(n.carbs, 1)}</span>g carbs</p>
-          <p><span className="font-extrabold text-ink">{fmt(n.fat, 1)}</span>g fat</p>
+          <p><span className="font-semibold text-ink">{fmt(n.kcal)}</span> kcal</p>
+          <p><span className="font-semibold text-ink">{fmt(n.carbs, 1)}</span>g carbs</p>
+          <p><span className="font-semibold text-ink">{fmt(n.fat, 1)}</span>g fat</p>
         </div>
       </div>
 
@@ -207,26 +215,26 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood }: Props & { f
 
       {/* Source */}
       <div>
-        <button onClick={() => setShowSource((s) => !s)} className="flex w-full items-center justify-center gap-1 py-1 text-xs font-bold text-silver">
-          {food.source === 'usda-sr' ? 'USDA FoodData Central' : 'Custom record'} · per 100g
+        <button onClick={() => setShowSource((s) => !s)} className="flex w-full items-center justify-center gap-1 py-1 text-xs font-semibold text-silver">
+          {sourceInfo(food).label.split(' · ')[0]} · per 100g
           <ChevronDown size={14} className={cx('transition', showSource && 'rotate-180')} />
         </button>
         {showSource && (
           <div className="card mt-2 animate-fade p-4 text-sm">
             <dl className="num grid grid-cols-2 gap-y-1.5 font-medium">
-              <dt className="text-silver">Protein</dt><dd className="text-right font-bold">{fmt(per100.protein, 2)} g</dd>
-              <dt className="text-silver">Energy</dt><dd className="text-right font-bold">{fmt(per100.kcal)} kcal</dd>
-              <dt className="text-silver">Carbohydrate</dt><dd className="text-right font-bold">{fmt(per100.carbs, 2)} g</dd>
-              <dt className="text-silver">Fat</dt><dd className="text-right font-bold">{fmt(per100.fat, 2)} g</dd>
-              <dt className="text-silver">Fibre</dt><dd className="text-right font-bold">{fmt(per100.fiber, 2)} g</dd>
+              <dt className="text-silver">Protein</dt><dd className="text-right font-semibold">{fmt(per100.protein, 2)} g</dd>
+              <dt className="text-silver">Energy</dt><dd className="text-right font-semibold">{fmt(per100.kcal)} kcal</dd>
+              <dt className="text-silver">Carbohydrate</dt><dd className="text-right font-semibold">{fmt(per100.carbs, 2)} g</dd>
+              <dt className="text-silver">Fat</dt><dd className="text-right font-semibold">{fmt(per100.fat, 2)} g</dd>
+              <dt className="text-silver">Fibre</dt><dd className="text-right font-semibold">{fmt(per100.fiber, 2)} g</dd>
             </dl>
             <p className="mt-3 text-xs leading-relaxed text-silver">
-              {food.source === 'usda-sr' ? (
-                <a className="inline-flex items-center gap-1 font-bold text-accent" href={fdcUrl(food.fdcId!)} target="_blank" rel="noreferrer">
-                  SR Legacy · FDC {food.fdcId} <ExternalLink size={11} />
+              {sourceInfo(food).url ? (
+                <a className="inline-flex items-center gap-1 font-semibold text-accent" href={sourceInfo(food).url} target="_blank" rel="noreferrer">
+                  {sourceInfo(food).label} <ExternalLink size={11} />
                 </a>
               ) : (
-                <>Source: {food.sourceNote}</>
+                <>{sourceInfo(food).label}</>
               )}
               {entry && ' · values as logged'}
             </p>

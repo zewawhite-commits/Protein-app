@@ -7,9 +7,9 @@ export default function Onboarding() {
       <div className="relative pt-safe animate-fade-up">
         <div className="mt-10 flex items-center gap-3">
           <Ring value={0.72} size={40} stroke={5} color="ink" track="line" />
-          <span className="text-lg font-extrabold tracking-tight">Protein</span>
+          <span className="text-lg font-semibold tracking-tight">Protein</span>
         </div>
-        <h1 className="mt-10 text-[44px] font-extrabold leading-[1.02] tracking-tight">
+        <h1 className="mt-10 text-[44px] font-semibold leading-[1.02] tracking-tight">
           Weigh it.<br />Log it.<br /><span className="text-accent">Hit your number.</span>
         </h1>
         <p className="mt-4 max-w-sm font-medium text-silver">

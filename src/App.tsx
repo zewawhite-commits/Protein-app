@@ -11,6 +11,7 @@ import Onboarding from './pages/Onboarding';
 
 const Insights = lazy(() => import('./pages/Insights'));
 const Admin = lazy(() => import('./pages/Admin'));
+const Snap = lazy(() => import('./pages/Snap'));
 
 export default function App() {
   useThemeSync();
@@ -26,7 +27,8 @@ export default function App() {
           <Route path="profile" element={<Profile />} />
           <Route path="admin" element={<Admin />} />
         </Route>
-        <Route path="add" element={<div className="mx-auto max-w-lg px-4 pb-16 sm:px-6"><AddFood /></div>} />
+        <Route path="snap" element={<Snap />} />
+        <Route path="add" element={<div className="mx-auto max-w-lg px-5 pb-16"><AddFood /></div>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Suspense>

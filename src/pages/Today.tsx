@@ -22,6 +22,7 @@ export function entryAsFood(e: LogEntry, lookup: (id: string) => Food | undefine
   return {
     id: e.foodId,
     fdcId: e.food.fdcId,
+    ref: e.food.ref,
     name: e.food.name,
     state: e.food.state,
     per100: e.food.per100,
@@ -73,14 +74,14 @@ export default function Today() {
 
       <section className="mt-8">
         <div className="mb-3 flex items-baseline justify-between px-1">
-          <h2 className="text-xl font-extrabold tracking-tight">{isToday ? "Today's meals" : `${relativeDay(date)}'s meals`}</h2>
-          {entries.length > 0 && <Link to="/history" className="text-sm font-bold text-accent">View all</Link>}
+          <h2 className="text-xl font-semibold tracking-tight">{isToday ? "Today's meals" : `${relativeDay(date)}'s meals`}</h2>
+          {entries.length > 0 && <Link to="/history" className="text-sm font-semibold text-accent">View all</Link>}
         </div>
         {entries.length === 0 ? (
           <Link to={`/add${!isToday ? `?date=${date}` : ''}`} className="card flex items-center gap-4 p-4 transition active:scale-[.99]">
             <span className="grid h-14 w-14 place-items-center rounded-[18px] bg-primary text-on-primary"><Plus size={24} strokeWidth={2.6} /></span>
             <span>
-              <span className="block font-extrabold">Log your first meal</span>
+              <span className="block font-semibold">Log your first meal</span>
               <span className="block text-sm font-medium text-silver">Weigh it, find it, done.</span>
             </span>
           </Link>
@@ -124,8 +125,8 @@ function HeroCard(props: {
                 <span className="num text-[64px] font-extrabold leading-[0.9]">{fmt(protein)}</span>
                 <span className="num ml-1 text-lg font-bold text-silver">/{fmt(goal)}g</span>
               </p>
-              <p className="mt-2 text-[15px] font-bold">Protein eaten</p>
-              <span className={cx('mt-2.5 inline-flex h-7 items-center gap-1.5 rounded-full px-2.5 text-xs font-bold', pct >= 1 ? 'bg-accent/10 text-accent' : 'bg-raised text-silver')}>
+              <p className="mt-2 text-[15px] font-semibold">Protein eaten</p>
+              <span className={cx('mt-2.5 inline-flex h-7 items-center gap-1.5 rounded-full px-2.5 text-xs font-semibold', pct >= 1 ? 'bg-accent/10 text-accent' : 'bg-raised text-silver')}>
                 {pct >= 1 ? <Check size={13} strokeWidth={3} /> : <Target size={13} strokeWidth={2.5} />}
                 <span className="num">{pct >= 1 ? `Goal hit · +${fmt(protein - goal)}g` : `${fmt(goal - protein)}g to go`}</span>
               </span>
@@ -145,15 +146,15 @@ function HeroCard(props: {
 
         {/* Page 2: protein by meal */}
         <div className="w-full shrink-0 snap-center px-6">
-          <p className="text-[15px] font-bold">Protein by meal</p>
+          <p className="text-[15px] font-semibold">Protein by meal</p>
           <div className="mt-4 grid grid-cols-2 gap-2.5">
             {perMeal.map((m) => (
               <div key={m.key} className="tile flex items-center gap-3 p-3">
                 <Ring value={goal ? m.protein / goal : 0} size={40} stroke={5} track="line" color="accent">
-                  <span className="num text-[10px] font-extrabold">{goal ? fmt((m.protein / goal) * 100) : 0}%</span>
+                  <span className="num text-[10px] font-bold">{goal ? fmt((m.protein / goal) * 100) : 0}%</span>
                 </Ring>
                 <div className="min-w-0">
-                  <p className="num text-lg font-extrabold leading-none">{fmt(m.protein)}<span className="text-xs text-silver">g</span></p>
+                  <p className="num text-lg font-bold leading-none">{fmt(m.protein)}<span className="text-xs text-silver">g</span></p>
                   <p className="mt-1 truncate text-[11px] font-semibold text-silver">{m.label}</p>
                 </div>
               </div>
@@ -180,8 +181,8 @@ function HeroCard(props: {
 function MacroTile({ icon, value, unit, label, incomplete }: { icon: React.ReactNode; value: number; unit: string; label: string; incomplete: boolean }) {
   return (
     <div className="tile px-3 pb-3 pt-3.5">
-      <p className="num text-[17px] font-extrabold leading-none">
-        {fmt(value)}<span className="text-xs font-bold text-silver">{unit}</span>
+      <p className="num text-[17px] font-bold leading-none">
+        {fmt(value)}<span className="text-xs font-semibold text-silver">{unit}</span>
         {incomplete && <span className="text-warn" title="Some foods have no value for this in the source data">*</span>}
       </p>
       <p className="mt-1 text-[11px] font-semibold text-silver">{label}</p>
@@ -223,13 +224,13 @@ function WeekStrip({ date, onSelect }: { date: string; onSelect: (d: string) => 
         const future = d > today;
         return (
           <button key={d} onClick={() => !future && onSelect(d)} disabled={future} className="flex flex-col items-center gap-2">
-            <span className={cx('text-[11px] font-bold', sel ? 'text-ink' : 'text-dim')}>
+            <span className={cx('text-[11px] font-semibold', sel ? 'text-ink' : 'text-dim')}>
               {fromKey(d).toLocaleDateString(undefined, { weekday: 'short' })}
             </span>
             <Ring value={future ? 0 : v} size={40} stroke={3} dashed={future || v === 0} color={hit ? 'accent' : 'ink'} track="line">
               <span
                 className={cx(
-                  'num grid h-[30px] w-[30px] place-items-center rounded-full text-[13px] font-extrabold',
+                  'num grid h-[30px] w-[30px] place-items-center rounded-full text-[13px] font-bold',
                   sel ? 'bg-primary text-on-primary' : future ? 'text-dim' : 'text-ink',
                 )}
               >

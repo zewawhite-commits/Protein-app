@@ -20,11 +20,13 @@ export function useFoodDb() {
 export function useFoodLookup() {
   const { db } = useFoodDb();
   const custom = useStore((s) => s.customFoods);
+  const remote = useStore((s) => s.remoteFoods);
   return useMemo(() => {
     const map = new Map<string, Food>(db?.byId);
+    for (const f of Object.values(remote)) map.set(f.id, f);
     for (const c of custom) map.set(c.id, c);
     return (id: string) => map.get(id);
-  }, [db, custom]);
+  }, [db, custom, remote]);
 }
 
 export function usePhotoUrl(id?: string) {

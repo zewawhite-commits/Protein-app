@@ -86,7 +86,7 @@ export function Sheet({ open, onClose, children, title }: { open: boolean; onClo
         <div className="sticky top-0 z-10 bg-bg/90 px-5 pb-3 pt-2.5 backdrop-blur-xl">
           <div className="mx-auto h-1 w-9 rounded-full bg-line" />
           <div className="mt-3 flex items-center justify-between">
-            <h2 className="text-lg font-extrabold tracking-tight">{title}</h2>
+            <h2 className="text-lg font-semibold tracking-tight">{title}</h2>
             <button onClick={onClose} className="grid h-9 w-9 place-items-center rounded-full bg-raised text-ink" aria-label="Close">
               <X size={18} strokeWidth={2.4} />
             </button>
@@ -104,7 +104,7 @@ export function StateBadge({ state, className }: { state: PrepState; className?:
   return (
     <span
       className={cx(
-        'inline-flex h-5 items-center rounded-full px-2 text-[10px] font-bold uppercase tracking-wide',
+        'inline-flex h-5 items-center rounded-full px-2 text-[10px] font-semibold uppercase tracking-wide',
         state === 'cooked' ? 'bg-ink text-bg' : state === 'raw' ? 'bg-accent/10 text-accent' : 'bg-raised text-silver',
         className,
       )}
@@ -118,7 +118,7 @@ export function PageHeader({ title, right, sub }: { title: string; right?: React
   return (
     <header className="pt-safe pb-5">
       <div className="flex items-center justify-between gap-4">
-        <h1 className="text-[32px] font-extrabold leading-none tracking-tight">{title}</h1>
+        <h1 className="text-[30px] font-bold leading-none tracking-tight">{title}</h1>
         {right}
       </div>
       {sub && <div className="mt-2 text-sm font-medium text-silver">{sub}</div>}
@@ -134,7 +134,7 @@ export function Segmented<T extends string>({ value, options, onChange, full }: 
           key={o.value}
           onClick={() => onChange(o.value)}
           className={cx(
-            'h-9 rounded-full px-4 text-sm font-bold transition',
+            'h-9 rounded-full px-4 text-sm font-semibold transition',
             full && 'flex-1',
             value === o.value ? 'bg-surface text-ink shadow-[0_1px_3px_rgb(0_0_0/0.12)]' : 'text-silver',
           )}
@@ -150,7 +150,7 @@ export function Empty({ icon, title, body, action }: { icon: ReactNode; title: s
   return (
     <div className="card flex flex-col items-center px-6 py-10 text-center">
       <div className="mb-4 grid h-14 w-14 place-items-center rounded-full bg-raised text-ink">{icon}</div>
-      <p className="font-extrabold">{title}</p>
+      <p className="font-semibold">{title}</p>
       {body && <p className="mt-1 max-w-[16rem] text-sm text-silver">{body}</p>}
       {action && <div className="mt-5">{action}</div>}
     </div>
@@ -159,7 +159,7 @@ export function Empty({ icon, title, body, action }: { icon: ReactNode; title: s
 
 export function Pill({ children, className }: { children: ReactNode; className?: string }) {
   return (
-    <span className={cx('inline-flex h-9 items-center gap-1.5 rounded-full bg-surface px-3.5 text-[13px] font-bold', className)} style={{ boxShadow: 'var(--shadow)' }}>
+    <span className={cx('inline-flex h-9 items-center gap-1.5 rounded-full bg-surface px-3.5 text-[13px] font-semibold', className)} style={{ boxShadow: 'var(--shadow)' }}>
       {children}
     </span>
   );

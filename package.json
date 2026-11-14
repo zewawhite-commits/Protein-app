@@ -12,6 +12,7 @@
     "build:foods": "node scripts/build-foods.mjs"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^1.8.0",
     "@fontsource-variable/plus-jakarta-sans": "^5.1.0",
     "idb-keyval": "^6.2.1",
     "lucide-react": "^0.460.0",

@@ -30,7 +30,7 @@ export function Layout() {
               key={t.to}
               to={t.to}
               end={t.to === '/'}
-              className={({ isActive }) => cx('flex h-14 flex-1 flex-col items-center justify-center gap-1 text-[10px] font-bold transition', isActive ? 'text-ink' : 'text-dim')}
+              className={({ isActive }) => cx('flex h-14 flex-1 flex-col items-center justify-center gap-1 text-[10px] font-semibold transition', isActive ? 'text-ink' : 'text-dim')}
             >
               {({ isActive }) => (
                 <>

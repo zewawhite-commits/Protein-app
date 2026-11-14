@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronRight, Database, Download, Moon, Pencil, ShieldCheck, Smartphone, Sun, Trash2, Upload } from 'lucide-react';
+import { ChevronRight, Database, Download, Moon, Pencil, ShieldCheck, Smartphone, Sparkles, Sun, Trash2, Upload } from 'lucide-react';
 import { useStore, exportData } from '@/store/useStore';
 import { dailyGoal, fromKg } from '@/lib/nutrition';
 import { allPhotoIds, deletePhoto } from '@/lib/photos';
@@ -54,11 +54,11 @@ export default function Profile() {
 
       <section className="card relative overflow-hidden p-5">
                 <div className="relative flex items-center gap-4">
-          <div className="grid h-16 w-16 place-items-center rounded-full bg-primary text-2xl font-extrabold text-on-primary">
+          <div className="grid h-16 w-16 place-items-center rounded-full bg-primary text-2xl font-semibold text-on-primary">
             {(profile.name || '?').slice(0, 1).toUpperCase()}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-xl font-extrabold">{profile.name || 'You'}</p>
+            <p className="truncate text-xl font-semibold">{profile.name || 'You'}</p>
             <p className="text-sm font-semibold text-silver">
               {profile.bodyWeightKg ? `${fmt(fromKg(profile.bodyWeightKg, settings.bodyUnit), 1)} ${settings.bodyUnit} · ` : ''}
               {profile.goalMode === 'perKg' ? `${profile.gramsPerKg} g/kg` : 'Fixed goal'}
@@ -79,6 +79,8 @@ export default function Profile() {
         </Row>
       </Group>
 
+      <AiSettings />
+
       <Group title="Your data">
         <button onClick={download} className="w-full"><Row icon={<Download size={18} />} label="Export backup" chevron /></button>
         <button onClick={() => fileRef.current?.click()} className="w-full"><Row icon={<Upload size={18} />} label="Restore backup" chevron /></button>
@@ -98,11 +100,11 @@ export default function Profile() {
 
       <Group title="About">
         <div className="px-3.5 py-3 text-sm font-medium leading-relaxed text-silver">
-          <p className="flex items-center gap-2 font-bold text-ink"><Database size={16} className="text-accent" /> Nutrition data</p>
+          <p className="flex items-center gap-2 font-semibold text-ink"><Database size={16} className="text-accent" /> Nutrition data</p>
           <p className="mt-1.5">
-            U.S. Department of Agriculture, Agricultural Research Service. <em>FoodData Central: SR Legacy</em> (2018). Values are per 100 g edible portion and are not altered by this app.
+            USDA FoodData Central — SR Legacy (2018) and FNDDS (2024). FAO/INFOODS Food Composition Table for Western Africa (2019), © FAO, used with acknowledgement for non-commercial use. Packaged products: Open Food Facts (ODbL), label data contributed by its community. Values are per 100 g and are never altered or estimated by this app.
           </p>
-          <p className="mt-4 flex items-center gap-2 font-bold text-ink"><Smartphone size={16} className="text-accent" /> Install</p>
+          <p className="mt-4 flex items-center gap-2 font-semibold text-ink"><Smartphone size={16} className="text-accent" /> Install</p>
           <p className="mt-1.5">On iPhone: Share → Add to Home Screen. On Android: menu → Install app. Works offline once installed.</p>
         </div>
       </Group>
@@ -118,7 +120,7 @@ export default function Profile() {
 function Mini({ label, value }: { label: string; value: string }) {
   return (
     <div className="tile py-3">
-      <p className="num text-lg font-extrabold">{value}</p>
+      <p className="num text-lg font-bold">{value}</p>
       <p className="text-[11px] font-semibold text-silver">{label}</p>
     </div>
   );
@@ -127,7 +129,7 @@ function Mini({ label, value }: { label: string; value: string }) {
 function Group({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="mt-6">
-      <p className="mb-3 px-1 text-sm font-extrabold text-silver">{title}</p>
+      <p className="mb-3 px-1 text-sm font-semibold text-silver">{title}</p>
       <div className="card overflow-hidden p-1.5">{children}</div>
     </section>
   );
@@ -137,7 +139,7 @@ function Row({ icon, label, children, chevron, danger }: { icon: React.ReactNode
   return (
     <div className={cx('flex min-h-[60px] items-center gap-3.5 rounded-[22px] px-3 py-2 text-left', danger && 'text-danger')}>
       <span className={cx('grid h-10 w-10 place-items-center rounded-full bg-raised', danger ? 'text-danger' : 'text-ink')}>{icon}</span>
-      <span className="flex-1 font-bold">{label}</span>
+      <span className="flex-1 font-semibold">{label}</span>
       {children}
       {chevron && <ChevronRight size={16} className="text-dim" />}
     </div>
@@ -149,5 +151,41 @@ export function Toggle({ on, onChange, label }: { on: boolean; onChange: (v: boo
     <button role="switch" aria-checked={on} aria-label={label} onClick={() => onChange(!on)} className={cx('relative h-8 w-[52px] rounded-full transition', on ? 'bg-accent' : 'bg-line')}>
       <span className={cx('absolute top-1 h-6 w-6 rounded-full bg-white shadow transition-all', on ? 'left-[24px]' : 'left-1')} />
     </button>
+  );
+}
+
+function AiSettings() {
+  const key = useStore((s) => s.settings.aiApiKey);
+  const updateSettings = useStore((s) => s.updateSettings);
+  const [draft, setDraft] = useState('');
+  return (
+    <section id="ai" className="mt-6">
+      <p className="mb-3 px-1 text-sm font-semibold text-silver">Photo recognition</p>
+      <div className="card p-4">
+        <div className="flex items-center gap-3">
+          <span className="grid h-10 w-10 place-items-center rounded-full bg-raised"><Sparkles size={18} /></span>
+          <div className="min-w-0 flex-1">
+            <p className="font-semibold">AI food identification</p>
+            <p className="text-xs text-silver">{key ? `Using your key ••••${key.slice(-4)}` : 'Uses the app server if available, or your own key'}</p>
+          </div>
+          {key && <button onClick={() => updateSettings({ aiApiKey: undefined })} className="chip !h-9">Remove</button>}
+        </div>
+        {!key && (
+          <form
+            className="mt-4 flex gap-2"
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (draft.trim().startsWith('sk-')) { updateSettings({ aiApiKey: draft.trim() }); setDraft(''); }
+            }}
+          >
+            <input type="password" autoComplete="off" value={draft} onChange={(e) => setDraft(e.target.value)} placeholder="Anthropic API key (sk-ant-…)" className="field !h-12 flex-1" />
+            <button type="submit" disabled={!draft.trim().startsWith('sk-')} className="btn-primary !h-12 !px-5 text-sm">Save</button>
+          </form>
+        )}
+        <p className="mt-3 text-xs leading-relaxed text-silver">
+          Photos are sent to Anthropic’s Claude to name the foods. Nutrition values never come from the AI — only from USDA, FAO or product records you confirm. A key saved here stays on this device, is sent only to Anthropic, and is not included in backups.
+        </p>
+      </div>
+    </section>
   );
 }

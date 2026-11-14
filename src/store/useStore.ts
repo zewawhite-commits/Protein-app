@@ -19,6 +19,8 @@ interface State {
   goalHistory: Record<string, number>;
   recentFoodIds: string[];
   favoriteFoodIds: string[];
+  /** Products fetched live (Open Food Facts) that the user logged or starred, so recents/favourites resolve offline. */
+  remoteFoods: Record<string, Food>;
 
   saveProfile: (p: Profile) => void;
   updateSettings: (s: Partial<Settings>) => void;
@@ -26,6 +28,7 @@ interface State {
   updateEntry: (id: string, patch: Partial<Pick<LogEntry, 'grams' | 'meal' | 'photoId' | 'note' | 'date'>>) => void;
   removeEntry: (id: string) => void;
   toggleFavorite: (foodId: string) => void;
+  rememberFood: (food: Food) => void;
   upsertCustomFood: (f: Omit<CustomFood, 'id' | 'createdAt' | 'updatedAt' | 'source'> & { id?: string }) => CustomFood;
   archiveCustomFood: (id: string, archived: boolean) => void;
   importData: (data: unknown) => void;
@@ -44,6 +47,7 @@ export const useStore = create<State>()(
       goalHistory: {},
       recentFoodIds: [],
       favoriteFoodIds: [],
+      remoteFoods: {},
 
       saveProfile: (p) =>
         set((s) => ({ profile: p, goalHistory: { ...s.goalHistory, [todayKey()]: dailyGoal(p) } })),
@@ -63,6 +67,7 @@ export const useStore = create<State>()(
             per100: { ...food.per100 },
             source: food.source,
             fdcId: food.fdcId,
+            ref: food.ref,
             sourceNote: food.sourceNote,
           },
           grams,
@@ -72,6 +77,7 @@ export const useStore = create<State>()(
         set((s) => ({
           entries: [...s.entries, entry],
           recentFoodIds: [food.id, ...s.recentFoodIds.filter((id) => id !== food.id)].slice(0, 24),
+          remoteFoods: food.source === 'off' ? { ...s.remoteFoods, [food.id]: food } : s.remoteFoods,
         }));
         return entry;
       },
@@ -89,6 +95,8 @@ export const useStore = create<State>()(
           if (e?.photoId) void deletePhoto(e.photoId);
           return { entries: s.entries.filter((x) => x.id !== id) };
         }),
+
+      rememberFood: (food) => set((s) => (food.source === 'off' ? { remoteFoods: { ...s.remoteFoods, [food.id]: food } } : {})),
 
       toggleFavorite: (foodId) =>
         set((s) => ({
@@ -127,11 +135,12 @@ export const useStore = create<State>()(
           goalHistory: d.goalHistory ?? {},
           recentFoodIds: d.recentFoodIds ?? [],
           favoriteFoodIds: d.favoriteFoodIds ?? [],
+          remoteFoods: d.remoteFoods ?? {},
         });
       },
 
       resetAll: () =>
-        set({ profile: null, settings: defaultSettings, entries: [], customFoods: [], goalHistory: {}, recentFoodIds: [], favoriteFoodIds: [] }),
+        set({ profile: null, settings: defaultSettings, entries: [], customFoods: [], goalHistory: {}, recentFoodIds: [], favoriteFoodIds: [], remoteFoods: {} }),
     }),
     { name: 'protein-app', version: 1 },
   ),
@@ -147,6 +156,9 @@ export function goalOn(date: string, goalHistory: Record<string, number>, profil
 }
 
 export function exportData() {
-  const { profile, settings, entries, customFoods, goalHistory, recentFoodIds, favoriteFoodIds } = useStore.getState();
-  return { app: 'protein-app', exportedAt: new Date().toISOString(), profile, settings, entries, customFoods, goalHistory, recentFoodIds, favoriteFoodIds };
+  const { profile, settings, entries, customFoods, goalHistory, recentFoodIds, favoriteFoodIds, remoteFoods } = useStore.getState();
+  // The personal API key is never written to backup files.
+  const { aiApiKey: _omit, ...safeSettings } = settings;
+  void _omit;
+  return { app: 'protein-app', exportedAt: new Date().toISOString(), profile, settings: safeSettings, entries, customFoods, goalHistory, recentFoodIds, favoriteFoodIds, remoteFoods };
 }

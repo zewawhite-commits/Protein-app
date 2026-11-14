@@ -63,7 +63,7 @@ function Days({ query }: { query: string }) {
     <div className="space-y-6">
       {[...months.entries()].map(([month, list]) => (
         <section key={month}>
-          <p className="mb-3 px-1 text-sm font-extrabold text-silver">{month}</p>
+          <p className="mb-3 px-1 text-sm font-semibold text-silver">{month}</p>
           <div className="card p-1.5">
             {list.map(({ date, list: es, protein, goal }) => {
               const v = goal ? protein / goal : 0;
@@ -72,14 +72,14 @@ function Days({ query }: { query: string }) {
               return (
                 <Link key={date} to={date === todayKey() ? '/' : `/?date=${date}`} className="flex items-center gap-3.5 rounded-[22px] p-3 transition active:bg-raised/60">
                   <Ring value={v} size={52} stroke={4.5} color={hit ? 'accent' : 'ink'} track="raised">
-                    <span className="num text-base font-extrabold">{Number(date.slice(8))}</span>
+                    <span className="num text-base font-bold">{Number(date.slice(8))}</span>
                   </Ring>
                   <div className="min-w-0 flex-1">
-                    <p className="font-bold">{relativeDay(date)}</p>
+                    <p className="font-semibold">{relativeDay(date)}</p>
                     <p className="mt-0.5 truncate text-xs font-medium text-silver">{names}</p>
                   </div>
                   <div className="text-right">
-                    <p className={cx('num text-lg font-extrabold leading-none', hit && 'text-accent')}>{fmt(protein)}<span className="text-xs text-silver">/{fmt(goal)}g</span></p>
+                    <p className={cx('num text-lg font-bold leading-none', hit && 'text-accent')}>{fmt(protein)}<span className="text-xs text-silver">/{fmt(goal)}g</span></p>
                     <p className="mt-1 text-[10px] font-semibold text-dim">{es.length} items</p>
                   </div>
                   <ChevronRight size={16} className="shrink-0 text-dim" />
@@ -116,7 +116,7 @@ function PhotoTile({ entry, onClick }: { entry: LogEntry; onClick: () => void })
     <button onClick={onClick} className="group relative aspect-[4/5] overflow-hidden rounded-[24px] bg-raised">
       {url && <img src={url} alt={entry.food.name} className="h-full w-full object-cover transition group-hover:scale-105" />}
       <div className="absolute inset-x-2 bottom-2 rounded-[18px] bg-black/45 p-2.5 text-left text-white backdrop-blur-md">
-        <p className="truncate text-xs font-bold">{splitName(entry.food.name).title}</p>
+        <p className="truncate text-xs font-semibold">{splitName(entry.food.name).title}</p>
         <p className="num mt-0.5 text-[11px] font-semibold opacity-80">{fmt(p, 1)}g protein · {relativeDay(entry.date)}</p>
       </div>
     </button>

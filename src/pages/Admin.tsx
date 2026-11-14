@@ -3,7 +3,7 @@ import { Link, Navigate } from 'react-router-dom';
 import { Archive, ArchiveRestore, ArrowLeft, ExternalLink, Lock, Pencil, Plus, Search, Trash2 } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 import { useFoodDb } from '@/lib/hooks';
-import { fdcUrl, searchFoods, splitName, STATE_LABEL } from '@/lib/foods';
+import { sourceInfo, searchFoods, splitName, STATE_LABEL } from '@/lib/foods';
 import type { CustomFood, PrepState } from '@/lib/types';
 import { Segmented, Sheet, StateBadge, cx, fmt } from '@/components/ui';
 
@@ -36,28 +36,28 @@ export default function Admin() {
           <Link to="/profile" className="grid h-11 w-11 place-items-center rounded-full bg-surface" aria-label="Back"><ArrowLeft size={18} /></Link>
           <div>
             <p className="eyebrow">Admin</p>
-            <h1 className="text-[26px] font-extrabold tracking-tight">Nutrition records</h1>
+            <h1 className="text-[26px] font-semibold tracking-tight">Nutrition records</h1>
           </div>
         </div>
       </header>
 
       <div className="grid grid-cols-2 gap-3">
         <div className="card p-4">
-          <p className="eyebrow">USDA records</p>
-          <p className="mt-2 text-3xl font-extrabold num">{fmt(stats?.total)}</p>
+          <p className="eyebrow">Database records</p>
+          <p className="mt-2 text-3xl font-bold num">{fmt(stats?.total)}</p>
           <p className="mt-1 text-xs text-dim">
             {stats ? `${fmt(stats.by.raw)} raw · ${fmt(stats.by.cooked)} cooked · ${fmt(stats.by.dry)} dry` : 'Loading…'}
           </p>
         </div>
         <div className="card p-4">
           <p className="eyebrow">Custom records</p>
-          <p className="mt-2 text-3xl font-extrabold num">{custom.filter((c) => !c.archived).length}</p>
+          <p className="mt-2 text-3xl font-bold num">{custom.filter((c) => !c.archived).length}</p>
           <p className="mt-1 text-xs text-dim">{custom.filter((c) => c.archived).length} archived</p>
         </div>
       </div>
 
       <div className="mt-6 flex items-center justify-between">
-        <Segmented value={view} onChange={setView} options={[{ value: 'custom', label: 'Custom' }, { value: 'usda', label: 'USDA' }]} />
+        <Segmented value={view} onChange={setView} options={[{ value: 'custom', label: 'Custom' }, { value: "usda", label: "Database" }]} />
         {view === 'custom' && <button onClick={() => setEditing('new')} className="btn-primary !h-11 !px-5 text-sm"><Plus size={16} /> New record</button>}
       </div>
 
@@ -65,7 +65,7 @@ export default function Admin() {
         <div className="mt-4 space-y-2">
           {custom.length === 0 && (
             <div className="card p-6 text-center text-sm text-silver">
-              No custom records. Add one for foods missing from USDA — every record must cite where its values came from (product label, national food composition table, lab analysis).
+              No custom records. Add one for foods missing from the databases — every record must cite where its values came from (product label, national food composition table, lab analysis).
             </div>
           )}
           {custom.map((f) => (
@@ -89,20 +89,20 @@ export default function Admin() {
         <div className="mt-4">
           <p className="mb-3 flex items-start gap-2 rounded-[20px] bg-raised p-3.5 text-xs font-medium leading-relaxed text-silver">
             <Lock size={14} className="mt-0.5 shrink-0" />
-            USDA records are read-only so they always match the published source. To correct or add a food, create a custom record and cite its source.
+            USDA and FAO records are read-only so they always match the published source. To correct or add a food, create a custom record and cite its source.
           </p>
           <div className="relative mb-3">
             <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-dim" />
-            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search USDA records" className="field !rounded-full pl-10" />
+            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search database records" className="field !rounded-full pl-10" />
           </div>
           <div className="card overflow-hidden p-1.5">
             {usdaResults.map((f) => (
-              <a key={f.id} href={fdcUrl(f.fdcId!)} target="_blank" rel="noreferrer" className="flex items-center gap-3 rounded-[22px] px-3.5 py-3 hover:bg-raised/60">
+              <a key={f.id} href={sourceInfo(f).url} target="_blank" rel="noreferrer" className="flex items-center gap-3 rounded-[22px] px-3.5 py-3 hover:bg-raised/60">
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium">{splitName(f.name).title}</p>
                   <p className="truncate text-xs text-silver">{splitName(f.name).detail || f.category}</p>
                   <p className="mt-1 text-[11px] text-dim num">
-                    FDC {f.fdcId} · {STATE_LABEL[f.state]} · P {fmt(f.per100.protein, 2)} · F {fmt(f.per100.fat, 2)} · C {fmt(f.per100.carbs, 2)} · {fmt(f.per100.kcal)} kcal
+                    {sourceInfo(f).label} · {STATE_LABEL[f.state]} · P {fmt(f.per100.protein, 2)} · F {fmt(f.per100.fat, 2)} · C {fmt(f.per100.carbs, 2)} · {fmt(f.per100.kcal)} kcal
                   </p>
                 </div>
                 <ExternalLink size={14} className="shrink-0 text-dim" />

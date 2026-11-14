@@ -66,21 +66,21 @@ export default function Insights() {
 
           <section className="card p-5">
             <div className="mb-4 flex items-baseline justify-between">
-              <h2 className="text-lg font-extrabold tracking-tight">Daily protein</h2>
-              <span className="flex items-center gap-1.5 text-xs font-bold text-silver"><span className="inline-block h-0 w-4 border-t-2 border-dashed border-silver" /> goal</span>
+              <h2 className="text-lg font-semibold tracking-tight">Daily protein</h2>
+              <span className="flex items-center gap-1.5 text-xs font-semibold text-silver"><span className="inline-block h-0 w-4 border-t-2 border-dashed border-silver" /> goal</span>
             </div>
             <BarChart series={data.series} />
           </section>
 
           <section className="card p-5">
-            <h2 className="mb-4 text-lg font-extrabold tracking-tight">By meal</h2>
+            <h2 className="mb-4 text-lg font-semibold tracking-tight">By meal</h2>
             <div className="space-y-3">
               {(Object.entries(data.perMeal) as [Meal, number][]).map(([meal, p]) => {
                 const share = data.total ? p / data.total : 0;
                 return (
                   <div key={meal}>
                     <div className="mb-1.5 flex justify-between text-sm">
-                      <span className="font-bold capitalize">{meal}</span>
+                      <span className="font-semibold capitalize">{meal}</span>
                       <span className="tabular-nums">{fmt(share * 100)}% <span className="text-dim">· {fmt(p)} g</span></span>
                     </div>
                     <div className="h-2.5 overflow-hidden rounded-full bg-raised">
@@ -93,14 +93,14 @@ export default function Insights() {
           </section>
 
           <section className="card p-5">
-            <h2 className="mb-3 text-lg font-extrabold tracking-tight">Top protein sources</h2>
+            <h2 className="mb-3 text-lg font-semibold tracking-tight">Top protein sources</h2>
             <ol>
               {data.top.map((f, i) => (
                 <li key={f.name + i} className="flex items-center gap-3 py-2.5">
                   <FoodVisual name={f.name} size={40} />
-                  <span className="min-w-0 flex-1 truncate text-sm font-bold">{splitName(f.name).title}</span>
+                  <span className="min-w-0 flex-1 truncate text-sm font-semibold">{splitName(f.name).title}</span>
                   <span className="text-xs text-dim">{f.count}×</span>
-                  <span className="num w-16 text-right font-extrabold">{fmt(f.protein)} g</span>
+                  <span className="num w-16 text-right font-bold">{fmt(f.protein)} g</span>
                 </li>
               ))}
             </ol>
@@ -114,8 +114,8 @@ export default function Insights() {
 function Kpi({ label, value, unit, sub }: { label: string; value: string; unit: string; sub: string }) {
   return (
     <div className="card p-5">
-      <p className="num text-[34px] font-extrabold leading-none">{value}<span className="ml-0.5 text-sm font-bold text-silver">{unit}</span></p>
-      <p className="mt-2 text-sm font-bold">{label}</p>
+      <p className="num text-[34px] font-bold leading-none">{value}<span className="ml-0.5 text-sm font-bold text-silver">{unit}</span></p>
+      <p className="mt-2 text-sm font-semibold">{label}</p>
       <p className="mt-0.5 truncate text-xs font-medium text-silver">{sub}</p>
     </div>
   );
@@ -165,7 +165,7 @@ function BarChart({ series }: { series: { date: string; protein: number; goal: n
           })}
         </div>
       </div>
-      <div className="mt-2 flex text-[10px] font-bold text-dim" style={{ gap: n > 30 ? 1 : n > 7 ? 3 : 8 }}>
+      <div className="mt-2 flex text-[10px] font-semibold text-dim" style={{ gap: n > 30 ? 1 : n > 7 ? 3 : 8 }}>
         {series.map((s, i) => (
           <span key={s.date} className="flex-1 text-center">
             {showLabel(i) ? (n <= 7 ? fromKey(s.date).toLocaleDateString(undefined, { weekday: 'narrow' }) : fromKey(s.date).getDate()) : ''}

@@ -85,7 +85,7 @@ export function ProfileForm({ initial, submitLabel, onSaved }: { initial?: Profi
             <div className="grid grid-cols-4 gap-2">
               {PRESETS.map((p) => (
                 <button type="button" key={p.v} onClick={() => setPerKg(String(p.v))} className={cx('flex h-16 flex-col items-center justify-center rounded-[20px] transition', Number(perKg) === p.v ? 'bg-primary text-on-primary' : 'bg-raised')}>
-                  <span className="num text-lg font-extrabold">{p.label}</span>
+                  <span className="num text-lg font-bold">{p.label}</span>
                   <span className="text-[10px] font-semibold opacity-60">{p.note || 'g/kg'}</span>
                 </button>
               ))}
@@ -109,7 +109,7 @@ export function ProfileForm({ initial, submitLabel, onSaved }: { initial?: Profi
       <div className="flex items-center justify-between rounded-[24px] bg-raised p-5">
         <div>
           <p className="num text-[44px] font-extrabold leading-none">{valid ? fmt(goal) : '—'}<span className="text-lg text-silver">g</span></p>
-          <p className="mt-1.5 text-sm font-bold">Daily protein goal</p>
+          <p className="mt-1.5 text-sm font-semibold">Daily protein goal</p>
         </div>
         {mode === 'perKg' && !weightKg && <p className="max-w-[9rem] text-right text-xs text-silver">Enter your body weight to calculate</p>}
       </div>

@@ -15,12 +15,19 @@ export interface Portion {
   grams: number;
 }
 
-export type FoodSource = 'usda-sr' | 'custom';
+/**
+ * Where a record's nutrient values come from. Values are always copied from the source,
+ * never estimated: usda-sr / usda-fndds (USDA FoodData Central), fao-wafct (FAO/INFOODS
+ * West African table), off (Open Food Facts product label data), custom (entered with a cited source).
+ */
+export type FoodSource = 'usda-sr' | 'usda-fndds' | 'fao-wafct' | 'off' | 'custom';
 
 export interface Food {
   /** "usda:<fdcId>" or "custom:<uuid>" */
   id: string;
   fdcId?: number;
+  /** Source-specific reference: WAFCT food code, Open Food Facts barcode. */
+  ref?: string;
   name: string;
   category: string;
   state: PrepState;
@@ -53,7 +60,7 @@ export interface LogEntry {
    * Snapshot of the food at log time, so later edits to a custom record
    * never rewrite history.
    */
-  food: Pick<Food, 'name' | 'state' | 'per100' | 'source' | 'fdcId' | 'sourceNote'>;
+  food: Pick<Food, 'name' | 'state' | 'per100' | 'source' | 'fdcId' | 'ref' | 'sourceNote'>;
   grams: number;
   photoId?: string;
   note?: string;
@@ -78,4 +85,6 @@ export interface Settings {
   theme: Theme;
   bodyUnit: BodyUnit;
   adminMode: boolean;
+  /** Optional personal Anthropic API key for photo recognition when no server endpoint exists. Stored on this device only. */
+  aiApiKey?: string;
 }
