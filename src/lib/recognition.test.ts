@@ -9,7 +9,7 @@ beforeAll(async () => {
   const json = JSON.parse(readFileSync('public/data/foods.json', 'utf8'));
   (globalThis as { fetch: unknown }).fetch = async () => ({ ok: true, json: async () => json });
   await loadFoodDb();
-});
+}, 30_000); // parsing the 13k-food database can be slow on a busy machine
 
 const item = (over: Partial<RecognitionResult['items'][number]>) => ({
   name: '', localName: '', cuisine: '', searchQueries: [], state: 'cooked' as const, estimatedGrams: 0, confidence: 'high' as const, ...over,
