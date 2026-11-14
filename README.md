@@ -4,7 +4,12 @@ A premium, mobile-first protein tracker. Weigh your food, pick it from the USDA 
 
 ## Features
 
-- **Food database** — 7,283 foods from USDA FoodData Central (SR Legacy, April 2018), searched locally and offline.
+- **International food database** — 13,656 foods searched locally and offline:
+  - USDA FoodData Central **SR Legacy** (7,282 ingredients and basic foods)
+  - USDA **FNDDS** (5,347 foods and mixed dishes as eaten, including curries, biryani, pad thai, sushi, ramen, falafel, dumplings, enchiladas…)
+  - **FAO/INFOODS West African Food Composition Table 2019** (1,027 foods: fufu, jollof dishes, bambara groundnut, plantain dishes…)
+- **Packaged products worldwide** — live search of Open Food Facts (3M+ products, label values per 100 g).
+- **Snap your food** — in-app camera (or gallery). Claude vision identifies each food in the photo, from any cuisine, and suggests matching database records plus a rough portion estimate. You pick the match and weigh it. The AI never supplies nutrient values.
 - **Raw / cooked / dry kept separate** — every record is tagged, filterable, and the add sheet tells you when to weigh. It offers the cooked (or raw) version of the same food in one tap.
 - **Weight entry in grams** — keypad, ±5 g steppers, quick weights and USDA household portions.
 - **Automatic calculation** — protein, energy, carbs and fat, scaled from per-100 g source values.
@@ -20,15 +25,37 @@ A premium, mobile-first protein tracker. Weigh your food, pick it from the USDA 
 
 - All USDA values are copied verbatim by `scripts/build-foods.mjs` from the official CSV. Missing values stay `null` and are shown as "—". Totals that include a missing value are marked with `*`.
 - Each log entry stores a snapshot of the values it was logged with, so later edits never rewrite history.
-- `src/lib/nutrition.ts` holds all the calculations. It is pure and deterministic, with no AI involved. Any future AI suggestions must live in a separate module and never write nutrient values.
+- `src/lib/nutrition.ts` holds all the calculations. It is pure and deterministic, with no AI involved.
+- AI lives only in `src/lib/recognition.ts` (identification) and returns names, search terms, raw/cooked state and a portion *estimate* labelled as such. Every logged number comes from the record the user confirms.
+- Some foods are not in any bundled table yet (e.g. jollof rice, attiéké). The app then offers similar records, product search, or a custom record that must cite its source. It never invents values.
 
 ### Rebuilding the food data
 
 ```bash
 curl -LO https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_sr_legacy_food_csv_2018-04.zip
+curl -LO https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_survey_food_csv_2024-10-31.zip
+curl -LO https://www.fao.org/fileadmin/user_upload/faoweb/2020/WAFCT_2019.xlsx
 unzip FoodData_Central_sr_legacy_food_csv_2018-04.zip -d /tmp/usda
-npm run build:foods -- /tmp/usda/FoodData_Central_sr_legacy_food_csv_2018-04
+unzip FoodData_Central_survey_food_csv_2024-10-31.zip -d /tmp/usda
+pip install openpyxl && python3 scripts/convert-wafct.py WAFCT_2019.xlsx /tmp/wafct.json
+npm run build:foods -- --sr /tmp/usda/FoodData_Central_sr_legacy_food_csv_2018-04 \
+  --fndds /tmp/usda/FoodData_Central_survey_food_csv_2024-10-31 --wafct /tmp/wafct.json
 ```
+
+## Photo recognition setup
+
+Recognition uses Claude (model `claude-opus-5-5`) and needs an Anthropic API key. Either:
+
+- **Hosted (recommended):** deploy to Vercel and set `ANTHROPIC_API_KEY` in the project's Environment Variables. The app calls `api/recognize.ts`, so the key never reaches phones.
+- **Personal:** in the app, Profile → Photo recognition → paste your own key. It is stored on that device only and sent only to Anthropic.
+
+Each photo is one API call. Requests enable server-side refusal fallbacks (`fallbacks: "default"`).
+
+## Deploy (get a link for your phone)
+
+1. Go to https://vercel.com/new, sign in with GitHub and import **Protein-app**.
+2. Optional: add `ANTHROPIC_API_KEY` under Environment Variables for photo recognition.
+3. Deploy. Open the URL on your phone and choose Add to Home Screen.
 
 ## Development
 
@@ -41,16 +68,20 @@ npm run build      # type-check + production build with service worker
 
 ## Stack
 
-React 18 + TypeScript, Vite 5, Tailwind CSS 3 (design tokens in `src/index.css`), Zustand (persisted to localStorage), idb-keyval (photos), vite-plugin-pwa (Workbox), lucide-react icons, Inter Variable.
+React 18 + TypeScript, Vite 5, Tailwind CSS 3 (design tokens in `src/index.css`), Zustand (persisted to localStorage), idb-keyval (photos), vite-plugin-pwa (Workbox), lucide-react icons, Plus Jakarta Sans, Anthropic TypeScript SDK (photo recognition), Vercel Functions (`api/`).
 
 ```
-scripts/build-foods.mjs   USDA CSV → public/data/foods.json
+scripts/build-foods.mjs   USDA + FAO tables → public/data/foods.json
+scripts/convert-wafct.py  FAO West Africa xlsx → JSON
+api/recognize.ts          serverless photo recognition endpoint
 src/lib/                  types, nutrition maths, food search, dates, photos, hooks
 src/store/useStore.ts     single data layer (swap for a backend later)
 src/components/           UI primitives, layout/nav, food sheet, entry rows, profile form
-src/pages/                Today, AddFood, History, Insights, Profile, Admin, Onboarding
+src/pages/                Today, AddFood, Snap (camera + AI), History, Insights, Profile, Admin, Onboarding
 ```
 
-## Data source
+## Data sources and licences
 
-U.S. Department of Agriculture, Agricultural Research Service. FoodData Central: SR Legacy, 2018. https://fdc.nal.usda.gov/
+- U.S. Department of Agriculture, Agricultural Research Service. FoodData Central: SR Legacy (2018) and FNDDS 2021–2023 (2024). Public domain. https://fdc.nal.usda.gov/
+- Vincent A. et al. 2020. FAO/INFOODS Food Composition Table for Western Africa (2019). Rome, FAO. © FAO 2020. Reuse is permitted for non-commercial products with acknowledgement; **commercial use requires permission from FAO** (copyright@fao.org).
+- Open Food Facts, https://world.openfoodfacts.org — Open Database License (ODbL); product data contributed by its community.

@@ -188,7 +188,10 @@ const PREP = /\b(raw|cooked|uncooked|dry|roasted|boiled|baked|grilled|broiled|fr
  *   → { title: "Chicken breast, meat only", detail: "roasted", prep: "cooked, roasted" }
  */
 export function splitName(name: string): { title: string; detail: string } {
-  const clean = name.replace(/\s*\(Includes foods for USDA's Food Distribution Program\)/i, '');
+  const clean = name
+    .replace(/\s*\(Includes foods for USDA's Food Distribution Program\)/i, '')
+    .replace(/\*/g, '') // FAO marks recipe-calculated foods with *
+    .replace(/,\s*n=\d+$/i, ''); // FAO sample counts
   let parts = clean.split(/,\s*/).filter((p) => p && !FILLER.test(p));
   if (parts.length > 1 && GROUP_PREFIX.test(parts[0])) parts = parts.slice(1);
   const core = parts.filter((p) => !PREP.test(p));
@@ -197,7 +200,8 @@ export function splitName(name: string): { title: string; detail: string } {
   // "Chicken" + "breast" reads better as "Chicken breast".
   let title = core[0];
   let rest = core.slice(1);
-  if (rest.length && rest[0].split(' ').length <= 2 && title.split(' ').length <= 2 && !/\d|%|\(/.test(rest[0])) {
+  // Only for one-word heads ("Chicken, breast"); multi-word heads are already natural ("Chicken thigh, skin eaten").
+  if (rest.length && rest[0].split(' ').length <= 2 && !title.includes(' ') && !/\d|%|\(/.test(rest[0])) {
     const word = rest[0];
     const isPart = PART.test(word) || (/^egg$/i.test(title) && /^(white|yolk)$/i.test(word));
     // Cuts/parts follow the food ("Chicken breast"); descriptors lead it ("Greek yogurt", "White rice").
