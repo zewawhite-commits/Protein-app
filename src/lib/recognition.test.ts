@@ -68,3 +68,14 @@ describe('Open Food Facts mapping', () => {
     expect(offToFood({ code: '1', product_name: 'Water', nutriments: {} })).toBeNull();
   });
 });
+
+import { confidentMatch } from './foods';
+describe('confident matching for AI-suggested foods', () => {
+  it('never matches word fragments, but finds real records', async () => {
+    await loadFoodDb();
+    expect(confidentMatch(['moi moi'])?.name ?? null).toBeNull();
+    expect(confidentMatch(['moi moi', 'cowpeas boiled'])?.name).toMatch(/cowpea/i);
+    expect(confidentMatch(['chicken breast roasted'])?.name).toMatch(/chicken.*breast/i);
+    expect(confidentMatch(['egg whole hard-boiled'])?.name).toMatch(/egg/i);
+  });
+});

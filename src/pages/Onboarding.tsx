@@ -7,6 +7,7 @@ import { GoogleIcon } from '@/components/BrandIcons';
 import { primaryGoal, suggestGramsPerKg, suggestionReason } from '@/lib/goals';
 import { COUNTRIES } from '@/lib/countries';
 import { dailyGoal, fromKg, round1, toKg } from '@/lib/nutrition';
+import { dailyTargets } from '@/lib/energy';
 import type { ActivityLevel, Diet, FitnessGoal } from '@/lib/types';
 import { Ring, Segmented, cx, fmt } from '@/components/ui';
 import { CountUp, haptic } from '@/components/fx';
@@ -58,6 +59,14 @@ export default function Onboarding() {
   const weightOk = weightNum >= minW && weightNum <= maxW;
   const weightKg = weightOk ? toKg(weightNum, unit) : null;
   const weightError = weight && !weightOk ? `Enter a weight between ${minW} and ${maxW} ${unit}.` : '';
+  // Height: cm, or feet + inches when the user weighs in pounds.
+  const [heightCm, setHeightCm] = useState('');
+  const [heightFt, setHeightFt] = useState('');
+  const [heightIn, setHeightIn] = useState('');
+  const heightNum = unit === 'kg' ? Number(heightCm) : (Number(heightFt) * 12 + Number(heightIn || 0)) * 2.54;
+  const heightOk = heightNum >= 100 && heightNum <= 250;
+  const heightTyped = unit === 'kg' ? !!heightCm : !!heightFt;
+  const heightError = heightTyped && !heightOk ? (unit === 'kg' ? 'Enter a height between 100 and 250 cm.' : 'Enter a height between 3 ft 4 in and 8 ft 2 in.') : '';
   const ageNum = Number(age);
   const ageOk = !age || (ageNum >= 13 && ageNum <= 110);
   const person = { age: ageNum || undefined, pregnant: sex === 'female' && pregnant };
@@ -93,12 +102,17 @@ export default function Onboarding() {
       country: country || undefined,
       activity,
       diet,
+      heightCm: heightOk ? Math.round(heightNum) : undefined,
+      calorieMode: 'auto',
     });
   }
 
   if (step === 0) return <Welcome signedIn={!!session} email={session?.user.email} onStart={next} />;
 
   const total = weightKg ? dailyGoal({ goalMode: 'perKg', gramsPerKg: gPerKg, bodyWeightKg: weightKg, goalGrams: 0 }) : 0;
+  const targets = weightKg
+    ? dailyTargets({ name: '', goalMode: 'perKg', goalGrams: 0, gramsPerKg: gPerKg, createdAt: 0, bodyWeightKg: weightKg, heightCm: heightOk ? heightNum : undefined, age: ageNum || undefined, sex, pregnant: sex === 'female' && pregnant, goals, activity }, total)
+    : null;
 
   return (
     <div className="mx-auto flex min-h-dvh max-w-lg flex-col px-5 md:max-w-xl pb-8">
@@ -113,7 +127,7 @@ export default function Onboarding() {
 
       <div key={step} className="flex flex-1 animate-fade-up flex-col">
         {step === 1 && (
-          <Question title="What are your goals?" sub="Pick all that apply. We’ll suggest a daily protein target.">
+          <Question title="What are your goals?" sub="Pick all that apply. We’ll set your calorie and protein targets.">
             {GOALS.map((o) => <Choice key={o.value} option={o} multi selected={goals.includes(o.value)} onClick={() => toggleGoal(o.value)} />)}
             <div className="flex-1" />
             <button onClick={next} disabled={!goals.length} className="btn-primary mt-6 w-full">
@@ -122,7 +136,7 @@ export default function Onboarding() {
           </Question>
         )}
         {step === 2 && (
-          <Question title="How active are you?" sub="Training raises how much protein your body uses.">
+          <Question title="How active are you?" sub="Activity changes how much energy and protein your body uses.">
             {ACTIVITY.map((o) => <Choice key={o.value} option={o} selected={activity === o.value} onClick={() => pickActivity(o.value)} />)}
           </Question>
         )}
@@ -169,8 +183,27 @@ export default function Onboarding() {
               <span className="pointer-events-none absolute right-5 top-1/2 -translate-y-1/2 text-lg text-silver">{unit}</span>
             </div>
             <p id="ob-weight-err" className="mt-2 min-h-5 text-sm text-danger">{weightError}</p>
+            <label className="label mt-1" htmlFor="ob-height">Height</label>
+            {unit === 'kg' ? (
+              <div className="relative">
+                <input id="ob-height" className={cx('field !h-14 pr-14 text-xl font-semibold', heightError && '!ring-2 !ring-danger')} inputMode="numeric" maxLength={3} value={heightCm} onChange={(e) => setHeightCm(e.target.value.replace(/\D/g, ''))} placeholder="175" />
+                <span className="pointer-events-none absolute right-5 top-1/2 -translate-y-1/2 text-lg text-silver">cm</span>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-3">
+                <div className="relative">
+                  <input id="ob-height" className={cx('field !h-14 pr-12 text-xl font-semibold', heightError && '!ring-2 !ring-danger')} inputMode="numeric" maxLength={1} value={heightFt} onChange={(e) => setHeightFt(e.target.value.replace(/\D/g, ''))} placeholder="5" aria-label="Feet" />
+                  <span className="pointer-events-none absolute right-5 top-1/2 -translate-y-1/2 text-lg text-silver">ft</span>
+                </div>
+                <div className="relative">
+                  <input className="field !h-14 pr-12 text-xl font-semibold" inputMode="numeric" maxLength={2} value={heightIn} onChange={(e) => setHeightIn(e.target.value.replace(/\D/g, ''))} placeholder="9" aria-label="Inches" />
+                  <span className="pointer-events-none absolute right-5 top-1/2 -translate-y-1/2 text-lg text-silver">in</span>
+                </div>
+              </div>
+            )}
+            <p className="mt-1 min-h-5 text-sm">{heightError ? <span className="text-danger">{heightError}</span> : <span className="text-xs text-silver">With age and weight, this sets your calorie target. Optional.</span>}</p>
             <div className="flex-1" />
-            <button onClick={() => { setGPerKg(suggestGramsPerKg(primaryGoal(goals.length ? goals : ['health'], activity ?? 'active'), activity ?? 'active', person)); next(); }} disabled={!weightKg || !ageOk} className="btn-primary mt-6 w-full">Continue</button>
+            <button onClick={() => { setGPerKg(suggestGramsPerKg(primaryGoal(goals.length ? goals : ['health'], activity ?? 'active'), activity ?? 'active', person)); next(); }} disabled={!weightKg || !ageOk || !!heightError} className="btn-primary mt-6 w-full">Continue</button>
           </Question>
         )}
         {step === 5 && goal && activity && (
@@ -197,6 +230,26 @@ export default function Onboarding() {
               <p className="num mt-2 text-sm font-semibold">{gPerKg.toFixed(1)} g per kg of body weight</p>
               <p className="mt-4 text-sm leading-relaxed text-silver">{suggestionReason(goal, activity, suggestGramsPerKg(goal, activity, person), person)}</p>
             </div>
+            {targets ? (
+              <div className="card mt-3 p-4">
+                <div className="flex items-baseline justify-between">
+                  <p className="text-sm font-semibold">Full day</p>
+                  <p className="num text-sm"><span className="text-lg font-bold"><CountUp value={targets.kcal} /></span> <span className="text-silver">kcal</span></p>
+                </div>
+                <div className="mt-3 grid grid-cols-4 gap-2 text-center">
+                  {([['Protein', targets.protein, 'bg-accent'], ['Carbs', targets.carbs, 'bg-[rgb(var(--carbs))]'], ['Fat', targets.fat, 'bg-[rgb(var(--fat))]'], ['Fibre', targets.fiber, 'bg-silver']] as const).map(([l, v, c]) => (
+                    <div key={l} className="rounded-2xl bg-raised px-1 py-2">
+                      <span className={cx('mx-auto mb-1 block h-1.5 w-6 rounded-full', c)} />
+                      <p className="num text-[15px] font-bold">{fmt(v)}g</p>
+                      <p className="text-[11px] text-silver">{l}</p>
+                    </div>
+                  ))}
+                </div>
+                <p className="mt-2 text-[11px] leading-snug text-dim">Calories estimated with the Mifflin–St Jeor equation{goals.includes('fatloss') && !(sex === 'female' && pregnant) ? ', about 20% below maintenance for fat loss' : goals.includes('muscle') ? ', about 10% above maintenance for muscle gain' : ''}.</p>
+              </div>
+            ) : (
+              <p className="mt-3 rounded-2xl bg-raised p-3 text-center text-xs text-silver">Add your height and age to also get calorie, carb and fat targets.</p>
+            )}
             <p className="mt-3 text-center text-xs text-dim">A starting point, not medical advice. Check with a health professional if you have a medical condition.</p>
             <div className="flex-1" />
             <button onClick={() => { haptic([10, 40, 10]); finish(); }} className="btn-primary mt-8 w-full">Start tracking</button>
@@ -270,7 +323,7 @@ function Welcome({ signedIn, email, onStart }: { signedIn: boolean; email?: stri
       <h1 className="mt-12 animate-fade-up text-[44px] font-extrabold leading-[1.02] tracking-tight">
         Weigh it.<br />Snap it.<br /><span className="text-accent">Hit your number.</span>
       </h1>
-      <p className="mt-4 max-w-sm text-[15px] text-silver">Protein tracking by weight, with foods from around the world. Raw and cooked kept separate.</p>
+      <p className="mt-4 max-w-sm text-[15px] text-silver">Calories, protein, carbs, vitamins — tracked by weight, with foods from around the world. Raw and cooked kept separate.</p>
       <div className="flex-1" />
 
       {err && <p className="mb-3 rounded-2xl bg-danger/10 px-4 py-3 text-sm text-danger">{err}</p>}

@@ -1,3 +1,4 @@
+import { EXTRA_KEYS } from './nutrients';
 /**
  * Food database: loads public/data/foods.json (USDA SR Legacy + USDA FNDDS +
  * FAO/INFOODS West Africa, built by scripts/build-foods.mjs) and merges custom
@@ -15,7 +16,7 @@ interface FoodsFile {
   generatedAt: string;
   categories: Record<string, string>;
   quickPicks: number[];
-  foods: [number | string, string, number, PrepState, number, number | null, number | null, number | null, number | null, [string, number][], SourceCode][];
+  foods: [number | string, string, number, PrepState, number, number | null, number | null, number | null, number | null, [string, number][], SourceCode, (number | null)[]?][];
 }
 
 export interface FoodDb {
@@ -68,7 +69,7 @@ export function loadFoodDb(): Promise<FoodDb> {
         return r.json() as Promise<FoodsFile>;
       })
       .then((file) => {
-        const foods: Food[] = file.foods.map(([key, name, cat, state, protein, kcal, fat, carbs, fiber, portions, src]) => {
+        const foods: Food[] = file.foods.map(([key, name, cat, state, protein, kcal, fat, carbs, fiber, portions, src, extra]) => {
           const usda = src !== 'w';
           return {
             id: usda ? `usda:${key}` : `wafct:${key}`,
@@ -77,7 +78,7 @@ export function loadFoodDb(): Promise<FoodDb> {
             name,
             category: file.categories[cat] ?? 'Other',
             state,
-            per100: { protein, kcal, fat, carbs, fiber },
+            per100: { protein, kcal, fat, carbs, fiber, ...(extra && Object.fromEntries(EXTRA_KEYS.map((k, i) => [k, extra[i] ?? null]))) },
             portions: portions.map(([label, grams]) => ({ label, grams })),
             source: SOURCE_OF[src],
           };
@@ -219,3 +220,26 @@ const PART = /^(breast|thigh|leg|wing|drumstick|back|neck|giblets|liver|heart|ki
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 export const fdcUrl = (fdcId: number) => `https://fdc.nal.usda.gov/food-details/${fdcId}/nutrients`;
+
+/**
+ * The first search result that really contains every word of one of the queries
+ * (whole words, allowing plurals; "cooked" also matches any cooked record). Used for
+ * AI-suggested names, where a loose match (e.g. "moi" → "moisture") would be misleading.
+ */
+const OTHER_FORM = new Set(['leafy', 'leaves', 'leaf', 'tips', 'shoots', 'sprouted', 'sprouts', 'flour', 'meal', 'roll', 'loaf', 'powder', 'dehydrated', 'dried', 'canned', 'frozen', 'breaded', 'babyfood', 'luncheon', 'sticks']);
+
+export function confidentMatch(queries: string[], opts: SearchOptions = {}): Food | undefined {
+  const same = (w: string, t: string) => w === t || w === `${t}s` || w === `${t}es` || t === `${w}s` || SYNONYMS[t] === w;
+  for (const q of queries) {
+    const terms = tokenize(q).filter((t) => t.length > 1);
+    if (!terms.length) continue;
+    const hits = searchFoods(q, { ...opts, limit: 8 }).filter((f) => {
+      const words = tokenize(f.name);
+      return terms.every((t) => words.some((w) => same(w, t)) || (t === 'cooked' && f.state === 'cooked'));
+    });
+    // Skip records about a different part or product (leaves, flour, rolls…) unless the query asks for it.
+    const hit = hits.find((f) => !tokenize(f.name).some((w) => OTHER_FORM.has(w) && !terms.includes(w)));
+    if (hit) return hit;
+  }
+  return undefined;
+}

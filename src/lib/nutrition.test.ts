@@ -117,3 +117,25 @@ describe('phone numbers', () => {
     expect(toE164('+234', '+1 (415) 555-0100')).toBe('+14155550100');
   });
 });
+
+import { dailyTargets, estimateKcal, restingKcal } from './energy';
+describe('calorie targets', () => {
+  const base = { name: '', goalMode: 'perKg' as const, goalGrams: 0, gramsPerKg: 1.6, createdAt: 0 };
+  it('uses Mifflin–St Jeor', () => {
+    // 10*70 + 6.25*175 - 5*30 + 5 = 1648.75
+    expect(restingKcal({ bodyWeightKg: 70, heightCm: 175, age: 30, sex: 'male' })).toBeCloseTo(1648.75);
+    expect(restingKcal({ bodyWeightKg: 60, heightCm: 165, age: 30, sex: 'female' })).toBeCloseTo(1320.25);
+  });
+  it('adjusts for goals and activity, with a safety floor', () => {
+    const p = { ...base, bodyWeightKg: 70, heightCm: 175, age: 30, sex: 'male' as const, activity: 'active' as const };
+    expect(estimateKcal({ ...p, goals: ['maintain'] })).toBe(2560); // 1648.75 * 1.55 = 2555.6
+    expect(estimateKcal({ ...p, goals: ['fatloss', 'muscle'] })).toBe(2040);
+    expect(estimateKcal({ ...p, goals: ['muscle'] })).toBe(2810);
+    expect(estimateKcal({ ...p, bodyWeightKg: 40, heightCm: 150, age: 70, sex: 'female', activity: 'sedentary', goals: ['fatloss'] })).toBe(1200);
+    expect(estimateKcal({ ...p, heightCm: undefined })).toBeNull();
+  });
+  it('splits calories into macros', () => {
+    const t = dailyTargets({ ...base, calorieMode: 'fixed', calorieGoal: 2000, bodyWeightKg: 70 }, 120)!;
+    expect(t).toMatchObject({ kcal: 2000, protein: 120, fat: 67, carbs: 229, fiber: 28, estimated: false });
+  });
+});

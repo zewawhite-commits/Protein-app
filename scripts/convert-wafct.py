@@ -30,7 +30,11 @@ C = {
     'code': 0, 'name': 1, 'source': 4,
     'kcal': next(i for i, h in enumerate(header) if h.startswith('Energy') and 'kcal' in h),
     'protein': col('PROTCNT'), 'fat': col('FAT'), 'carbs': col('CHOAVLDF'), 'fiber': col('FIBTG'),
+    'satFat': col('FASAT'), 'cholesterol': col('CHOLE'), 'sodium': col('NA'), 'potassium': col('K'),
+    'calcium': col('CA'), 'iron': col('FE'), 'magnesium': col('MG'), 'zinc': col('ZN'),
+    'vitA': col('VITA_RAE'), 'vitC': col('VITC'), 'vitD': col('VITD'), 'vitB12': col('VITB12'), 'folate': col('FOLDFE'),
 }
+EXTRA = ['satFat', 'cholesterol', 'sodium', 'potassium', 'calcium', 'iron', 'magnesium', 'zinc', 'vitA', 'vitC', 'vitD', 'vitB12', 'folate']
 
 def num(v):
     if v is None or str(v).strip() in ('', '-', 'tr'):
@@ -54,7 +58,7 @@ for r in rows[3:]:
     protein, pflag = num(r[C['protein']])
     if protein is None:
         continue
-    vals = {k: num(r[C[k]])[0] for k in ('kcal', 'fat', 'carbs', 'fiber')}
+    vals = {k: num(r[C[k]])[0] for k in ('kcal', 'fat', 'carbs', 'fiber', *EXTRA)}
     foods.append({
         'code': str(code), 'name': re.sub(r'\s+', ' ', str(name)).strip(), 'group': group,
         'protein': protein, 'proteinFlagged': pflag, **vals,

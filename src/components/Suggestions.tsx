@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { ChevronRight, Loader2, Sparkles } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 import { useFoodDb } from '@/lib/hooks';
-import { searchFoods, splitName } from '@/lib/foods';
+import { confidentMatch, splitName } from '@/lib/foods';
 import { fitsDiet } from '@/lib/goals';
 import { gramsForProtein } from '@/lib/nutrition';
 import { todayKey } from '@/lib/dates';
@@ -50,7 +50,7 @@ export function Suggestions({ remaining }: { remaining: number }) {
   const aiRows: Row[] = useMemo(
     () =>
       ai.ideas.map((idea, i) => {
-        const match = idea.searchQueries.concat(idea.localName, idea.name).filter(Boolean).map((q) => searchFoods(q, { custom, limit: 1 })[0]).find(Boolean);
+        const match = confidentMatch(idea.searchQueries.concat(idea.localName, idea.name).filter(Boolean), { custom });
         return { key: `ai${i}`, title: idea.localName && idea.localName !== idea.name ? idea.localName : idea.name, sub: idea.localName && idea.localName !== idea.name ? idea.name : undefined, why: idea.why, food: match, query: idea.searchQueries[0] ?? idea.name };
       }),
     [ai.ideas, custom],

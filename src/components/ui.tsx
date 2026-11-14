@@ -22,7 +22,7 @@ export function Ring({
   value: number;
   size?: number;
   stroke?: number;
-  color?: 'accent' | 'ink' | 'silver';
+  color?: 'accent' | 'ink' | 'silver' | 'carbs' | 'fat' | 'warn';
   track?: 'line' | 'raised';
   dashed?: boolean;
   children?: ReactNode;

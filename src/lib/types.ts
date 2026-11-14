@@ -8,6 +8,21 @@ export interface Per100 {
   fat: number | null;
   carbs: number | null;
   fiber: number | null;
+  /** Extra nutrients (see lib/nutrients.ts). Optional: entries logged before v3 lack them. */
+  sugar?: number | null;
+  satFat?: number | null;
+  cholesterol?: number | null;
+  sodium?: number | null;
+  potassium?: number | null;
+  calcium?: number | null;
+  iron?: number | null;
+  magnesium?: number | null;
+  zinc?: number | null;
+  vitA?: number | null;
+  vitC?: number | null;
+  vitD?: number | null;
+  vitB12?: number | null;
+  folate?: number | null;
 }
 
 export interface Portion {
@@ -91,6 +106,11 @@ export interface Profile {
   country?: string;
   activity?: ActivityLevel;
   diet?: Diet;
+  /** Height in cm (for the calorie estimate). */
+  heightCm?: number;
+  /** 'auto' (default) = estimated from body data; 'fixed' = calorieGoal. */
+  calorieMode?: 'auto' | 'fixed';
+  calorieGoal?: number;
 }
 
 export type FitnessGoal = 'muscle' | 'fatloss' | 'maintain' | 'performance' | 'health';

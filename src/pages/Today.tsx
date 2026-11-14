@@ -1,12 +1,14 @@
 import { useMemo, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Camera, Check, Drumstick, Flame, Plus, Search, Target } from 'lucide-react';
+import { Camera, Check, Flame, Plus, Search } from 'lucide-react';
 import { useStore, goalOn } from '@/store/useStore';
 import { useDay, useFoodLookup } from '@/lib/hooks';
 import { addDays, fromKey, relativeDay, todayKey, weekOf } from '@/lib/dates';
-import { sumEntries } from '@/lib/nutrition';
+import { sumEntries, type Totals } from '@/lib/nutrition';
+import { dailyTargets, type Targets } from '@/lib/energy';
+import { DV_NOTE, MacroBar, NutrientList } from '@/components/Nutrients';
 import type { Food, LogEntry, Meal } from '@/lib/types';
-import { Pill, Ring, cx, fmt } from '@/components/ui';
+import { Pill, Ring, Sheet, cx, fmt } from '@/components/ui';
 import { APP_NAME, CountUp } from '@/components/fx';
 import { EntryRow } from '@/components/EntryRow';
 import { Suggestions } from '@/components/Suggestions';
@@ -41,12 +43,13 @@ export default function Today() {
   const date = params.get('date') ?? today;
   const setDate = (d: string) => setParams(d === today ? {} : { date: d }, { replace: true });
   const { entries, totals, goal } = useDay(date);
-  const profileWeight = useStore((s) => s.profile?.bodyWeightKg);
+  const profile = useStore((s) => s.profile);
+  const profileWeight = profile?.bodyWeightKg;
+  const targets = useMemo(() => (profile ? dailyTargets(profile, goal) : null), [profile, goal]);
   const lookup = useFoodLookup();
   const [editing, setEditing] = useState<LogEntry | null>(null);
   const { streak, weekHits } = useGoalStats(date);
 
-  const pct = goal ? totals.protein / goal : 0;
   const isToday = date === today;
 
   return (
@@ -87,16 +90,7 @@ export default function Today() {
 
       <div className="lg:grid lg:grid-cols-[1.1fr_1fr] lg:items-start lg:gap-8">
       <div>
-      <HeroCard
-        protein={totals.protein}
-        goal={goal}
-        pct={pct}
-        kcal={totals.kcal}
-        carbs={totals.carbs}
-        fat={totals.fat}
-        incomplete={totals.incomplete}
-        entries={entries}
-      />
+      <HeroCard totals={totals} goal={goal} targets={targets} entries={entries} />
       {isToday && <Suggestions remaining={Math.max(0, goal - totals.protein)} />}
       </div>
 
@@ -126,18 +120,18 @@ export default function Today() {
   );
 }
 
-function HeroCard(props: {
-  protein: number; goal: number; pct: number;
-  kcal: number; carbs: number; fat: number; incomplete: { kcal: boolean; carbs: boolean; fat: boolean };
-  entries: LogEntry[];
-}) {
-  const { protein, goal, pct } = props;
+function HeroCard({ totals, goal, targets, entries }: { totals: Totals; goal: number; targets: Targets | null; entries: LogEntry[] }) {
   const [page, setPage] = useState(0);
+  const [allNutrients, setAllNutrients] = useState(false);
   const scroller = useRef<HTMLDivElement>(null);
   const perMeal = useMemo(
-    () => MEALS.map((m) => ({ ...m, protein: sumEntries(props.entries.filter((e) => e.meal === m.key)).protein })),
-    [props.entries],
+    () => MEALS.map((m) => ({ ...m, ...sumEntries(entries.filter((e) => e.meal === m.key)) })),
+    [entries],
   );
+  const kcalLeft = targets ? targets.kcal - totals.kcal : 0;
+  const kcalPct = targets ? totals.kcal / targets.kcal : 0;
+  const over = targets && kcalLeft < 0;
+  const pages = 3;
 
   return (
     <section className="card mt-5 pb-4 pt-6">
@@ -146,58 +140,79 @@ function HeroCard(props: {
         onScroll={(e) => setPage(Math.round(e.currentTarget.scrollLeft / e.currentTarget.clientWidth))}
         className="flex snap-x snap-mandatory overflow-x-auto no-scrollbar"
       >
-        {/* Page 1: protein */}
+        {/* Page 1: calories + macros */}
         <div className="w-full shrink-0 snap-center px-6">
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0">
-              <p className="flex items-baseline">
-                <CountUp value={Math.round(protein)} className={cx('num font-extrabold leading-[0.9]', protein >= 1000 ? 'text-[48px]' : 'text-[64px]')} />
-                <span className="num ml-1 text-lg font-bold text-silver">/{fmt(goal)}g</span>
-              </p>
-              <p className="mt-2 text-[15px] font-semibold">Protein eaten</p>
-              <span className={cx('mt-2.5 inline-flex h-7 items-center gap-1.5 rounded-full px-2.5 text-xs font-semibold', pct >= 1 ? 'bg-accent/10 text-accent' : 'bg-raised text-silver')}>
-                {pct >= 1 ? <Check size={13} strokeWidth={3} /> : <Target size={13} strokeWidth={2.5} />}
-                <span className="num">{pct >= 1 ? `Goal hit · +${fmt(protein - goal)}g` : `${fmt(goal - protein)}g to go`}</span>
-              </span>
+              {targets ? (
+                <>
+                  <p className="flex items-baseline">
+                    <CountUp value={Math.abs(Math.round(kcalLeft))} className={cx('num font-extrabold leading-[0.9]', Math.abs(kcalLeft) >= 10000 ? 'text-[44px]' : 'text-[56px]')} />
+                  </p>
+                  <p className="mt-2 text-[15px] font-semibold">{over ? 'Calories over' : 'Calories left'}</p>
+                  <p className="num mt-1 text-xs text-silver">{fmt(totals.kcal)}{totals.incomplete.kcal && '*'} eaten of {fmt(targets.kcal)} kcal</p>
+                </>
+              ) : (
+                <>
+                  <p className="flex items-baseline">
+                    <CountUp value={Math.round(totals.kcal)} className="num text-[56px] font-extrabold leading-[0.9]" />
+                    <span className="num ml-1 text-lg font-bold text-silver">kcal</span>
+                  </p>
+                  <p className="mt-2 text-[15px] font-semibold">Calories eaten</p>
+                  <Link to="/profile?edit=1" className="mt-1 inline-block text-xs font-semibold text-accent">Add height & age for a calorie goal</Link>
+                </>
+              )}
             </div>
-            <Ring value={pct} size={118} stroke={12} color={pct >= 1 ? 'accent' : 'ink'} track="raised">
-              <div className={cx('grid h-14 w-14 place-items-center rounded-full', pct >= 1 ? 'bg-accent text-white' : 'bg-raised')}>
-                <Drumstick size={24} strokeWidth={2.2} />
+            <Ring value={targets ? kcalPct : 0} size={112} stroke={11} color={over ? 'warn' : 'ink'} track="raised" dashed={!targets}>
+              <div className="grid h-14 w-14 place-items-center rounded-full bg-raised">
+                <Flame size={24} strokeWidth={2.2} className={over ? 'text-warn' : ''} />
               </div>
             </Ring>
           </div>
-          {/* Protein is the point; other nutrients are secondary context. */}
-          <div className="mt-5 h-2.5 overflow-hidden rounded-full bg-raised">
-            <div className={cx('h-full rounded-full transition-all duration-700', pct >= 1 ? 'bg-accent' : 'bg-ink')} style={{ width: `${Math.min(100, pct * 100)}%` }} />
+          <div className="mt-5 space-y-3">
+            <MacroBar label="Protein" value={totals.protein} target={goal} color="protein" />
+            <MacroBar label="Carbs" value={totals.carbs} target={targets?.carbs} color="carbs" incomplete={totals.incomplete.carbs} />
+            <MacroBar label="Fat" value={totals.fat} target={targets?.fat} color="fat" incomplete={totals.incomplete.fat} />
           </div>
-          <p className="num mt-3 text-xs text-silver">
-            Also today: {fmt(props.kcal)} kcal · {fmt(props.carbs)} g carbs · {fmt(props.fat)} g fat
-            {(props.incomplete.kcal || props.incomplete.carbs || props.incomplete.fat) && <span title="Some foods have no value for this in the source data"> *</span>}
-          </p>
+          {totals.protein >= goal && goal > 0 && (
+            <span className="mt-3 inline-flex h-7 items-center gap-1.5 rounded-full bg-accent/10 px-2.5 text-xs font-semibold text-accent">
+              <Check size={13} strokeWidth={3} /> Protein goal hit
+            </span>
+          )}
         </div>
 
-        {/* Page 2: protein by meal */}
+        {/* Page 2: nutrients */}
         <div className="w-full shrink-0 snap-center px-6">
-          <p className="text-[15px] font-semibold">Protein by meal</p>
+          <div className="flex items-baseline justify-between">
+            <p className="text-[15px] font-semibold">Nutrients</p>
+            <button onClick={() => setAllNutrients(true)} className="text-sm font-semibold text-accent">See all</button>
+          </div>
+          <div className="mt-2">
+            <MacroBar label="Fibre" value={totals.fiber} target={targets?.fiber} color="fiber" incomplete={totals.incomplete.fiber} />
+          </div>
+          <NutrientList compact values={totals} incomplete={totals.incomplete} keys={['sugar', 'satFat', 'sodium', 'iron', 'calcium']} />
+        </div>
+
+        {/* Page 3: by meal */}
+        <div className="w-full shrink-0 snap-center px-6">
+          <p className="text-[15px] font-semibold">By meal</p>
           <div className="mt-4 grid grid-cols-2 gap-2.5">
             {perMeal.map((m) => (
-              <div key={m.key} className="tile flex items-center gap-3 p-3">
-                <Ring value={goal ? m.protein / goal : 0} size={40} stroke={5} track="line" color="accent">
-                  <span className="num text-[10px] font-bold">{goal ? fmt((m.protein / goal) * 100) : 0}%</span>
-                </Ring>
-                <div className="min-w-0">
-                  <p className="num text-lg font-bold leading-none">{fmt(m.protein)}<span className="text-xs text-silver">g</span></p>
-                  <p className="mt-1 truncate text-[11px] font-semibold text-silver">{m.label}</p>
-                </div>
+              <div key={m.key} className="tile p-3">
+                <p className="truncate text-[11px] font-semibold text-silver">{m.label}</p>
+                <p className="num mt-1 text-lg font-bold leading-none">{fmt(m.kcal)}<span className="text-xs text-silver"> kcal</span></p>
+                <p className="num mt-1.5 text-[11px] text-silver">
+                  <span className="text-accent">P {fmt(m.protein)}</span> · C {fmt(m.carbs)} · F {fmt(m.fat)}
+                </p>
               </div>
             ))}
           </div>
-          <p className="mt-3 text-center text-[11px] font-medium text-dim">% of your daily goal</p>
+          <p className="mt-3 text-center text-[11px] font-medium text-dim">Protein · carbs · fat in grams</p>
         </div>
       </div>
 
       <div className="mt-4 flex justify-center gap-1.5">
-        {[0, 1].map((i) => (
+        {Array.from({ length: pages }, (_, i) => (
           <button
             key={i}
             aria-label={`Page ${i + 1}`}
@@ -206,6 +221,17 @@ function HeroCard(props: {
           />
         ))}
       </div>
+
+      <Sheet open={allNutrients} onClose={() => setAllNutrients(false)} title="All nutrients">
+        <div className="space-y-3">
+          <MacroBar label="Protein" value={totals.protein} target={goal} color="protein" />
+          <MacroBar label="Carbs" value={totals.carbs} target={targets?.carbs} color="carbs" incomplete={totals.incomplete.carbs} />
+          <MacroBar label="Fat" value={totals.fat} target={targets?.fat} color="fat" incomplete={totals.incomplete.fat} />
+          <MacroBar label="Fibre" value={totals.fiber} target={targets?.fiber} color="fiber" incomplete={totals.incomplete.fiber} />
+        </div>
+        <div className="mt-4"><NutrientList values={totals} incomplete={totals.incomplete} /></div>
+        <p className="mt-3 text-[11px] leading-snug text-dim">{DV_NOTE}</p>
+      </Sheet>
     </section>
   );
 }

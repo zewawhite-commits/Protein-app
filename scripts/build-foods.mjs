@@ -59,6 +59,13 @@ const NUTRIENT_KEYS = {
   sr: { protein: '1003', fat: '1004', carbs: '1005', kcal: '1008', fiber: '1079' },
   fndds: { protein: '203', fat: '204', carbs: '205', kcal: '208', fiber: '291' },
 };
+// Extra nutrients, in the order of EXTRA_KEYS (src/lib/nutrients.ts):
+// sugar, satFat, cholesterol, sodium, potassium, calcium, iron, magnesium, zinc, vitA (RAE), vitC, vitD (µg), vitB12, folate (DFE)
+const EXTRA_IDS = {
+  sr: ['2000', '1258', '1253', '1093', '1092', '1087', '1089', '1090', '1095', '1106', '1162', '1114', '1178', '1190'],
+  fndds: ['269', '606', '601', '307', '306', '301', '303', '304', '309', '320', '401', '328', '418', '435'],
+};
+const WAFCT_EXTRA = [null, 'satFat', 'cholesterol', 'sodium', 'potassium', 'calcium', 'iron', 'magnesium', 'zinc', 'vitA', 'vitC', 'vitD', 'vitB12', 'folate'];
 const r1 = (v) => (v == null || Number.isNaN(v) ? null : Math.round(v * 100) / 100);
 
 /**
@@ -142,6 +149,7 @@ function loadDataset(dir, kind) {
       r1(n[N.fiber]),
       (portions.get(f.fdc_id) ?? []).slice(0, 6),
       kind === 'sr' ? 's' : 'f',
+      EXTRA_IDS[kind].map((id) => r1(n[id])),
     ]);
   }
   return { out, categories, missing };
@@ -160,6 +168,7 @@ if (args.wafct) {
     categories,
     out: w.foods.map((f) => [
       f.code, f.name, catId(f.group), prepState(f.name, ''), r1(f.protein), r1(f.kcal), r1(f.fat), r1(f.carbs), r1(f.fiber), [], 'w',
+      WAFCT_EXTRA.map((k) => (k ? r1(f[k]) : null)),
     ]),
   });
 }
@@ -176,7 +185,7 @@ for (const id of QUICK_PICKS) if (!ids.has(id)) throw new Error(`Quick pick ${id
 
 const usedCats = [...new Set(out.map((f) => f[2]))].sort((a, b) => a - b);
 const payload = {
-  version: 2,
+  version: 3,
   sources: {
     s: {
       name: 'USDA FoodData Central — SR Legacy',
@@ -197,7 +206,8 @@ const payload = {
   basis: 'per 100 g edible portion',
   url: 'https://fdc.nal.usda.gov/',
   generatedAt: new Date().toISOString().slice(0, 10),
-  fields: ['fdcId', 'name', 'categoryId', 'state', 'protein', 'kcal', 'fat', 'carbs', 'fiber', 'portions', 'source'],
+  fields: ['fdcId', 'name', 'categoryId', 'state', 'protein', 'kcal', 'fat', 'carbs', 'fiber', 'portions', 'source', 'extra'],
+  extraFields: ['sugar', 'satFat', 'cholesterol', 'sodium', 'potassium', 'calcium', 'iron', 'magnesium', 'zinc', 'vitA', 'vitC', 'vitD', 'vitB12', 'folate'],
   categories: Object.fromEntries(usedCats.map((id) => [id, allCategories[id]])),
   quickPicks: QUICK_PICKS,
   foods: out,

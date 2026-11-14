@@ -4,6 +4,7 @@
  * No estimation, no AI — keep suggestions elsewhere.
  */
 import type { LogEntry, Per100, Profile } from './types';
+import { EXTRA_KEYS, type ExtraKey } from './nutrients';
 
 export const round1 = (n: number) => Math.round(n * 10) / 10;
 
@@ -13,14 +14,13 @@ export function scale(per100: number | null, grams: number): number | null {
   return (per100 * grams) / 100;
 }
 
-export interface Totals {
-  protein: number;
-  kcal: number;
-  fat: number;
-  carbs: number;
+type Summed = 'kcal' | 'fat' | 'carbs' | 'fiber' | ExtraKey;
+const SUMMED: Summed[] = ['kcal', 'fat', 'carbs', 'fiber', ...EXTRA_KEYS];
+
+export type Totals = { protein: number } & Record<Summed, number> & {
   /** True when at least one entry lacked a value for that nutrient, so the total is a lower bound. */
-  incomplete: { kcal: boolean; fat: boolean; carbs: boolean };
-}
+  incomplete: Record<Summed, boolean>;
+};
 
 export function nutrientsFor(per100: Per100, grams: number) {
   return {
@@ -33,18 +33,21 @@ export function nutrientsFor(per100: Per100, grams: number) {
 }
 
 export function sumEntries(entries: LogEntry[]): Totals {
-  const t: Totals = { protein: 0, kcal: 0, fat: 0, carbs: 0, incomplete: { kcal: false, fat: false, carbs: false } };
+  const t = { protein: 0, incomplete: {} } as Totals;
+  for (const k of SUMMED) { t[k] = 0; t.incomplete[k] = false; }
   for (const e of entries) {
-    const n = nutrientsFor(e.food.per100, e.grams);
-    t.protein += n.protein;
-    for (const k of ['kcal', 'fat', 'carbs'] as const) {
-      const v = n[k];
+    t.protein += scale(e.food.per100.protein, e.grams) ?? 0;
+    for (const k of SUMMED) {
+      const v = scale(e.food.per100[k] ?? null, e.grams);
       if (v == null) t.incomplete[k] = true;
       else t[k] += v;
     }
   }
   return t;
 }
+
+/** One nutrient for a weight, or null when the source has no value. */
+export const amountOf = (per100: Per100, key: keyof Per100, grams: number) => scale(per100[key] ?? null, grams);
 
 /** Daily protein goal in grams for a profile. */
 export function dailyGoal(p: Pick<Profile, 'goalMode' | 'goalGrams' | 'gramsPerKg' | 'bodyWeightKg'>): number {

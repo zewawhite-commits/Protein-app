@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { Profile } from '@/lib/types';
 import { dailyGoal, fromKg, round1, toKg } from '@/lib/nutrition';
+import { dailyTargets, estimateKcal } from '@/lib/energy';
 import { useStore } from '@/store/useStore';
 import { Segmented, cx, fmt } from './ui';
 
@@ -26,12 +27,26 @@ export function ProfileForm({ initial, submitLabel, onSaved }: { initial?: Profi
   const [mode, setMode] = useState<Profile['goalMode']>(initial?.goalMode ?? 'perKg');
   const [perKg, setPerKg] = useState(String(initial?.gramsPerKg ?? 1.6));
   const [fixed, setFixed] = useState(String(initial?.goalGrams ?? 140));
+  const [age, setAge] = useState(initial?.age ? String(initial.age) : '');
+  const [height, setHeight] = useState(initial?.heightCm ? String(initial.heightCm) : '');
+  const [kcalMode, setKcalMode] = useState<'auto' | 'fixed'>(initial?.calorieMode ?? 'auto');
+  const [kcalFixed, setKcalFixed] = useState(initial?.calorieGoal ? String(initial.calorieGoal) : '');
+  const ageNum = Number(age);
+  const ageOk = !age || (ageNum >= 13 && ageNum <= 110);
+  const heightNum = Number(height);
+  const heightOk = !height || (heightNum >= 100 && heightNum <= 250);
 
   const weightNum = Number(weight.replace(',', '.'));
   const [minW, maxW] = unit === 'kg' ? [25, 300] : [55, 660];
   const weightKg = weightNum >= minW && weightNum <= maxW ? toKg(weightNum, unit) : null;
   const weightError = weight && !weightKg ? `Enter a weight between ${minW} and ${maxW} ${unit}.` : '';
   const draft: Profile = {
+    // Keep everything else from onboarding (goals, sex, country, diet…).
+    ...(initial ?? {}),
+    age: ageNum || undefined,
+    heightCm: heightNum || undefined,
+    calorieMode: kcalMode,
+    calorieGoal: Number(kcalFixed) || undefined,
     name: name.trim(),
     bodyWeightKg: weightKg ? round1(weightKg) : null,
     goalMode: mode,
@@ -40,7 +55,11 @@ export function ProfileForm({ initial, submitLabel, onSaved }: { initial?: Profi
     createdAt: initial?.createdAt ?? Date.now(),
   };
   const goal = dailyGoal(draft);
-  const valid = goal > 0 && goal < 1000 && (mode === 'fixed' || !!weightKg);
+  const kcalNum = Number(kcalFixed);
+  const kcalOk = kcalMode === 'auto' || (kcalNum >= 800 && kcalNum <= 8000);
+  const valid = goal > 0 && goal < 1000 && (mode === 'fixed' || !!weightKg) && ageOk && heightOk && kcalOk;
+  const estimate = estimateKcal(draft);
+  const targets = dailyTargets(draft, goal);
 
   function switchUnit(u: 'kg' | 'lb') {
     if (u === unit) return;
@@ -74,6 +93,21 @@ export function ProfileForm({ initial, submitLabel, onSaved }: { initial?: Profi
         </div>
         {weightError && <p className="mt-2 text-sm text-danger">{weightError}</p>}
       </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="label" htmlFor="pf-age">Age</label>
+          <input id="pf-age" className={cx('field', !ageOk && '!ring-2 !ring-danger')} inputMode="numeric" maxLength={3} value={age} onChange={(e) => setAge(e.target.value.replace(/\D/g, ''))} placeholder="30" />
+        </div>
+        <div>
+          <label className="label" htmlFor="pf-height">Height</label>
+          <div className="relative">
+            <input id="pf-height" className={cx('field pr-12', !heightOk && '!ring-2 !ring-danger')} inputMode="numeric" maxLength={3} value={height} onChange={(e) => setHeight(e.target.value.replace(/\D/g, ''))} placeholder="175" />
+            <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-silver">cm</span>
+          </div>
+        </div>
+      </div>
+      {(!ageOk || !heightOk) && <p className="-mt-4 text-sm text-danger">{!ageOk ? 'Age must be 13–110.' : 'Height must be 100–250 cm.'}</p>}
 
       <div>
         <span className="label">Daily protein goal</span>
@@ -115,6 +149,28 @@ export function ProfileForm({ initial, submitLabel, onSaved }: { initial?: Profi
           <p className="mt-1.5 text-sm font-semibold">Daily protein goal</p>
         </div>
         {mode === 'perKg' && !weightKg && <p className="max-w-[9rem] text-right text-xs text-silver">Enter your body weight to calculate</p>}
+      </div>
+
+      <div>
+        <span className="label">Daily calories</span>
+        <div className="grid grid-cols-2 gap-2">
+          {([['auto', 'Estimate for me'], ['fixed', 'Set my own']] as const).map(([v, l]) => (
+            <button type="button" key={v} onClick={() => setKcalMode(v)} className={cx('chip justify-center !h-12', kcalMode === v && 'chip-on')}>{l}</button>
+          ))}
+        </div>
+        {kcalMode === 'auto' ? (
+          <p className="mt-2 text-xs leading-relaxed text-silver">
+            {estimate ? <>About <b className="num text-ink">{fmt(estimate)} kcal</b> from your weight, height, age, activity and goals (Mifflin–St Jeor).</> : 'Add your age and height to get an estimate.'}
+          </p>
+        ) : (
+          <div className="relative mt-2">
+            <input className={cx('field pr-14', !kcalOk && kcalFixed && '!ring-2 !ring-danger')} inputMode="numeric" maxLength={4} value={kcalFixed} onChange={(e) => setKcalFixed(e.target.value.replace(/\D/g, ''))} placeholder={estimate ? String(estimate) : '2000'} aria-label="Calories per day" />
+            <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-silver">kcal</span>
+          </div>
+        )}
+        {targets && (
+          <p className="num mt-2 text-xs text-silver">Carbs {fmt(targets.carbs)} g · Fat {fmt(targets.fat)} g · Fibre {fmt(targets.fiber)} g</p>
+        )}
       </div>
 
       <button type="submit" disabled={!valid} className="btn-primary w-full">{submitLabel}</button>

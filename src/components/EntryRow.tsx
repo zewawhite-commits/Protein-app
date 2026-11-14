@@ -14,14 +14,15 @@ export function EntryRow({ entry, onClick }: { entry: LogEntry; onClick?: () => 
       <FoodVisual name={entry.food.name} category={lookup(entry.foodId)?.category} photoId={entry.photoId} fdcId={entry.food.fdcId} size={56} />
       <div className="min-w-0 flex-1">
         <p className="line-clamp-2 font-semibold leading-snug">{title}</p>
-        <p className="num mt-1 flex items-center gap-1.5 text-xs font-medium text-silver">
+        <p className="num mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs font-medium text-silver">
           <StateBadge state={entry.food.state} className="shrink-0" />
-          {fmt(entry.grams)} g{n.kcal != null && <> · {fmt(n.kcal)} kcal</>}
+          <span className="whitespace-nowrap">{fmt(entry.grams)} g</span>
+          <span className="whitespace-nowrap"><span className="text-accent">P {fmt(n.protein, n.protein < 10 ? 1 : 0)}</span>{n.carbs != null && <> · C {fmt(n.carbs)}</>}{n.fat != null && <> · F {fmt(n.fat)}</>}</span>
         </p>
       </div>
       <div className="text-right">
-        <p className="num text-lg font-bold leading-none">{fmt(n.protein, 1)}<span className="text-xs font-bold text-silver">g</span></p>
-        <p className="mt-1 text-[10px] font-semibold text-dim">protein</p>
+        <p className="num text-lg font-bold leading-none">{n.kcal == null ? '—' : fmt(n.kcal)}</p>
+        <p className="mt-1 text-[10px] font-semibold text-dim">kcal</p>
       </div>
     </button>
   );

@@ -24,6 +24,9 @@ const n = (v: unknown): number | null => {
   return Number.isFinite(x) && x >= 0 ? Math.round(x * 100) / 100 : null;
 };
 
+const mg = (v: unknown) => { const x = n(v); return x == null ? null : Math.round(Number(v) * 1e5) / 100; };
+const ug = (v: unknown) => { const x = n(v); return x == null ? null : Math.round(Number(v) * 1e8) / 100; };
+
 export function offToFood(p: OffProduct): Food | null {
   const nu = p.nutriments ?? {};
   const protein = n(nu.proteins_100g);
@@ -37,7 +40,14 @@ export function offToFood(p: OffProduct): Food | null {
     name: brand && !name.toLowerCase().includes(brand.toLowerCase()) ? `${name}, ${brand}` : name,
     category: 'Packaged product',
     state: 'na',
-    per100: { protein, kcal: n(nu['energy-kcal_100g']), fat: n(nu.fat_100g), carbs: n(nu.carbohydrates_100g), fiber: n(nu.fiber_100g) },
+    per100: {
+      protein, kcal: n(nu['energy-kcal_100g']), fat: n(nu.fat_100g), carbs: n(nu.carbohydrates_100g), fiber: n(nu.fiber_100g),
+      // Label values: grams in Open Food Facts; minerals/vitamins converted to mg / µg.
+      sugar: n(nu.sugars_100g), satFat: n(nu['saturated-fat_100g']),
+      cholesterol: mg(nu.cholesterol_100g), sodium: mg(nu.sodium_100g), potassium: mg(nu.potassium_100g),
+      calcium: mg(nu.calcium_100g), iron: mg(nu.iron_100g), magnesium: mg(nu.magnesium_100g), zinc: mg(nu.zinc_100g),
+      vitA: ug(nu['vitamin-a_100g']), vitC: mg(nu['vitamin-c_100g']), vitD: ug(nu['vitamin-d_100g']), vitB12: ug(nu['vitamin-b12_100g']), folate: ug(nu.folates_100g),
+    },
     portions: serving ? [{ label: p.serving_size ? `1 serving (${p.serving_size})` : '1 serving', grams: serving }] : [],
     source: 'off',
   };

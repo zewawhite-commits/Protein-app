@@ -12,7 +12,9 @@ A premium, mobile-first protein tracker. Weigh your food, pick it from the USDA 
 - **Snap your food** — in-app camera (or gallery). Claude vision identifies each food in the photo, from any cuisine, and suggests matching database records plus a rough portion estimate. You pick the match and weigh it. The AI never supplies nutrient values.
 - **Raw / cooked / dry kept separate** — every record is tagged, filterable, and the add sheet tells you when to weigh. It offers the cooked (or raw) version of the same food in one tap.
 - **Weight entry in grams** — keypad, ±5 g steppers, quick weights and USDA household portions.
-- **Automatic calculation** — protein, energy, carbs and fat, scaled from per-100 g source values.
+- **Full nutrition tracking** — calories, protein, carbs, fat and fibre, plus sugars, saturated fat, cholesterol, sodium, potassium, calcium, iron, magnesium, zinc and vitamins A, C, D, B12 and folate, scaled from per-100 g source values and shown with % of the FDA daily value.
+- **Calorie and macro targets** — estimated from weight, height, age, sex, activity and goals (Mifflin–St Jeor; ~20% deficit for fat loss, ~10% surplus for muscle gain, 1,200/1,500 kcal floors), or set by hand. Fat 30% of energy, fibre 14 g per 1,000 kcal, carbs the rest.
+- **AI coach** — chat that knows the user's goals, targets and today's food; suggests local foods as tappable cards whose numbers come from the database.
 - **Daily goal** — fixed grams or g/kg body weight (kg or lb). When you change the goal, past days keep the goal they had.
 - **Daily log** — grouped by meal, with a week strip of progress rings and a streak counter.
 - **History** — by day with search, plus a photo gallery.
@@ -48,6 +50,7 @@ npm run build:foods -- --sr /tmp/usda/FoodData_Central_sr_legacy_food_csv_2018-0
 ## AI features (all server-side)
 
 - **Photo recognition** (`api/recognize.ts`): names each food, its local name and cuisine; for mixed dishes it lists likely ingredients (including hidden ones such as cooking oil) so users can log them one by one. Portion sizes are only offered as a labelled estimate; the weight field is always what the user enters.
+- **Coach chat** (`api/chat.ts`, `src/lib/coach.ts`): multi-turn chat with the user's profile, targets and today's totals as context. It is told never to state per-food nutrient values; suggested foods are matched to database records only when every query word matches a record (`confidentMatch`), otherwise the user is sent to search. Plus/Pro only when payments are on.
 - **Meal ideas** (`api/recommend.ts`): suggests foods eaten in the user's country to close the day's protein gap — names only; the app looks each one up and calculates protein and grams.
 - **Learning from corrections** (`api/feedback.ts`): stores, anonymously, which database record people chose for an AI suggestion (table `recognition_feedback`) for human review. Never treated as verified data.
 - No AI key is ever stored in the app or on phones.

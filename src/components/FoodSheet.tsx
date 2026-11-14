@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Camera, ChevronDown, ExternalLink, Heart, ImagePlus, Minus, Plus, Trash2, ArrowLeftRight, Scale } from 'lucide-react';
 import type { Food, LogEntry, Meal } from '@/lib/types';
-import { nutrientsFor, round1 } from '@/lib/nutrition';
+import { nutrientsFor, round1, scale } from '@/lib/nutrition';
+import { EXTRA_KEYS } from '@/lib/nutrients';
+import { MACRO_COLOR, NutrientList } from './Nutrients';
 import { counterparts, sourceInfo, splitName } from '@/lib/foods';
 import { deletePhoto, savePhoto } from '@/lib/photos';
 import { useFoodDb, usePhotoUrl, useDay } from '@/lib/hooks';
@@ -54,6 +56,7 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
   const [photoId, setPhotoId] = useState<string | undefined>(entry?.photoId ?? preset?.photoId);
   const [busy, setBusy] = useState(false);
   const [showSource, setShowSource] = useState(false);
+  const [showMore, setShowMore] = useState(false);
   const photoUrl = usePhotoUrl(photoId);
   const camRef = useRef<HTMLInputElement>(null);
   const galRef = useRef<HTMLInputElement>(null);
@@ -203,22 +206,37 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
       )}
 
       {/* Result */}
-      <div className="card flex items-center gap-4 p-5">
-        <div className="flex flex-col items-center">
-          <Ring value={day.goal ? after / day.goal : 0} size={64} stroke={7} color={after >= day.goal ? 'accent' : 'ink'} track="raised">
-            <span className="num text-xs font-bold">{day.goal ? fmt(Math.min(999, (after / day.goal) * 100)) : 0}%</span>
-          </Ring>
-          <span className="mt-1 text-[10px] font-medium text-silver">of daily goal</span>
+      <div className="card p-5">
+        <div className="flex items-center gap-4">
+          <div className="min-w-0 flex-1">
+            <p className="num text-[34px] font-bold leading-none">{n.kcal == null ? '—' : <CountUp value={n.kcal} duration={300} />}<span className="text-lg text-silver"> kcal</span></p>
+            <p className="mt-1 text-[13px] font-medium text-silver">in {fmt(g)} g</p>
+          </div>
+          <div className="flex flex-col items-center">
+            <Ring value={day.goal ? after / day.goal : 0} size={58} stroke={6} color="accent" track="raised">
+              <span className="num text-[11px] font-bold">{day.goal ? fmt(Math.min(999, (after / day.goal) * 100)) : 0}%</span>
+            </Ring>
+            <span className="mt-1 text-[10px] font-medium text-silver">protein goal</span>
+          </div>
         </div>
-        <div className="min-w-0 flex-1">
-          <p className="num text-[34px] font-bold leading-none"><CountUp value={n.protein} digits={1} duration={300} /><span className="text-lg text-silver">g</span></p>
-          <p className="mt-1 text-[13px] font-medium text-silver">protein in {fmt(g)} g</p>
+        <div className="mt-4 grid grid-cols-4 gap-2 text-center">
+          {([['Protein', n.protein, 'protein'], ['Carbs', n.carbs, 'carbs'], ['Fat', n.fat, 'fat'], ['Fibre', n.fiber, 'fiber']] as const).map(([l, v, c]) => (
+            <div key={l} className="rounded-2xl bg-raised px-1 py-2">
+              <span className={cx('mx-auto mb-1 block h-1.5 w-5 rounded-full', MACRO_COLOR[c])} />
+              <p className="num text-[15px] font-bold">{v == null ? '—' : fmt(v, v < 10 ? 1 : 0)}<span className="text-[11px] text-silver">g</span></p>
+              <p className="text-[11px] text-silver">{l}</p>
+            </div>
+          ))}
         </div>
-        <div className="num space-y-0.5 text-right text-[13px] font-semibold text-silver">
-          <p><span className="font-semibold text-ink">{fmt(n.kcal)}</span> kcal</p>
-          <p><span className="font-semibold text-ink">{fmt(n.carbs, 1)}</span>g carbs</p>
-          <p><span className="font-semibold text-ink">{fmt(n.fat, 1)}</span>g fat</p>
-        </div>
+        <button onClick={() => setShowMore((s) => !s)} className="mt-3 flex w-full items-center justify-center gap-1 text-xs font-semibold text-accent">
+          {showMore ? 'Hide' : 'Show'} vitamins, minerals & sugar <ChevronDown size={14} className={cx('transition', showMore && 'rotate-180')} />
+        </button>
+        {showMore && (
+          <div className="mt-1 animate-fade">
+            <NutrientList compact values={Object.fromEntries(EXTRA_KEYS.map((k) => [k, scale(per100[k] ?? null, g)]))} />
+            <p className="mt-2 text-[11px] text-dim">% of the daily value (US FDA reference for adults).</p>
+          </div>
+        )}
       </div>
 
       {/* Meal */}
