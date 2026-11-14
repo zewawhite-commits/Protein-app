@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react';
 import { ArrowLeft, Check, Bike, Coffee, Droplet, Drumstick, Dumbbell, Flame, HeartPulse, Leaf, Loader2, Mail, Pencil, Phone, Rabbit, Scale, Sofa, Soup, ThumbsDown, ThumbsUp, Trophy, Turtle, Fish, Salad, Utensils, Wheat, Zap, Footprints } from 'lucide-react';
 import { useStore } from '@/store/useStore';
-import { accountsEnabled, sendPhoneCode, signInWithEmail, signInWithGoogle, toE164, useSession, verifyPhoneCode } from '@/lib/account';
+import { accountsEnabled, sendPhoneCode, signInWithEmail, signInWithGoogle, toE164, useSession, verifyEmailCode, verifyPhoneCode } from '@/lib/account';
 import { DIAL_CODES } from '@/lib/dialCodes';
 import { COUNTRY_DATA } from '@/lib/countries';
 import { GoogleIcon } from '@/components/BrandIcons';
@@ -447,8 +447,15 @@ function Welcome({ signedIn, email, onStart }: { signedIn: boolean; email?: stri
       ) : mode === 'sent' ? (
         <div className="card p-5 text-center">
           <p className="font-semibold">Check your email</p>
-          <p className="mt-1 text-sm text-silver">We sent a sign-in link to {addr}. Open it on this phone.</p>
-          <button onClick={() => setMode('choose')} className="mt-4 text-sm font-semibold text-silver">Use another way</button>
+          <p className="mt-1 text-sm text-silver">Enter the 6-digit code we sent to {addr.trim()}</p>
+          <input inputMode="numeric" autoComplete="one-time-code" maxLength={6} className="field mt-3 text-center text-2xl font-semibold tracking-[0.4em]" value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))} placeholder="••••••" />
+          <button disabled={busy || code.length < 6} onClick={() => run(() => verifyEmailCode(addr.trim(), code))} className="btn-primary mt-2 w-full">
+            {busy && <Loader2 size={18} className="animate-spin" />} Sign in
+          </button>
+          <div className="mt-3 flex justify-between text-sm font-semibold text-silver">
+            <button onClick={() => { setMode('choose'); setCode(''); }}>Use another way</button>
+            <button onClick={() => run(() => signInWithEmail(addr.trim()))}>Send a new code</button>
+          </div>
         </div>
       ) : mode === 'phone' ? (
         <div className="grid gap-2">
@@ -477,7 +484,7 @@ function Welcome({ signedIn, email, onStart }: { signedIn: boolean; email?: stri
         <div className="grid gap-2">
           <input type="email" inputMode="email" autoComplete="email" className="field" placeholder="you@example.com" value={addr} onChange={(e) => setAddr(e.target.value)} />
           <button disabled={busy || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(addr)} onClick={() => run(() => signInWithEmail(addr.trim()), () => setMode('sent'))} className="btn-primary">
-            {busy && <Loader2 size={18} className="animate-spin" />} Email me a sign-in link
+            {busy && <Loader2 size={18} className="animate-spin" />} Email me a code
           </button>
           <button onClick={() => setMode('choose')} className="mt-1 text-sm font-semibold text-silver">Back</button>
         </div>
@@ -486,9 +493,11 @@ function Welcome({ signedIn, email, onStart }: { signedIn: boolean; email?: stri
           <button disabled={busy} onClick={() => run(signInWithGoogle)} className="btn bg-surface text-ink" style={{ boxShadow: 'var(--shadow)' }}>
             <GoogleIcon /> Continue with Google
           </button>
-          <button onClick={() => setMode('phone')} className="btn bg-surface text-ink" style={{ boxShadow: 'var(--shadow)' }}>
-            <Phone size={18} /> Continue with phone
-          </button>
+          {import.meta.env.VITE_PHONE_SIGNIN === 'on' && (
+            <button onClick={() => setMode('phone')} className="btn bg-surface text-ink" style={{ boxShadow: 'var(--shadow)' }}>
+              <Phone size={18} /> Continue with phone
+            </button>
+          )}
           <button onClick={() => setMode('email')} className="btn bg-surface text-ink" style={{ boxShadow: 'var(--shadow)' }}>
             <Mail size={18} /> Continue with email
           </button>

@@ -26,7 +26,10 @@ export async function signInWithGoogle() {
   if (error) throw error;
 }
 
-/** Sends a one-time sign-in link to the email address. */
+/**
+ * Emails a 6-digit sign-in code (and a link, if the email template includes one).
+ * The Supabase "Magic Link" template must contain {{ .Token }} for the code to appear.
+ */
 export async function signInWithEmail(email: string) {
   if (!supabase) return;
   const { error } = await supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: returnUrl() } });
@@ -34,6 +37,13 @@ export async function signInWithEmail(email: string) {
 }
 
 /** Sends a one-time code by SMS. `phone` in international format, e.g. +2348012345678. */
+/** Signs in with the 6-digit code from the email. */
+export async function verifyEmailCode(email: string, token: string) {
+  if (!supabase) return;
+  const { error } = await supabase.auth.verifyOtp({ email, token, type: 'email' });
+  if (error) throw error;
+}
+
 export async function sendPhoneCode(phone: string) {
   if (!supabase) return;
   const { error } = await supabase.auth.signInWithOtp({ phone });

@@ -1,4 +1,4 @@
-import { accessToken } from './account';
+import { aiHeaders } from './premium';
 /**
  * Browser side of photo recognition, plus matching AI suggestions to database records.
  * Nutrient values always come from the matched database record, never from the AI.
@@ -8,6 +8,8 @@ import { searchFoods } from './foods';
 import type { CustomFood, Food } from './types';
 
 /** Server recognition requires Premium and the user has no personal key. */
+export class SignInRequiredError extends Error {}
+
 export class PremiumRequiredError extends Error {
   constructor(message = 'Photo recognition is a Premium feature.') {
     super(message);
@@ -44,12 +46,12 @@ export async function recognizePhoto(photo: Blob, premiumToken?: string): Promis
 }
 
 async function send(payload: { image?: string; mediaType?: string; text?: string }, premiumToken?: string): Promise<RecognitionResult> {
-  const userToken = premiumToken ? undefined : await accessToken();
+  void premiumToken;
   let res: Response;
   try {
     res = await fetch('/api/recognize', {
       method: 'POST',
-      headers: { 'content-type': 'application/json', ...(premiumToken && { authorization: `Bearer ${premiumToken}` }), ...(userToken && { 'x-user-token': userToken }) },
+      headers: await aiHeaders(),
       body: JSON.stringify(payload),
     });
   } catch {
@@ -59,6 +61,7 @@ async function send(payload: { image?: string; mediaType?: string; text?: string
   if (!isJson || res.status === 404 || res.status === 501) throw new RecognitionUnavailableError();
   const data = (await res.json()) as RecognitionResult & { error?: string };
   if (res.ok) return data;
+  if (res.status === 401) throw new SignInRequiredError(data.error);
   if (res.status === 402) throw new PremiumRequiredError(data.error);
   if (res.status === 429) throw new ScanLimitError(data.error);
   throw new Error(data.error || `Recognition failed (${res.status}).`);

@@ -4,17 +4,18 @@ import { ArrowLeft, Check, ChevronRight, ImagePlus, Loader2, RotateCcw, Search, 
 import { useStore } from '@/store/useStore';
 import { useFoodDb, usePhotoUrl } from '@/lib/hooks';
 import { deletePhoto, getPhoto, savePhoto } from '@/lib/photos';
-import { matchItems, sendFeedback, PremiumRequiredError, recognizePhoto, recognizeText, RecognitionUnavailableError, ScanLimitError, type MatchedItem } from '@/lib/recognize-client';
+import { matchItems, sendFeedback, PremiumRequiredError, SignInRequiredError, recognizePhoto, recognizeText, RecognitionUnavailableError, ScanLimitError, type MatchedItem } from '@/lib/recognize-client';
 import { refreshPremium } from '@/lib/premium';
 import { SOURCE_SHORT, splitName } from '@/lib/foods';
 import { mealForNow, todayKey } from '@/lib/dates';
 import type { Food } from '@/lib/types';
 import { FoodSheet } from '@/components/FoodSheet';
+import { SignInButtons } from '@/components/SignIn';
 import { FoodVisual } from '@/components/FoodIcon';
 import { Segmented, StateBadge, cx, fmt } from '@/components/ui';
 import { haptic, toast } from '@/components/fx';
 
-type Phase = 'camera' | 'describe' | 'analyzing' | 'results' | 'unavailable' | 'premium' | 'limit' | 'error';
+type Phase = 'camera' | 'describe' | 'signin' | 'analyzing' | 'results' | 'unavailable' | 'premium' | 'limit' | 'error';
 
 export default function Snap() {
   const nav = useNavigate();
@@ -31,6 +32,7 @@ export default function Snap() {
   const [described, setDescribed] = useState('');
   const [photoId, setPhotoId] = useState<string>();
   const [error, setError] = useState('');
+  const [left, setLeft] = useState<{ left: number; limit: number } | null>(null);
   const [note, setNote] = useState('');
   const [matches, setMatches] = useState<MatchedItem[]>([]);
   const [pick, setPick] = useState<{ food: Food; grams?: number; label: string; index: number } | null>(null);
@@ -66,10 +68,13 @@ export default function Snap() {
         return;
       }
       setNote(result.note);
+      const r = result as typeof result & { scansLeft?: number; scanLimit?: number };
+      setLeft(r.scanLimit != null && r.scanLimit < 900 && r.scansLeft != null ? { left: r.scansLeft, limit: r.scanLimit } : null);
       setMatches(matchItems(result, custom));
       setPhase('results');
     } catch (e) {
-      if (e instanceof PremiumRequiredError) setPhase('premium');
+      if (e instanceof SignInRequiredError) setPhase('signin');
+      else if (e instanceof PremiumRequiredError) { setError(e.message); setPhase('premium'); }
       else if (e instanceof ScanLimitError) { setError(e.message || 'Monthly photo scans used up.'); setPhase('limit'); }
       else if (e instanceof RecognitionUnavailableError) setPhase('unavailable');
       else {
@@ -151,6 +156,12 @@ export default function Snap() {
             Tap the closest match, then weigh. AI identifies the food — protein always comes from the database record.
             {note && <span className="mt-1 block text-ink/80">{note}</span>}
           </p>
+          {left && (
+            <Link to="/premium" className="mt-3 flex items-center justify-between rounded-2xl bg-accent/10 px-4 py-3 text-[14px] font-semibold text-accent">
+              <span>{left.left} of {left.limit} free AI scans left this month</span>
+              <span>Unlimited →</span>
+            </Link>
+          )}
           <div className="mt-4 space-y-3">
             {matches.map((m, i) => (
               <ItemCard
@@ -195,12 +206,21 @@ export default function Snap() {
         </div>
       )}
 
+      {phase === 'signin' && (
+        <div className="card mt-5 p-5">
+          <p className="text-[17px] font-bold">Sign in to use AI scans</p>
+          <p className="mt-1 text-sm text-silver">Free accounts get 3 AI scans a month. Your photo is saved — or pick the food yourself, always free.</p>
+          <div className="mt-4"><SignInButtons /></div>
+          <Link to={manualUrl()} className="btn-ghost mt-2 w-full">Pick food manually</Link>
+        </div>
+      )}
+
       {phase === 'premium' && (
         <div className="card mt-5 p-5">
-          <p className="flex items-center gap-2 font-semibold"><Sparkles size={18} className="text-accent" /> Photo recognition is Premium</p>
-          <p className="mt-2 text-sm leading-relaxed text-silver">Your photo is saved. Go Premium to have foods identified automatically, or pick the food yourself — that’s always free.</p>
+          <p className="flex items-center gap-2 text-[17px] font-bold"><Sparkles size={18} className="text-accent" /> You’re out of AI scans</p>
+          <p className="mt-2 text-sm leading-relaxed text-silver">{error || 'AI scans come with Plus and Pro.'} Picking the food yourself is always free.</p>
           <div className="mt-4 grid gap-2">
-            <Link to="/premium" className="btn-primary"><Sparkles size={17} /> See Premium</Link>
+            <Link to="/premium" className="btn-primary"><Sparkles size={17} /> Upgrade — from $2.50/month</Link>
             <Link to={manualUrl()} className="btn-ghost">Pick food manually</Link>
           </div>
         </div>

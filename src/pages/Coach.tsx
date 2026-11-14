@@ -2,6 +2,8 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowUp, ChevronRight, ImagePlus, Loader2, RotateCcw, Sparkles, X } from 'lucide-react';
 import { blobToBase64, resizeImage } from '@/lib/photos';
+import { aiHeaders } from '@/lib/premium';
+import { SignInButtons } from '@/components/SignIn';
 import { useStore } from '@/store/useStore';
 import { useDay, useFoodDb } from '@/lib/hooks';
 import { confidentMatch, splitName } from '@/lib/foods';
@@ -16,7 +18,7 @@ import { Segmented, cx, fmt } from '@/components/ui';
 import { PlanView } from '@/components/PlanView';
 import { APP_NAME, haptic } from '@/components/fx';
 
-interface Msg extends ChatTurn { foods?: CoachFood[]; error?: boolean; premium?: boolean; thumb?: string; fromPhoto?: boolean }
+interface Msg extends ChatTurn { foods?: CoachFood[]; error?: boolean; premium?: boolean; signIn?: boolean; thumb?: string; fromPhoto?: boolean }
 interface Pending { data: string; mediaType: 'image/jpeg'; thumb: string }
 
 const PHOTO_PROMPT = 'What’s in this photo, and how does it fit my goals?';
@@ -93,7 +95,6 @@ function Chat() {
   const [open, setOpen] = useState<{ food: Food; grams?: number } | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
   const profile = useStore((s) => s.profile);
-  const premiumToken = useStore((s) => s.premium?.token);
 
   useEffect(() => { save(msgs); endRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' }); }, [msgs]);
 
@@ -113,14 +114,14 @@ function Chat() {
     try {
       const res = await fetch('/api/chat', {
         method: 'POST',
-        headers: { 'content-type': 'application/json', ...(premiumToken && { authorization: `Bearer ${premiumToken}` }) },
+        headers: await aiHeaders(),
         body: JSON.stringify({ turns: history.map(({ role, content }) => ({ role, content })), context, ...(photo && { image: { data: photo.data, mediaType: photo.mediaType } }) }),
       });
       const isJson = res.headers.get('content-type')?.includes('application/json');
       if (!isJson || res.status === 404 || res.status === 501) throw new Error('The coach isn’t switched on yet. It will work once the AI key is added on the server.');
-      const data = (await res.json()) as CoachReply & { error?: string; premium?: boolean };
-      if (res.status === 402) {
-        setMsgs((m) => [...m, { role: 'assistant', content: data.error ?? 'The coach is a Plus and Pro feature.', error: true, premium: true }]);
+      const data = (await res.json()) as CoachReply & { error?: string; premium?: boolean; signIn?: boolean };
+      if (res.status === 401 || res.status === 402) {
+        setMsgs((m) => [...m, { role: 'assistant', content: data.error ?? 'The coach is a Plus and Pro feature.', error: true, premium: res.status === 402, signIn: res.status === 401 }]);
         return;
       }
       if (!res.ok) throw new Error(data.error || 'Could not reply.');
@@ -163,6 +164,7 @@ function Chat() {
             <div className={cx('whitespace-pre-wrap rounded-[22px] rounded-bl-md px-4 py-3 text-[15px] leading-relaxed', m.error ? 'bg-danger/10 text-ink' : 'bg-surface')} style={m.error ? undefined : { boxShadow: 'var(--shadow)' }}>
               {m.content}
               {m.premium && <Link to="/premium" className="mt-2 block font-semibold text-accent">See plans →</Link>}
+              {m.signIn && <div className="mt-3"><SignInButtons /></div>}
             </div>
             {!!m.foods?.length && <FoodCards foods={m.foods} estimate={m.fromPhoto} onOpen={(food, grams) => setOpen({ food, grams })} />}
           </div>

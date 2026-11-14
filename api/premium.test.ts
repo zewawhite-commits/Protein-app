@@ -175,14 +175,61 @@ describe('tiers and accounts', () => {
   });
 });
 
-describe('recognition is Premium-gated when payments are on', () => {
-  it('returns 402 without a valid, unexpired pass', async () => {
+describe('plan limits (quota)', () => {
+  const U = '7f1c2e7a-3b4d-4c5e-8f9a-0b1c2d3e4f5a';
+  function fakeSupabase(counts: Record<string, number>, email = 'me@example.com') {
+    process.env.SUPABASE_URL = 'https://proj.supabase.co';
+    process.env.SUPABASE_SERVICE_ROLE_KEY = 'service-role';
     process.env.ANTHROPIC_API_KEY = 'sk-ant-test';
-    expect((await recognize(post('https://x/api/recognize', { image: 'abc' }))).status).toBe(402);
-    const expired = signPass({ email: 'a@b.co', cid: 1, plan: 'PLN_month', tier: 'plus', exp: Date.now() - 1 });
-    const res = await recognize(post('https://x/api/recognize', { image: 'abc' }, expired));
+    vi.stubGlobal('fetch', async (input: string | URL | Request, init?: RequestInit) => {
+      const url = String(input instanceof Request ? input.url : input);
+      if (url.endsWith('/auth/v1/user')) return new Response(JSON.stringify({ id: U, email, app_metadata: {} }), { status: 200 });
+      if (url.endsWith('/rest/v1/rpc/use_scan')) {
+        const { p_key, p_limit } = JSON.parse(String(init?.body));
+        const used = counts[p_key] ?? 0;
+        if (used >= p_limit) return new Response('-1', { status: 200 });
+        counts[p_key] = used + 1;
+        return new Response(String(p_limit - used - 1), { status: 200 });
+      }
+      return new Response('{}', { status: 404 });
+    });
+  }
+  const call = (body: unknown, token?: string, pass?: string) =>
+    new Request('https://x/api/recognize', { method: 'POST', headers: { 'content-type': 'application/json', ...(token && { 'x-user-token': token }), ...(pass && { authorization: `Bearer ${pass}` }) }, body: JSON.stringify(body) });
+  afterEach(() => { delete process.env.ANTHROPIC_API_KEY; delete process.env.ADMIN_EMAILS; });
+
+  it('needs sign-in for AI', async () => {
+    fakeSupabase({});
+    const res = await recognize(call({ image: 'abc' }));
+    expect(res.status).toBe(401);
+    expect(await res.json()).toMatchObject({ signIn: true });
+  });
+
+  it('gives free users 3 scans, then asks them to upgrade', async () => {
+    fakeSupabase({ [`scan:${U}`]: 3 });
+    const res = await recognize(call({ image: 'abc' }, 'jwt'));
     expect(res.status).toBe(402);
-    expect(await res.json()).toMatchObject({ renew: true });
-    delete process.env.ANTHROPIC_API_KEY;
+    expect(await res.json()).toMatchObject({ limitReached: true, premium: true, tier: 'free' });
+  });
+
+  it('keeps plans and ideas for paid tiers, and uses the pass tier limits', async () => {
+    const { gate, limitFor } = await import('./_lib/quota');
+    fakeSupabase({});
+    const free = await gate(call({}, 'jwt'), 'plan');
+    expect(free.ok).toBe(false);
+    if (!free.ok) expect(free.status).toBe(402);
+    const pro = signPass({ email: 'me@example.com', cid: 1, plan: 'PLN_year', tier: 'pro', exp: Date.now() + 86400e3 });
+    const ok = await gate(call({}, 'jwt', pro), 'plan');
+    expect(ok).toMatchObject({ ok: true, tier: 'pro', limit: limitFor('pro', 'plan'), left: limitFor('pro', 'plan') - 1 });
+    const expired = signPass({ email: 'me@example.com', cid: 1, plan: 'PLN_month', tier: 'plus', exp: Date.now() - 1 });
+    const back = await gate(call({}, 'jwt', expired), 'plan');
+    if (!back.ok) expect(back.body).toMatchObject({ renew: true, tier: 'free' });
+  });
+
+  it('lets admins test without limits', async () => {
+    const { gate } = await import('./_lib/quota');
+    fakeSupabase({ [`scan:${U}`]: 999 }, 'boss@example.com');
+    process.env.ADMIN_EMAILS = 'boss@example.com';
+    expect(await gate(call({}, 'jwt'), 'scan')).toMatchObject({ ok: true, left: Infinity });
   });
 });

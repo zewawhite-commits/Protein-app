@@ -110,3 +110,24 @@ export function formatPrice(p: PlanInfo): string {
 }
 
 export const intervalLabel = (i: string) => ({ monthly: 'month', annually: 'year', quarterly: 'quarter', weekly: 'week', biannually: '6 months', daily: 'day' })[i] ?? i;
+
+/** Headers for AI requests: who you are (account) and your plan (pass), if any. */
+export async function aiHeaders(): Promise<Record<string, string>> {
+  const { accessToken } = await import('./account');
+  const token = useStore.getState().premium?.token;
+  const user = await accessToken();
+  return { 'content-type': 'application/json', ...(token && { authorization: `Bearer ${token}` }), ...(user && { 'x-user-token': user }) };
+}
+
+export interface Usage { tier: 'free' | 'plus' | 'pro'; admin: boolean; features: Record<'scan' | 'coach' | 'plan' | 'ideas', { used: number; limit: number | null }> }
+
+/** This month's AI usage for the signed-in user, or null. */
+export async function fetchUsage(): Promise<Usage | null> {
+  try {
+    const res = await fetch('/api/usage', { headers: await aiHeaders() });
+    if (!res.ok || !res.headers.get('content-type')?.includes('application/json')) return null;
+    return (await res.json()) as Usage;
+  } catch {
+    return null;
+  }
+}

@@ -12,15 +12,15 @@ import { Segmented, cx } from '@/components/ui';
 
 /** Planned prices, shown until live plans load from the payment provider (which sets the real charge). */
 const PREVIEW = [
-  { name: 'Free', perks: ['Calories, macros & 13,000+ foods', 'Groups, progress & weight', '3 AI scans a month'], year: '$0', month: '', perMonth: '' },
-  { name: 'Plus', perks: ['60 AI scans a month', 'AI coach & eating plans'], year: '$29.99/yr', month: '$4.99/mo', perMonth: '≈ $2.50/mo', best: true },
-  { name: 'Pro', perks: ['200 AI scans a month', 'Everything in Plus'], year: '$47.99/yr', month: '$7.99/mo', perMonth: '≈ $4.00/mo' },
+  { name: 'Free', perks: ['Calories, macros & 13,000+ foods', 'Barcode, exercise, progress & feed', '3 AI scans + 5 coach messages a month'], year: '$0', month: '', perMonth: '' },
+  { name: 'Plus', perks: ['Unlimited AI photo scans & describe', 'Unlimited AI coach chat'], year: '$29.99/yr', month: '$4.99/mo', perMonth: '≈ $2.50/mo', best: true },
+  { name: 'Pro', perks: ['Everything in Plus', 'AI eating plans built for you', 'AI meal ideas from your cuisines'], year: '$47.99/yr', month: '$7.99/mo', perMonth: '≈ $4.00/mo' },
 ];
 
 const TIER_INFO: Record<'free' | Tier, { name: string; perks: string[] }> = {
-  free: { name: 'Free', perks: ['13,000+ foods, calories & macros', 'Groups, progress & weight tracking', '3 AI photo scans a month'] },
-  plus: { name: 'Plus', perks: ['60 AI photo scans a month', 'AI coach chat & eating plans', 'AI meal ideas'] },
-  pro: { name: 'Pro', perks: ['200 AI photo scans a month', 'Everything in Plus', 'Best for logging every meal'] },
+  free: { name: 'Free', perks: ['13,000+ foods, barcode, exercise & progress', 'Feed and groups', '3 AI scans + 5 coach messages a month'] },
+  plus: { name: 'Plus', perks: ['Unlimited AI photo scans & describe', 'Unlimited AI coach chat', 'Everything in Free'] },
+  pro: { name: 'Pro', perks: ['Everything in Plus', 'AI eating plans built for you', 'AI meal ideas from your cuisines'] },
 };
 
 type Billing = 'monthly' | 'yearly';
@@ -109,7 +109,7 @@ export default function Premium() {
           <p className="flex items-center gap-2 font-semibold"><Check size={18} className="text-accent" strokeWidth={3} /> You’re on {premium!.tier === 'pro' ? 'Pro' : 'Plus'}</p>
           <p className="mt-1 text-sm text-silver">
             {premium!.email} · renews or ends around {new Date(premium!.exp).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}
-            {premium!.scanLimit && <> · {premium!.scanLimit} photo scans a month</>}
+            {' · '}Unlimited AI scans & coach{premium!.tier === 'pro' && ', eating plans & meal ideas'}
           </p>
           <div className="mt-4 grid gap-2">
             <Link to="/snap" className="btn-primary"><Camera size={18} /> Snap a meal</Link>

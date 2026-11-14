@@ -4,8 +4,8 @@
  */
 import Anthropic from '@anthropic-ai/sdk';
 import { cleanTurns, coachWithClient, type ChatImage } from '../src/lib/coach';
-import { bearer, json, paymentsEnabled, readPass, scanLimit } from './_lib/premium';
-import { useScan } from './_lib/accounts';
+import { json } from './_lib/premium';
+import { gate } from './_lib/quota';
 import { cleanContext } from './_lib/context';
 
 const IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
@@ -23,21 +23,15 @@ export async function POST(request: Request): Promise<Response> {
     if ((data.length * 3) / 4 > MAX_IMAGE_BYTES) return json({ error: 'Image too large (max 5 MB).' }, 413);
     image = { data, mediaType: mediaType as ChatImage['mediaType'] };
   }
-  if (paymentsEnabled()) {
-    const pass = readPass(bearer(request));
-    if (!pass || pass.exp < Date.now()) return json({ error: 'The AI coach is a Plus and Pro feature.', premium: true }, 402);
-    // A photo in the chat counts as one photo scan, like the camera.
-    if (image) {
-      const limit = scanLimit(pass.tier ?? 'plus');
-      try {
-        if ((await useScan(pass.uid ?? `cus_${pass.cid}`, limit)) < 0) return json({ error: `You’ve used all ${limit} photo scans this month. You can still chat without photos.`, limitReached: true }, 429);
-      } catch (e) {
-        return json({ error: (e as Error).message }, 503);
-      }
-    }
+  const coach = await gate(request, 'coach');
+  if (!coach.ok) return json(coach.body, coach.status);
+  // A photo in the chat also counts as one AI scan.
+  if (image) {
+    const scan = await gate(request, 'scan');
+    if (!scan.ok) return json({ ...scan.body, error: `${scan.body.error} You can still chat without photos.` }, scan.status);
   }
   try {
-    return json(await coachWithClient(new Anthropic(), turns, cleanContext(body?.context), image));
+    return json({ ...(await coachWithClient(new Anthropic(), turns, cleanContext(body?.context), image)), quota: { left: coach.left, limit: coach.limit, tier: coach.tier } });
   } catch (e) {
     if (e instanceof Anthropic.RateLimitError) return json({ error: 'Busy — try again in a moment.' }, 429);
     if (e instanceof Anthropic.APIError) return json({ error: `Coach service error (${e.status ?? 'network'}).` }, 502);

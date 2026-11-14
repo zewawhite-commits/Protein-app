@@ -10,6 +10,7 @@ import { allPhotoIds, deletePhoto } from '@/lib/photos';
 import type { Theme } from '@/lib/types';
 import { ProfileForm } from '@/components/ProfileForm';
 import { ProfileHero } from '@/components/ProfileHero';
+import { UsageCard } from '@/components/UsageCard';
 import { PageHeader, Segmented, Sheet, cx } from '@/components/ui';
 
 export default function Profile() {
@@ -56,6 +57,7 @@ export default function Profile() {
       <PageHeader title="Profile" />
 
       <ProfileHero onEdit={() => setEditing(true)} />
+      <UsageCard />
 
       <Group title="Appearance">
         <Row icon={settings.theme === 'light' ? <Sun size={18} /> : <Moon size={18} />} label="Theme">

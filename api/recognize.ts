@@ -1,7 +1,6 @@
 /**
  * Serverless endpoint for photo recognition (Vercel Functions, Web-standard handler).
- * If Paystack payments are configured, callers must send a valid Premium pass
- * (Authorization: Bearer <pass>); otherwise the endpoint is open to the app.
+ * Plan limits are enforced by api/_lib/quota.ts (sign-in required; Free/Plus/Pro monthly scans).
  * Keeps the Anthropic API key on the server: set ANTHROPIC_API_KEY in the Vercel
  * project's Environment Variables.
  *
@@ -10,8 +9,7 @@
  */
 import Anthropic from '@anthropic-ai/sdk';
 import { recognizeWithClient } from '../src/lib/recognition';
-import { bearer, freeScans, paymentsEnabled, readPass, scanLimit } from './_lib/premium';
-import { useScan, userFromToken } from './_lib/accounts';
+import { gate } from './_lib/quota';
 
 const MAX_BYTES = 5 * 1024 * 1024;
 const TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
@@ -19,34 +17,9 @@ const TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
 export async function POST(request: Request): Promise<Response> {
   let scansLeft: number | undefined;
   if (!process.env.ANTHROPIC_API_KEY) return json({ error: 'Recognition is not configured on this server.' }, 501);
-  // When payments are set up, the server's AI key is a Premium feature.
-  if (paymentsEnabled()) {
-    const pass = readPass(bearer(request));
-    if (!pass) {
-      // Free plan: a few scans a month for signed-in users.
-      const user = await userFromToken(request.headers.get('x-user-token'));
-      const free = freeScans();
-      if (!user || !free) return json({ error: `Sign in to get ${free} free photo scans a month, or upgrade for more.`, premium: true }, 402);
-      try {
-        const left = await useScan(`free:${user.id}`, free);
-        if (left < 0) return json({ error: `You’ve used your ${free} free scans this month. Upgrade to Plus for 60 a month.`, premium: true, limitReached: true }, 402);
-        scansLeft = left;
-      } catch (e) {
-        return json({ error: (e as Error).message }, 503);
-      }
-    }
-    if (pass) {
-      if (pass.exp < Date.now()) return json({ error: 'Your Premium pass needs renewing.', premium: true, renew: true }, 402);
-      const limit = scanLimit(pass.tier ?? 'plus');
-      try {
-        const left = await useScan(pass.uid ?? `cus_${pass.cid}`, limit);
-        if (left < 0) return json({ error: `You’ve used all ${limit} photo scans this month.${pass.tier === 'pro' ? '' : ' Upgrade to Pro for more.'}`, limitReached: true, tier: pass.tier }, 429);
-        scansLeft = left;
-      } catch (e) {
-        return json({ error: (e as Error).message }, 503);
-      }
-    }
-  }
+  const g = await gate(request, 'scan');
+  if (!g.ok) return json(g.body, g.status);
+  if (Number.isFinite(g.left)) scansLeft = g.left;
   let body: { image?: string; mediaType?: string; text?: string };
   try {
     body = await request.json();
@@ -63,7 +36,7 @@ export async function POST(request: Request): Promise<Response> {
 
   try {
     const result = await recognizeWithClient(new Anthropic(), text ? null : image!, mediaType, text || undefined);
-    return json(Number.isFinite(scansLeft) ? { ...result, scansLeft } : result, 200);
+    return json(scansLeft != null ? { ...result, scansLeft, scanLimit: g.limit } : result, 200);
   } catch (e) {
     if (e instanceof Anthropic.RateLimitError) return json({ error: 'Busy — try again in a moment.' }, 429);
     if (e instanceof Anthropic.APIError) return json({ error: `Recognition service error (${e.status ?? 'network'}).` }, 502);

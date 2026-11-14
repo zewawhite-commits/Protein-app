@@ -10,6 +10,7 @@ import { todayKey } from '@/lib/dates';
 import type { Food } from '@/lib/types';
 import type { Idea } from '@/lib/recommendation';
 import { FoodVisual } from './FoodIcon';
+import { aiHeaders } from '@/lib/premium';
 import { cx, fmt } from './ui';
 import { haptic } from './fx';
 
@@ -31,7 +32,6 @@ export function Suggestions({ remaining }: { remaining: number }) {
   const { db } = useFoodDb();
   const profile = useStore((s) => s.profile);
   const entries = useStore((s) => s.entries);
-  const premiumToken = useStore((s) => s.premium?.token);
   const custom = useStore((s) => s.customFoods);
   const [ai, setAi] = useState<{ state: 'idle' | 'loading' | 'done' | 'error'; ideas: Idea[]; message?: string; premium?: boolean }>({ state: 'idle', ideas: [] });
 
@@ -62,7 +62,7 @@ export function Suggestions({ remaining }: { remaining: number }) {
     try {
       const res = await fetch('/api/recommend', {
         method: 'POST',
-        headers: { 'content-type': 'application/json', ...(premiumToken && { authorization: `Bearer ${premiumToken}` }) },
+        headers: await aiHeaders(),
         body: JSON.stringify({
           country: profile?.country, diet: profile?.diet, remainingGrams: remaining, eatenToday,
           goals: profile?.goals ?? (profile?.goal ? [profile.goal] : undefined), activity: profile?.activity,
@@ -72,7 +72,7 @@ export function Suggestions({ remaining }: { remaining: number }) {
       const isJson = res.headers.get('content-type')?.includes('application/json');
       if (!isJson || res.status === 404 || res.status === 501) throw new Error('AI ideas aren’t switched on yet — here are great options from the database.');
       const data = (await res.json()) as { ideas?: Idea[]; error?: string };
-      if (res.status === 402) return setAi({ state: 'error', ideas: [], message: data.error, premium: true });
+      if (res.status === 402 || res.status === 401) return setAi({ state: 'error', ideas: [], message: data.error, premium: res.status === 402 });
       if (!res.ok) throw new Error(data.error || 'Could not get ideas.');
       setAi({ state: 'done', ideas: data.ideas ?? [] });
     } catch (e) {
