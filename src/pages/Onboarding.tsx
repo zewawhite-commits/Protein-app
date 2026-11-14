@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react';
-import { ArrowLeft, Check, Bike, Dumbbell, Flame, HeartPulse, Leaf, Loader2, Mail, Phone, Scale, Sofa, Trophy, Fish, Salad, Utensils, Footprints } from 'lucide-react';
+import { ArrowLeft, Check, Bike, Coffee, Droplet, Drumstick, Dumbbell, Flame, HeartPulse, Leaf, Loader2, Mail, Pencil, Phone, Rabbit, Scale, Sofa, Soup, ThumbsDown, ThumbsUp, Trophy, Turtle, Fish, Salad, Utensils, Wheat, Zap, Footprints } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 import { accountsEnabled, sendPhoneCode, signInWithEmail, signInWithGoogle, toE164, useSession, verifyPhoneCode } from '@/lib/account';
 import { DIAL_CODES } from '@/lib/dialCodes';
@@ -275,8 +275,8 @@ export default function Onboarding() {
                 <p className="text-center text-sm font-semibold text-silver">{losing ? 'Weight loss' : 'Weight gain'} per week</p>
                 <p className="num mt-1 text-center text-[34px] font-extrabold">{fmt(fromKg(pace, unit), 2)} {unit}</p>
                 <div className="mt-3 grid grid-cols-3 text-center text-sm font-bold">
-                  {[['🦥', 'Slow'], ['🐇', 'Recommended'], ['🐆', 'Fast']].map(([e, l], i) => (
-                    <span key={l} className={cx((i === 0 && pace < 0.4) || (i === 1 && pace >= 0.4 && pace <= 0.6) || (i === 2 && pace > 0.6) ? 'text-accent' : 'text-silver')}><span className="block text-[28px]">{e}</span>{l}</span>
+                  {([[Turtle, 'Slow'], [Rabbit, 'Recommended'], [Zap, 'Fast']] as const).map(([Icon, l], i) => (
+                    <span key={l} className={cx('flex flex-col items-center gap-1', (i === 0 && pace < 0.4) || (i === 1 && pace >= 0.4 && pace <= 0.6) || (i === 2 && pace > 0.6) ? 'text-accent' : 'text-silver')}><Icon size={28} strokeWidth={2} />{l}</span>
                   ))}
                 </div>
                 <input type="range" min={losing ? 0.25 : 0.1} max={losing ? 1 : 0.5} step={0.05} value={pace} onChange={(e) => { setPace(Number(e.target.value)); haptic(5); }} className="mt-3 h-2 w-full cursor-pointer appearance-none rounded-full bg-raised accent-[rgb(var(--accent))]" aria-label="Pace per week" />
@@ -304,9 +304,9 @@ export default function Onboarding() {
         )}
         {at === 'coach' && (
           <Question title="Do you work with a personal trainer or dietitian?" sub="Your plan stays yours either way — share it with them anytime.">
-            {([[true, 'Yes', '👍'], [false, 'No', '👎']] as const).map(([v, l, e]) => (
+            {([[true, 'Yes', ThumbsUp], [false, 'No', ThumbsDown]] as const).map(([v, l, Icon]) => (
               <button key={l} onClick={() => { haptic(); setHasCoach(v); setTimeout(next, 180); }} className={cx('flex h-16 items-center gap-4 rounded-[20px] px-5 text-left text-[17px] font-bold transition', hasCoach === v ? 'bg-primary text-on-primary' : 'bg-surface')} style={hasCoach === v ? undefined : { boxShadow: 'var(--shadow)' }}>
-                <span className="text-[24px]">{e}</span>{l}
+                <span className={cx('grid h-10 w-10 place-items-center rounded-full', hasCoach === v ? 'bg-on-primary/15' : 'bg-raised')}><Icon size={19} /></span>{l}
               </button>
             ))}
           </Question>
@@ -314,8 +314,8 @@ export default function Onboarding() {
         {at === 'notify' && (
           <Question title="Stay on track with reminders" sub="A gentle nudge if you forget to log a meal. You can change this anytime.">
             <div className="card mt-2 space-y-3 p-5">
-              {[['🍳', 'Breakfast', '09:30'], ['🥗', 'Lunch', '14:00'], ['🍲', 'Dinner', '20:00']].map(([e, l, t]) => (
-                <div key={l} className="flex items-center gap-3"><span className="text-[26px]">{e}</span><span className="flex-1 font-bold">{l}</span><span className="num font-semibold text-silver">{t}</span></div>
+              {([[Coffee, 'Breakfast', '09:30'], [Salad, 'Lunch', '14:00'], [Soup, 'Dinner', '20:00']] as const).map(([Icon, l, t]) => (
+                <div key={l} className="flex items-center gap-3"><span className="grid h-10 w-10 place-items-center rounded-full bg-accent/10 text-accent"><Icon size={19} /></span><span className="flex-1 font-bold">{l}</span><span className="num font-semibold text-silver">{t}</span></div>
               ))}
             </div>
             <div className="flex-1" />
@@ -341,11 +341,11 @@ export default function Onboarding() {
             <div className="card mt-4 p-5">
               <p className="text-[17px] font-bold">Your daily recommendation</p>
               <p className="text-sm text-silver">Tap any number to edit it.</p>
-              <EditTile big emoji="🔥" label="Calories" unit="kcal" value={targets?.kcal} onChange={(v) => setKcalOverride(v)} min={800} max={8000} />
+              <EditTile big icon={Flame} tone="text-ink" label="Calories" unit="kcal" value={targets?.kcal} onChange={(v) => setKcalOverride(v)} min={800} max={8000} />
               <div className="mt-2.5 grid grid-cols-3 gap-2.5">
-                <EditTile emoji="🍗" label="Protein" unit="g" value={total} onChange={(v) => setProteinOverride(v)} min={20} max={400} />
-                <EditTile emoji="🌾" label="Carbs" unit="g" value={targets?.carbs} />
-                <EditTile emoji="🥑" label="Fat" unit="g" value={targets?.fat} />
+                <EditTile icon={Drumstick} tone="text-accent" label="Protein" unit="g" value={total} onChange={(v) => setProteinOverride(v)} min={20} max={400} />
+                <EditTile icon={Wheat} tone="text-[rgb(var(--carbs))]" label="Carbs" unit="g" value={targets?.carbs} />
+                <EditTile icon={Droplet} tone="text-[rgb(var(--fat))]" label="Fat" unit="g" value={targets?.fat} />
               </div>
               <p className="mt-3 text-sm leading-relaxed text-silver">{suggestionReason(goal, activity, suggestGramsPerKg(goal, activity, person), person)}</p>
               {!targets && <p className="mt-2 rounded-2xl bg-raised p-3 text-sm text-silver">Add your height and age in Profile to get calorie, carb and fat targets.</p>}
@@ -533,12 +533,12 @@ function ProgressCurve({ losing, label }: { losing: boolean; label: string }) {
 }
 
 /** Number tile that can be tapped to edit. */
-function EditTile({ emoji, label, unit, value, onChange, min = 0, max = 10000, big }: { emoji: string; label: string; unit: string; value?: number; onChange?: (v: number) => void; min?: number; max?: number; big?: boolean }) {
+function EditTile({ icon: Icon, tone, label, unit, value, onChange, min = 0, max = 10000, big }: { icon: typeof Flame; tone: string; label: string; unit: string; value?: number; onChange?: (v: number) => void; min?: number; max?: number; big?: boolean }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState('');
   return (
     <div className={cx('rounded-[22px] bg-raised p-4', big && 'mt-4 flex items-center gap-4')}>
-      <span className={cx(big ? 'grid h-14 w-14 place-items-center rounded-2xl bg-surface text-[28px]' : 'text-[22px]')}>{emoji}</span>
+      <span className={cx('grid place-items-center rounded-2xl bg-surface', big ? 'h-14 w-14' : 'h-9 w-9', tone)}><Icon size={big ? 26 : 18} strokeWidth={2.2} /></span>
       <div className={cx(big && 'flex-1')}>
         {editing && onChange ? (
           <input
@@ -548,8 +548,8 @@ function EditTile({ emoji, label, unit, value, onChange, min = 0, max = 10000, b
             className={cx('num w-full bg-transparent font-extrabold outline-none', big ? 'text-[34px]' : 'text-[22px]')}
           />
         ) : (
-          <button onClick={() => { if (!onChange) return; setDraft(value ? String(Math.round(value)) : ''); setEditing(true); haptic(); }} className={cx('num block font-extrabold', big ? 'text-[34px]' : 'mt-1 text-[22px]')}>
-            {value == null ? '—' : `${fmt(value)}${unit === 'g' ? 'g' : ''}`}{onChange && <span className="ml-1 align-middle text-sm text-dim">✎</span>}
+          <button onClick={() => { if (!onChange) return; setDraft(value ? String(Math.round(value)) : ''); setEditing(true); haptic(); }} className={cx('num block whitespace-nowrap font-extrabold', big ? 'text-[34px]' : 'mt-1 text-[22px]')}>
+            {value == null ? '—' : `${fmt(value)}${unit === 'g' ? 'g' : ''}`}{onChange && <Pencil size={big ? 16 : 12} className="ml-1 inline align-middle text-dim" />}
           </button>
         )}
         <p className="text-sm font-semibold text-silver">{label}{unit === 'kcal' ? ' (kcal)' : ''}</p>

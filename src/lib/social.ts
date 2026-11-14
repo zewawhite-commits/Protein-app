@@ -67,7 +67,7 @@ export async function members(groupId: string): Promise<Member[]> {
   fail(error);
   const ids = (data ?? []).map((m) => m.user_id as string);
   const profiles = await profilesFor(ids);
-  return (data ?? []).map((m) => ({ user_id: m.user_id, role: m.role, ...(profiles.get(m.user_id) ?? { display_name: 'Member', avatar: '🙂', streak: 0 }) }))
+  return (data ?? []).map((m) => ({ user_id: m.user_id, role: m.role, ...(profiles.get(m.user_id) ?? { display_name: 'Member', avatar: '', streak: 0 }) }))
     .sort((a, b) => b.streak - a.streak);
 }
 
@@ -96,7 +96,7 @@ export async function feed(groupId: string, limit = 30): Promise<Post[]> {
   fail(reacts.error); fail(comments.error);
   return posts.map((p) => ({
     ...p,
-    author: profiles.get(p.user_id) ?? { display_name: 'Member', avatar: '🙂' },
+    author: profiles.get(p.user_id) ?? { display_name: 'Member', avatar: '' },
     photoUrl: p.photo_path ? urls.get(p.photo_path) : undefined,
     reactions: (reacts.data ?? []).filter((r) => r.post_id === p.id) as Post['reactions'],
     commentCount: (comments.data ?? []).filter((c) => c.post_id === p.id).length,
@@ -152,7 +152,7 @@ export async function comments(postId: string): Promise<Comment[]> {
   fail(error);
   const list = (data ?? []) as Comment[];
   const profiles = await profilesFor(list.map((c) => c.user_id));
-  return list.map((c) => ({ ...c, author: profiles.get(c.user_id) ?? { display_name: 'Member', avatar: '🙂' } }));
+  return list.map((c) => ({ ...c, author: profiles.get(c.user_id) ?? { display_name: 'Member', avatar: '' } }));
 }
 
 export async function addComment(postId: string, body: string) {

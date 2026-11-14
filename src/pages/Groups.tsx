@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Check, ChevronDown, Copy, Crown, Flame, Loader2, LogOut, MessageCircle, Plus, RefreshCw, Send, Share2, Trash2, Users } from 'lucide-react';
+import { Check, ChevronDown, Copy, Crown, Dumbbell, Flame, Heart, Loader2, LogOut, MessageCircle, Plus, RefreshCw, Send, Share2, Sparkles, ThumbsUp, Trash2, Users, Utensils } from 'lucide-react';
+import { AVATAR_COLORS, Avatar } from '@/components/Avatar';
 import { useStore } from '@/store/useStore';
 import { accountsEnabled, useSession } from '@/lib/account';
 import { useDay } from '@/lib/hooks';
@@ -19,7 +20,8 @@ import { haptic, toast } from '@/components/fx';
 import { useStreak } from './Today';
 
 const GROUP_KEY = 'provora-group';
-const AVATARS = ['🙂', '💪', '🔥', '🥑', '🍗', '🏃', '🧘', '⚡️', '🌱', '🦁', '🐯', '🦊'];
+const REACTION_ICON: Record<Reaction, typeof Flame> = { '🔥': Flame, '💪': Dumbbell, '👏': ThumbsUp, '😋': Sparkles, '❤️': Heart };
+const REACTION_LABEL: Record<Reaction, string> = { '🔥': 'Fire', '💪': 'Strong', '👏': 'Nice', '😋': 'Tasty', '❤️': 'Love' };
 const MEAL_LABEL: Record<Meal, string> = { breakfast: 'Breakfast', lunch: 'Lunch', dinner: 'Dinner', snack: 'Snack' };
 
 export default function Groups() {
@@ -62,7 +64,7 @@ function Shell({ children }: { children: React.ReactNode }) {
 function Intro() {
   return (
     <div className="card overflow-hidden p-5">
-      <div className="flex -space-x-2 text-[34px]">{['💪', '🥑', '🔥', '🍗'].map((a) => <span key={a} className="grid h-14 w-14 place-items-center rounded-full bg-raised ring-4 ring-surface">{a}</span>)}</div>
+      <div className="flex -space-x-2">{['Ava Moore', 'Ben Cole', 'Kemi Ade', 'Leo Park'].map((n, i) => <Avatar key={n} name={n} color={Object.keys(AVATAR_COLORS)[i]} size={52} className="ring-4 ring-surface" />)}</div>
       <p className="mt-4 text-[20px] font-extrabold leading-snug">Grow with friends</p>
       <p className="mt-1 text-sm text-silver">Create a private group, invite friends with a code, post your meals and react to theirs.</p>
     </div>
@@ -79,7 +81,7 @@ function Signed() {
   const [groups, setGroups] = useState<Group[] | null>(null);
   const [active, setActive] = useState<string | null>(() => { try { return localStorage.getItem(GROUP_KEY); } catch { return null; } });
   const [error, setError] = useState('');
-  const [avatar, setAvatar] = useState(() => { try { return localStorage.getItem('provora-avatar') ?? '🙂'; } catch { return '🙂'; } });
+  const [avatar, setAvatar] = useState(() => { try { return localStorage.getItem('provora-avatar') ?? 'blue'; } catch { return 'blue'; } });
 
   const reload = useCallback(async () => {
     try {
@@ -208,8 +210,8 @@ function GroupView({ group, groups, avatar, onAvatar, onSwitch, onChanged }: {
       <div className="-mx-5 mb-4 flex gap-3 overflow-x-auto px-5 pb-1 no-scrollbar">
         {people.map((m, i) => (
           <div key={m.user_id} className="w-16 shrink-0 text-center">
-            <div className="relative mx-auto grid h-16 w-16 place-items-center rounded-full bg-surface text-[30px]" style={{ boxShadow: 'var(--shadow)' }}>
-              {m.avatar}
+            <div className="relative mx-auto h-16 w-16">
+              <Avatar name={m.display_name} color={m.avatar} size={64} />
               {i === 0 && m.streak > 0 && <Crown size={18} className="absolute -top-2 left-1/2 -translate-x-1/2 fill-warn text-warn" />}
               <span className="num absolute -bottom-1.5 left-1/2 flex -translate-x-1/2 items-center gap-0.5 rounded-full bg-surface px-1.5 text-xs font-bold" style={{ boxShadow: 'var(--shadow)' }}><Flame size={11} className="text-accent" />{m.streak}</span>
             </div>
@@ -222,7 +224,7 @@ function GroupView({ group, groups, avatar, onAvatar, onSwitch, onChanged }: {
 
       {posts === null ? <Loading /> : posts.length === 0 ? (
         <div className="card p-6 text-center">
-          <p className="text-[34px]">🍽️</p>
+          <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-raised"><Utensils size={24} /></span>
           <p className="mt-2 font-bold">No posts yet</p>
           <p className="mt-1 text-sm text-silver">Share your first meal — or invite friends with code <b className="text-ink">{group.invite_code}</b>.</p>
         </div>
@@ -255,11 +257,15 @@ function GroupView({ group, groups, avatar, onAvatar, onSwitch, onChanged }: {
         {'share' in navigator && (
           <button onClick={() => void navigator.share({ title: 'Join my Provora group', text: `Join “${group.name}” on Provora with code ${group.invite_code}`, url: location.origin }).catch(() => undefined)} className="btn-ghost mt-3 w-full"><Share2 size={18} /> Share invite</button>
         )}
-        <p className="mb-2 mt-6 text-sm font-semibold text-silver">Your avatar</p>
+        <p className="mb-2 mt-6 text-sm font-semibold text-silver">Your colour</p>
         <div className="flex flex-wrap gap-2">
-          {AVATARS.map((a) => <button key={a} onClick={() => onAvatar(a)} className={cx('grid h-12 w-12 place-items-center rounded-full text-[24px]', a === avatar ? 'bg-primary' : 'bg-raised')}>{a}</button>)}
+          {Object.keys(AVATAR_COLORS).map((c) => (
+            <button key={c} onClick={() => onAvatar(c)} className={cx('grid h-12 w-12 place-items-center rounded-full', AVATAR_COLORS[c], c === avatar && 'ring-4 ring-accent/40')} aria-label={c}>
+              {c === avatar && <Check size={18} className="text-white" strokeWidth={3} />}
+            </button>
+          ))}
         </div>
-        <p className="mt-2 text-xs text-dim">Group mates see your first name (from Profile), avatar and streak — nothing else.</p>
+        <p className="mt-2 text-xs text-dim">Group mates see your first name (from Profile), your colour and streak — nothing else.</p>
         <button onClick={async () => { await leaveGroup(group.id); toast(`You left “${group.name}”`); setSettings(false); onChanged(); }} className="btn-ghost mt-6 w-full text-danger"><LogOut size={18} /> Leave group</button>
       </Sheet>
     </>
@@ -271,20 +277,19 @@ function PostCard({ post, me, onReact, onOpen, onDelete }: { post: Post; me?: st
   return (
     <article className="card overflow-hidden">
       <div className="flex items-center gap-3 p-4 pb-3">
-        <span className="grid h-11 w-11 place-items-center rounded-full bg-raised text-[22px]">{post.author?.avatar}</span>
+        <Avatar name={post.author?.display_name ?? 'Member'} color={post.author?.avatar} size={44} />
         <div className="min-w-0 flex-1">
           <p className="truncate font-bold">{post.user_id === me ? 'You' : post.author?.display_name}</p>
           <p className="text-xs text-silver">{post.meal ? `${MEAL_LABEL[post.meal as Meal]} · ` : ''}{ago(post.created_at)} ago</p>
         </div>
         {post.user_id === me && <button onClick={onDelete} className="grid h-9 w-9 place-items-center rounded-full text-dim" aria-label="Delete post"><Trash2 size={16} /></button>}
       </div>
-      <p className="px-4 text-[17px] font-bold leading-snug">{post.title}</p>
+      <div className="flex items-center gap-3 px-4">
+        {!post.photoUrl && <FoodVisual name={post.title} size={48} />}
+        <p className="min-w-0 flex-1 text-[17px] font-bold leading-snug">{post.title}</p>
+      </div>
       {post.caption && <p className="mt-1 px-4 text-sm text-silver">{post.caption}</p>}
-      {post.photoUrl ? (
-        <img src={post.photoUrl} alt={post.title} className="mt-3 aspect-[4/3] w-full object-cover" loading="lazy" />
-      ) : (
-        <div className="mx-4 mt-3 grid h-28 place-items-center rounded-[22px] bg-raised"><FoodVisual name={post.title} size={84} className="!bg-transparent" /></div>
-      )}
+      {post.photoUrl && <img src={post.photoUrl} alt={post.title} className="mt-3 aspect-[4/3] w-full object-cover" loading="lazy" />}
       <div className="num grid grid-cols-4 gap-2 px-4 pt-3 text-center">
         {([['Calories', post.kcal, ''], ['Protein', post.protein, 'g'], ['Carbs', post.carbs, 'g'], ['Fat', post.fat, 'g']] as const).map(([l, v, u]) => (
           <div key={l} className="rounded-2xl bg-raised py-2">
@@ -294,11 +299,14 @@ function PostCard({ post, me, onReact, onOpen, onDelete }: { post: Post; me?: st
         ))}
       </div>
       <div className="flex items-center gap-1.5 overflow-x-auto p-3 no-scrollbar">
-        {counts.map(({ e, n, mine }) => (
-          <button key={e} onClick={() => onReact(e)} className={cx('flex h-9 shrink-0 items-center gap-1 rounded-full px-2.5 text-[15px] transition active:scale-90', mine ? 'bg-accent/15 ring-1 ring-accent' : 'bg-raised')}>
-            {e}{n > 0 && <span className="num text-xs font-bold">{n}</span>}
-          </button>
-        ))}
+        {counts.map(({ e, n, mine }) => {
+          const Icon = REACTION_ICON[e];
+          return (
+            <button key={e} onClick={() => onReact(e)} aria-label={REACTION_LABEL[e]} aria-pressed={mine} className={cx('flex h-9 shrink-0 items-center gap-1 rounded-full px-3 transition active:scale-90', mine ? 'bg-accent text-white' : 'bg-raised text-ink/70')}>
+              <Icon size={16} strokeWidth={2.4} fill={mine && (e === '❤️' || e === '🔥') ? 'currentColor' : 'none'} />{n > 0 && <span className="num text-xs font-bold">{n}</span>}
+            </button>
+          );
+        })}
         <button onClick={onOpen} className="ml-auto flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-raised px-3 text-sm font-semibold"><MessageCircle size={15} /> {post.commentCount || 'Comment'}</button>
       </div>
     </article>
@@ -381,7 +389,7 @@ function CommentsSheet({ post, onClose }: { post: Post | null; onClose: () => vo
         <ul className="space-y-3">
           {list.map((c) => (
             <li key={c.id} className="flex gap-3">
-              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-raised text-[18px]">{c.author?.avatar}</span>
+              <Avatar name={c.author?.display_name ?? 'Member'} color={c.author?.avatar} size={36} />
               <div className="min-w-0 rounded-[18px] bg-surface px-3.5 py-2.5" style={{ boxShadow: 'var(--shadow)' }}>
                 <p className="text-sm font-bold">{c.author?.display_name} <span className="font-medium text-dim">· {ago(c.created_at)}</span></p>
                 <p className="text-sm">{c.body}</p>

@@ -148,7 +148,7 @@ export default function AddFood() {
       )}
       {db && list.length === 0 && !searching && tab !== 'saved' && (
         <p className="py-12 text-center text-sm font-medium text-silver">
-          {tab === 'recent' ? 'Foods you log show up here.' : tab === 'favs' ? 'Tap ♥ on any food to keep it here for quick logging.' : tab === 'custom' ? 'No custom foods yet.' : 'Nothing here.'}
+          {tab === 'recent' ? 'Foods you log show up here.' : tab === 'favs' ? 'Tap the heart on any food to keep it here for quick logging.' : tab === 'custom' ? 'No custom foods yet.' : 'Nothing here.'}
         </p>
       )}
 
@@ -232,7 +232,7 @@ function FoodRow({ food, onClick }: { food: Food; onClick: () => void }) {
       </div>
     </button>
     <button
-      onClick={() => { haptic(); rememberFood(food); toggleFavorite(food.id); toast(isFav ? 'Removed from favourites' : 'Saved to favourites ♥'); }}
+      onClick={() => { haptic(); rememberFood(food); toggleFavorite(food.id); toast(isFav ? 'Removed from favourites' : 'Saved to favourites'); }}
       className={cx('grid h-11 w-11 shrink-0 place-items-center rounded-full transition active:scale-90', isFav ? 'text-accent' : 'text-dim')}
       aria-label={isFav ? 'Remove from favourites' : 'Save to favourites'}
       aria-pressed={isFav}

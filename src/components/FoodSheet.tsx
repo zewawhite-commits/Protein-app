@@ -296,7 +296,7 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
         )}
         {!entry && (
           <button
-            onClick={() => { haptic(); rememberFood(food); toggleFavorite(food.id); toast(isFav ? 'Removed from favourites' : 'Saved to favourites ♥'); }}
+            onClick={() => { haptic(); rememberFood(food); toggleFavorite(food.id); toast(isFav ? 'Removed from favourites' : 'Saved to favourites'); }}
             className={cx('btn !h-14 !w-14 !px-0', isFav ? 'bg-accent/10 text-accent' : 'bg-surface text-ink')}
             style={{ boxShadow: 'var(--shadow)' }}
             aria-label={isFav ? 'Remove from favourites' : 'Save to favourites'}

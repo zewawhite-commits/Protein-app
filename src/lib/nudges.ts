@@ -32,7 +32,7 @@ export function computeNudges(o: {
   }
   const p = o.totals.protein;
   if (o.proteinGoal > 0 && p >= o.proteinGoal) {
-    out.push({ id: `${o.date}:win:protein`, kind: 'win', title: 'Protein goal hit 🎉', body: `${Math.round(p)} g of ${o.proteinGoal} g today. Nice work.` });
+    out.push({ id: `${o.date}:win:protein`, kind: 'win', title: 'Protein goal hit', body: `${Math.round(p)} g of ${o.proteinGoal} g today. Nice work.` });
   } else if (o.proteinGoal > 0 && nowMin >= 17 * 60 && p < o.proteinGoal * 0.75) {
     out.push({ id: `${o.date}:tip:protein`, kind: 'tip', title: `${Math.round(o.proteinGoal - p)} g protein to go`, body: 'A protein-rich dinner or snack can close the gap. Ask the coach for ideas.', link: '/coach' });
   }
@@ -46,7 +46,7 @@ export function computeNudges(o: {
     out.push({ id: `${o.date}:tip:fiber`, kind: 'tip', title: 'Low on fibre', body: 'Beans, lentils, vegetables, fruit or whole grains would help.', link: '/add?q=beans cooked' });
   }
   if (o.streak >= 3) {
-    out.push({ id: `${o.date}:win:streak`, kind: 'win', title: `${o.streak}-day streak 🔥`, body: 'You’ve hit your protein goal days in a row. Keep it going!' });
+    out.push({ id: `${o.date}:win:streak`, kind: 'win', title: `${o.streak}-day streak`, body: 'You’ve hit your protein goal days in a row. Keep it going!' });
   }
   return out;
 }

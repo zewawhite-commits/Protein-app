@@ -42,7 +42,7 @@ const STARTERS = [
   'Healthy snacks under 200 kcal',
   'How can I eat more fibre?',
   'Is my sugar too high today?',
-  '📷 Send a photo of your meal',
+  'Send a photo of your meal',
 ];
 
 /** Everything the AI needs to know about the person and their day. */
@@ -146,7 +146,7 @@ function Chat() {
             <p className="text-[15px] font-semibold">Hi{profile?.name ? ` ${profile.name}` : ''}! Ask me anything about food.</p>
             <p className="mt-1 text-sm text-silver">I can plan meals with foods from {profile?.country || 'where you live'}, check how today is going, or help you hit your targets. Numbers always come from the {APP_NAME} food database.</p>
             <div className="mt-4 flex flex-wrap gap-2">
-              {STARTERS.map((s) => <button key={s} onClick={() => (s.startsWith('📷') ? fileRef.current?.click() : send(s))} className="chip !h-9 !bg-raised text-[14px]">{s}</button>)}
+              {STARTERS.map((s) => <button key={s} onClick={() => (s.startsWith('Send a photo') ? fileRef.current?.click() : send(s))} className="chip !h-9 !bg-raised text-[14px]">{s.startsWith('Send a photo') && <ImagePlus size={15} />}{s}</button>)}
             </div>
           </div>
         )}
