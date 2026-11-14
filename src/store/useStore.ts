@@ -5,7 +5,7 @@
  */
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { CustomFood, Food, LogEntry, Meal, Profile, Settings } from '@/lib/types';
+import type { CustomFood, Food, LogEntry, Meal, Profile, SavedMeal, SavedPlan, Settings } from '@/lib/types';
 import { dailyGoal } from '@/lib/nutrition';
 import { todayKey } from '@/lib/dates';
 import { deletePhoto } from '@/lib/photos';
@@ -21,6 +21,12 @@ interface State {
   favoriteFoodIds: string[];
   /** Products fetched live (Open Food Facts) that the user logged or starred, so recents/favourites resolve offline. */
   remoteFoods: Record<string, Food>;
+  savedMeals: SavedMeal[];
+  savedPlans: SavedPlan[];
+  saveMeal: (name: string, entries: LogEntry[]) => SavedMeal;
+  removeSavedMeal: (id: string) => void;
+  savePlan: (p: Omit<SavedPlan, 'id' | 'createdAt'>) => SavedPlan;
+  removeSavedPlan: (id: string) => void;
   /** Signed Premium pass from the server (Paystack subscription). */
   premium: { token: string; exp: number; email: string; plan: string; tier?: 'plus' | 'pro'; scanLimit?: number } | null;
   /** When user data last changed (epoch ms); used to decide which copy wins in cloud sync. */
@@ -53,7 +59,22 @@ export const useStore = create<State>()(
       recentFoodIds: [],
       favoriteFoodIds: [],
       remoteFoods: {},
+      savedMeals: [],
+      savedPlans: [],
       premium: null,
+
+      saveMeal: (name, list) => {
+        const meal: SavedMeal = { id: crypto.randomUUID(), name: name.trim() || 'My meal', createdAt: Date.now(), items: list.map((e) => ({ foodId: e.foodId, food: e.food, grams: e.grams })) };
+        set((s) => ({ savedMeals: [meal, ...s.savedMeals].slice(0, 100) }));
+        return meal;
+      },
+      removeSavedMeal: (id) => set((s) => ({ savedMeals: s.savedMeals.filter((m) => m.id !== id) })),
+      savePlan: (p) => {
+        const plan: SavedPlan = { ...p, id: crypto.randomUUID(), createdAt: Date.now() };
+        set((s) => ({ savedPlans: [plan, ...s.savedPlans].slice(0, 30) }));
+        return plan;
+      },
+      removeSavedPlan: (id) => set((s) => ({ savedPlans: s.savedPlans.filter((m) => m.id !== id) })),
 
       setPremium: (premium) => set({ premium }),
 
@@ -144,11 +165,13 @@ export const useStore = create<State>()(
           recentFoodIds: d.recentFoodIds ?? [],
           favoriteFoodIds: d.favoriteFoodIds ?? [],
           remoteFoods: d.remoteFoods ?? {},
+          savedMeals: d.savedMeals ?? [],
+          savedPlans: d.savedPlans ?? [],
         });
       },
 
       resetAll: () =>
-        set({ profile: null, settings: defaultSettings, entries: [], customFoods: [], goalHistory: {}, recentFoodIds: [], favoriteFoodIds: [], remoteFoods: {}, premium: null }),
+        set({ profile: null, settings: defaultSettings, entries: [], customFoods: [], goalHistory: {}, recentFoodIds: [], favoriteFoodIds: [], remoteFoods: {}, savedMeals: [], savedPlans: [], premium: null }),
     }),
     {
       name: 'protein-app',
@@ -167,7 +190,8 @@ export const useStore = create<State>()(
 useStore.subscribe((s, prev) => {
   const changed =
     s.entries !== prev.entries || s.profile !== prev.profile || s.customFoods !== prev.customFoods ||
-    s.goalHistory !== prev.goalHistory || s.favoriteFoodIds !== prev.favoriteFoodIds;
+    s.goalHistory !== prev.goalHistory || s.favoriteFoodIds !== prev.favoriteFoodIds ||
+    s.savedMeals !== prev.savedMeals || s.savedPlans !== prev.savedPlans;
   if (changed && s.lastModified === prev.lastModified) useStore.setState({ lastModified: Date.now() });
 });
 
@@ -182,7 +206,7 @@ export function goalOn(date: string, goalHistory: Record<string, number>, profil
 
 export function exportData() {
   // Premium passes and personal API keys are never written to backup files.
-  const { profile, settings, entries, customFoods, goalHistory, recentFoodIds, favoriteFoodIds, remoteFoods } = useStore.getState();
+  const { profile, settings, entries, customFoods, goalHistory, recentFoodIds, favoriteFoodIds, remoteFoods, savedMeals, savedPlans } = useStore.getState();
   const safeSettings = settings;
-  return { app: 'protein-app', exportedAt: new Date().toISOString(), profile, settings: safeSettings, entries, customFoods, goalHistory, recentFoodIds, favoriteFoodIds, remoteFoods };
+  return { app: 'protein-app', exportedAt: new Date().toISOString(), profile, settings: safeSettings, entries, customFoods, goalHistory, recentFoodIds, favoriteFoodIds, remoteFoods, savedMeals, savedPlans };
 }

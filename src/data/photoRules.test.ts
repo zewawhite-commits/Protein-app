@@ -14,5 +14,8 @@ describe('photo rules', () => {
     expect(photoKeyFor('Plantain, cooked, no added fat')).toBe('plantain');
     expect(photoKeyFor('Pineapple, raw')).toBeUndefined();
     expect(photoKeyFor('Cheeseburger, single patty')).toBe('burger');
+    expect(photoKeyFor('Beef curry')).toBeUndefined();
+    expect(photoKeyFor('Grilled chicken')).toBe('chicken');
+    expect(photoKeyFor('Chicken salad')).toBe('salad');
   });
 });

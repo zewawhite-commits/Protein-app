@@ -83,11 +83,11 @@ const SCHEMA = {
   additionalProperties: false,
 } as const;
 
-const SYSTEM = `You identify foods in photos for a protein-tracking app used worldwide.
+const SYSTEM = `You identify foods in photos for a nutrition-tracking app used worldwide.
 
 For each distinct food you can see, return one item. If a plate has separable parts (e.g. rice, grilled chicken, fried plantain), list them separately. If the food is a combined dish whose parts can't be weighed apart (a curry, soup, stew, sandwich, sushi roll), return the dish as one item.
 
-Recognise dishes from any cuisine. Use the specific dish name in English in "name" and the local name in "localName" (e.g. name "Spicy rice with tomato and chicken", localName "Jollof rice").
+Recognise dishes from any cuisine in the world — African, Asian, European, the Americas, Middle Eastern, Pacific — as well as packaged products, drinks, snacks, fruit and street food. Look at every part of the photo (sides, sauces, drinks) before answering; prefer the most specific dish name you are confident in, and lower "confidence" when unsure rather than guessing. Use the specific dish name in English in "name" and the local name in "localName" (e.g. name "Spicy rice with tomato and chicken", localName "Jollof rice").
 
 "searchQueries" are used to look the food up in food-composition databases (USDA, FAO/INFOODS) and a packaged-product database. Give 2–4 short queries, most specific first, then more generic fallbacks that such databases are likely to contain, e.g. ["jollof rice", "rice tomato sauce", "rice white cooked"] or ["chicken thigh roasted", "chicken roasted"]. For a branded packaged product, include the brand and product name.
 
@@ -96,7 +96,7 @@ Recognise dishes from any cuisine. Use the specific dish name in English in "nam
 
 For a combined dish (soup, stew, curry, rice dish, salad, sandwich…), also list its likely main ingredients in "ingredients" (3–8 items), each with database-style "searchQueries" and its state as it is in the dish. Include ingredients that are usually present but hard to see, such as cooking oil, palm oil, stock fish, crayfish or ground melon seeds, and mark those "visible": false. For single foods, return "ingredients": [].
 
-Do not provide any nutrient values. If the photo contains no food, set isFood to false and items to [].`;
+Do not provide any nutrient values. If the photo contains no food (or only a menu, a person, etc.), set isFood to false and items to [] and explain briefly in "note".`;
 
 /** Run recognition with an Anthropic client (server-side key, or the user's own key in the browser). */
 export async function recognizeWithClient(client: Anthropic, imageBase64: string, mediaType: string): Promise<RecognitionResult> {
@@ -107,7 +107,8 @@ export async function recognizeWithClient(client: Anthropic, imageBase64: string
     betas: ['server-side-fallback-2026-07-01'],
     fallbacks: 'default',
     output_config: {
-      effort: 'medium',
+      // Higher effort: careful look at every part of the plate (accuracy matters more than speed here).
+      effort: 'high',
       format: { type: 'json_schema', schema: SCHEMA as unknown as Record<string, unknown> },
     },
     system: SYSTEM,

@@ -13,6 +13,7 @@ import type { Food, PrepState } from '@/lib/types';
 import { FoodSheet } from '@/components/FoodSheet';
 import { FoodVisual } from '@/components/FoodIcon';
 import { WorldFoods } from '@/components/WorldFoods';
+import { SavedMealsList } from '@/components/SavedMeals';
 import { FOOD_PHOTOS } from '@/data/foodPhotos';
 import { StateBadge, cx, fmt } from '@/components/ui';
 
@@ -23,8 +24,8 @@ const STATES: { value: PrepState | 'all'; label: string }[] = [
   { value: 'dry', label: 'Dry' },
 ];
 
-type Tab = 'picks' | 'recent' | 'favs' | 'custom';
-const TABS: [Tab, string][] = [['recent', 'Recent'], ['picks', 'High protein'], ['favs', 'Favourites'], ['custom', 'My foods']];
+type Tab = 'picks' | 'recent' | 'favs' | 'saved' | 'custom';
+const TABS: [Tab, string][] = [['recent', 'Recent'], ['picks', 'High protein'], ['favs', 'Favourites'], ['saved', 'Saved meals'], ['custom', 'My foods']];
 
 export default function AddFood() {
   const nav = useNavigate();
@@ -141,12 +142,13 @@ export default function AddFood() {
 
       {db && !searching && tab === 'picks' && <PhotoCards foods={list} onPick={setSelected} />}
 
-      {db && list.length > 0 && (
+      {!searching && tab === 'saved' && <SavedMealsList date={date} />}
+      {db && list.length > 0 && !(tab === 'saved' && !searching) && (
         <div className="card mt-1 p-1.5">
           {list.map((f) => <FoodRow key={f.id} food={f} onClick={() => setSelected(f)} />)}
         </div>
       )}
-      {db && list.length === 0 && !searching && (
+      {db && list.length === 0 && !searching && tab !== 'saved' && (
         <p className="py-12 text-center text-sm font-medium text-silver">
           {tab === 'recent' ? 'Foods you log show up here.' : tab === 'favs' ? 'Tap ♥ on any food to keep it here for quick logging.' : tab === 'custom' ? 'No custom foods yet.' : 'Nothing here.'}
         </p>

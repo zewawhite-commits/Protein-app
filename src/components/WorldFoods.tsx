@@ -52,7 +52,7 @@ export function WorldFoods({ onSearch }: { onSearch: (q: string) => void }) {
       <p className="mb-2.5 px-1 text-[15px] font-semibold">Popular around the world</p>
       <div className="-mx-5 flex gap-3 overflow-x-auto px-5 pb-1 no-scrollbar">
         {items.map((w) => {
-          const key = photoKeyFor(w.label);
+          const key = photoKeyFor(w.label) ?? photoKeyFor(w.q);
           return (
             <button key={w.label} onClick={() => { haptic(); onSearch(w.q); }} className="w-24 shrink-0 text-left transition active:scale-95">
               <div className="grid h-24 w-24 place-items-center overflow-hidden rounded-[22px] bg-surface" style={{ boxShadow: 'var(--shadow)' }}>

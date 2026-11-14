@@ -13,7 +13,8 @@ import type { Food } from '@/lib/types';
 import { FoodVisual } from '@/components/FoodIcon';
 import { photoKeyFor } from '@/data/photoRules';
 import { FoodSheet } from '@/components/FoodSheet';
-import { cx, fmt } from '@/components/ui';
+import { Segmented, cx, fmt } from '@/components/ui';
+import { PlanView } from '@/components/PlanView';
 import { APP_NAME, haptic } from '@/components/fx';
 
 interface Msg extends ChatTurn { foods?: CoachFood[]; error?: boolean; premium?: boolean; thumb?: string; fromPhoto?: boolean }
@@ -45,21 +46,11 @@ const STARTERS = [
   '📷 Send a photo of your meal',
 ];
 
-export default function Coach() {
-  const [msgs, setMsgs] = useState<Msg[]>(load);
-  const [text, setText] = useState('');
-  const [busy, setBusy] = useState(false);
-  const [pending, setPending] = useState<Pending | null>(null);
-  const fileRef = useRef<HTMLInputElement>(null);
-  const [open, setOpen] = useState<{ food: Food; grams?: number } | null>(null);
-  const endRef = useRef<HTMLDivElement>(null);
+/** Everything the AI needs to know about the person and their day. */
+export function useCoachContext(): CoachContext {
   const profile = useStore((s) => s.profile);
-  const premiumToken = useStore((s) => s.premium?.token);
   const { entries, totals, goal } = useDay(todayKey());
-
-  useEffect(() => { save(msgs); endRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' }); }, [msgs]);
-
-  const context = useMemo<CoachContext>(() => {
+  return useMemo<CoachContext>(() => {
     const t = profile ? dailyTargets(profile, goal) : null;
     return {
       name: profile?.name || undefined,
@@ -72,6 +63,41 @@ export default function Coach() {
       localTime: new Date().toLocaleString(undefined, { weekday: 'long', hour: '2-digit', minute: '2-digit' }),
     };
   }, [profile, goal, totals, entries]);
+}
+
+export default function Coach() {
+  const [view, setView] = useState<'chat' | 'plan'>(() => (new URLSearchParams(location.search).get('view') === 'plan' ? 'plan' : 'chat'));
+  return (
+    <div className="animate-fade-up">
+      <header className="pt-safe flex items-center justify-between gap-3 pb-3">
+        <div className="flex items-center gap-3">
+          <span className="grid h-11 w-11 place-items-center rounded-full bg-accent/10 text-accent"><Sparkles size={20} /></span>
+          <div>
+            <h1 className="text-[22px] font-bold leading-tight tracking-tight">Coach</h1>
+            <p className="text-xs text-silver">Knows your goals, tastes and today’s food</p>
+          </div>
+        </div>
+      </header>
+      <div className="mb-4"><Segmented full value={view} onChange={(v) => { haptic(); setView(v); }} options={[{ value: 'chat', label: 'Chat' }, { value: 'plan', label: 'My eating plan' }]} /></div>
+      {view === 'chat' ? <Chat /> : <PlanView />}
+    </div>
+  );
+}
+
+function Chat() {
+  const [msgs, setMsgs] = useState<Msg[]>(load);
+  const [text, setText] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [pending, setPending] = useState<Pending | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [open, setOpen] = useState<{ food: Food; grams?: number } | null>(null);
+  const endRef = useRef<HTMLDivElement>(null);
+  const profile = useStore((s) => s.profile);
+  const premiumToken = useStore((s) => s.premium?.token);
+
+  useEffect(() => { save(msgs); endRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' }); }, [msgs]);
+
+  const context = useCoachContext();
 
   async function send(content: string) {
     const photo = pending;
@@ -107,19 +133,12 @@ export default function Coach() {
   }
 
   return (
-    <div className="flex min-h-[calc(100dvh-8rem)] animate-fade-up flex-col">
-      <header className="pt-safe flex items-center justify-between pb-4">
-        <div className="flex items-center gap-3">
-          <span className="grid h-11 w-11 place-items-center rounded-full bg-accent/10 text-accent"><Sparkles size={20} /></span>
-          <div>
-            <h1 className="text-[22px] font-bold leading-tight tracking-tight">Coach</h1>
-            <p className="text-xs text-silver">Knows your goals and today’s food</p>
-          </div>
+    <div className="flex min-h-[calc(100dvh-14rem)] flex-col">
+      {msgs.length > 0 && (
+        <div className="mb-2 flex justify-end">
+          <button onClick={() => { haptic(); setMsgs([]); }} className="chip !h-9" aria-label="New chat"><RotateCcw size={14} /> New chat</button>
         </div>
-        {msgs.length > 0 && (
-          <button onClick={() => { haptic(); setMsgs([]); }} className="chip !h-9" aria-label="New chat"><RotateCcw size={14} /> New</button>
-        )}
-      </header>
+      )}
 
       <div className="flex-1 space-y-3 pb-28">
         {msgs.length === 0 && (

@@ -38,3 +38,13 @@ describe('coach', () => {
     expect(req.messages[2].content[1]).toEqual({ type: 'text', text: 'What is this?' });
   });
 });
+
+import { sanitizePlan } from './plan';
+describe('eating plan', () => {
+  it('keeps a clean shape and strips nutrient numbers from tips', () => {
+    const p = sanitizePlan({ title: 'Strong day', meals: [{ meal: 'breakfast', title: 'Eggs', items: [{ name: 'Eggs', localName: '', searchQueries: ['egg whole hard-boiled'], grams: 100 }] }, { meal: 'brunch', title: 'x', items: [{ name: 'a' }] }, { meal: 'lunch', title: 'Empty', items: [] }], tips: ['Eat 30 g protein at breakfast'] });
+    expect(p.meals).toHaveLength(1);
+    expect(p.meals[0].items[0]).toEqual({ name: 'Eggs', localName: '', searchQueries: ['egg whole hard-boiled'], grams: 100 });
+    expect(p.tips[0]).not.toMatch(/30 g/);
+  });
+});

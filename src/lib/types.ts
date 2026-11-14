@@ -135,3 +135,19 @@ export interface Settings {
   adminMode: boolean;
   reminders?: Reminders;
 }
+
+/** A meal the user saved to log again in one tap (food snapshots + the grams they weighed). */
+export interface SavedMeal {
+  id: string;
+  name: string;
+  items: { foodId: string; food: LogEntry['food']; grams: number }[];
+  createdAt: number;
+}
+
+/** An AI eating plan the user saved. Item weights are suggestions, never logged automatically. */
+export interface SavedPlan {
+  id: string;
+  title: string;
+  createdAt: number;
+  plan: import('./plan').DayPlan;
+}

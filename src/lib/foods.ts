@@ -226,7 +226,7 @@ export const fdcUrl = (fdcId: number) => `https://fdc.nal.usda.gov/food-details/
  * (whole words, allowing plurals; "cooked" also matches any cooked record). Used for
  * AI-suggested names, where a loose match (e.g. "moi" → "moisture") would be misleading.
  */
-const OTHER_FORM = new Set(['leafy', 'leaves', 'leaf', 'tips', 'shoots', 'sprouted', 'sprouts', 'flour', 'meal', 'roll', 'loaf', 'powder', 'dehydrated', 'dried', 'canned', 'frozen', 'breaded', 'babyfood', 'luncheon', 'sticks']);
+const OTHER_FORM = new Set(['bran', 'germ', 'leafy', 'leaves', 'leaf', 'tips', 'shoots', 'sprouted', 'sprouts', 'flour', 'meal', 'roll', 'loaf', 'powder', 'dehydrated', 'dried', 'canned', 'frozen', 'breaded', 'babyfood', 'luncheon', 'sticks']);
 
 export function confidentMatch(queries: string[], opts: SearchOptions = {}): Food | undefined {
   const same = (w: string, t: string) => w === t || w === `${t}s` || w === `${t}es` || t === `${w}s` || SYNONYMS[t] === w;

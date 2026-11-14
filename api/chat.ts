@@ -3,36 +3,13 @@
  * AI nutrition coach. Requires a Premium pass when payments are configured.
  */
 import Anthropic from '@anthropic-ai/sdk';
-import { cleanTurns, coachWithClient, type ChatImage, type CoachContext } from '../src/lib/coach';
+import { cleanTurns, coachWithClient, type ChatImage } from '../src/lib/coach';
 import { bearer, json, paymentsEnabled, readPass, scanLimit } from './_lib/premium';
 import { useScan } from './_lib/accounts';
+import { cleanContext } from './_lib/context';
 
 const IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
-
-const str = (v: unknown, n: number) => (typeof v === 'string' ? v.slice(0, n) : undefined);
-const num = (v: unknown, max: number) => (typeof v === 'number' && Number.isFinite(v) && v >= 0 && v <= max ? v : undefined);
-
-function cleanContext(raw: unknown): CoachContext {
-  const c = (raw ?? {}) as Record<string, any>;
-  const nums = (o: any, keys: string[], max: number) => Object.fromEntries(keys.map((k) => [k, num(o?.[k], max)]));
-  return {
-    name: str(c.name, 40),
-    goals: Array.isArray(c.goals) ? c.goals.map((g: unknown) => String(g).slice(0, 20)).slice(0, 5) : undefined,
-    activity: str(c.activity, 20),
-    diet: str(c.diet, 20),
-    country: str(c.country, 60),
-    cuisines: Array.isArray(c.cuisines) ? c.cuisines.map((g: unknown) => String(g).slice(0, 30)).slice(0, 26) : undefined,
-    avoid: Array.isArray(c.avoid) ? c.avoid.map((g: unknown) => String(g).slice(0, 30)).slice(0, 20) : undefined,
-    age: num(c.age, 120),
-    sex: str(c.sex, 15),
-    pregnant: c.pregnant === true,
-    targets: nums(c.targets, ['kcal', 'protein', 'carbs', 'fat', 'fiber'], 20000),
-    today: nums(c.today, ['kcal', 'protein', 'carbs', 'fat', 'fiber', 'sugar', 'sodiumMg'], 50000),
-    eatenToday: Array.isArray(c.eatenToday) ? c.eatenToday.map((s: unknown) => String(s).slice(0, 60)).slice(0, 20) : [],
-    localTime: str(c.localTime, 40),
-  };
-}
 
 export async function POST(request: Request): Promise<Response> {
   if (!process.env.ANTHROPIC_API_KEY) return json({ error: 'The coach isn’t switched on yet.' }, 501);

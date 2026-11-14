@@ -21,8 +21,18 @@ const DISHES: [RegExp, string][] = [
 /** Things that are ingredients or extracts rather than the food itself. */
 const NOT_THE_FOOD = /^(oil|fat|lard|shortening|margarine)\b|\b(broth|stock|bouillon|gravy|baby|babyfood|infant|flour|starch|sauce|seasoning|extract|powder(?! protein)|dehydrated|substitute|imitation|flavou?red? drink)\b/;
 
-const FOODS: [RegExp, string][] = [
+/** Whole dishes with their own photos; checked before the "mixed dish" guard below. */
+const DISH_PHOTOS: [RegExp, string][] = [
   [/protein (shake|powder|bar)|\bwhey\b|\bsmoothie/, 'shake'],
+  [/burger/, 'burger'],
+  [/\bpizza\b/, 'pizza'],
+  [/\bsalad\b/, 'salad'],
+];
+
+/** Mixed dishes shouldn't borrow a plain ingredient's photo (beef curry ≠ steak). */
+const MIXED_DISH = /\b(curry|stew|soup|taco|burrito|sandwich|pie|casserole|lasagna|sushi|ramen|noodle soup|pad thai|biryani|paella|empanada|dumplings?|wrap|quesadilla|enchilada|fajita|as ingredient|with (sauce|gravy|vegetables|rice|noodles|pasta))\b/;
+
+const FOODS: [RegExp, string][] = [
   [/plantains?\b|\bdodo\b|\balloco\b/, 'plantain'],
   [/sweet ?potato/, 'sweetpotato'],
   [/^yams?\b|\byams?\b/, 'yam'],
@@ -33,9 +43,7 @@ const FOODS: [RegExp, string][] = [
   [/\bsardines?\b/, 'sardine'],
   [/\bshrimps?\b|\bprawns?\b/, 'shrimp'],
   [/^fish\b|\b(catfish|mackerel|cod|croaker|herring|haddock|trout|snapper|hake|pollock)\b/, 'fish'],
-  [/burger/, 'burger'],
-  [/\bpizza\b/, 'pizza'],
-  [/^chicken\b|\bchicken (breast|thigh|leg|wing|drumstick)/, 'chicken'],
+  [/^(grilled |roast(ed)? )?chicken\b|\bchicken (breast|thigh|leg|wing|drumstick)/, 'chicken'],
   [/^turkey\b/, 'turkey'],
   [/\bsausages?\b|frankfurter|hot ?dog/, 'sausage'],
   [/^pork\b|pork chop/, 'pork'],
@@ -62,13 +70,14 @@ const FOODS: [RegExp, string][] = [
   [/^avocados?\b/, 'avocado'],
   [/^spinach\b|\bspinach, /, 'spinach'],
   [/^broccoli\b/, 'broccoli'],
-  [/\bsalad\b/, 'salad'],
 ];
 
 export function photoKeyFor(name: string): string | undefined {
   const n = name.toLowerCase();
   for (const [re, key] of DISHES) if (re.test(n) && PHOTO_LIBRARY[key]) return key;
   if (NOT_THE_FOOD.test(n)) return undefined;
+  for (const [re, key] of DISH_PHOTOS) if (re.test(n) && PHOTO_LIBRARY[key]) return key;
+  if (MIXED_DISH.test(n)) return undefined;
   for (const [re, key] of FOODS) if (re.test(n) && PHOTO_LIBRARY[key]) return key;
   return undefined;
 }

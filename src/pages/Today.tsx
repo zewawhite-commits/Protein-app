@@ -14,6 +14,7 @@ import { EntryRow } from '@/components/EntryRow';
 import { Suggestions } from '@/components/Suggestions';
 import { FoodSheet } from '@/components/FoodSheet';
 import { NotificationBell } from '@/components/Notifications';
+import { SaveMealButton } from '@/components/SavedMeals';
 
 const MEALS: { key: Meal; label: string }[] = [
   { key: 'breakfast', label: 'Breakfast' },
@@ -101,7 +102,12 @@ export default function Today() {
       <section className="mt-8 lg:mt-5">
         <div className="mb-3 flex items-baseline justify-between px-1">
           <h2 className="text-xl font-semibold tracking-tight">{isToday ? "Today's meals" : `${relativeDay(date)}'s meals`}</h2>
-          {entries.length > 0 && <Link to="/history" className="text-sm font-semibold text-accent">View all</Link>}
+          {entries.length > 0 && (
+            <span className="flex items-center gap-4">
+              <SaveMealButton entries={entries} />
+              <Link to="/history" className="text-sm font-semibold text-accent">View all</Link>
+            </span>
+          )}
         </div>
         {entries.length === 0 ? (
           <Link to={`/add${!isToday ? `?date=${date}` : ''}`} className="card flex items-center gap-4 p-4 transition active:scale-[.99]">
