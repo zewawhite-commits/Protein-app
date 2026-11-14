@@ -207,7 +207,7 @@ export default function Onboarding() {
               </div>
               <div>
                 <label className="label mt-2" htmlFor="ob-age">Age</label>
-                <input id="ob-age" className={cx('field text-center', !ageOk && '!ring-2 !ring-danger')} inputMode="numeric" maxLength={3} value={age} onChange={(e) => setAge(e.target.value.replace(/\D/g, ''))} placeholder="—" />
+                <input id="ob-age" className={cx('field text-center', !ageOk && '!ring-2 !ring-danger')} inputMode="numeric" maxLength={3} value={age} onChange={(e) => setAge(e.target.value.replace(/\D/g, ''))} placeholder="30" />
               </div>
             </div>
             {!ageOk && <p className="mt-1 text-sm text-danger">Enter an age between 13 and 110.</p>}
@@ -254,9 +254,9 @@ export default function Onboarding() {
                 </div>
               </div>
             )}
-            <p className="mt-1 min-h-5 text-sm">{heightError ? <span className="text-danger">{heightError}</span> : <span className="text-xs text-silver">With age and weight, this sets your calorie target. Optional.</span>}</p>
+            <p className="mt-1 min-h-5 text-sm">{heightError ? <span className="text-danger">{heightError}</span> : <span className="text-xs text-silver">We use your age, height and weight to work out your calories.</span>}</p>
             <div className="flex-1" />
-            <button onClick={() => { setGPerKg(suggestGramsPerKg(primaryGoal(goals.length ? goals : ['health'], activity ?? 'active'), activity ?? 'active', person)); next(); }} disabled={!weightKg || !ageOk || !!heightError} className="btn-primary mt-6 w-full">Continue</button>
+            <button onClick={() => { setGPerKg(suggestGramsPerKg(primaryGoal(goals.length ? goals : ['health'], activity ?? 'active'), activity ?? 'active', person)); next(); }} disabled={!weightKg || !age || !ageOk || !heightOk} className="btn-primary mt-6 w-full">{!weightKg || !age || !heightOk ? 'Add age, height and weight' : 'Continue'}</button>
           </Question>
         )}
         {at === 'goalweight' && (
@@ -348,7 +348,7 @@ export default function Onboarding() {
                 <EditTile icon={Droplet} tone="text-[rgb(var(--fat))]" label="Fat" unit="g" value={targets?.fat} />
               </div>
               <p className="mt-3 text-sm leading-relaxed text-silver">{suggestionReason(goal, activity, suggestGramsPerKg(goal, activity, person), person)}</p>
-              {!targets && <p className="mt-2 rounded-2xl bg-raised p-3 text-sm text-silver">Add your height and age in Profile to get calorie, carb and fat targets.</p>}
+              
             </div>
             <p className="mt-3 text-center text-xs text-dim">Calories estimated with the Mifflin–St Jeor equation. A starting point, not medical advice.</p>
             <div className="flex-1" />
