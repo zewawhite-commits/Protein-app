@@ -72,3 +72,23 @@ describe('foods', () => {
     expect(searchFoods('yogurt', { custom })).toEqual([]);
   });
 });
+
+import { fitsDiet, suggestGramsPerKg } from './goals';
+describe('goal suggestions', () => {
+  it('suggests evidence-based targets', () => {
+    expect(suggestGramsPerKg('health', 'sedentary')).toBe(0.8);
+    expect(suggestGramsPerKg('muscle', 'active')).toBe(1.6);
+    expect(suggestGramsPerKg('fatloss', 'active')).toBe(1.8);
+    expect(suggestGramsPerKg('muscle', 'sedentary')).toBe(1.2);
+    expect(suggestGramsPerKg('performance', 'athlete')).toBe(1.8);
+    for (const g of ['muscle', 'fatloss', 'maintain', 'performance', 'health'] as const)
+      for (const a of ['sedentary', 'light', 'active', 'athlete'] as const) expect(suggestGramsPerKg(g, a)).toBeLessThanOrEqual(2.0);
+  });
+  it('filters suggestions by diet', () => {
+    expect(fitsDiet({ name: 'Chicken breast' }, 'vegetarian')).toBe(false);
+    expect(fitsDiet({ name: 'Fish, salmon' }, 'pescatarian')).toBe(true);
+    expect(fitsDiet({ name: 'Egg, whole' }, 'vegetarian')).toBe(true);
+    expect(fitsDiet({ name: 'Egg, whole' }, 'vegan')).toBe(false);
+    expect(fitsDiet({ name: 'Tofu, firm' }, 'vegan')).toBe(true);
+  });
+});

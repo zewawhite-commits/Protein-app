@@ -19,7 +19,9 @@ A premium, mobile-first protein tracker. Weigh your food, pick it from the USDA 
 - **Insights** — 7/30/90-day charts against the goal, averages, days the goal was hit, best day, breakdown by meal, top protein sources.
 - **Food photos** — camera or gallery, downscaled and stored in IndexedDB.
 - **Profile** — dark, light or auto theme, JSON backup export and restore, delete all data.
-- **Premium** — Paystack subscription (monthly/yearly) unlocking AI photo recognition; prices come live from the Paystack plans.
+- **Onboarding** — goal, activity level and diet questions; suggests a protein target (0.8–2.0 g/kg, with sources) and tailors food suggestions to the diet.
+- **Accounts** — optional sign-in with Google or email (Supabase), with cloud sync across phones.
+- **Plans** — Free, Plus and Pro (monthly or yearly) via Paystack; Plus/Pro unlock AI photo recognition with monthly scan allowances; prices come live from the Paystack plans.
 - **Admin** — browse USDA records (read-only, linked to FDC), and create, edit or archive custom records. Custom records require a cited source and pass sanity checks.
 
 ## Nutritional accuracy
@@ -52,6 +54,20 @@ Recognition uses Claude (model `claude-opus-5-5`) and needs an Anthropic API key
 
 Each photo is one API call. Requests enable server-side refusal fallbacks (`fallbacks: "default"`).
 
+## Accounts and cloud sync (Supabase)
+
+Optional sign-in with Google or an email link. Signed-in users' data (profile, log, custom foods) is saved to their account and synced across phones; photos stay on each phone.
+
+1. Create a free project at https://supabase.com.
+2. SQL Editor → paste and run `supabase/schema.sql` (tables, row-level security, scan counter).
+3. Authentication → Providers → enable **Google** (needs a Google Cloud OAuth client; Supabase shows the redirect URL to paste there) and keep **Email** on.
+4. Authentication → URL Configuration → add your app URL(s) to Redirect URLs.
+5. App (public) settings — in Vercel env vars, and as GitHub Actions *variables* for Pages:
+   `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` (Project Settings → API).
+6. Server (secret, Vercel only): `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`.
+
+With accounts on, subscribing requires signing in, the plan follows the account, and "Restore" needs no receipt.
+
 ## Premium subscriptions (Paystack)
 
 Photo recognition through the server is a paid Premium feature when payments are configured. Everything else stays free.
@@ -64,10 +80,11 @@ How it works, without a database:
 
 Setup:
 1. Create a Paystack account and complete business verification.
-2. In Paystack → Plans, create a monthly and/or yearly plan in NGN; copy each plan code (`PLN_…`).
+2. In Paystack → Plans, create the plans you sell and copy each plan code (`PLN_…`). Tiers: **Plus** (e.g. $5.99/month, 100 photo scans a month) and **Pro** (e.g. $11.99/month, 400 scans), each monthly and yearly. Charging in USD needs Paystack's approval for your business; otherwise use NGN prices.
 3. In Vercel → Project → Settings → Environment Variables add:
    - `PAYSTACK_SECRET_KEY` (test key `sk_test_…` first, live key later)
-   - `PAYSTACK_PLAN_MONTHLY` and/or `PAYSTACK_PLAN_YEARLY`
+   - `PAYSTACK_PLAN_PLUS_MONTHLY`, `PAYSTACK_PLAN_PLUS_YEARLY`, `PAYSTACK_PLAN_PRO_MONTHLY`, `PAYSTACK_PLAN_PRO_YEARLY`
+   - Optional: `SCAN_LIMIT_PLUS` (default 100), `SCAN_LIMIT_PRO` (default 400). Limits are enforced when Supabase is set up.
    - `PREMIUM_TOKEN_SECRET` (any long random string, keep it secret)
    - `ANTHROPIC_API_KEY`
 4. Redeploy. Test with Paystack's test cards, then switch to the live secret key.

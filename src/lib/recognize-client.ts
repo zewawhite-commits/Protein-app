@@ -15,6 +15,9 @@ export class PremiumRequiredError extends Error {
   }
 }
 
+/** Monthly photo-scan allowance used up. */
+export class ScanLimitError extends Error {}
+
 export class RecognitionUnavailableError extends Error {
   constructor() {
     super('Photo recognition is not set up yet.');
@@ -45,12 +48,15 @@ export async function recognizePhoto(photo: Blob, userApiKey?: string, premiumTo
       const { error } = (await res.json()) as { error?: string };
       if (!userApiKey) throw new PremiumRequiredError(error);
       // Not Premium, but the user has their own key: fall through to it.
+    } else if (isJson && res.status === 429) {
+      const { error } = (await res.json()) as { error?: string };
+      throw new ScanLimitError(error);
     } else if (isJson && res.status !== 501) {
       const { error } = (await res.json()) as { error?: string };
       throw new Error(error || `Recognition failed (${res.status}).`);
     }
   } catch (e) {
-    if (e instanceof PremiumRequiredError) throw e;
+    if (e instanceof PremiumRequiredError || e instanceof ScanLimitError) throw e;
     if (!(e instanceof TypeError) && !userApiKey) throw e; // TypeError = network/no endpoint
   }
 

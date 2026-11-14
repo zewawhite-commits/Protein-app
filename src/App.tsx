@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect } from 'react';
 import { refreshPremium } from './lib/premium';
+import { useCloudSync } from './lib/account';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { useStore } from './store/useStore';
 import { useThemeSync } from './lib/hooks';
@@ -18,6 +19,7 @@ const Premium = lazy(() => import('./pages/Premium'));
 export default function App() {
   useThemeSync();
   useEffect(() => { void refreshPremium(); }, []);
+  useCloudSync();
   const profile = useStore((s) => s.profile);
   if (!profile) return <Onboarding />;
   return (

@@ -27,8 +27,10 @@ const post = (url: string, body: unknown, token?: string) =>
 
 beforeEach(() => {
   process.env.PAYSTACK_SECRET_KEY = 'sk_test_x';
-  process.env.PAYSTACK_PLAN_MONTHLY = 'PLN_month';
-  process.env.PAYSTACK_PLAN_YEARLY = 'PLN_year';
+  process.env.PAYSTACK_PLAN_PLUS_MONTHLY = 'PLN_month';
+  process.env.PAYSTACK_PLAN_PRO_YEARLY = 'PLN_year';
+  delete process.env.SUPABASE_URL;
+  delete process.env.SUPABASE_SERVICE_ROLE_KEY;
   process.env.PREMIUM_TOKEN_SECRET = 'test-secret-that-is-long-enough';
 });
 afterEach(() => vi.unstubAllGlobals());
@@ -41,10 +43,10 @@ const sub = (status: string, nextInMs: number, plan = 'PLN_month') => ({ status,
 
 describe('Premium pass', () => {
   it('round-trips and rejects tampering', () => {
-    const t = signPass({ email: 'a@b.co', cid: 1, plan: 'PLN_month', exp: Date.now() + DAY });
+    const t = signPass({ email: 'a@b.co', cid: 1, plan: 'PLN_month', tier: 'plus', exp: Date.now() + DAY });
     expect(readPass(t)?.cid).toBe(1);
     const [body, sig] = t.split('.');
-    const forged = Buffer.from(JSON.stringify({ email: 'a@b.co', cid: 1, plan: 'PLN_month', exp: Date.now() + 999 * DAY })).toString('base64url');
+    const forged = Buffer.from(JSON.stringify({ email: 'a@b.co', cid: 1, plan: 'PLN_month', tier: 'plus', exp: Date.now() + 999 * DAY })).toString('base64url');
     expect(readPass(`${forged}.${sig}`)).toBeNull();
     expect(readPass(`${body}.x${sig.slice(1)}`)).toBeNull();
     expect(readPass('garbage')).toBeNull();
@@ -102,7 +104,7 @@ describe('activate', () => {
   });
 
   it('renews a pass while subscribed and refuses after cancellation', async () => {
-    const old = signPass({ email: 'ada@example.com', cid: 42, plan: 'PLN_month', exp: Date.now() - DAY });
+    const old = signPass({ email: 'ada@example.com', cid: 42, plan: 'PLN_month', tier: 'plus', exp: Date.now() - DAY });
     fakePaystack({ subs: [sub('active', 30 * DAY)] });
     expect((await activate(post('https://app.test/x', { token: old }))).status).toBe(200);
     fakePaystack({ subs: [sub('cancelled', 30 * DAY)] });
@@ -117,15 +119,32 @@ describe('checkout', () => {
       sent = JSON.parse(String(init?.body));
       return new Response(JSON.stringify({ status: true, data: { authorization_url: 'https://checkout.paystack.com/abc', reference: 'r' } }));
     });
-    const res = await checkout(post('https://protein.example/api/premium/checkout', { email: 'a@b.co', plan: 'yearly' }));
+    const res = await checkout(post('https://protein.example/api/premium/checkout', { email: 'a@b.co', plan: 'pro_yearly' }));
     expect(res.status).toBe(200);
     expect(sent).toMatchObject({ email: 'a@b.co', plan: 'PLN_year', callback_url: 'https://protein.example/premium' });
   });
 
   it('validates input', async () => {
     fakePaystack({});
-    expect((await checkout(post('https://x/api', { email: 'nope', plan: 'yearly' }))).status).toBe(400);
+    expect((await checkout(post('https://x/api', { email: 'nope', plan: 'pro_yearly' }))).status).toBe(400);
     expect((await checkout(post('https://x/api', { email: 'a@b.co', plan: 'lifetime' }))).status).toBe(400);
+  });
+});
+
+describe('tiers and accounts', () => {
+  it('passes carry the tier of the plan bought', async () => {
+    fakePaystack({ tx: paidTx({ plan_object: { plan_code: 'PLN_year', interval: 'annually' } }), subs: [sub('active', 300 * DAY, 'PLN_year')] });
+    const res = await activate(post('https://app.test/x', { reference: 'ref123' }));
+    expect(await res.json()).toMatchObject({ tier: 'pro', scanLimit: 400 });
+  });
+
+  it('requires sign-in to subscribe when accounts are on', async () => {
+    process.env.SUPABASE_URL = 'https://proj.supabase.co';
+    process.env.SUPABASE_SERVICE_ROLE_KEY = 'service-role';
+    fakePaystack({});
+    const res = await checkout(post('https://x/api', { email: 'a@b.co', plan: 'plus_monthly' }));
+    expect(res.status).toBe(401);
+    expect(await res.json()).toMatchObject({ signIn: true });
   });
 });
 
@@ -133,7 +152,7 @@ describe('recognition is Premium-gated when payments are on', () => {
   it('returns 402 without a valid, unexpired pass', async () => {
     process.env.ANTHROPIC_API_KEY = 'sk-ant-test';
     expect((await recognize(post('https://x/api/recognize', { image: 'abc' }))).status).toBe(402);
-    const expired = signPass({ email: 'a@b.co', cid: 1, plan: 'PLN_month', exp: Date.now() - 1 });
+    const expired = signPass({ email: 'a@b.co', cid: 1, plan: 'PLN_month', tier: 'plus', exp: Date.now() - 1 });
     const res = await recognize(post('https://x/api/recognize', { image: 'abc' }, expired));
     expect(res.status).toBe(402);
     expect(await res.json()).toMatchObject({ renew: true });

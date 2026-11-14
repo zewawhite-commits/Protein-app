@@ -22,7 +22,9 @@ interface State {
   /** Products fetched live (Open Food Facts) that the user logged or starred, so recents/favourites resolve offline. */
   remoteFoods: Record<string, Food>;
   /** Signed Premium pass from the server (Paystack subscription). */
-  premium: { token: string; exp: number; email: string; plan: string } | null;
+  premium: { token: string; exp: number; email: string; plan: string; tier?: 'plus' | 'pro'; scanLimit?: number } | null;
+  /** When user data last changed (epoch ms); used to decide which copy wins in cloud sync. */
+  lastModified?: number;
   setPremium: (p: State['premium']) => void;
 
   saveProfile: (p: Profile) => void;
@@ -151,6 +153,14 @@ export const useStore = create<State>()(
     { name: 'protein-app', version: 1 },
   ),
 );
+
+// Stamp every change to user data, for cloud sync.
+useStore.subscribe((s, prev) => {
+  const changed =
+    s.entries !== prev.entries || s.profile !== prev.profile || s.customFoods !== prev.customFoods ||
+    s.goalHistory !== prev.goalHistory || s.favoriteFoodIds !== prev.favoriteFoodIds;
+  if (changed && s.lastModified === prev.lastModified) useStore.setState({ lastModified: Date.now() });
+});
 
 /** Goal that applied on a given day (falls back to the current profile goal). */
 export function goalOn(date: string, goalHistory: Record<string, number>, profile: Profile | null): number {

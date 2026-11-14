@@ -3,18 +3,27 @@
  *   { reference }                 after returning from Paystack checkout
  *   { reference, email }          restore on another device (reference is on the Paystack receipt)
  *   { token }                     renew an existing (possibly expired) pass
+ *   { account: true }             restore for the signed-in account (Authorization: Bearer <Supabase token>)
  * → { token, exp, email, plan } or 402 when there is no paid subscription.
  */
-import { fail, issuePass, json, paymentsEnabled, readPass, verifiedPlanPayment } from '../_lib/premium';
+import { bearer, customerIdByEmail, fail, issuePass, json, paymentsEnabled, readPass, verifiedPlanPayment } from '../_lib/premium';
+import { userFromToken } from '../_lib/accounts';
 
 export async function POST(request: Request): Promise<Response> {
   if (!paymentsEnabled()) return json({ error: 'Payments are not set up yet.' }, 501);
-  const body = (await request.json().catch(() => ({}))) as { reference?: string; email?: string; token?: string };
+  const body = (await request.json().catch(() => ({}))) as { reference?: string; email?: string; token?: string; account?: boolean };
   try {
+    if (body.account) {
+      const user = await userFromToken(bearer(request));
+      if (!user) return json({ error: 'Sign in first.' }, 401);
+      const cid = await customerIdByEmail(user.email);
+      const pass = cid ? await issuePass({ email: user.email, cid, plan: '', uid: user.id }) : null;
+      return pass ? json(pass) : json({ error: 'No active subscription for this account.' }, 402);
+    }
     if (body.token) {
       const pass = readPass(body.token);
       if (!pass) return json({ error: 'Invalid Premium pass.' }, 401);
-      const renewed = await issuePass({ email: pass.email, cid: pass.cid, plan: pass.plan });
+      const renewed = await issuePass({ email: pass.email, cid: pass.cid, plan: pass.plan, uid: pass.uid });
       return renewed ? json(renewed) : json({ error: 'Your subscription is no longer active.' }, 402);
     }
 

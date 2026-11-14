@@ -4,10 +4,13 @@
  * asking Paystack whether the subscription is still active.
  *
  * Environment variables (set in Vercel → Project → Settings → Environment Variables):
- *   PAYSTACK_SECRET_KEY    sk_live_… / sk_test_… from the Paystack dashboard
- *   PAYSTACK_PLAN_MONTHLY  plan code, e.g. PLN_xxxxx (optional)
- *   PAYSTACK_PLAN_YEARLY   plan code (optional)
- *   PREMIUM_TOKEN_SECRET   long random string used to sign Premium passes
+ *   PAYSTACK_SECRET_KEY         sk_live_… / sk_test_… from the Paystack dashboard
+ *   PAYSTACK_PLAN_PLUS_MONTHLY  plan codes (PLN_…); set the ones you sell
+ *   PAYSTACK_PLAN_PLUS_YEARLY
+ *   PAYSTACK_PLAN_PRO_MONTHLY
+ *   PAYSTACK_PLAN_PRO_YEARLY
+ *   PREMIUM_TOKEN_SECRET        long random string used to sign Premium passes
+ *   SCAN_LIMIT_PLUS / SCAN_LIMIT_PRO  photo scans per calendar month (default 100 / 400)
  *
  * Files in api/_lib are helpers, not routes.
  */
@@ -18,15 +21,30 @@ const DAY = 86_400_000;
 /** Extra time after the renewal date so a slightly late renewal doesn't lock anyone out. */
 const GRACE_MS = 3 * DAY;
 
-export type PlanId = 'monthly' | 'yearly';
+export type Tier = 'plus' | 'pro';
+export type PlanId = `${Tier}_${'monthly' | 'yearly'}`;
+export const PLAN_IDS: PlanId[] = ['plus_monthly', 'plus_yearly', 'pro_monthly', 'pro_yearly'];
 
 export function config() {
   const secret = process.env.PAYSTACK_SECRET_KEY;
   const tokenSecret = process.env.PREMIUM_TOKEN_SECRET;
   const plans: Partial<Record<PlanId, string>> = {};
-  if (process.env.PAYSTACK_PLAN_MONTHLY) plans.monthly = process.env.PAYSTACK_PLAN_MONTHLY;
-  if (process.env.PAYSTACK_PLAN_YEARLY) plans.yearly = process.env.PAYSTACK_PLAN_YEARLY;
+  for (const id of PLAN_IDS) {
+    const code = process.env[`PAYSTACK_PLAN_${id.toUpperCase()}`];
+    if (code) plans[id] = code;
+  }
   return { enabled: !!(secret && tokenSecret && Object.keys(plans).length), secret, tokenSecret, plans };
+}
+
+/** Which tier a Paystack plan code belongs to. */
+export function tierOf(planCode: string): Tier {
+  const id = (Object.entries(config().plans) as [PlanId, string][]).find(([, code]) => code === planCode)?.[0];
+  return id?.startsWith('pro') ? 'pro' : 'plus';
+}
+
+export function scanLimit(tier: Tier): number {
+  const v = Number(tier === 'pro' ? process.env.SCAN_LIMIT_PRO : process.env.SCAN_LIMIT_PLUS);
+  return Number.isFinite(v) && v > 0 ? v : tier === 'pro' ? 400 : 100;
 }
 
 export const paymentsEnabled = () => config().enabled;
@@ -56,6 +74,9 @@ export interface Pass {
   /** Paystack customer id */
   cid: number;
   plan: string;
+  tier: Tier;
+  /** Supabase user id, when the subscriber has an account */
+  uid?: string;
   /** Expiry, epoch ms */
   exp: number;
 }
@@ -121,6 +142,7 @@ interface VerifiedTransaction {
   paid_at: string | null;
   customer: { id: number; email: string };
   plan_object?: { plan_code?: string; interval?: string } | null;
+  metadata?: { user_id?: string } | string | null;
 }
 
 /** Verifies a payment reference and checks it bought one of our plans. */
@@ -129,7 +151,8 @@ export async function verifiedPlanPayment(reference: string) {
   const planCode = tx.plan_object?.plan_code;
   const ours = Object.values(config().plans).includes(planCode ?? '');
   if (tx.status !== 'success' || !ours) return null;
-  return { email: tx.customer.email.toLowerCase(), cid: tx.customer.id, plan: planCode!, paidAt: tx.paid_at ? new Date(tx.paid_at).getTime() : Date.now(), interval: tx.plan_object?.interval ?? 'monthly' };
+  const meta = typeof tx.metadata === 'object' && tx.metadata ? tx.metadata : {};
+  return { email: tx.customer.email.toLowerCase(), cid: tx.customer.id, plan: planCode!, paidAt: tx.paid_at ? new Date(tx.paid_at).getTime() : Date.now(), interval: tx.plan_object?.interval ?? 'monthly', uid: meta.user_id };
 }
 
 /** Period covered by a payment when Paystack hasn't created the subscription record yet. */
@@ -139,12 +162,24 @@ export function periodMs(interval: string): number {
 }
 
 /** Issue a pass for a verified customer: subscription date if available, else the paid period. */
-export async function issuePass(p: { email: string; cid: number; plan: string; paidAt?: number; interval?: string }) {
+export async function issuePass(p: { email: string; cid: number; plan: string; paidAt?: number; interval?: string; uid?: string }) {
   const sub = await activeSubscription(p.cid).catch(() => null);
   const until = sub?.until ?? (p.paidAt ? p.paidAt + periodMs(p.interval ?? 'monthly') + GRACE_MS : 0);
   if (until <= Date.now()) return null;
-  const pass: Pass = { email: p.email, cid: p.cid, plan: sub?.plan ?? p.plan, exp: until };
-  return { token: signPass(pass), exp: pass.exp, email: pass.email, plan: pass.plan };
+  const plan = sub?.plan ?? p.plan;
+  const tier = tierOf(plan);
+  const pass: Pass = { email: p.email, cid: p.cid, plan, tier, uid: p.uid, exp: until };
+  return { token: signPass(pass), exp: pass.exp, email: pass.email, plan, tier, scanLimit: scanLimit(tier) };
+}
+
+/** Paystack customer id for an email (used to restore Premium for a signed-in account). */
+export async function customerIdByEmail(email: string): Promise<number | null> {
+  try {
+    const c = await paystack<{ id: number }>(`/customer/${encodeURIComponent(email)}`);
+    return c.id;
+  } catch {
+    return null;
+  }
 }
 
 export const json = (data: unknown, status = 200) =>

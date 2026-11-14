@@ -4,7 +4,7 @@ import { Check, ChevronRight, ImagePlus, Loader2, RotateCcw, Search, Sparkles, X
 import { useStore } from '@/store/useStore';
 import { useFoodDb, usePhotoUrl } from '@/lib/hooks';
 import { deletePhoto, getPhoto, savePhoto } from '@/lib/photos';
-import { matchItems, PremiumRequiredError, recognizePhoto, RecognitionUnavailableError, type MatchedItem } from '@/lib/recognize-client';
+import { matchItems, PremiumRequiredError, recognizePhoto, RecognitionUnavailableError, ScanLimitError, type MatchedItem } from '@/lib/recognize-client';
 import { refreshPremium } from '@/lib/premium';
 import { SOURCE_SHORT, splitName } from '@/lib/foods';
 import { todayKey } from '@/lib/dates';
@@ -13,7 +13,7 @@ import { FoodSheet } from '@/components/FoodSheet';
 import { FoodVisual } from '@/components/FoodIcon';
 import { StateBadge, cx, fmt } from '@/components/ui';
 
-type Phase = 'camera' | 'analyzing' | 'results' | 'unavailable' | 'premium' | 'error';
+type Phase = 'camera' | 'analyzing' | 'results' | 'unavailable' | 'premium' | 'limit' | 'error';
 
 export default function Snap() {
   const nav = useNavigate();
@@ -64,6 +64,7 @@ export default function Snap() {
       setPhase('results');
     } catch (e) {
       if (e instanceof PremiumRequiredError) setPhase('premium');
+      else if (e instanceof ScanLimitError) { setError(e.message || 'Monthly photo scans used up.'); setPhase('limit'); }
       else if (e instanceof RecognitionUnavailableError) setPhase('unavailable');
       else {
         setError((e as Error).message || 'Something went wrong.');
@@ -166,6 +167,17 @@ export default function Snap() {
           <div className="mt-4 grid gap-2">
             <Link to="/premium" className="btn-primary"><Sparkles size={17} /> See Premium</Link>
             <Link to={manualUrl()} className="btn-ghost">Pick food manually</Link>
+          </div>
+        </div>
+      )}
+
+      {phase === 'limit' && (
+        <div className="card mt-5 p-5">
+          <p className="font-semibold">Monthly photo scans used up</p>
+          <p className="mt-1 text-sm text-silver">{error} Your scans reset on the 1st. You can still pick the food yourself.</p>
+          <div className="mt-4 grid gap-2">
+            <Link to={manualUrl()} className="btn-primary">Pick food manually</Link>
+            <Link to="/premium" className="btn-ghost">See plans</Link>
           </div>
         </div>
       )}

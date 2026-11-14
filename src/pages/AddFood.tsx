@@ -5,6 +5,7 @@ import { useFoodDb, useFoodLookup, usePhotoUrl } from '@/lib/hooks';
 import { SOURCE_SHORT, searchFoods, splitName } from '@/lib/foods';
 import { searchProducts } from '@/lib/openFoodFacts';
 import { deletePhoto } from '@/lib/photos';
+import { fitsDiet } from '@/lib/goals';
 import { relativeDay, todayKey } from '@/lib/dates';
 import { useStore } from '@/store/useStore';
 import type { Food, PrepState } from '@/lib/types';
@@ -33,6 +34,7 @@ export default function AddFood() {
   const custom = useStore((s) => s.customFoods);
   const recentIds = useStore((s) => s.recentFoodIds);
   const favIds = useStore((s) => s.favoriteFoodIds);
+  const diet = useStore((s) => s.profile?.diet);
 
   const [q, setQ] = useState(params.get('q') ?? '');
   const dq = useDeferredValue(q);
@@ -50,11 +52,11 @@ export default function AddFood() {
   const browse = useMemo(() => {
     const ids = tab === 'recent' ? recentIds : tab === 'favs' ? favIds : [];
     const list =
-      tab === 'picks' ? db?.quickPicks ?? []
+      tab === 'picks' ? (db?.quickPicks ?? []).filter((f) => fitsDiet(f, diet))
       : tab === 'custom' ? custom.filter((c) => !c.archived)
       : (ids.map(lookup).filter(Boolean) as Food[]);
     return state === 'all' ? list : list.filter((f) => f.state === state);
-  }, [tab, db, custom, recentIds, favIds, lookup, state]);
+  }, [tab, db, custom, recentIds, favIds, lookup, state, diet]);
 
   const list = searching ? results : browse;
   const back = () => nav(date === todayKey() ? '/' : `/?date=${date}`);

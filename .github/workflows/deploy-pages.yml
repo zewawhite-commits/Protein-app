@@ -30,6 +30,9 @@ jobs:
       - run: npm run build
         env:
           BASE_PATH: /${{ github.event.repository.name }}/
+          # Optional: Settings → Secrets and variables → Actions → Variables
+          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
       # Single-page app: serve index.html for deep links like /Protein-app/history
       - run: cp dist/index.html dist/404.html
       - uses: actions/upload-pages-artifact@v3

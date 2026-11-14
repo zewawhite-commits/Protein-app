@@ -1,8 +1,9 @@
 import { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronRight, Database, Download, Moon, Pencil, ShieldCheck, Smartphone, Sparkles, Sun, Trash2, Upload } from 'lucide-react';
+import { ChevronRight, Cloud, Database, Download, Moon, Pencil, ShieldCheck, Smartphone, Sparkles, Sun, Trash2, Upload } from 'lucide-react';
 import { useStore, exportData } from '@/store/useStore';
 import { isPremiumActive } from '@/lib/premium';
+import { accountsEnabled, signInWithEmail, signInWithGoogle, signOut, useSession } from '@/lib/account';
 import { dailyGoal, fromKg } from '@/lib/nutrition';
 import { allPhotoIds, deletePhoto } from '@/lib/photos';
 import type { Theme } from '@/lib/types';
@@ -79,6 +80,8 @@ export default function Profile() {
           <Segmented<Theme> value={settings.theme} onChange={(t) => updateSettings({ theme: t })} options={[{ value: 'dark', label: 'Dark' }, { value: 'light', label: 'Light' }, { value: 'system', label: 'Auto' }]} />
         </Row>
       </Group>
+
+      <AccountCard />
 
       <PremiumCard />
 
@@ -201,7 +204,7 @@ function PremiumCard() {
       <div className="flex items-center gap-4">
         <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-on-primary/10"><Sparkles size={22} className="text-accent" /></span>
         <div className="min-w-0 flex-1">
-          <p className="font-semibold">{active ? 'Premium is active' : 'Go Premium'}</p>
+          <p className="font-semibold">{active ? `${premium!.tier === 'pro' ? 'Pro' : 'Plus'} is active` : 'Upgrade to Plus or Pro'}</p>
           <p className="truncate text-[13px] opacity-70">
             {active ? `${premium!.email} · until ${new Date(premium!.exp).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}` : 'AI photo recognition for every meal'}
           </p>
@@ -209,5 +212,46 @@ function PremiumCard() {
         <ChevronRight size={18} className="opacity-60" />
       </div>
     </Link>
+  );
+}
+
+function AccountCard() {
+  const session = useSession();
+  const [email, setEmail] = useState('');
+  const [note, setNote] = useState('');
+  if (!accountsEnabled) return null;
+  return (
+    <section className="mt-6">
+      <p className="mb-3 px-1 text-sm font-semibold text-silver">Account</p>
+      <div className="card p-4">
+        {session ? (
+          <div className="flex items-center gap-3">
+            <span className="grid h-10 w-10 place-items-center rounded-full bg-raised"><Cloud size={18} /></span>
+            <div className="min-w-0 flex-1">
+              <p className="truncate font-semibold">{session.user.email}</p>
+              <p className="text-xs text-silver">Your data is saved to your account</p>
+            </div>
+            <button onClick={() => void signOut()} className="chip !h-9">Sign out</button>
+          </div>
+        ) : (
+          <>
+            <p className="font-semibold">Save your data to an account</p>
+            <p className="mt-0.5 text-xs text-silver">Use the app on any phone and never lose your log.</p>
+            <button onClick={() => signInWithGoogle().catch((e: Error) => setNote(e.message))} className="btn mt-3 w-full bg-raised text-ink">Continue with Google</button>
+            <div className="mt-2 flex gap-2">
+              <input type="email" inputMode="email" className="field !h-12 flex-1" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
+              <button
+                disabled={!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())}
+                onClick={() => signInWithEmail(email.trim()).then(() => setNote('Check your email for a sign-in link.'), (e: Error) => setNote(e.message))}
+                className="btn-ghost !h-12 !px-4 text-sm"
+              >
+                Email link
+              </button>
+            </div>
+            {note && <p className="mt-2 text-xs text-silver">{note}</p>}
+          </>
+        )}
+      </div>
+    </section>
   );
 }

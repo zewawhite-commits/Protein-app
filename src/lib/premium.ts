@@ -5,13 +5,17 @@
  * functions (e.g. Vercel) and Paystack is configured; otherwise everything stays free.
  */
 import { useStore } from '@/store/useStore';
+import { accessToken } from './account';
 
-export interface PremiumPass { token: string; exp: number; email: string; plan: string }
-export interface PlanInfo { id: 'monthly' | 'yearly'; name: string; amount: number; currency: string; interval: string }
+export type Tier = 'plus' | 'pro';
+export type PlanId = `${Tier}_${'monthly' | 'yearly'}`;
+export interface PremiumPass { token: string; exp: number; email: string; plan: string; tier?: Tier; scanLimit?: number }
+export interface PlanInfo { id: PlanId; tier: Tier; name: string; amount: number; currency: string; interval: string; scans: number }
 
 async function call<T>(path: string, init?: { body?: unknown; token?: string }): Promise<T> {
   const res = await fetch(`/api/premium/${path}`, {
     method: init?.body !== undefined || init?.token ? 'POST' : 'GET',
+    // token is a Premium pass or a Supabase access token, depending on the endpoint
     headers: { 'content-type': 'application/json', ...(init?.token && { authorization: `Bearer ${init.token}` }) },
     body: init?.body !== undefined ? JSON.stringify(init.body) : init?.token ? '{}' : undefined,
   });
@@ -29,18 +33,27 @@ export class PaymentsUnavailableError extends Error {
 }
 
 /** Plans with live prices, or null when payments aren't set up on this deployment. */
-export async function fetchPlans(): Promise<PlanInfo[] | null> {
+export async function fetchPlans(): Promise<{ plans: PlanInfo[]; accountRequired: boolean } | null> {
   try {
-    const r = await call<{ enabled: boolean; plans: PlanInfo[] }>('plans');
-    return r.enabled && r.plans.length ? r.plans : null;
+    const r = await call<{ enabled: boolean; plans: PlanInfo[]; accountRequired?: boolean }>('plans');
+    return r.enabled && r.plans.length ? { plans: r.plans, accountRequired: !!r.accountRequired } : null;
   } catch {
     return null;
   }
 }
 
-export async function startCheckout(email: string, plan: PlanInfo['id']): Promise<void> {
-  const { url } = await call<{ url: string }>('checkout', { body: { email, plan } });
+export async function startCheckout(email: string, plan: PlanId): Promise<void> {
+  const { url } = await call<{ url: string }>('checkout', { body: { email, plan }, token: await accessToken() });
   window.location.assign(url);
+}
+
+/** Restore Premium for the signed-in account (no receipt needed). */
+export async function restoreForAccount(): Promise<PremiumPass> {
+  const token = await accessToken();
+  if (!token) throw new Error('Sign in first.');
+  const pass = await call<PremiumPass>('activate', { body: { account: true }, token });
+  useStore.getState().setPremium(pass);
+  return pass;
 }
 
 export async function activate(input: { reference: string; email?: string }): Promise<PremiumPass> {
@@ -77,7 +90,8 @@ export async function refreshPremium(force = false): Promise<void> {
 
 export function formatPrice(p: PlanInfo): string {
   try {
-    return new Intl.NumberFormat(undefined, { style: 'currency', currency: p.currency, maximumFractionDigits: 0 }).format(p.amount);
+    const whole = Number.isInteger(p.amount);
+    return new Intl.NumberFormat(undefined, { style: 'currency', currency: p.currency, minimumFractionDigits: whole ? 0 : 2, maximumFractionDigits: whole ? 0 : 2 }).format(p.amount);
   } catch {
     return `${p.currency} ${p.amount.toLocaleString()}`;
   }

@@ -79,7 +79,15 @@ export interface Profile {
   /** g/kg body weight when goalMode = perKg. */
   gramsPerKg: number;
   createdAt: number;
+  /** Answers from onboarding (optional for profiles created before it existed). */
+  goal?: FitnessGoal;
+  activity?: ActivityLevel;
+  diet?: Diet;
 }
+
+export type FitnessGoal = 'muscle' | 'fatloss' | 'maintain' | 'performance' | 'health';
+export type ActivityLevel = 'sedentary' | 'light' | 'active' | 'athlete';
+export type Diet = 'all' | 'pescatarian' | 'vegetarian' | 'vegan';
 
 export interface Settings {
   theme: Theme;

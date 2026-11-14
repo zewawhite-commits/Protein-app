@@ -10,18 +10,28 @@
  */
 import Anthropic from '@anthropic-ai/sdk';
 import { recognizeWithClient } from '../src/lib/recognition';
-import { bearer, paymentsEnabled, readPass } from './_lib/premium';
+import { bearer, paymentsEnabled, readPass, scanLimit } from './_lib/premium';
+import { useScan } from './_lib/accounts';
 
 const MAX_BYTES = 5 * 1024 * 1024;
 const TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
 
 export async function POST(request: Request): Promise<Response> {
+  let scansLeft: number | undefined;
   if (!process.env.ANTHROPIC_API_KEY) return json({ error: 'Recognition is not configured on this server.' }, 501);
   // When payments are set up, the server's AI key is a Premium feature.
   if (paymentsEnabled()) {
     const pass = readPass(bearer(request));
     if (!pass) return json({ error: 'Photo recognition is a Premium feature.', premium: true }, 402);
     if (pass.exp < Date.now()) return json({ error: 'Your Premium pass needs renewing.', premium: true, renew: true }, 402);
+    const limit = scanLimit(pass.tier ?? 'plus');
+    try {
+      const left = await useScan(pass.uid ?? `cus_${pass.cid}`, limit);
+      if (left < 0) return json({ error: `You’ve used all ${limit} photo scans this month.${pass.tier === 'pro' ? '' : ' Upgrade to Pro for more.'}`, limitReached: true, tier: pass.tier }, 429);
+      scansLeft = left;
+    } catch (e) {
+      return json({ error: (e as Error).message }, 503);
+    }
   }
   let body: { image?: string; mediaType?: string };
   try {
@@ -36,7 +46,7 @@ export async function POST(request: Request): Promise<Response> {
 
   try {
     const result = await recognizeWithClient(new Anthropic(), image, mediaType);
-    return json(result, 200);
+    return json(Number.isFinite(scansLeft) ? { ...result, scansLeft } : result, 200);
   } catch (e) {
     if (e instanceof Anthropic.RateLimitError) return json({ error: 'Busy — try again in a moment.' }, 429);
     if (e instanceof Anthropic.APIError) return json({ error: `Recognition service error (${e.status ?? 'network'}).` }, 502);
