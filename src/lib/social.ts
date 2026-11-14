@@ -20,6 +20,8 @@ export interface Post {
   photoUrl?: string;
   reactions: { emoji: Reaction; user_id: string }[];
   commentCount: number;
+  /** Up to two latest comments, shown under the post. */
+  latestComments?: Comment[];
 }
 export interface Comment { id: string; post_id: string; user_id: string; body: string; created_at: string; author?: PublicProfile }
 
@@ -125,16 +127,20 @@ export async function feed(groupId: string, limit = 30, userId?: string): Promis
   const [profiles, reacts, comments, urls] = await Promise.all([
     profilesFor(posts.map((p) => p.user_id)),
     db().from('reactions').select('post_id, emoji, user_id').in('post_id', ids),
-    db().from('comments').select('post_id').in('post_id', ids),
+    db().from('comments').select('id, post_id, user_id, body, created_at').in('post_id', ids).order('created_at', { ascending: false }),
     signedUrls(posts.map((p) => p.photo_path).filter(Boolean) as string[]),
   ]);
   fail(reacts.error); fail(comments.error);
+  const allComments = (comments.data ?? []) as Comment[];
+  const commenters = await profilesFor(allComments.map((c) => c.user_id));
   return posts.map((p) => ({
     ...p,
     author: profiles.get(p.user_id) ?? { display_name: 'Member', avatar: '', streak: 0 },
     photoUrl: p.photo_path ? urls.get(p.photo_path) : undefined,
     reactions: (reacts.data ?? []).filter((r) => r.post_id === p.id) as Post['reactions'],
-    commentCount: (comments.data ?? []).filter((c) => c.post_id === p.id).length,
+    commentCount: allComments.filter((c) => c.post_id === p.id).length,
+    latestComments: allComments.filter((c) => c.post_id === p.id).slice(0, 2).reverse()
+      .map((c) => ({ ...c, author: commenters.get(c.user_id) ?? { display_name: 'Member', avatar: '', streak: 0 } })),
   }));
 }
 

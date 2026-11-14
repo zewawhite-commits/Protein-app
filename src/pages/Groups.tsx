@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowLeft, Check, ChevronDown, Copy, Crown, Dumbbell, Flame, Globe2, Heart, ImagePlus, Link2, Loader2, Lock, LogOut, MessageCircle, Plus, RefreshCw, Send, Share2, Sparkles, ThumbsUp, Trash2, UserRound, Users, Utensils, X } from 'lucide-react';
+import { ArrowLeft, Check, ChevronDown, Copy, Crown, Droplet, Drumstick, Dumbbell, Flame, Globe2, Heart, ImagePlus, Link2, Loader2, Lock, LogOut, MessageCircle, Plus, RefreshCw, Reply, Send, Share2, SmilePlus, Sparkles, ThumbsUp, Trash2, UserRound, Users, Utensils, Wheat, X } from 'lucide-react';
 import { AVATAR_COLORS, Avatar } from '@/components/Avatar';
 import { GroupChat } from '@/components/GroupChat';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
@@ -61,7 +61,7 @@ const STEPS = [
 ];
 
 const EXAMPLES: Post[] = [
-  { id: 'x1', group_id: '', user_id: 'a', title: 'Grilled chicken, rice and greens', caption: 'Post-gym dinner', meal: 'dinner', kcal: 612, protein: 48, carbs: 55, fat: 19, photo_path: null, created_at: new Date(Date.now() - 3600e3).toISOString(), author: { display_name: 'Maya', avatar: 'violet', streak: 21, username: 'maya_moves' }, reactions: [{ emoji: '🔥', user_id: 'b' }, { emoji: '💪', user_id: 'c' }], commentCount: 3 },
+  { id: 'x1', group_id: '', user_id: 'a', title: 'Grilled chicken, rice and greens', caption: 'Post-gym dinner', meal: 'dinner', kcal: 612, protein: 48, carbs: 55, fat: 19, photo_path: null, created_at: new Date(Date.now() - 3600e3).toISOString(), author: { display_name: 'Maya', avatar: 'violet', streak: 21, username: 'maya_moves' }, reactions: [{ emoji: '🔥', user_id: 'b' }, { emoji: '💪', user_id: 'c' }], commentCount: 3, latestComments: [{ id: 'c1', post_id: 'x1', user_id: 'b', body: 'That looks so good!', created_at: '', author: { display_name: 'Leo', avatar: 'teal', streak: 9 } }, { id: 'c2', post_id: 'x1', user_id: 'c', body: 'Recipe please', created_at: '', author: { display_name: 'Kemi', avatar: 'amber', streak: 4 } }] },
   { id: 'x2', group_id: '', user_id: 'b', title: 'Down 4 kg this month!', caption: 'Logging every meal really works.', meal: null, kcal: null, protein: null, carbs: null, fat: null, photo_path: null, created_at: new Date(Date.now() - 5 * 3600e3).toISOString(), author: { display_name: 'Leo', avatar: 'teal', streak: 9, username: 'leo_lifts' }, reactions: [{ emoji: '❤️', user_id: 'a' }, { emoji: '👏', user_id: 'c' }, { emoji: '👏', user_id: 'd' }], commentCount: 5 },
 ];
 
@@ -94,8 +94,8 @@ function Preview({ signIn, note }: { signIn?: boolean; note?: string }) {
         )}
       </div>
       <p className="mb-3 mt-6 px-1 text-sm font-semibold text-silver">What the feed looks like · examples</p>
-      <div className="pointer-events-none space-y-4 opacity-95">
-        {EXAMPLES.map((p) => <PostCard key={p.id} post={p} onReact={() => undefined} onOpen={() => undefined} onDelete={() => undefined} />)}
+      <div className="space-y-4">
+        {EXAMPLES.map((p) => <PostCard key={p.id} post={p} onReact={() => toast('Sign in to react and comment')} onOpen={() => toast('Sign in to react and comment')} onDelete={() => undefined} />)}
       </div>
     </>
   );
@@ -432,43 +432,73 @@ function GroupView({ group, groups, avatar, onAvatar, onSwitch, onChanged, onEdi
 }
 
 function PostCard({ post, me, onReact, onOpen, onDelete, onAuthor }: { post: Post; me?: string; onReact: (e: Reaction) => void; onOpen: () => void; onDelete: () => void; onAuthor?: () => void }) {
+  const [picker, setPicker] = useState(false);
   const counts = useMemo(() => REACTIONS.map((e) => ({ e, n: post.reactions.filter((r) => r.emoji === e).length, mine: post.reactions.some((r) => r.emoji === e && r.user_id === me) })), [post.reactions, me]);
+  const used = counts.filter((c) => c.n > 0);
+  const total = post.reactions.length;
+  const when = new Date(post.created_at);
+  const stamp = Date.now() - when.getTime() < 86400e3 ? `Today at ${when.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}` : `${ago(post.created_at)} ago`;
   return (
     <article className="card overflow-hidden">
-      <div className="flex items-center gap-3 p-4 pb-3">
+      <div className="flex items-center gap-3 px-4 pt-4">
         <button onClick={onAuthor} className="flex min-w-0 flex-1 items-center gap-3 text-left">
-          <Avatar name={post.author?.display_name ?? 'Member'} color={post.author?.avatar} photoUrl={post.author?.photoUrl} size={44} />
+          <Avatar name={post.author?.display_name ?? 'Member'} color={post.author?.avatar} photoUrl={post.author?.photoUrl} size={40} />
           <div className="min-w-0 flex-1">
-            <p className="truncate font-bold">{post.author?.display_name}{post.author?.username && <span className="font-medium text-silver"> @{post.author.username}</span>}</p>
-            <p className="text-xs text-silver">{post.meal ? `${MEAL_LABEL[post.meal as Meal]} · ` : ''}{ago(post.created_at)} ago</p>
+            <p className="truncate text-[15px] font-semibold">{post.author?.display_name}</p>
+            <p className="text-xs text-silver">{stamp}</p>
           </div>
         </button>
         {post.user_id === me && <button onClick={onDelete} className="grid h-9 w-9 place-items-center rounded-full text-dim" aria-label="Delete post"><Trash2 size={16} /></button>}
       </div>
-      <div className="flex items-center gap-3 px-4">
-        {!post.photoUrl && post.kcal != null && <FoodVisual name={post.title} size={48} />}
-        <p className="min-w-0 flex-1 text-[17px] font-bold leading-snug">{post.title}</p>
-      </div>
-      {post.caption && <p className="mt-1 px-4 text-sm text-silver">{post.caption}</p>}
-      {post.photoUrl && <img src={post.photoUrl} alt={post.title} className="mt-3 aspect-[4/3] w-full object-cover" loading="lazy" />}
-      {post.kcal != null && <div className="num grid grid-cols-4 gap-2 px-4 pt-3 text-center">
-        {([['Calories', post.kcal, ''], ['Protein', post.protein, 'g'], ['Carbs', post.carbs, 'g'], ['Fat', post.fat, 'g']] as const).map(([l, v, u]) => (
-          <div key={l} className="rounded-2xl bg-raised py-2">
-            <p className="text-[15px] font-bold">{v == null ? '—' : `${fmt(Number(v))}${u}`}</p>
-            <p className="text-xs text-silver">{l}</p>
-          </div>
-        ))}
-      </div>}
-      <div className="flex items-center gap-1.5 overflow-x-auto p-3 no-scrollbar">
-        {counts.map(({ e, n, mine }) => {
-          const Icon = REACTION_ICON[e];
-          return (
-            <button key={e} onClick={() => onReact(e)} aria-label={REACTION_LABEL[e]} aria-pressed={mine} className={cx('flex h-9 shrink-0 items-center gap-1 rounded-full px-3 transition active:scale-90', mine ? 'bg-accent text-white' : 'bg-raised text-ink/70')}>
-              <Icon size={16} strokeWidth={2.4} fill={mine && (e === '❤️' || e === '🔥') ? 'currentColor' : 'none'} />{n > 0 && <span className="num text-xs font-bold">{n}</span>}
-            </button>
-          );
-        })}
-        <button onClick={onOpen} className="ml-auto flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-raised px-3 text-sm font-semibold"><MessageCircle size={15} /> {post.commentCount || 'Comment'}</button>
+      <p className="mt-3 px-4 text-[17px] font-semibold leading-snug">{post.title}</p>
+      {post.caption && <p className="mt-1 px-4 text-[15px] text-silver">{post.caption}</p>}
+      {post.photoUrl && <img src={post.photoUrl} alt={post.title} className="mx-4 mt-3 aspect-[4/3] w-[calc(100%-2rem)] rounded-[18px] object-cover" loading="lazy" />}
+      {post.kcal != null && (
+        <div className="num mt-3 grid grid-cols-4 gap-2 px-4">
+          {([['Calories', post.kcal, '', Flame, 'text-ink'], ['Protein', post.protein, 'g', Drumstick, 'text-accent'], ['Carbs', post.carbs, 'g', Wheat, 'text-[rgb(var(--carbs))]'], ['Fats', post.fat, 'g', Droplet, 'text-[rgb(var(--fat))]']] as const).map(([l, v, u, Icon, c]) => (
+            <div key={l}>
+              <p className={cx('flex items-center gap-1 text-xs font-semibold', c)}><Icon size={12} />{l}</p>
+              <p className="text-[17px] font-bold">{v == null ? '—' : `${fmt(Number(v))}${u}`}</p>
+            </div>
+          ))}
+        </div>
+      )}
+      {(total > 0 || post.commentCount > 0) && (
+        <div className="mt-3 flex items-center gap-2 px-4">
+          {used.map(({ e, n, mine }) => {
+            const Icon = REACTION_ICON[e];
+            return (
+              <button key={e} onClick={() => onReact(e)} className={cx('flex h-8 items-center gap-1 rounded-full border px-2.5 text-xs font-bold', mine ? 'border-ink bg-ink text-on-primary' : 'border-line')}>
+                <Icon size={13} /> {n}
+              </button>
+            );
+          })}
+          {post.commentCount > 0 && <button onClick={onOpen} className="ml-auto flex items-center gap-1 text-xs font-semibold text-silver"><MessageCircle size={13} /> {post.commentCount}</button>}
+        </div>
+      )}
+      {!!post.latestComments?.length && (
+        <button onClick={onOpen} className="mt-3 block w-full space-y-1.5 px-4 text-left">
+          {post.latestComments.map((c) => (
+            <p key={c.id} className="line-clamp-2 text-sm"><b className="font-semibold">{c.author?.display_name}</b> <span className="text-ink/80">{c.body}</span></p>
+          ))}
+          {post.commentCount > 2 && <p className="text-sm font-medium text-silver">View all {post.commentCount} comments</p>}
+        </button>
+      )}
+      {picker && (
+        <div className="mx-4 mt-3 flex justify-around rounded-full bg-raised p-1.5">
+          {counts.map(({ e, mine }) => {
+            const Icon = REACTION_ICON[e];
+            return (
+              <button key={e} onClick={() => { onReact(e); setPicker(false); }} aria-label={REACTION_LABEL[e]} className={cx('grid h-10 w-10 place-items-center rounded-full transition active:scale-90', mine ? 'bg-ink text-on-primary' : 'text-ink')}>
+                <Icon size={19} />
+              </button>
+            );
+          })}
+        </div>
+      )}
+      <div className="mt-3 grid grid-cols-2 border-t border-line">
+        <button onClick={() => { haptic(); setPicker((v) => !v); }} className="flex h-12 items-center justify-center gap-2 text-sm font-semibold text-silver"><SmilePlus size={17} /> React</button>
+        <button onClick={onOpen} className="flex h-12 items-center justify-center gap-2 border-l border-line text-sm font-semibold text-silver"><MessageCircle size={17} /> Comment</button>
       </div>
     </article>
   );
@@ -677,6 +707,7 @@ function CommentsSheet({ post, onClose }: { post: Post | null; onClose: () => vo
                 <p className="text-sm font-bold">{c.author?.username ? `@${c.author.username}` : c.author?.display_name} <span className="font-medium text-dim">· {ago(c.created_at)}</span></p>
                 <p className="text-sm">{c.body}</p>
               </div>
+              <button onClick={() => setText(`@${c.author?.username ?? c.author?.display_name ?? ''} `)} className="ml-1 self-end pb-1 text-xs font-semibold text-silver" aria-label="Reply"><Reply size={14} /></button>
             </li>
           ))}
         </ul>
@@ -715,8 +746,8 @@ function FeedPreview({ signIn, note }: { signIn?: boolean; note?: string }) {
         {signIn ? <div className="mt-5"><SignInButtons /></div> : <p className="mt-5 rounded-2xl bg-raised p-4 text-sm text-silver">{note}</p>}
       </div>
       <p className="mb-3 mt-6 px-1 text-sm font-semibold text-silver">Example posts</p>
-      <div className="pointer-events-none space-y-4">
-        {EXAMPLES.map((p) => <PostCard key={p.id} post={p} onReact={() => undefined} onOpen={() => undefined} onDelete={() => undefined} />)}
+      <div className="space-y-4">
+        {EXAMPLES.map((p) => <PostCard key={p.id} post={p} onReact={() => toast('Sign in to react and comment')} onOpen={() => toast('Sign in to react and comment')} onDelete={() => undefined} />)}
       </div>
     </>
   );
