@@ -117,6 +117,8 @@ export interface Profile {
   obstacles?: string[];
   /** Works with a trainer or dietitian. */
   hasCoach?: boolean;
+  /** Profile picture kept on this device (IndexedDB photo id). */
+  photoId?: string;
   /** Height in cm (for the calorie estimate). */
   heightCm?: number;
   /** 'auto' (default) = estimated from body data; 'fixed' = calorieGoal. */

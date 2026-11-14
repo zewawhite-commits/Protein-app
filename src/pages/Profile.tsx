@@ -1,21 +1,21 @@
 import { useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { ChevronRight, Cloud, Database, Download, Moon, Pencil, ShieldCheck, Smartphone, Sparkles, Sun, Trash2, Upload } from 'lucide-react';
+import { ChevronRight, Cloud, Database, Download, Moon, ShieldCheck, Smartphone, Sparkles, Sun, Trash2, Upload } from 'lucide-react';
 import { useStore, exportData } from '@/store/useStore';
 import { isPremiumActive } from '@/lib/premium';
 import { accountsEnabled, signInWithEmail, signInWithGoogle, signOut, useSession } from '@/lib/account';
 import { GoogleIcon } from '@/components/BrandIcons';
-import { dailyGoal, fromKg } from '@/lib/nutrition';
+
 import { allPhotoIds, deletePhoto } from '@/lib/photos';
 import type { Theme } from '@/lib/types';
 import { ProfileForm } from '@/components/ProfileForm';
-import { PageHeader, Segmented, Sheet, cx, fmt } from '@/components/ui';
+import { ProfileHero } from '@/components/ProfileHero';
+import { PageHeader, Segmented, Sheet, cx } from '@/components/ui';
 
 export default function Profile() {
   const profile = useStore((s) => s.profile)!;
   const settings = useStore((s) => s.settings);
   const updateSettings = useStore((s) => s.updateSettings);
-  const entries = useStore((s) => s.entries);
   const importData = useStore((s) => s.importData);
   const resetAll = useStore((s) => s.resetAll);
   const [params, setParams] = useSearchParams();
@@ -24,8 +24,6 @@ export default function Profile() {
   const [msg, setMsg] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const goal = dailyGoal(profile);
-  const days = new Set(entries.map((e) => e.date)).size;
 
   function download() {
     const blob = new Blob([JSON.stringify(exportData(), null, 2)], { type: 'application/json' });
@@ -57,26 +55,7 @@ export default function Profile() {
     <div className="animate-fade-up">
       <PageHeader title="Profile" />
 
-      <section className="card relative overflow-hidden p-5">
-                <div className="relative flex items-center gap-4">
-          <div className="grid h-16 w-16 place-items-center rounded-full bg-primary text-2xl font-semibold text-on-primary">
-            {(profile.name || '?').slice(0, 1).toUpperCase()}
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-xl font-semibold">{profile.name || 'You'}</p>
-            <p className="text-sm font-semibold text-silver">
-              {profile.bodyWeightKg ? `${fmt(fromKg(profile.bodyWeightKg, settings.bodyUnit), 1)} ${settings.bodyUnit} · ` : ''}
-              {profile.goalMode === 'perKg' ? `${profile.gramsPerKg} g/kg` : 'Fixed goal'}
-            </p>
-          </div>
-          <button onClick={() => setEditing(true)} className="grid h-11 w-11 place-items-center rounded-full bg-raised" aria-label="Edit profile"><Pencil size={16} /></button>
-        </div>
-        <div className="relative mt-5 grid grid-cols-3 gap-2 text-center">
-          <Mini label="Daily goal" value={`${fmt(goal)} g`} />
-          <Mini label="Days logged" value={fmt(days)} />
-          <Mini label="Entries" value={fmt(entries.length)} />
-        </div>
-      </section>
+      <ProfileHero onEdit={() => setEditing(true)} />
 
       <Group title="Appearance">
         <Row icon={settings.theme === 'light' ? <Sun size={18} /> : <Moon size={18} />} label="Theme">
@@ -124,14 +103,6 @@ export default function Profile() {
   );
 }
 
-function Mini({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="tile py-3">
-      <p className="num text-lg font-bold">{value}</p>
-      <p className="text-[12px] font-semibold text-silver">{label}</p>
-    </div>
-  );
-}
 
 function Group({ title, children }: { title: string; children: React.ReactNode }) {
   return (
