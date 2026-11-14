@@ -1,6 +1,7 @@
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { BarChart3, CalendarDays, House, Plus, UserRound } from 'lucide-react';
-import { cx } from './ui';
+import { BarChart3, CalendarDays, Camera, House, Plus, UserRound } from 'lucide-react';
+import { Ring, cx } from './ui';
+import { APP_NAME } from './fx';
 
 const tabs = [
   { to: '/', label: 'Home', icon: House },
@@ -9,18 +10,48 @@ const tabs = [
   { to: '/profile', label: 'Profile', icon: UserRound },
 ] as const;
 
+/**
+ * Phones: content column + floating bottom bar. Tablets: wider column.
+ * Laptops/desktops (lg+): fixed side menu and a wide content area.
+ */
 export function Layout() {
   const nav = useNavigate();
   const loc = useLocation();
   const day = new URLSearchParams(loc.search).get('date');
+  const q = day ? `?date=${day}` : '';
   return (
-    <div className="relative mx-auto min-h-dvh max-w-lg">
-      <main className="relative px-5 pb-nav">
+    <div className="relative min-h-dvh">
+      {/* Side menu (large screens) */}
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-line/60 bg-surface px-4 py-6 lg:flex">
+        <div className="flex items-center gap-2.5 px-3">
+          <Ring value={0.72} size={28} stroke={4} color="accent" track="line" />
+          <span className="text-xl font-bold tracking-tight">{APP_NAME}</span>
+        </div>
+        <button onClick={() => nav(`/add${q}`)} className="btn-primary mt-8 w-full !h-12"><Plus size={18} /> Log food</button>
+        <button onClick={() => nav(`/snap${q}`)} className="btn-ghost mt-2 w-full !h-12"><Camera size={18} /> Snap a meal</button>
+        <nav className="mt-8 flex flex-col gap-1" aria-label="Main">
+          {tabs.map((t) => (
+            <NavLink
+              key={t.to}
+              to={t.to}
+              end={t.to === '/'}
+              className={({ isActive }) => cx('flex h-11 items-center gap-3 rounded-2xl px-3 text-[15px] font-medium transition', isActive ? 'bg-raised text-ink' : 'text-silver hover:bg-raised/60')}
+            >
+              <t.icon size={20} />
+              {t.label}
+            </NavLink>
+          ))}
+        </nav>
+      </aside>
+
+      <main className="relative mx-auto max-w-lg px-5 pb-nav md:max-w-2xl md:px-8 lg:ml-64 lg:max-w-5xl lg:px-12 lg:pb-12">
         <Outlet />
       </main>
-      <div className="pointer-events-none fixed inset-x-0 bottom-0 z-30 h-32 bg-gradient-to-t from-bg via-bg/80 to-transparent" />
+
+      {/* Bottom bar (phones and tablets) */}
+      <div className="pointer-events-none fixed inset-x-0 bottom-0 z-30 h-32 bg-gradient-to-t from-bg via-bg/80 to-transparent lg:hidden" />
       <nav
-        className="fixed inset-x-0 bottom-0 z-40 mx-auto flex max-w-lg items-center gap-3 px-5"
+        className="fixed inset-x-0 bottom-0 z-40 mx-auto flex max-w-lg items-center gap-3 px-5 md:max-w-2xl lg:hidden"
         style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 1rem)' }}
         aria-label="Main"
       >
@@ -42,7 +73,7 @@ export function Layout() {
           ))}
         </div>
         <button
-          onClick={() => nav(`/add${day ? `?date=${day}` : ''}`)}
+          onClick={() => nav(`/add${q}`)}
           className="grid h-[68px] w-[68px] shrink-0 place-items-center rounded-full bg-primary text-on-primary transition active:scale-95"
           style={{ boxShadow: '0 10px 30px -8px rgb(0 0 0 / 0.45)' }}
           aria-label="Log food"

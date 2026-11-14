@@ -83,6 +83,12 @@ export interface Profile {
   goal?: FitnessGoal;
   /** All goals the user picked (goal = the one that sets the target). */
   goals?: FitnessGoal[];
+  age?: number;
+  sex?: 'female' | 'male' | 'unspecified';
+  /** Pregnant or breastfeeding — raises the minimum target. */
+  pregnant?: boolean;
+  /** Country the user lives in / cooks from; used to tailor food suggestions. */
+  country?: string;
   activity?: ActivityLevel;
   diet?: Diet;
 }
@@ -95,6 +101,4 @@ export interface Settings {
   theme: Theme;
   bodyUnit: BodyUnit;
   adminMode: boolean;
-  /** Optional personal Anthropic API key for photo recognition when no server endpoint exists. Stored on this device only. */
-  aiApiKey?: string;
 }

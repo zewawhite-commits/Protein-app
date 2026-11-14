@@ -26,7 +26,8 @@ interface Props {
   onSaved?: () => void;
   onSwitchFood?: (f: Food) => void;
   /** Starting values from the photo flow: the meal photo and an AI portion estimate (a suggestion only). */
-  preset?: { photoId?: string; grams?: number; aiLabel?: string };
+  /** From the photo flow: the meal photo and the AI's rough portion guess (never pre-filled as the weight). */
+  preset?: { photoId?: string; aiEstimate?: number };
 }
 
 export function FoodSheet({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Props) {
@@ -47,7 +48,8 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
   const { db } = useFoodDb();
   const day = useDay(date);
 
-  const [grams, setGrams] = useState(entry ? String(entry.grams) : preset?.grams ? String(preset.grams) : '100');
+  // The weight is always what the user enters; nothing is pre-filled for a new entry.
+  const [grams, setGrams] = useState(entry ? String(entry.grams) : '');
   const [meal, setMeal] = useState<Meal>(entry?.meal ?? mealForNow());
   const [photoId, setPhotoId] = useState<string | undefined>(entry?.photoId ?? preset?.photoId);
   const [busy, setBusy] = useState(false);
@@ -135,9 +137,9 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
 
       {/* Weight */}
       <div className="card p-5">
-        {preset?.aiLabel && !entry && (
-          <p className="mb-3 rounded-2xl bg-accent/10 px-3 py-2 text-center text-xs font-semibold text-accent">
-            {preset.aiLabel}
+        {!entry && (
+          <p className="mb-3 text-center text-[13px] font-medium text-silver">
+            Weigh the <span className="font-semibold text-ink">edible part</span> — no bones, shells, skins or packaging.
           </p>
         )}
         {weighHint && !entry && (
@@ -156,6 +158,8 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
               value={grams}
               onChange={(e) => setGrams(e.target.value.replace(/[^\d.,]/g, ''))}
               onFocus={(e) => e.target.select()}
+              placeholder="0"
+              autoFocus={!entry}
               aria-label="Weight in grams"
               className="num min-w-0 bg-transparent text-center text-[56px] font-extrabold leading-none outline-none"
               style={{ width: `${Math.max(2, grams.length) + 0.5}ch` }}
@@ -165,6 +169,11 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
           <button onClick={() => bump(5)} className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-raised" aria-label="Plus 5 grams"><Plus size={20} strokeWidth={2.6} /></button>
         </div>
         <div className="-mx-5 mt-5 flex gap-2 overflow-x-auto px-5 no-scrollbar">
+          {!!preset?.aiEstimate && !entry && (
+            <button onClick={() => { haptic(); setGrams(String(preset.aiEstimate)); }} className="chip shrink-0 border border-dashed border-accent !bg-accent/10 !text-accent" title="A rough guess from your photo — weigh for accuracy">
+              AI estimate ~{preset.aiEstimate}g
+            </button>
+          )}
           {[50, 100, 150, 200].map((v) => (
             <button key={v} onClick={() => setGrams(String(v))} className={cx('chip shrink-0', g === v && 'chip-on')}>{v}g</button>
           ))}
@@ -278,7 +287,7 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
           </button>
         )}
         <button onClick={save} disabled={g <= 0 || busy} className="btn-primary flex-1">
-          {entry ? 'Save changes' : `Add ${fmt(n.protein, 1)} g to ${MEALS.find((m) => m.value === meal)?.label ?? 'log'}`}
+          {entry ? 'Save changes' : g > 0 ? `Add ${fmt(n.protein, 1)} g to ${MEALS.find((m) => m.value === meal)?.label ?? 'log'}` : 'Enter the weight first'}
         </button>
       </div>
     </div>

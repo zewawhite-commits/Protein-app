@@ -100,3 +100,11 @@ describe('multiple goals', () => {
     expect(primaryGoal(['health', 'muscle'], 'light')).toBe('muscle');
   });
 });
+
+describe('age and pregnancy', () => {
+  it('raises the floor for older adults and pregnancy', () => {
+    expect(suggestGramsPerKg('health', 'sedentary', { age: 70 })).toBe(1.0);
+    expect(suggestGramsPerKg('health', 'sedentary', { pregnant: true })).toBe(1.1);
+    expect(suggestGramsPerKg('muscle', 'active', { age: 70 })).toBe(1.6);
+  });
+});

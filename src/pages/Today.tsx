@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Check, Drumstick, Droplet, Flame, Plus, Target, Wheat } from 'lucide-react';
+import { Camera, Check, Drumstick, Flame, Plus, Search, Target } from 'lucide-react';
 import { useStore, goalOn } from '@/store/useStore';
 import { useDay, useFoodLookup } from '@/lib/hooks';
 import { addDays, fromKey, relativeDay, todayKey, weekOf } from '@/lib/dates';
@@ -9,6 +9,7 @@ import type { Food, LogEntry, Meal } from '@/lib/types';
 import { Pill, Ring, cx, fmt } from '@/components/ui';
 import { APP_NAME, CountUp } from '@/components/fx';
 import { EntryRow } from '@/components/EntryRow';
+import { Suggestions } from '@/components/Suggestions';
 import { FoodSheet } from '@/components/FoodSheet';
 
 const MEALS: { key: Meal; label: string }[] = [
@@ -73,8 +74,19 @@ export default function Today() {
         </Link>
       )}
 
+      <div className="mb-5 flex gap-2">
+        <Link to={`/add${!isToday ? `?date=${date}` : ''}`} className="flex h-12 flex-1 items-center gap-3 rounded-full bg-surface px-4 text-[15px] text-dim" style={{ boxShadow: 'var(--shadow)' }}>
+          <Search size={18} className="text-silver" /> Search any food in the world
+        </Link>
+        <Link to={`/snap${!isToday ? `?date=${date}` : ''}`} className="grid h-12 w-12 place-items-center rounded-full bg-primary text-on-primary" aria-label="Snap a photo">
+          <Camera size={20} />
+        </Link>
+      </div>
+
       <WeekStrip date={date} onSelect={setDate} />
 
+      <div className="lg:grid lg:grid-cols-[1.1fr_1fr] lg:items-start lg:gap-8">
+      <div>
       <HeroCard
         protein={totals.protein}
         goal={goal}
@@ -85,8 +97,10 @@ export default function Today() {
         incomplete={totals.incomplete}
         entries={entries}
       />
+      {isToday && <Suggestions remaining={Math.max(0, goal - totals.protein)} />}
+      </div>
 
-      <section className="mt-8">
+      <section className="mt-8 lg:mt-5">
         <div className="mb-3 flex items-baseline justify-between px-1">
           <h2 className="text-xl font-semibold tracking-tight">{isToday ? "Today's meals" : `${relativeDay(date)}'s meals`}</h2>
           {entries.length > 0 && <Link to="/history" className="text-sm font-semibold text-accent">View all</Link>}
@@ -105,6 +119,7 @@ export default function Today() {
           </div>
         )}
       </section>
+      </div>
 
       <FoodSheet food={editing ? entryAsFood(editing, lookup) : null} entry={editing ?? undefined} date={date} onClose={() => setEditing(null)} />
     </div>
@@ -151,11 +166,14 @@ function HeroCard(props: {
               </div>
             </Ring>
           </div>
-          <div className="mt-6 grid grid-cols-3 gap-2.5">
-            <MacroTile icon={<Flame size={16} />} value={props.kcal} unit="" label="kcal" incomplete={props.incomplete.kcal} />
-            <MacroTile icon={<Wheat size={16} />} value={props.carbs} unit="g" label="carbs" incomplete={props.incomplete.carbs} />
-            <MacroTile icon={<Droplet size={16} />} value={props.fat} unit="g" label="fat" incomplete={props.incomplete.fat} />
+          {/* Protein is the point; other nutrients are secondary context. */}
+          <div className="mt-5 h-2.5 overflow-hidden rounded-full bg-raised">
+            <div className={cx('h-full rounded-full transition-all duration-700', pct >= 1 ? 'bg-accent' : 'bg-ink')} style={{ width: `${Math.min(100, pct * 100)}%` }} />
           </div>
+          <p className="num mt-3 text-xs text-silver">
+            Also today: {fmt(props.kcal)} kcal · {fmt(props.carbs)} g carbs · {fmt(props.fat)} g fat
+            {(props.incomplete.kcal || props.incomplete.carbs || props.incomplete.fat) && <span title="Some foods have no value for this in the source data"> *</span>}
+          </p>
         </div>
 
         {/* Page 2: protein by meal */}
@@ -189,19 +207,6 @@ function HeroCard(props: {
         ))}
       </div>
     </section>
-  );
-}
-
-function MacroTile({ icon, value, unit, label, incomplete }: { icon: React.ReactNode; value: number; unit: string; label: string; incomplete: boolean }) {
-  return (
-    <div className="tile px-3 pb-3 pt-3.5">
-      <p className="num text-[17px] font-bold leading-none">
-        {fmt(value)}<span className="text-xs font-semibold text-silver">{unit}</span>
-        {incomplete && <span className="text-warn" title="Some foods have no value for this in the source data">*</span>}
-      </p>
-      <p className="mt-1 text-[11px] font-semibold text-silver">{label}</p>
-      <div className="mt-3 grid h-8 w-8 place-items-center rounded-full bg-surface text-ink">{icon}</div>
-    </div>
   );
 }
 

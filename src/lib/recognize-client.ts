@@ -1,8 +1,6 @@
 /**
  * Browser side of photo recognition, plus matching AI suggestions to database records.
- * Order: the app's own /api/recognize endpoint (server-held key) → the user's own
- * Anthropic API key, if they saved one in Profile. Nutrient values always come from
- * the matched database record, never from the AI.
+ * Nutrient values always come from the matched database record, never from the AI.
  */
 import type { RecognitionResult, RecognizedItem } from './recognition';
 import { searchFoods } from './foods';
@@ -31,47 +29,30 @@ async function toBase64(blob: Blob): Promise<string> {
   return btoa(bin);
 }
 
-export async function recognizePhoto(photo: Blob, userApiKey?: string, premiumToken?: string): Promise<RecognitionResult> {
+/**
+ * Recognition always goes through the app's server (/api/recognize), which holds the
+ * Anthropic key. No AI key ever lives in the browser or on the phone.
+ */
+export async function recognizePhoto(photo: Blob, premiumToken?: string): Promise<RecognitionResult> {
   const image = await toBase64(photo);
   const mediaType = photo.type || 'image/jpeg';
-
-  // 1. Hosted endpoint (works when deployed with ANTHROPIC_API_KEY on the server).
+  let res: Response;
   try {
-    const res = await fetch('/api/recognize', {
+    res = await fetch('/api/recognize', {
       method: 'POST',
       headers: { 'content-type': 'application/json', ...(premiumToken && { authorization: `Bearer ${premiumToken}` }) },
       body: JSON.stringify({ image, mediaType }),
     });
-    const isJson = res.headers.get('content-type')?.includes('application/json');
-    if (res.ok && isJson) return (await res.json()) as RecognitionResult;
-    if (isJson && res.status === 402) {
-      const { error } = (await res.json()) as { error?: string };
-      if (!userApiKey) throw new PremiumRequiredError(error);
-      // Not Premium, but the user has their own key: fall through to it.
-    } else if (isJson && res.status === 429) {
-      const { error } = (await res.json()) as { error?: string };
-      throw new ScanLimitError(error);
-    } else if (isJson && res.status !== 501) {
-      const { error } = (await res.json()) as { error?: string };
-      throw new Error(error || `Recognition failed (${res.status}).`);
-    }
-  } catch (e) {
-    if (e instanceof PremiumRequiredError || e instanceof ScanLimitError) throw e;
-    if (!(e instanceof TypeError) && !userApiKey) throw e; // TypeError = network/no endpoint
+  } catch {
+    throw new RecognitionUnavailableError();
   }
-
-  // 2. The user's own key, called directly from this device.
-  if (!userApiKey) throw new RecognitionUnavailableError();
-  const [{ default: Anthropic }, { recognizeWithClient }] = await Promise.all([import('@anthropic-ai/sdk'), import('./recognition')]);
-  const client = new Anthropic({ apiKey: userApiKey, dangerouslyAllowBrowser: true });
-  try {
-    return await recognizeWithClient(client, image, mediaType);
-  } catch (e) {
-    if (e instanceof Anthropic.AuthenticationError) throw new Error('Your Anthropic API key was rejected. Check it in Profile.');
-    if (e instanceof Anthropic.RateLimitError) throw new Error('Rate limited — try again in a moment.');
-    if (e instanceof Anthropic.APIError) throw new Error(`Recognition service error (${e.status ?? 'network'}).`);
-    throw e;
-  }
+  const isJson = res.headers.get('content-type')?.includes('application/json');
+  if (!isJson || res.status === 404 || res.status === 501) throw new RecognitionUnavailableError();
+  const data = (await res.json()) as RecognitionResult & { error?: string };
+  if (res.ok) return data;
+  if (res.status === 402) throw new PremiumRequiredError(data.error);
+  if (res.status === 429) throw new ScanLimitError(data.error);
+  throw new Error(data.error || `Recognition failed (${res.status}).`);
 }
 
 export interface MatchedItem {

@@ -70,7 +70,7 @@ export function Toaster() {
     return () => { listeners.delete(setList); };
   }, []);
   return createPortal(
-    <div className="pointer-events-none fixed inset-x-0 z-[60] mx-auto flex max-w-lg flex-col items-center gap-2 px-5" style={{ bottom: 'calc(max(env(safe-area-inset-bottom), 1rem) + 88px)' }} aria-live="polite">
+    <div className="pointer-events-none fixed inset-x-0 z-[60] mx-auto flex max-w-lg flex-col items-center gap-2 px-5 lg:left-64" style={{ bottom: 'calc(max(env(safe-area-inset-bottom), 1rem) + 88px)' }} aria-live="polite">
       {list.map((t) => (
         <div
           key={t.id}

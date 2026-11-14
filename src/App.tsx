@@ -37,7 +37,7 @@ export default function App() {
         </Route>
         <Route path="snap" element={<Snap />} />
         <Route path="premium" element={<Premium />} />
-        <Route path="add" element={<div className="mx-auto max-w-lg px-5 pb-16"><AddFood /></div>} />
+        <Route path="add" element={<div className="mx-auto max-w-lg px-5 pb-16 md:max-w-2xl md:px-8 lg:max-w-3xl"><AddFood /></div>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Suspense>

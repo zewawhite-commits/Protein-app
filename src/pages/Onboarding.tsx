@@ -4,6 +4,7 @@ import { useStore } from '@/store/useStore';
 import { accountsEnabled, signInWithEmail, signInWithGoogle, useSession } from '@/lib/account';
 import { GoogleIcon } from '@/components/BrandIcons';
 import { primaryGoal, suggestGramsPerKg, suggestionReason } from '@/lib/goals';
+import { COUNTRIES } from '@/lib/countries';
 import { dailyGoal, fromKg, round1, toKg } from '@/lib/nutrition';
 import type { ActivityLevel, Diet, FitnessGoal } from '@/lib/types';
 import { Ring, Segmented, cx, fmt } from '@/components/ui';
@@ -44,6 +45,10 @@ export default function Onboarding() {
   const [activity, setActivity] = useState<ActivityLevel>();
   const [diet, setDiet] = useState<Diet>();
   const [name, setName] = useState('');
+  const [age, setAge] = useState('');
+  const [sex, setSex] = useState<'female' | 'male' | 'unspecified'>('unspecified');
+  const [pregnant, setPregnant] = useState(false);
+  const [country, setCountry] = useState('');
   const [weight, setWeight] = useState('');
   const [gPerKg, setGPerKg] = useState(1.6);
 
@@ -52,12 +57,15 @@ export default function Onboarding() {
   const weightOk = weightNum >= minW && weightNum <= maxW;
   const weightKg = weightOk ? toKg(weightNum, unit) : null;
   const weightError = weight && !weightOk ? `Enter a weight between ${minW} and ${maxW} ${unit}.` : '';
+  const ageNum = Number(age);
+  const ageOk = !age || (ageNum >= 13 && ageNum <= 110);
+  const person = { age: ageNum || undefined, pregnant: sex === 'female' && pregnant };
   const next = () => setStep((s) => Math.min(STEPS - 1, s + 1));
   const back = () => setStep((s) => Math.max(0, s - 1));
 
   function pickActivity(a: ActivityLevel) {
     setActivity(a);
-    setGPerKg(suggestGramsPerKg(primaryGoal(goals.length ? goals : ['health'], a), a));
+    setGPerKg(suggestGramsPerKg(primaryGoal(goals.length ? goals : ['health'], a), a, person));
     next();
   }
 
@@ -67,6 +75,7 @@ export default function Onboarding() {
   const toggleGoal = (g: FitnessGoal) => setGoals((cur) => (cur.includes(g) ? cur.filter((x) => x !== g) : [...cur, g]));
 
   function finish() {
+    if (!ageOk) return;
     if (!weightKg) return;
     saveProfile({
       name: name.trim() || session?.user.user_metadata?.full_name?.split(' ')[0] || '',
@@ -77,6 +86,10 @@ export default function Onboarding() {
       createdAt: Date.now(),
       goal,
       goals,
+      age: ageNum || undefined,
+      sex,
+      pregnant: sex === 'female' && pregnant ? true : undefined,
+      country: country || undefined,
       activity,
       diet,
     });
@@ -87,7 +100,7 @@ export default function Onboarding() {
   const total = weightKg ? dailyGoal({ goalMode: 'perKg', gramsPerKg: gPerKg, bodyWeightKg: weightKg, goalGrams: 0 }) : 0;
 
   return (
-    <div className="mx-auto flex min-h-dvh max-w-lg flex-col px-5 pb-8">
+    <div className="mx-auto flex min-h-dvh max-w-lg flex-col px-5 md:max-w-xl pb-8">
       <header className="pt-safe flex items-center gap-4 pb-6">
         <button onClick={back} className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-surface" style={{ boxShadow: 'var(--shadow)' }} aria-label="Back">
           <ArrowLeft size={20} />
@@ -118,11 +131,36 @@ export default function Onboarding() {
           </Question>
         )}
         {step === 4 && (
-          <Question title="About you" sub="Your target is set per kilogram of body weight.">
-            <label className="label mt-2" htmlFor="ob-name">First name</label>
-            <input id="ob-name" className="field" value={name} onChange={(e) => setName(e.target.value)} placeholder="Optional" autoComplete="given-name" />
+          <Question title="About you" sub="This helps us set the right target for you.">
+            <div className="grid grid-cols-[1fr_6.5rem] gap-3">
+              <div>
+                <label className="label mt-2" htmlFor="ob-name">First name</label>
+                <input id="ob-name" className="field" value={name} onChange={(e) => setName(e.target.value)} placeholder="Optional" autoComplete="given-name" />
+              </div>
+              <div>
+                <label className="label mt-2" htmlFor="ob-age">Age</label>
+                <input id="ob-age" className={cx('field text-center', !ageOk && '!ring-2 !ring-danger')} inputMode="numeric" maxLength={3} value={age} onChange={(e) => setAge(e.target.value.replace(/\D/g, ''))} placeholder="—" />
+              </div>
+            </div>
+            {!ageOk && <p className="mt-1 text-sm text-danger">Enter an age between 13 and 110.</p>}
+
+            <span className="label mt-5">Sex</span>
+            <Segmented full value={sex} onChange={(v) => { haptic(); setSex(v); }} options={[{ value: 'female', label: 'Female' }, { value: 'male', label: 'Male' }, { value: 'unspecified', label: 'Prefer not to say' }]} />
+            {sex === 'female' && (
+              <label className="mt-3 flex items-center gap-3 rounded-2xl bg-surface p-3 text-sm" style={{ boxShadow: 'var(--shadow)' }}>
+                <input type="checkbox" checked={pregnant} onChange={(e) => setPregnant(e.target.checked)} className="h-5 w-5 accent-[rgb(var(--accent))]" />
+                Pregnant or breastfeeding
+              </label>
+            )}
+
+            <label className="label mt-5" htmlFor="ob-country">Where do you live?</label>
+            <select id="ob-country" className="field" value={country} onChange={(e) => setCountry(e.target.value)}>
+              <option value="">Choose a country (optional)</option>
+              {COUNTRIES.map((c) => <option key={c}>{c}</option>)}
+            </select>
+            <p className="mt-1 text-xs text-silver">We’ll suggest foods people actually eat where you live.</p>
             <div className="mt-5 flex items-center justify-between">
-              <label className="label !mb-0" htmlFor="ob-weight">Body weight</label>
+              <label className="label !mb-0 mt-5" htmlFor="ob-weight">Body weight</label>
               <Segmented value={unit} onChange={(u) => { if (weightNum) setWeight(String(round1(fromKg(toKg(weightNum, unit), u)))); updateSettings({ bodyUnit: u }); }} options={[{ value: 'kg', label: 'kg' }, { value: 'lb', label: 'lb' }]} />
             </div>
             <div className="relative mt-2">
@@ -131,7 +169,7 @@ export default function Onboarding() {
             </div>
             <p id="ob-weight-err" className="mt-2 min-h-5 text-sm text-danger">{weightError}</p>
             <div className="flex-1" />
-            <button onClick={next} disabled={!weightKg} className="btn-primary mt-8 w-full">Continue</button>
+            <button onClick={() => { setGPerKg(suggestGramsPerKg(primaryGoal(goals.length ? goals : ['health'], activity ?? 'active'), activity ?? 'active', person)); next(); }} disabled={!weightKg || !ageOk} className="btn-primary mt-6 w-full">Continue</button>
           </Question>
         )}
         {step === 5 && goal && activity && (
@@ -156,7 +194,7 @@ export default function Onboarding() {
                 <button onClick={() => { haptic(); setGPerKg((v) => Math.min(2.5, round1(v + 0.1))); }} className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-raised text-lg font-semibold transition active:scale-90" aria-label="Higher">+</button>
               </div>
               <p className="num mt-2 text-sm font-semibold">{gPerKg.toFixed(1)} g per kg of body weight</p>
-              <p className="mt-4 text-sm leading-relaxed text-silver">{suggestionReason(goal, activity, suggestGramsPerKg(goal, activity))}</p>
+              <p className="mt-4 text-sm leading-relaxed text-silver">{suggestionReason(goal, activity, suggestGramsPerKg(goal, activity, person), person)}</p>
             </div>
             <p className="mt-3 text-center text-xs text-dim">A starting point, not medical advice. Check with a health professional if you have a medical condition.</p>
             <div className="flex-1" />
@@ -219,7 +257,7 @@ function Welcome({ signedIn, email, onStart }: { signedIn: boolean; email?: stri
   };
 
   return (
-    <div className="relative mx-auto flex min-h-dvh max-w-lg flex-col px-5 pb-8">
+    <div className="relative mx-auto flex min-h-dvh max-w-lg flex-col px-5 md:max-w-xl pb-8">
       <div className="pt-safe mt-10 flex items-center gap-3 animate-fade-up">
         <Ring value={0.72} size={40} stroke={5} color="ink" track="line" />
         <span className="text-lg font-semibold tracking-tight">Provora</span>

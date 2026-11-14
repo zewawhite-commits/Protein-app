@@ -66,7 +66,7 @@ export async function syncOnSignIn(userId: string) {
   const remoteUpdated = data ? new Date(data.updated_at as string).getTime() : 0;
   if (data && (remoteUpdated > localUpdated || (!local.profile && !local.entries.length))) {
     const snap = data.data as Snapshot;
-    useStore.getState().importData({ ...snap, settings: { ...snap.settings, aiApiKey: local.settings.aiApiKey } });
+    useStore.getState().importData(snap);
     useStore.setState({ lastModified: remoteUpdated, premium: local.premium });
     lastPushed = JSON.stringify(snap);
   } else {

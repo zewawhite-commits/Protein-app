@@ -77,10 +77,10 @@ export function Sheet({ open, onClose, children, title }: { open: boolean; onClo
   }, [open, onClose]);
   if (!open) return null;
   return createPortal(
-    <div className="fixed inset-0 z-50 flex items-end justify-center" role="dialog" aria-modal="true" aria-label={title}>
+    <div className="fixed inset-0 z-50 flex items-end justify-center md:items-center md:p-6" role="dialog" aria-modal="true" aria-label={title}>
       <button aria-label="Close" className="absolute inset-0 animate-fade bg-black/40 backdrop-blur-[2px]" onClick={onClose} />
       <div
-        className="relative max-h-[94dvh] w-full max-w-lg animate-sheet-up overflow-y-auto rounded-t-[32px] bg-bg no-scrollbar"
+        className="relative max-h-[94dvh] w-full max-w-lg animate-sheet-up overflow-y-auto rounded-t-[32px] bg-bg no-scrollbar md:max-h-[88dvh] md:max-w-xl md:rounded-[32px] md:animate-fade-up"
         style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 1.25rem)' }}
       >
         <div className="sticky top-0 z-10 bg-bg/90 px-5 pb-3 pt-2.5 backdrop-blur-xl">

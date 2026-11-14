@@ -88,8 +88,6 @@ export default function Profile() {
 
       <PremiumCard />
 
-      <AiSettings />
-
       <Group title="Your data">
         <button onClick={download} className="w-full"><Row icon={<Download size={18} />} label="Export backup" chevron /></button>
         <button onClick={() => fileRef.current?.click()} className="w-full"><Row icon={<Upload size={18} />} label="Restore backup" chevron /></button>
@@ -160,42 +158,6 @@ export function Toggle({ on, onChange, label }: { on: boolean; onChange: (v: boo
     <button role="switch" aria-checked={on} aria-label={label} onClick={() => onChange(!on)} className={cx('relative h-8 w-[52px] rounded-full transition', on ? 'bg-accent' : 'bg-line')}>
       <span className={cx('absolute top-1 h-6 w-6 rounded-full bg-white shadow transition-all', on ? 'left-[24px]' : 'left-1')} />
     </button>
-  );
-}
-
-function AiSettings() {
-  const key = useStore((s) => s.settings.aiApiKey);
-  const updateSettings = useStore((s) => s.updateSettings);
-  const [draft, setDraft] = useState('');
-  return (
-    <section id="ai" className="mt-6">
-      <p className="mb-3 px-1 text-sm font-semibold text-silver">Photo recognition</p>
-      <div className="card p-4">
-        <div className="flex items-center gap-3">
-          <span className="grid h-10 w-10 place-items-center rounded-full bg-raised"><Sparkles size={18} /></span>
-          <div className="min-w-0 flex-1">
-            <p className="font-semibold">AI food identification</p>
-            <p className="text-xs text-silver">{key ? `Using your key ••••${key.slice(-4)}` : 'Uses the app server if available, or your own key'}</p>
-          </div>
-          {key && <button onClick={() => updateSettings({ aiApiKey: undefined })} className="chip !h-9">Remove</button>}
-        </div>
-        {!key && (
-          <form
-            className="mt-4 flex gap-2"
-            onSubmit={(e) => {
-              e.preventDefault();
-              if (draft.trim().startsWith('sk-')) { updateSettings({ aiApiKey: draft.trim() }); setDraft(''); }
-            }}
-          >
-            <input type="password" autoComplete="off" value={draft} onChange={(e) => setDraft(e.target.value)} placeholder="Anthropic API key (sk-ant-…)" className="field !h-12 flex-1" />
-            <button type="submit" disabled={!draft.trim().startsWith('sk-')} className="btn-primary !h-12 !px-5 text-sm">Save</button>
-          </form>
-        )}
-        <p className="mt-3 text-xs leading-relaxed text-silver">
-          Photos are sent to Anthropic’s Claude to name the foods. Nutrition values never come from the AI — only from USDA, FAO or product records you confirm. A key saved here stays on this device, is sent only to Anthropic, and is not included in backups.
-        </p>
-      </div>
-    </section>
   );
 }
 

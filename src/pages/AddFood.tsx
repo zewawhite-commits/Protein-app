@@ -12,6 +12,7 @@ import { useStore } from '@/store/useStore';
 import type { Food, PrepState } from '@/lib/types';
 import { FoodSheet } from '@/components/FoodSheet';
 import { FoodVisual } from '@/components/FoodIcon';
+import { FOOD_PHOTOS } from '@/data/foodPhotos';
 import { StateBadge, cx, fmt } from '@/components/ui';
 
 const STATES: { value: PrepState | 'all'; label: string }[] = [
@@ -135,6 +136,8 @@ export default function AddFood() {
         <p className="flex items-center justify-center gap-2 py-12 font-medium text-silver"><Loader2 className="animate-spin" size={18} /> Loading foods…</p>
       )}
 
+      {db && !searching && tab === 'picks' && <PhotoCards foods={list} onPick={setSelected} />}
+
       {db && list.length > 0 && (
         <div className="card mt-1 p-1.5">
           {list.map((f) => <FoodRow key={f.id} food={f} onClick={() => setSelected(f)} />)}
@@ -233,6 +236,31 @@ function FoodRow({ food, onClick }: { food: Food; onClick: () => void }) {
     >
       <Heart size={19} fill={isFav ? 'currentColor' : 'none'} />
     </button>
+    </div>
+  );
+}
+
+/** Big photo cards for popular foods (only those with a photo). */
+function PhotoCards({ foods, onPick }: { foods: Food[]; onPick: (f: Food) => void }) {
+  const withPhoto = foods.filter((f) => f.fdcId && FOOD_PHOTOS[f.fdcId]);
+  if (!withPhoto.length) return null;
+  return (
+    <div className="-mx-5 mb-4 flex snap-x gap-3 overflow-x-auto px-5 pb-1 no-scrollbar">
+      {withPhoto.map((f) => {
+        const photo = FOOD_PHOTOS[f.fdcId!];
+        const { title } = splitName(f.name);
+        return (
+          <button key={f.id} onClick={() => { haptic(); onPick(f); }} className="relative h-52 w-40 shrink-0 snap-start overflow-hidden rounded-[24px] bg-raised text-left transition active:scale-[.97]" style={{ boxShadow: 'var(--shadow)' }}>
+            <img src={`${import.meta.env.BASE_URL}photos/${photo.file}`} alt={title} loading="lazy" className="absolute inset-0 h-full w-full object-cover" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
+            <div className="absolute inset-x-3 bottom-3 text-white">
+              <p className="line-clamp-2 text-[15px] font-semibold leading-tight">{title}</p>
+              <p className="num mt-1 text-xs opacity-80">{fmt(f.per100.protein, 1)} g protein / 100 g</p>
+            </div>
+            {f.state !== 'na' && <StateBadge state={f.state} className="absolute left-3 top-3 !bg-white/90 !text-black" />}
+          </button>
+        );
+      })}
     </div>
   );
 }

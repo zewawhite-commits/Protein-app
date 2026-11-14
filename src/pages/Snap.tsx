@@ -20,7 +20,6 @@ export default function Snap() {
   const [params] = useSearchParams();
   const date = params.get('date') ?? todayKey();
   const back = () => nav(date === todayKey() ? '/' : `/?date=${date}`);
-  const apiKey = useStore((s) => s.settings.aiApiKey);
   const premiumToken = useStore((s) => s.premium?.token);
   const custom = useStore((s) => s.customFoods);
   const entries = useStore((s) => s.entries);
@@ -52,7 +51,7 @@ export default function Snap() {
     try {
       const small = (await getPhoto(id)) ?? file;
       await refreshPremium();
-      const result = await recognizePhoto(small, apiKey, useStore.getState().premium?.token ?? premiumToken);
+      const result = await recognizePhoto(small, useStore.getState().premium?.token ?? premiumToken);
       await waitForDb();
       if (!result.isFood || !result.items.length) {
         setError(result.note || 'No food found in this photo.');
@@ -95,7 +94,7 @@ export default function Snap() {
   if (phase === 'camera') return <Camera onClose={back} onCapture={analyse} />;
 
   return (
-    <div className="mx-auto min-h-dvh max-w-lg animate-fade-up px-5 pb-12">
+    <div className="mx-auto min-h-dvh max-w-lg animate-fade-up px-5 md:max-w-2xl md:px-8 pb-12">
       <header className="pt-safe flex items-center justify-between pb-4">
         <button onClick={back} className="grid h-11 w-11 place-items-center rounded-full bg-surface" style={{ boxShadow: 'var(--shadow)' }} aria-label="Close">
           <X size={20} strokeWidth={2.4} />
@@ -151,11 +150,10 @@ export default function Snap() {
         <div className="card mt-5 p-5">
           <p className="flex items-center gap-2 font-semibold"><Zap size={18} className="text-accent" /> Photo recognition isn’t set up</p>
           <p className="mt-2 text-sm leading-relaxed text-silver">
-            Your photo is saved. To have foods identified automatically, add an Anthropic API key in Profile → Photo recognition (or deploy with a server key). Meanwhile, pick the food yourself.
+            Your photo is saved. Automatic identification switches on once the app’s server is set up. Meanwhile, pick the food yourself — it only takes a moment.
           </p>
           <div className="mt-4 grid gap-2">
             <Link to={manualUrl()} className="btn-primary">Pick food manually</Link>
-            <Link to="/profile#ai" className="btn-ghost">Set up recognition</Link>
           </div>
         </div>
       )}
@@ -196,7 +194,7 @@ export default function Snap() {
       <FoodSheet
         food={pick?.food ?? null}
         date={date}
-        preset={pick ? { photoId, grams: pick.grams, aiLabel: pick.grams ? `AI estimate ~${pick.grams} g — weigh for accuracy` : undefined } : undefined}
+        preset={pick ? { photoId, aiEstimate: pick.grams } : undefined}
         onClose={() => setPick(null)}
         onSaved={() => pick && setLogged((s) => new Set(s).add(pick.index))}
         onSwitchFood={(f) => setPick((p) => (p ? { ...p, food: f } : p))}

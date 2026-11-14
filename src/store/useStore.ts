@@ -150,7 +150,16 @@ export const useStore = create<State>()(
       resetAll: () =>
         set({ profile: null, settings: defaultSettings, entries: [], customFoods: [], goalHistory: {}, recentFoodIds: [], favoriteFoodIds: [], remoteFoods: {}, premium: null }),
     }),
-    { name: 'protein-app', version: 1 },
+    {
+      name: 'protein-app',
+      version: 2,
+      // v2: personal AI keys are no longer supported; remove any saved on this device.
+      migrate: (persisted, from) => {
+        const s = (persisted ?? {}) as { settings?: Record<string, unknown> };
+        if (from < 2 && s.settings) delete s.settings.aiApiKey;
+        return s as never;
+      },
+    },
   ),
 );
 
@@ -174,8 +183,6 @@ export function goalOn(date: string, goalHistory: Record<string, number>, profil
 export function exportData() {
   // Premium passes and personal API keys are never written to backup files.
   const { profile, settings, entries, customFoods, goalHistory, recentFoodIds, favoriteFoodIds, remoteFoods } = useStore.getState();
-  // The personal API key is never written to backup files.
-  const { aiApiKey: _omit, ...safeSettings } = settings;
-  void _omit;
+  const safeSettings = settings;
   return { app: 'protein-app', exportedAt: new Date().toISOString(), profile, settings: safeSettings, entries, customFoods, goalHistory, recentFoodIds, favoriteFoodIds, remoteFoods };
 }
