@@ -17,18 +17,19 @@ const anon = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
 export const accountsEnabled = !!(url && anon);
 export const supabase: SupabaseClient | null = accountsEnabled ? createClient(url!, anon!, { auth: { persistSession: true, detectSessionInUrl: true } }) : null;
 
-const appUrl = () => `${window.location.origin}${import.meta.env.BASE_URL}`;
+/** Where to land after an email/Google sign-in: the page you were on. */
+const returnUrl = () => `${window.location.origin}${window.location.pathname}`;
 
 export async function signInWithGoogle() {
   if (!supabase) return;
-  const { error } = await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: appUrl() } });
+  const { error } = await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: returnUrl() } });
   if (error) throw error;
 }
 
 /** Sends a one-time sign-in link to the email address. */
 export async function signInWithEmail(email: string) {
   if (!supabase) return;
-  const { error } = await supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: appUrl() } });
+  const { error } = await supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: returnUrl() } });
   if (error) throw error;
 }
 

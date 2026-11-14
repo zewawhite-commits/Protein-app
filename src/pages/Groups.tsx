@@ -584,10 +584,18 @@ function ShareSheet({ open, groupId, onClose, onShared }: { open: boolean; group
 
 /** Set up or edit your public profile: photo, name and @username. */
 function ProfileEditor({ initial, defaultName, onSaved, onCancel }: { initial: MyProfile | null; defaultName: string; onSaved: () => void; onCancel?: () => void }) {
-  const [name, setName] = useState(initial?.display_name && initial.display_name !== 'Member' ? initial.display_name : defaultName);
-  const [username, setUsername] = useState(initial?.username ?? '');
+  const localPhotoId = useStore((s) => s.profile?.photoId);
+  const startName = initial?.display_name && initial.display_name !== 'Member' ? initial.display_name : defaultName;
+  const [name, setName] = useState(startName);
+  // Suggest a username from their name so setup is one tap (they can change it).
+  const [username, setUsername] = useState(initial?.username ?? (startName ? `${startName.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 14) || 'user'}${Math.floor(100 + Math.random() * 900)}` : ''));
   const [photoUrl, setPhotoUrl] = useState(initial?.photoUrl);
   const [newPhoto, setNewPhoto] = useState<Blob | null>(null);
+  // Use the photo they already added in Profile, if any.
+  useEffect(() => {
+    if (initial?.photoUrl || !localPhotoId) return;
+    void getPhoto(localPhotoId).then((b) => { if (b) { setNewPhoto(b); setPhotoUrl(URL.createObjectURL(b)); } });
+  }, [initial?.photoUrl, localPhotoId]);
   const [free, setFree] = useState<boolean | null>(null);
   const [busy, setBusy] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -616,8 +624,8 @@ function ProfileEditor({ initial, defaultName, onSaved, onCancel }: { initial: M
 
   return (
     <div className="card p-6">
-      <p className="text-[20px] font-extrabold">{initial?.username ? 'Edit profile' : 'Set up your profile'}</p>
-      <p className="mt-1 text-sm text-silver">This is how friends see you in groups.</p>
+      <p className="text-[20px] font-extrabold">{initial?.username ? 'Edit profile' : 'Choose your username'}</p>
+      <p className="mt-1 text-sm text-silver">{initial?.username ? 'This is how others see you.' : 'We filled this in from your profile — change anything, then tap Save.'}</p>
       <button onClick={() => fileRef.current?.click()} className="relative mx-auto mt-5 block">
         <Avatar name={name || 'You'} photoUrl={photoUrl} size={104} />
         <span className="absolute bottom-0 right-0 grid h-9 w-9 place-items-center rounded-full bg-primary text-on-primary ring-4 ring-surface"><ImagePlus size={16} /></span>
