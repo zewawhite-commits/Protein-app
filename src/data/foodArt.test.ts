@@ -1,9 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { existsSync } from 'node:fs';
-import { artFor } from './foodArt';
+import { artFor, hasIcon } from './foodArt';
 
 describe('food illustrations', () => {
-  it('picks a fitting illustration and the file exists', () => {
+  it('picks a fitting icon for each food', () => {
     const cases: [string, string?, string?][] = [
       ['Chicken, broilers or fryers, breast, meat only, cooked, roasted', undefined, 'poultry_leg'],
       ['Spaghetti with meat sauce', undefined, 'spaghetti'],
@@ -20,7 +19,7 @@ describe('food illustrations', () => {
     for (const [name, cat, want] of cases) {
       const got = artFor(name, cat);
       expect(got, name).toBe(want);
-      expect(existsSync(`public/food3d/${got}.webp`)).toBe(true);
+      expect(hasIcon(got)).toBe(true);
     }
   });
 });

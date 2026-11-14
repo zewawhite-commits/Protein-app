@@ -14,7 +14,7 @@ import { FoodSheet } from '@/components/FoodSheet';
 import { FoodVisual } from '@/components/FoodIcon';
 import { WorldFoods } from '@/components/WorldFoods';
 import { SavedMealsList } from '@/components/SavedMeals';
-import { artFor, artUrl } from '@/data/foodArt';
+import { iconFor } from '@/data/foodArt';
 import { StateBadge, cx, fmt } from '@/components/ui';
 
 const STATES: { value: PrepState | 'all'; label: string }[] = [
@@ -250,10 +250,11 @@ function PhotoCards({ foods, onPick }: { foods: Food[]; onPick: (f: Food) => voi
     <div className="-mx-5 mb-5 flex snap-x gap-3 overflow-x-auto px-5 pb-1 no-scrollbar">
       {foods.slice(0, 10).map((f) => {
         const { title } = splitName(f.name);
+        const Icon = iconFor(f.name, f.category);
         return (
           <button key={f.id} onClick={() => { haptic(); onPick(f); }} className="flex h-48 w-40 shrink-0 snap-start flex-col justify-between rounded-[26px] bg-surface p-4 text-left transition active:scale-[.97]" style={{ boxShadow: 'var(--shadow)' }}>
             <div className="flex items-start justify-between">
-              <img src={artUrl(artFor(f.name, f.category))} alt="" loading="lazy" draggable={false} className="h-16 w-16" />
+              <span className="grid h-14 w-14 place-items-center rounded-2xl bg-raised"><Icon size={26} strokeWidth={1.8} /></span>
               {f.state !== 'na' && <StateBadge state={f.state} />}
             </div>
             <div>

@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { ChevronRight, Cloud, Database, Image as ImageIcon, Download, Moon, Pencil, ShieldCheck, Smartphone, Sparkles, Sun, Trash2, Upload } from 'lucide-react';
+import { ChevronRight, Cloud, Database, Download, Moon, Pencil, ShieldCheck, Smartphone, Sparkles, Sun, Trash2, Upload } from 'lucide-react';
 import { useStore, exportData } from '@/store/useStore';
 import { isPremiumActive } from '@/lib/premium';
 import { accountsEnabled, signInWithEmail, signInWithGoogle, signOut, useSession } from '@/lib/account';
@@ -111,8 +111,6 @@ export default function Profile() {
           <p className="mt-1.5">
             USDA FoodData Central — SR Legacy (2018) and FNDDS (2024). FAO/INFOODS Food Composition Table for Western Africa (2019), © FAO, used with acknowledgement for non-commercial use. Packaged products: Open Food Facts (ODbL), label data contributed by its community. Values are per 100 g and are never altered or estimated by this app.
           </p>
-          <p className="mt-4 flex items-center gap-2 font-semibold text-ink"><ImageIcon size={16} className="text-accent" /> Food photos</p>
-          <p className="mt-1.5">Food illustrations: Fluent Emoji 3D © Microsoft Corporation, MIT licence.</p>
           <p className="mt-4 flex items-center gap-2 font-semibold text-ink"><Smartphone size={16} className="text-accent" /> Install</p>
           <p className="mt-1.5">On iPhone: Share → Add to Home Screen. On Android: menu → Install app. Works offline once installed.</p>
         </div>

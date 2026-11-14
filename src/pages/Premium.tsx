@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Camera, Check, Loader2, Lock, Mail } from 'lucide-react';
+import { ArrowLeft, Camera, Check, Loader2, Lock, Mail, MessageCircle, NotebookPen } from 'lucide-react';
 import { useStore } from '@/store/useStore';
-import { artUrl } from '@/data/foodArt';
 import { accountsEnabled, signInWithEmail, signInWithGoogle, useSession } from '@/lib/account';
 import { GoogleIcon } from '@/components/BrandIcons';
 import {
@@ -95,8 +94,8 @@ export default function Premium() {
 
       <div className="text-center">
         <div className="mx-auto flex w-fit -space-x-3">
-          {['camera_with_flash', 'spiral_notepad', 'speech_balloon'].map((a) => (
-            <span key={a} className="grid h-20 w-20 place-items-center rounded-[26px] bg-surface ring-4 ring-bg" style={{ boxShadow: 'var(--shadow)' }}><img src={artUrl(a)} alt="" className="h-14 w-14" /></span>
+          {[Camera, NotebookPen, MessageCircle].map((Icon, i) => (
+            <span key={i} className="grid h-16 w-16 place-items-center rounded-full bg-primary text-on-primary ring-4 ring-bg"><Icon size={26} strokeWidth={2} /></span>
           ))}
         </div>
         <h1 className="mt-5 text-[32px] font-extrabold leading-[1.1] tracking-tight">Reach your goal faster</h1>

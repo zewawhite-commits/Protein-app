@@ -1,9 +1,13 @@
 /**
- * One consistent illustration style for every food: Microsoft Fluent Emoji 3D
- * (MIT licence, © Microsoft Corporation), stored in public/food3d as WebP.
- * Chosen from the food's name (and category as a fallback). Illustration only —
- * never used to identify a food or its nutrients.
+ * Picks a simple line icon for every food (clean, monochrome — no emoji), chosen from the
+ * food's name (and category as a fallback). Illustration only — never used to identify a
+ * food or its nutrients. Keys map to lucide icons in ICONS below.
  */
+import {
+  Amphora, Apple, Banana, Bean, Beef, Beer, CakeSlice, Candy, Carrot, Cherry, Citrus, Coffee, Cookie, CookingPot, Croissant,
+  CupSoda, Donut, Drumstick, Egg, EggFried, Fish, Grape, Ham, IceCreamCone, LeafyGreen, Martini, Milk, Nut, Package, Pizza,
+  Popcorn, Salad, Sandwich, Shell, Soup, Utensils, UtensilsCrossed, Wheat, Wine, type LucideIcon,
+} from 'lucide-react';
 type Rule = [RegExp, string];
 
 /** Specific dishes first, then foods, then broad groups. */
@@ -164,7 +168,7 @@ const CATEGORY_RULES: Rule[] = [
   [/meal|entree|dish|mixed/i, 'fork_and_knife_with_plate'],
 ];
 
-/** Illustration file (in public/food3d) for a food. Always returns something. */
+/** Icon key for a food. Always returns something. */
 export function artFor(name: string, category?: string): string {
   const n = name.toLowerCase();
   for (const [re, art] of RULES) if (re.test(n)) return art;
@@ -172,4 +176,28 @@ export function artFor(name: string, category?: string): string {
   return 'fork_and_knife_with_plate';
 }
 
-export const artUrl = (art: string) => `${import.meta.env.BASE_URL}food3d/${art}.webp`;
+const ICONS: Record<string, LucideIcon> = {
+  sushi: Fish, shallow_pan_of_food: CookingPot, curry_rice: Soup, steaming_bowl: Soup, spaghetti: UtensilsCrossed,
+  taco: Sandwich, burrito: Sandwich, hamburger: Sandwich, pizza: Pizza, hot_dog: Sandwich, sandwich: Sandwich,
+  falafel: Bean, dumpling: CookingPot, oden: Beef, tamale: Wheat, stuffed_flatbread: Wheat, flatbread: Wheat,
+  pot_of_food: Soup, bowl_with_spoon: Wheat, green_salad: Salad, bento_box: Utensils, beans: Bean, cup_with_straw: CupSoda,
+  egg: Egg, cooking: EggFried, bacon: Ham, poultry_leg: Drumstick, meat_on_bone: Ham, cut_of_meat: Beef,
+  shrimp: Shell, lobster: Shell, crab: Shell, squid: Shell, oyster: Shell, fish: Fish, canned_food: Package,
+  cheese_wedge: Milk, custard: Milk, glass_of_milk: Milk, butter: Milk, soft_ice_cream: IceCreamCone,
+  cooked_rice: Wheat, bagel: Croissant, croissant: Croissant, baguette_bread: Croissant, pancakes: Croissant, waffle: Croissant,
+  pretzel: Croissant, bread: Croissant, popcorn: Popcorn, rice_cracker: Cookie,
+  banana: Banana, green_apple: Apple, red_apple: Apple, tangerine: Citrus, lemon: Citrus, grapes: Grape, strawberry: Cherry,
+  blueberries: Grape, watermelon: Apple, melon: Apple, pineapple: Apple, mango: Apple, peach: Apple, pear: Apple, cherries: Cherry,
+  kiwi_fruit: Apple, coconut: Apple, avocado: LeafyGreen, olive: LeafyGreen,
+  roasted_sweet_potato: Carrot, french_fries: Carrot, potato: Carrot, tomato: Cherry, carrot: Carrot, ear_of_corn: Wheat,
+  broccoli: LeafyGreen, leafy_green: LeafyGreen, cucumber: LeafyGreen, hot_pepper: LeafyGreen, bell_pepper: LeafyGreen,
+  onion: LeafyGreen, garlic: LeafyGreen, ginger_root: LeafyGreen, mushroom: LeafyGreen, pea_pod: LeafyGreen, herb: LeafyGreen,
+  peanuts: Nut, chestnut: Nut, chocolate_bar: Candy, cookie: Cookie, doughnut: Donut, cupcake: CakeSlice, shortcake: CakeSlice,
+  pie: CakeSlice, candy: Candy, honey_pot: Amphora, jar: Amphora, salt: Amphora, hot_beverage: Coffee, teacup_without_handle: Coffee,
+  bubble_tea: CupSoda, beer_mug: Beer, wine_glass: Wine, cocktail_glass: Martini, beverage_box: CupSoda,
+  fork_and_knife_with_plate: Utensils,
+};
+
+/** Line icon for a food (always returns one). */
+export const iconFor = (name: string, category?: string): LucideIcon => ICONS[artFor(name, category)] ?? Utensils;
+export const hasIcon = (art: string) => art in ICONS;

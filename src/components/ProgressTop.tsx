@@ -1,9 +1,8 @@
 import { useMemo, useState } from 'react';
-import { ArrowRight, Flag, Minus, Plus } from 'lucide-react';
+import { ArrowRight, Flag, Flame, Minus, Plus } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 import { addDays, formatDay, fromKey, lastNDays, todayKey, weekOf } from '@/lib/dates';
 import { fromKg, round1, sumEntries, toKg } from '@/lib/nutrition';
-import { artUrl } from '@/data/foodArt';
 import { Segmented, Sheet, cx, fmt } from './ui';
 import { CountUp, haptic, toast } from './fx';
 
@@ -51,7 +50,7 @@ export function WeightAndStreak() {
           </button>
         </div>
         <div className="card flex flex-col items-center justify-center p-4 text-center">
-          <img src={artUrl('fire')} alt="" className="h-14 w-14" />
+          <span className="grid h-14 w-14 place-items-center rounded-full bg-[rgb(var(--carbs))]/12 text-[rgb(var(--carbs))]"><Flame size={28} fill="currentColor" fillOpacity={0.25} strokeWidth={2.2} /></span>
           <p className="num -mt-1 text-[22px] font-extrabold text-[rgb(var(--carbs))]">{streak}</p>
           <p className="text-sm font-bold text-[rgb(var(--carbs))]">Day streak</p>
           <div className="mt-2 grid grid-cols-7 gap-1">
