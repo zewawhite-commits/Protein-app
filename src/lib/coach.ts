@@ -18,6 +18,9 @@ export interface CoachContext {
   country?: string;
   cuisines?: string[];
   avoid?: string[];
+  obstacles?: string[];
+  weightKg?: number;
+  goalWeightKg?: number;
   age?: number;
   sex?: string;
   pregnant?: boolean;
@@ -79,6 +82,8 @@ export function contextText(c: CoachContext): string {
     `- Goals: ${c.goals?.length ? c.goals.join(', ') : 'not given'}; activity: ${c.activity || 'not given'}; diet: ${c.diet || 'eats everything'}`,
     `- Cuisines they enjoy: ${c.cuisines?.length ? c.cuisines.join(', ') : 'not given (offer a varied mix)'}`,
     `- Allergies / avoids (never suggest these): ${c.avoid?.length ? c.avoid.join(', ') : 'none given'}`,
+    `- What gets in their way: ${c.obstacles?.length ? c.obstacles.join(', ') : 'not given'}`,
+    `- Weight: ${c.weightKg ? `${Math.round(c.weightKg)} kg` : 'not given'}${c.goalWeightKg ? `; goal weight ${Math.round(c.goalWeightKg)} kg` : ''}`,
     `- Country: ${c.country || 'not given'}; age: ${c.age ?? 'not given'}; sex: ${c.sex || 'not given'}${c.pregnant ? '; pregnant or breastfeeding' : ''}`,
     `Daily targets: ${fmt(t.kcal, 'kcal')}, protein ${fmt(t.protein)}, carbs ${fmt(t.carbs)}, fat ${fmt(t.fat)}, fibre ${fmt(t.fiber)}`,
     `Eaten so far today: ${fmt(d.kcal, 'kcal')}, protein ${fmt(d.protein)}, carbs ${fmt(d.carbs)}, fat ${fmt(d.fat)}, fibre ${fmt(d.fiber)}, sugars ${fmt(d.sugar)}, sodium ${fmt(d.sodiumMg, 'mg')}`,

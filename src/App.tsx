@@ -18,6 +18,7 @@ const Admin = lazy(() => import('./pages/Admin'));
 const Snap = lazy(() => import('./pages/Snap'));
 const Premium = lazy(() => import('./pages/Premium'));
 const Coach = lazy(() => import('./pages/Coach'));
+const Groups = lazy(() => import('./pages/Groups'));
 
 export default function App() {
   useThemeSync();
@@ -36,6 +37,7 @@ export default function App() {
           <Route path="history" element={<History />} />
           <Route path="insights" element={<Insights />} />
           <Route path="coach" element={<Coach />} />
+          <Route path="groups" element={<Groups />} />
           <Route path="profile" element={<Profile />} />
           <Route path="admin" element={<Admin />} />
         </Route>

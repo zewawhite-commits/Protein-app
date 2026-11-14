@@ -159,3 +159,14 @@ describe('notifications', () => {
     expect(dueReminder(at(19, 30), [], times, [])).toBe('dinner');
   });
 });
+
+import { estimateKcal as est, weeksToGoal } from './energy';
+describe('goal weight and pace', () => {
+  const base = { name: '', goalMode: 'perKg' as const, goalGrams: 0, gramsPerKg: 1.6, createdAt: 0, bodyWeightKg: 80, heightCm: 180, age: 30, sex: 'male' as const, activity: 'active' as const, goals: ['fatloss' as const] };
+  it('sets the deficit from the chosen pace', () => {
+    // maintenance = (800+1125-150+5)*1.55 = 2759; 0.5 kg/week → -550/day
+    expect(est({ ...base, goalWeightKg: 72, paceKgPerWeek: 0.5 })).toBe(2210);
+    expect(weeksToGoal({ bodyWeightKg: 80, goalWeightKg: 72, paceKgPerWeek: 0.5 })).toBe(16);
+    expect(est({ ...base, goalWeightKg: 85, paceKgPerWeek: 0.25, goals: ['muscle'] })).toBe(3030);
+  });
+});

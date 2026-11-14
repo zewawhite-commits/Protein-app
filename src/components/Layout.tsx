@@ -1,13 +1,13 @@
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { BarChart3, CalendarDays, Camera, House, Plus, Sparkles, UserRound } from 'lucide-react';
+import { BarChart3, Camera, House, Plus, Sparkles, UserRound, Users } from 'lucide-react';
 import { Ring, cx } from './ui';
 import { APP_NAME } from './fx';
 
 const tabs = [
   { to: '/', label: 'Home', icon: House },
-  { to: '/history', label: 'History', icon: CalendarDays },
-  { to: '/coach', label: 'Coach', icon: Sparkles },
   { to: '/insights', label: 'Progress', icon: BarChart3 },
+  { to: '/groups', label: 'Groups', icon: Users },
+  { to: '/coach', label: 'Coach', icon: Sparkles },
   { to: '/profile', label: 'Profile', icon: UserRound },
 ] as const;
 

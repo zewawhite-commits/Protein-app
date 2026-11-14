@@ -35,6 +35,7 @@ export default {
           '0%': { transform: 'translate(0,0) rotate(0)', opacity: 1 },
           '100%': { transform: 'translate(var(--dx), 70vh) rotate(var(--rot))', opacity: 0 },
         },
+        dash: { from: { strokeDashoffset: '400' }, to: { strokeDashoffset: '0' } },
         pop: { '0%': { transform: 'scale(1)' }, '40%': { transform: 'scale(1.06)' }, '100%': { transform: 'scale(1)' } },
       },
       animation: {

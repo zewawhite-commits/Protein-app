@@ -14,6 +14,8 @@ A premium, mobile-first protein tracker. Weigh your food, pick it from the USDA 
 - **Weight entry in grams** — keypad, ±5 g steppers, quick weights and USDA household portions.
 - **Full nutrition tracking** — calories, protein, carbs, fat and fibre, plus sugars, saturated fat, cholesterol, sodium, potassium, calcium, iron, magnesium, zinc and vitamins A, C, D, B12 and folate, scaled from per-100 g source values and shown with % of the FDA daily value.
 - **Calorie and macro targets** — estimated from weight, height, age, sex, activity and goals (Mifflin–St Jeor; ~20% deficit for fat loss, ~10% surplus for muscle gain, 1,200/1,500 kcal floors), or set by hand. Fat 30% of energy, fibre 14 g per 1,000 kcal, carbs the rest.
+- **Groups (social)** — private groups joined by invite code: share a meal (with photo and app-calculated totals), react, comment, see members' streaks. Needs Supabase accounts and `supabase/social.sql`.
+- **Sign-up interview** — goals, workouts per week, diet, cuisines and allergies, body data, goal weight with pace slider and time-to-goal, obstacles, trainer/dietitian, reminders, then a plan screen with a progress curve and editable daily targets.
 - **AI coach** — chat that knows the user's goals, targets and today's food; suggests local foods as tappable cards whose numbers come from the database.
 - **Daily goal** — fixed grams or g/kg body weight (kg or lb). When you change the goal, past days keep the goal they had.
 - **Daily log** — grouped by meal, with a week strip of progress rings and a streak counter.
@@ -64,6 +66,9 @@ Recognition uses Claude (model `claude-opus-5-5`) and needs an Anthropic API key
 Each photo is one API call. Requests enable server-side refusal fallbacks (`fallbacks: "default"`).
 
 ## Accounts and cloud sync (Supabase)
+
+Run `supabase/schema.sql`, then `supabase/social.sql` (groups, posts, reactions, comments, photo storage with row-level security) in the Supabase SQL Editor.
+
 
 Optional sign-in with Google or an email link. Signed-in users' data (profile, log, custom foods) is saved to their account and synced across phones; photos stay on each phone.
 

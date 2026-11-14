@@ -110,6 +110,13 @@ export interface Profile {
   cuisines?: string[];
   /** Allergies and foods they avoid; AI suggestions must leave these out. */
   avoid?: string[];
+  /** Weight the person wants to reach (kg), and how fast (kg per week). */
+  goalWeightKg?: number;
+  paceKgPerWeek?: number;
+  /** What gets in the way (from onboarding); shared with the AI coach. */
+  obstacles?: string[];
+  /** Works with a trainer or dietitian. */
+  hasCoach?: boolean;
   /** Height in cm (for the calorie estimate). */
   heightCm?: number;
   /** 'auto' (default) = estimated from body data; 'fixed' = calorieGoal. */

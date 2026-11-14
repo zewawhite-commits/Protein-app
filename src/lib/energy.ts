@@ -34,13 +34,35 @@ export function calorieAdjust(goals: FitnessGoal[], pregnant?: boolean): number 
   return 1;
 }
 
+/** ~7,700 kcal per kg of body weight change (common approximation). */
+export const KCAL_PER_KG = 7700;
+
+/** Maintenance calories (resting × activity), or null without weight, height and age. */
+export function maintenanceKcal(p: Profile): number | null {
+  if (!p.bodyWeightKg || !p.heightCm || !p.age) return null;
+  return restingKcal({ bodyWeightKg: p.bodyWeightKg, heightCm: p.heightCm, age: p.age, sex: p.sex }) * ACTIVITY[p.activity ?? 'light'];
+}
+
 /** Estimated daily calories, or null when weight, height or age is missing. */
 export function estimateKcal(p: Profile): number | null {
-  if (!p.bodyWeightKg || !p.heightCm || !p.age) return null;
+  const tdee = maintenanceKcal(p);
+  if (!tdee || !p.bodyWeightKg) return null;
   const goals = p.goals?.length ? p.goals : p.goal ? [p.goal] : [];
-  const tdee = restingKcal({ bodyWeightKg: p.bodyWeightKg, heightCm: p.heightCm, age: p.age, sex: p.sex }) * ACTIVITY[p.activity ?? 'light'];
   const floor = p.sex === 'male' ? 1500 : 1200;
-  return Math.round(Math.max(floor, tdee * calorieAdjust(goals, p.pregnant)) / 10) * 10;
+  let kcal = tdee * calorieAdjust(goals, p.pregnant);
+  // With a goal weight and pace, the daily change follows the chosen pace instead.
+  if (p.goalWeightKg && p.paceKgPerWeek && !p.pregnant && Math.abs(p.goalWeightKg - p.bodyWeightKg) >= 0.5) {
+    const dir = p.goalWeightKg < p.bodyWeightKg ? -1 : 1;
+    kcal = tdee + (dir * p.paceKgPerWeek * KCAL_PER_KG) / 7;
+  }
+  return Math.round(Math.max(floor, kcal) / 10) * 10;
+}
+
+/** Weeks to reach the goal weight at the chosen pace (null if not applicable). */
+export function weeksToGoal(p: Pick<Profile, 'bodyWeightKg' | 'goalWeightKg' | 'paceKgPerWeek'>): number | null {
+  if (!p.bodyWeightKg || !p.goalWeightKg || !p.paceKgPerWeek) return null;
+  const diff = Math.abs(p.goalWeightKg - p.bodyWeightKg);
+  return diff < 0.5 ? null : Math.ceil(diff / p.paceKgPerWeek);
 }
 
 export function calorieGoal(p: Profile): { kcal: number; estimated: boolean } | null {

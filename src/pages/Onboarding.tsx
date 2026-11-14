@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { ArrowLeft, Check, Bike, Dumbbell, Flame, HeartPulse, Leaf, Loader2, Mail, Phone, Scale, Sofa, Trophy, Fish, Salad, Utensils, Footprints } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 import { accountsEnabled, sendPhoneCode, signInWithEmail, signInWithGoogle, toE164, useSession, verifyPhoneCode } from '@/lib/account';
@@ -9,10 +9,10 @@ import { primaryGoal, suggestGramsPerKg, suggestionReason } from '@/lib/goals';
 import { COUNTRIES } from '@/lib/countries';
 import { AVOIDS, CUISINES } from '@/lib/cuisines';
 import { dailyGoal, fromKg, round1, toKg } from '@/lib/nutrition';
-import { dailyTargets } from '@/lib/energy';
+import { dailyTargets, weeksToGoal } from '@/lib/energy';
 import type { ActivityLevel, Diet, FitnessGoal } from '@/lib/types';
 import { Ring, Segmented, cx, fmt } from '@/components/ui';
-import { CountUp, haptic } from '@/components/fx';
+import { haptic } from '@/components/fx';
 
 type Option<T> = { value: T; label: string; sub: string; icon: typeof Dumbbell };
 
@@ -24,10 +24,10 @@ const GOALS: Option<FitnessGoal>[] = [
   { value: 'health', label: 'Eat healthier', sub: 'Enough protein, every day', icon: HeartPulse },
 ];
 const ACTIVITY: Option<ActivityLevel>[] = [
-  { value: 'sedentary', label: 'Mostly sitting', sub: 'Little or no exercise', icon: Sofa },
-  { value: 'light', label: 'Lightly active', sub: 'Exercise 1–3 days a week', icon: Footprints },
-  { value: 'active', label: 'Active', sub: 'Train 3–5 days a week', icon: Bike },
-  { value: 'athlete', label: 'Very active', sub: 'Hard training 6–7 days a week', icon: Trophy },
+  { value: 'sedentary', label: '0 workouts', sub: 'Mostly sitting', icon: Sofa },
+  { value: 'light', label: '1–2 a week', sub: 'Workouts now and then', icon: Footprints },
+  { value: 'active', label: '3–5 a week', sub: 'Train 3–5 days a week', icon: Bike },
+  { value: 'athlete', label: '6+ a week', sub: 'Dedicated athlete', icon: Trophy },
 ];
 const DIETS: Option<Diet>[] = [
   { value: 'all', label: 'I eat everything', sub: 'Meat, fish, dairy, plants', icon: Utensils },
@@ -36,7 +36,7 @@ const DIETS: Option<Diet>[] = [
   { value: 'vegan', label: 'Vegan', sub: 'Plants only', icon: Leaf },
 ];
 
-const STEPS = 7;
+const OBSTACLES = ['Lack of consistency', 'Busy schedule', 'Unhealthy eating habits', 'No meal ideas', 'Lack of support', 'Cravings & snacking', 'Eating out a lot', 'Don’t know what to eat'];
 
 export default function Onboarding() {
   const session = useSession();
@@ -74,8 +74,22 @@ export default function Onboarding() {
   const ageNum = Number(age);
   const ageOk = !age || (ageNum >= 13 && ageNum <= 110);
   const person = { age: ageNum || undefined, pregnant: sex === 'female' && pregnant };
+  // Extra answers (Cal AI-style interview).
+  const [goalWeight, setGoalWeight] = useState('');
+  const [pace, setPace] = useState(0.5);
+  const [obstacles, setObstacles] = useState<string[]>([]);
+  const [hasCoach, setHasCoach] = useState<boolean>();
+  const [kcalOverride, setKcalOverride] = useState<number>();
+  const [proteinOverride, setProteinOverride] = useState<number>();
+  const wantsChange = goals.includes('fatloss') || goals.includes('muscle');
+  const flow = ['welcome', 'goals', 'activity', 'diet', 'cuisines', 'about', ...(wantsChange ? ['goalweight'] : []), 'obstacles', 'coach', 'notify', 'plan'];
+  const at = flow[step];
+  const STEPS = flow.length;
   const next = () => setStep((s) => Math.min(STEPS - 1, s + 1));
   const back = () => setStep((s) => Math.max(0, s - 1));
+  const goalWeightNum = Number(goalWeight.replace(',', '.'));
+  const goalWeightKg = goalWeightNum >= minW && goalWeightNum <= maxW ? toKg(goalWeightNum, unit) : undefined;
+  const losing = goalWeightKg != null && weightKg != null && goalWeightKg < weightKg;
 
   function pickActivity(a: ActivityLevel) {
     setActivity(a);
@@ -109,16 +123,28 @@ export default function Onboarding() {
       heightCm: heightOk ? Math.round(heightNum) : undefined,
       cuisines: cuisines.length ? cuisines : undefined,
       avoid: avoid.length ? avoid : undefined,
-      calorieMode: 'auto',
+      calorieMode: kcalOverride ? 'fixed' : 'auto',
+      calorieGoal: kcalOverride,
+      ...(proteinOverride ? { goalMode: 'fixed' as const, goalGrams: proteinOverride } : {}),
+      goalWeightKg: goalWeightKg ? round1(goalWeightKg) : undefined,
+      paceKgPerWeek: goalWeightKg ? pace : undefined,
+      obstacles: obstacles.length ? obstacles : undefined,
+      hasCoach,
     });
   }
 
-  if (step === 0) return <Welcome signedIn={!!session} email={session?.user.email} onStart={next} />;
+  if (at === 'welcome') return <Welcome signedIn={!!session} email={session?.user.email} onStart={next} />;
 
-  const total = weightKg ? dailyGoal({ goalMode: 'perKg', gramsPerKg: gPerKg, bodyWeightKg: weightKg, goalGrams: 0 }) : 0;
-  const targets = weightKg
-    ? dailyTargets({ name: '', goalMode: 'perKg', goalGrams: 0, gramsPerKg: gPerKg, createdAt: 0, bodyWeightKg: weightKg, heightCm: heightOk ? heightNum : undefined, age: ageNum || undefined, sex, pregnant: sex === 'female' && pregnant, goals, activity }, total)
-    : null;
+  const total = proteinOverride ?? (weightKg ? dailyGoal({ goalMode: 'perKg', gramsPerKg: gPerKg, bodyWeightKg: weightKg, goalGrams: 0 }) : 0);
+  const draftProfile = {
+    name: '', goalMode: 'perKg' as const, goalGrams: 0, gramsPerKg: gPerKg, createdAt: 0, bodyWeightKg: weightKg, heightCm: heightOk ? heightNum : undefined,
+    age: ageNum || undefined, sex, pregnant: sex === 'female' && pregnant, goals, activity,
+    goalWeightKg, paceKgPerWeek: goalWeightKg ? pace : undefined,
+    calorieMode: kcalOverride ? ('fixed' as const) : ('auto' as const), calorieGoal: kcalOverride,
+  };
+  const targets = weightKg ? dailyTargets(draftProfile, total) : null;
+  const weeks = weightKg ? weeksToGoal({ bodyWeightKg: weightKg, goalWeightKg, paceKgPerWeek: pace }) : null;
+  const goalDate = weeks ? new Date(Date.now() + weeks * 7 * 86400000) : null;
 
   return (
     <div className="mx-auto flex min-h-dvh max-w-lg flex-col px-5 md:max-w-xl pb-8">
@@ -132,7 +158,7 @@ export default function Onboarding() {
       </header>
 
       <div key={step} className="flex flex-1 animate-fade-up flex-col">
-        {step === 1 && (
+        {at === 'goals' && (
           <Question title="What are your goals?" sub="Pick all that apply. We’ll set your calorie and protein targets.">
             {GOALS.map((o) => <Choice key={o.value} option={o} multi selected={goals.includes(o.value)} onClick={() => toggleGoal(o.value)} />)}
             <div className="flex-1" />
@@ -141,17 +167,17 @@ export default function Onboarding() {
             </button>
           </Question>
         )}
-        {step === 2 && (
+        {at === 'activity' && (
           <Question title="How active are you?" sub="Activity changes how much energy and protein your body uses.">
             {ACTIVITY.map((o) => <Choice key={o.value} option={o} selected={activity === o.value} onClick={() => pickActivity(o.value)} />)}
           </Question>
         )}
-        {step === 3 && (
+        {at === 'diet' && (
           <Question title="How do you eat?" sub="We’ll tailor food suggestions. You can still log anything.">
             {DIETS.map((o) => <Choice key={o.value} option={o} selected={diet === o.value} onClick={() => { setDiet(o.value); next(); }} />)}
           </Question>
         )}
-        {step === 4 && (
+        {at === 'cuisines' && (
           <Question title="What do you like to eat?" sub="Pick every cuisine you enjoy — we’ll mix ideas from all of them.">
             <div className="flex flex-wrap gap-2">
               {CUISINES.map((c) => (
@@ -172,7 +198,7 @@ export default function Onboarding() {
             <button onClick={next} className="btn-primary mt-6 w-full">{cuisines.length ? `Continue · ${cuisines.length} picked` : 'Skip for now'}</button>
           </Question>
         )}
-        {step === 5 && (
+        {at === 'about' && (
           <Question title="About you" sub="This helps us set the right target for you.">
             <div className="grid grid-cols-[1fr_6.5rem] gap-3">
               <div>
@@ -233,54 +259,101 @@ export default function Onboarding() {
             <button onClick={() => { setGPerKg(suggestGramsPerKg(primaryGoal(goals.length ? goals : ['health'], activity ?? 'active'), activity ?? 'active', person)); next(); }} disabled={!weightKg || !ageOk || !!heightError} className="btn-primary mt-6 w-full">Continue</button>
           </Question>
         )}
-        {step === 6 && goal && activity && (
-          <Question title="Your daily target" sub="Based on your answers. Adjust it any time in Profile.">
-            <div className="card mt-2 flex flex-col items-center p-6 text-center">
-              <AnimatedRing>
-                <div>
-                  <p className={cx('num font-extrabold leading-none', fmt(total).length > 3 ? 'text-[30px]' : 'text-[40px]')}>
-                    <CountUp value={total} /><span className="text-lg text-silver">g</span>
-                  </p>
-                  <p className="mt-1 text-xs font-medium text-silver">protein / day</p>
-                </div>
-              </AnimatedRing>
-              <div className="mt-5 flex w-full items-center gap-3">
-                <button onClick={() => { haptic(); setGPerKg((v) => Math.max(0.8, round1(v - 0.1))); }} className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-raised text-lg font-semibold transition active:scale-90" aria-label="Lower">−</button>
-                <input
-                  type="range" min={0.8} max={2.5} step={0.1} value={gPerKg}
-                  onChange={(e) => { setGPerKg(Number(e.target.value)); haptic(5); }}
-                  className="h-2 flex-1 cursor-pointer appearance-none rounded-full bg-raised accent-[rgb(var(--accent))]"
-                  aria-label="Grams of protein per kilogram"
-                />
-                <button onClick={() => { haptic(); setGPerKg((v) => Math.min(2.5, round1(v + 0.1))); }} className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-raised text-lg font-semibold transition active:scale-90" aria-label="Higher">+</button>
-              </div>
-              <p className="num mt-2 text-sm font-semibold">{gPerKg.toFixed(1)} g per kg of body weight</p>
-              <p className="mt-4 text-sm leading-relaxed text-silver">{suggestionReason(goal, activity, suggestGramsPerKg(goal, activity, person), person)}</p>
+        {at === 'goalweight' && (
+          <Question title="What’s your goal weight?" sub="We’ll pace your calories so you get there steadily.">
+            <div className="relative">
+              <input id="ob-goalweight" className="field !h-20 pr-16 text-center text-[34px] font-extrabold" inputMode="decimal" maxLength={5} value={goalWeight} onChange={(e) => setGoalWeight(e.target.value.replace(/[^\d.,]/g, ''))} placeholder={weightKg ? String(round1(fromKg(weightKg * (goals.includes('fatloss') ? 0.92 : 1.05), unit))) : unit === 'kg' ? '70' : '155'} />
+              <span className="pointer-events-none absolute right-6 top-1/2 -translate-y-1/2 text-xl font-semibold text-silver">{unit}</span>
             </div>
-            {targets ? (
-              <div className="card mt-3 p-4">
-                <div className="flex items-baseline justify-between">
-                  <p className="text-sm font-semibold">Full day</p>
-                  <p className="num text-sm"><span className="text-lg font-bold"><CountUp value={targets.kcal} /></span> <span className="text-silver">kcal</span></p>
-                </div>
-                <div className="mt-3 grid grid-cols-4 gap-2 text-center">
-                  {([['Protein', targets.protein, 'bg-accent'], ['Carbs', targets.carbs, 'bg-[rgb(var(--carbs))]'], ['Fat', targets.fat, 'bg-[rgb(var(--fat))]'], ['Fibre', targets.fiber, 'bg-silver']] as const).map(([l, v, c]) => (
-                    <div key={l} className="rounded-2xl bg-raised px-1 py-2">
-                      <span className={cx('mx-auto mb-1 block h-1.5 w-6 rounded-full', c)} />
-                      <p className="num text-[15px] font-bold">{fmt(v)}g</p>
-                      <p className="text-[12px] text-silver">{l}</p>
-                    </div>
+            {goalWeightKg && weightKg && (
+              <p className="num mt-2 text-center text-[15px] font-semibold">
+                {Math.abs(goalWeightKg - weightKg) < 0.5 ? 'That’s about your weight now — we’ll help you maintain.' : `${losing ? 'Lose' : 'Gain'} ${fmt(Math.abs(fromKg(goalWeightKg - weightKg, unit)), 1)} ${unit}`}
+              </p>
+            )}
+            {goalWeightKg && weightKg && Math.abs(goalWeightKg - weightKg) >= 0.5 && (
+              <div className="card mt-5 p-5">
+                <p className="text-center text-sm font-semibold text-silver">{losing ? 'Weight loss' : 'Weight gain'} per week</p>
+                <p className="num mt-1 text-center text-[34px] font-extrabold">{fmt(fromKg(pace, unit), 2)} {unit}</p>
+                <div className="mt-3 grid grid-cols-3 text-center text-sm font-bold">
+                  {[['🦥', 'Slow'], ['🐇', 'Recommended'], ['🐆', 'Fast']].map(([e, l], i) => (
+                    <span key={l} className={cx((i === 0 && pace < 0.4) || (i === 1 && pace >= 0.4 && pace <= 0.6) || (i === 2 && pace > 0.6) ? 'text-accent' : 'text-silver')}><span className="block text-[28px]">{e}</span>{l}</span>
                   ))}
                 </div>
-                <p className="mt-2 text-[12px] leading-snug text-dim">Calories estimated with the Mifflin–St Jeor equation{goals.includes('fatloss') && !(sex === 'female' && pregnant) ? ', about 20% below maintenance for fat loss' : goals.includes('muscle') ? ', about 10% above maintenance for muscle gain' : ''}.</p>
+                <input type="range" min={losing ? 0.25 : 0.1} max={losing ? 1 : 0.5} step={0.05} value={pace} onChange={(e) => { setPace(Number(e.target.value)); haptic(5); }} className="mt-3 h-2 w-full cursor-pointer appearance-none rounded-full bg-raised accent-[rgb(var(--accent))]" aria-label="Pace per week" />
+                <div className="mt-4 rounded-2xl bg-raised p-4">
+                  <p className="font-semibold">You should reach your goal in <span className="text-accent">{weeks && weeks > 8 ? `${Math.round(weeks / 4.3)} months` : `${weeks} weeks`}</span></p>
+                  <p className="mt-1 text-sm text-silver">{pace > 0.75 ? 'Fast paces are harder to stick to and can cost muscle.' : pace < 0.4 ? 'Slow and steady — easy to keep up.' : 'A balanced pace that works for most people.'}</p>
+                  {targets && <p className="num mt-1 text-sm font-semibold">Daily calories: {fmt(targets.kcal)} kcal</p>}
+                </div>
               </div>
-            ) : (
-              <p className="mt-3 rounded-2xl bg-raised p-3 text-center text-xs text-silver">Add your height and age to also get calorie, carb and fat targets.</p>
             )}
-            <p className="mt-3 text-center text-xs text-dim">A starting point, not medical advice. Check with a health professional if you have a medical condition.</p>
             <div className="flex-1" />
-            <button onClick={() => { haptic([10, 40, 10]); finish(); }} className="btn-primary mt-8 w-full">Start tracking</button>
+            <button onClick={() => { if (!losing && pace > 0.5) setPace(0.25); next(); }} className="btn-primary mt-6 w-full">{goalWeightKg ? 'Continue' : 'Skip for now'}</button>
           </Question>
+        )}
+        {at === 'obstacles' && (
+          <Question title="What’s stopping you from reaching your goals?" sub="Pick any — your coach will help with these.">
+            {OBSTACLES.map((o) => (
+              <button key={o} onClick={() => { haptic(); setObstacles((cur) => (cur.includes(o) ? cur.filter((x) => x !== o) : [...cur, o])); }} className={cx('flex min-h-[60px] items-center justify-between rounded-[20px] px-5 text-left text-[16px] font-bold transition active:scale-[.99]', obstacles.includes(o) ? 'bg-primary text-on-primary' : 'bg-surface')} style={obstacles.includes(o) ? undefined : { boxShadow: 'var(--shadow)' }}>
+                {o} {obstacles.includes(o) && <Check size={18} strokeWidth={3} />}
+              </button>
+            ))}
+            <div className="flex-1" />
+            <button onClick={next} className="btn-primary mt-6 w-full">{obstacles.length ? 'Continue' : 'Skip'}</button>
+          </Question>
+        )}
+        {at === 'coach' && (
+          <Question title="Do you work with a personal trainer or dietitian?" sub="Your plan stays yours either way — share it with them anytime.">
+            {([[true, 'Yes', '👍'], [false, 'No', '👎']] as const).map(([v, l, e]) => (
+              <button key={l} onClick={() => { haptic(); setHasCoach(v); setTimeout(next, 180); }} className={cx('flex h-16 items-center gap-4 rounded-[20px] px-5 text-left text-[17px] font-bold transition', hasCoach === v ? 'bg-primary text-on-primary' : 'bg-surface')} style={hasCoach === v ? undefined : { boxShadow: 'var(--shadow)' }}>
+                <span className="text-[24px]">{e}</span>{l}
+              </button>
+            ))}
+          </Question>
+        )}
+        {at === 'notify' && (
+          <Question title="Stay on track with reminders" sub="A gentle nudge if you forget to log a meal. You can change this anytime.">
+            <div className="card mt-2 space-y-3 p-5">
+              {[['🍳', 'Breakfast', '09:30'], ['🥗', 'Lunch', '14:00'], ['🍲', 'Dinner', '20:00']].map(([e, l, t]) => (
+                <div key={l} className="flex items-center gap-3"><span className="text-[26px]">{e}</span><span className="flex-1 font-bold">{l}</span><span className="num font-semibold text-silver">{t}</span></div>
+              ))}
+            </div>
+            <div className="flex-1" />
+            <button onClick={async () => { haptic(); await enableReminders(); next(); }} className="btn-primary mt-6 w-full">Allow reminders</button>
+            <button onClick={next} className="mt-2 h-12 w-full font-bold text-silver">Not now</button>
+          </Question>
+        )}
+        {at === 'plan' && goal && activity && (
+          <div className="flex flex-1 flex-col">
+            <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-primary text-on-primary"><Check size={28} strokeWidth={3} /></div>
+            <h1 className="mt-4 text-center text-[28px] font-extrabold leading-tight tracking-tight">
+              {goalWeightKg && weightKg && goalDate && Math.abs(goalWeightKg - weightKg) >= 0.5
+                ? <>Goal: {losing ? 'lose' : 'gain'} {fmt(Math.abs(fromKg(goalWeightKg - weightKg, unit)), 1)} {unit} by {goalDate.toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}</>
+                : <>Your plan is ready{name.trim() ? `, ${name.trim()}` : ''}</>}
+            </h1>
+            {goalWeightKg && weightKg && goalDate && Math.abs(goalWeightKg - weightKg) >= 0.5 && (
+              <div className="card mt-5 p-5">
+                <p className="font-bold">Estimated progress</p>
+                <ProgressCurve losing={losing} label={`${fmt(fromKg(goalWeightKg, unit), 1)} ${unit}`} />
+                <div className="mt-1 flex justify-between text-sm font-semibold text-silver"><span>Now</span><span>{goalDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span></div>
+              </div>
+            )}
+            <div className="card mt-4 p-5">
+              <p className="text-[17px] font-bold">Your daily recommendation</p>
+              <p className="text-sm text-silver">Tap any number to edit it.</p>
+              <EditTile big emoji="🔥" label="Calories" unit="kcal" value={targets?.kcal} onChange={(v) => setKcalOverride(v)} min={800} max={8000} />
+              <div className="mt-2.5 grid grid-cols-3 gap-2.5">
+                <EditTile emoji="🍗" label="Protein" unit="g" value={total} onChange={(v) => setProteinOverride(v)} min={20} max={400} />
+                <EditTile emoji="🌾" label="Carbs" unit="g" value={targets?.carbs} />
+                <EditTile emoji="🥑" label="Fat" unit="g" value={targets?.fat} />
+              </div>
+              <p className="mt-3 text-sm leading-relaxed text-silver">{suggestionReason(goal, activity, suggestGramsPerKg(goal, activity, person), person)}</p>
+              {!targets && <p className="mt-2 rounded-2xl bg-raised p-3 text-sm text-silver">Add your height and age in Profile to get calorie, carb and fat targets.</p>}
+            </div>
+            <p className="mt-3 text-center text-xs text-dim">Calories estimated with the Mifflin–St Jeor equation. A starting point, not medical advice.</p>
+            <div className="flex-1" />
+            <button onClick={() => { haptic([10, 40, 10]); finish(); }} className="btn-primary mt-8 w-full">Let’s get started!</button>
+          </div>
         )}
       </div>
     </div>
@@ -290,7 +363,7 @@ export default function Onboarding() {
 function Question({ title, sub, children }: { title: string; sub: string; children: ReactNode }) {
   return (
     <div className="flex flex-1 flex-col">
-      <h1 className="text-[28px] font-bold leading-tight tracking-tight">{title}</h1>
+      <h1 className="text-[30px] font-extrabold leading-[1.15] tracking-tight">{title}</h1>
       <p className="mt-1.5 text-[15px] text-silver">{sub}</p>
       <div className="mt-6 flex flex-1 flex-col gap-2.5">{children}</div>
     </div>
@@ -427,12 +500,60 @@ function Welcome({ signedIn, email, onStart }: { signedIn: boolean; email?: stri
   );
 }
 
-/** Ring that fills up when the screen appears. */
-function AnimatedRing({ children }: { children: ReactNode }) {
-  const [v, setV] = useState(0);
-  useEffect(() => {
-    const t = setTimeout(() => setV(1), 80);
-    return () => clearTimeout(t);
-  }, []);
-  return <Ring value={v} size={160} stroke={12} color="accent" track="raised">{children}</Ring>;
+
+/** Turn on meal reminders from onboarding (asks the browser for permission). */
+async function enableReminders() {
+  try {
+    if (!('Notification' in window)) return;
+    const perm = Notification.permission === 'granted' ? 'granted' : await Notification.requestPermission();
+    if (perm === 'granted') {
+      const st = useStore.getState();
+      st.updateSettings({ reminders: { enabled: true, breakfast: '09:30', lunch: '14:00', dinner: '20:00' } });
+    }
+  } catch { /* not supported */ }
+}
+
+/** Simple eased curve from now to the goal (illustrative, not a prediction). */
+function ProgressCurve({ losing, label }: { losing: boolean; label: string }) {
+  const d = losing ? 'M10,18 C 90,18 120,30 160,62 S 240,104 290,104' : 'M10,104 C 90,104 120,92 160,60 S 240,18 290,18';
+  const end = losing ? 104 : 18;
+  return (
+    <svg viewBox="0 0 300 120" className="mt-3 w-full">
+      <defs><linearGradient id="pc" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stopColor="rgb(var(--accent))" stopOpacity="0.25" /><stop offset="1" stopColor="rgb(var(--accent))" stopOpacity="0" /></linearGradient></defs>
+      <path d={`${d} L290,118 L10,118 Z`} fill="url(#pc)" />
+      <path d={d} fill="none" stroke="rgb(var(--ink))" strokeWidth="3" strokeLinecap="round" className="animate-[dash_1.2s_ease-out_both]" style={{ strokeDasharray: 400, strokeDashoffset: 0 }} />
+      <circle cx="10" cy={losing ? 18 : 104} r="6" fill="rgb(var(--surface))" stroke="rgb(var(--ink))" strokeWidth="3" />
+      <circle cx="290" cy={end} r="6" fill="rgb(var(--surface))" stroke="rgb(var(--accent))" strokeWidth="3" />
+      <g transform={`translate(${222},${losing ? end - 40 : end + 14})`}>
+        <rect width="70" height="26" rx="13" fill="rgb(var(--primary))" />
+        <text x="35" y="17.5" textAnchor="middle" fontSize="12" fontWeight="700" fill="rgb(var(--on-primary))">{label}</text>
+      </g>
+    </svg>
+  );
+}
+
+/** Number tile that can be tapped to edit. */
+function EditTile({ emoji, label, unit, value, onChange, min = 0, max = 10000, big }: { emoji: string; label: string; unit: string; value?: number; onChange?: (v: number) => void; min?: number; max?: number; big?: boolean }) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState('');
+  return (
+    <div className={cx('rounded-[22px] bg-raised p-4', big && 'mt-4 flex items-center gap-4')}>
+      <span className={cx(big ? 'grid h-14 w-14 place-items-center rounded-2xl bg-surface text-[28px]' : 'text-[22px]')}>{emoji}</span>
+      <div className={cx(big && 'flex-1')}>
+        {editing && onChange ? (
+          <input
+            autoFocus inputMode="numeric" value={draft} onChange={(e) => setDraft(e.target.value.replace(/\D/g, ''))}
+            onBlur={() => { const n = Number(draft); if (n >= min && n <= max) onChange(n); setEditing(false); }}
+            onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}
+            className={cx('num w-full bg-transparent font-extrabold outline-none', big ? 'text-[34px]' : 'text-[22px]')}
+          />
+        ) : (
+          <button onClick={() => { if (!onChange) return; setDraft(value ? String(Math.round(value)) : ''); setEditing(true); haptic(); }} className={cx('num block font-extrabold', big ? 'text-[34px]' : 'mt-1 text-[22px]')}>
+            {value == null ? '—' : `${fmt(value)}${unit === 'g' ? 'g' : ''}`}{onChange && <span className="ml-1 align-middle text-sm text-dim">✎</span>}
+          </button>
+        )}
+        <p className="text-sm font-semibold text-silver">{label}{unit === 'kcal' ? ' (kcal)' : ''}</p>
+      </div>
+    </div>
+  );
 }

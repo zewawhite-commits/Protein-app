@@ -55,6 +55,7 @@ export function useCoachContext(): CoachContext {
       name: profile?.name || undefined,
       goals: profile?.goals ?? (profile?.goal ? [profile.goal] : undefined),
       activity: profile?.activity, diet: profile?.diet, country: profile?.country, cuisines: profile?.cuisines, avoid: profile?.avoid,
+      obstacles: profile?.obstacles, weightKg: profile?.bodyWeightKg ?? undefined, goalWeightKg: profile?.goalWeightKg,
       age: profile?.age, sex: profile?.sex, pregnant: profile?.pregnant,
       targets: { kcal: t?.kcal, protein: goal || undefined, carbs: t?.carbs, fat: t?.fat, fiber: t?.fiber },
       today: { kcal: totals.kcal, protein: totals.protein, carbs: totals.carbs, fat: totals.fat, fiber: totals.fiber, sugar: totals.sugar, sodiumMg: totals.sodium },
