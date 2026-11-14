@@ -11,7 +11,7 @@ describe('food illustrations', () => {
       ['Beef curry', undefined, 'curry_rice'],
       ['Jollof rice with chicken', undefined, 'shallow_pan_of_food'],
       ['Egg, whole, cooked, hard-boiled', undefined, 'egg'],
-      ['Eggplant, raw', 'Vegetables and Vegetable Products', 'carrot'],
+      ['Eggplant, raw', 'Vegetables and Vegetable Products', 'leafy_green'],
       ['Plantain, cooked', undefined, 'banana'],
       ['Pineapple, raw', undefined, 'pineapple'],
       ['Egusi soup', undefined, 'pot_of_food'],
