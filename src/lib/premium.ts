@@ -89,7 +89,7 @@ export async function refreshPremium(force = false): Promise<void> {
 }
 
 /** Prices shown in the app (always US dollars), by plan id. */
-export const USD_PRICES: Record<string, number> = { plus_monthly: 6.99, plus_yearly: 24.99, pro_monthly: 10.99, pro_yearly: 39.99 };
+export const USD_PRICES: Record<string, number> = { plus_monthly: 4.99, plus_yearly: 29.99, pro_monthly: 7.99, pro_yearly: 47.99 };
 
 /** Price as shown to people: the dollar price for known plans, otherwise the provider's own. */
 export function displayPrice(p: PlanInfo): string {

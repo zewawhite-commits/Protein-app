@@ -51,7 +51,7 @@
   body {
     @apply bg-bg text-ink font-sans font-normal antialiased;
     overscroll-behavior-y: none;
-    letter-spacing: 0.005em;
+    letter-spacing: -0.01em;
   }
   input, select, textarea, button { font: inherit; color: inherit; }
   :focus-visible { outline: 2px solid rgb(var(--accent)); outline-offset: 2px; }
@@ -60,7 +60,7 @@
 }
 
 @layer components {
-  .card { @apply bg-surface rounded-[28px]; box-shadow: var(--shadow); }
+  .card { @apply bg-surface rounded-[24px]; box-shadow: var(--shadow); }
   .tile { @apply bg-raised rounded-[20px]; }
   .btn { @apply inline-flex items-center justify-center gap-2 rounded-full px-6 h-14 text-[16px] font-bold transition active:scale-[.98] disabled:opacity-30 disabled:pointer-events-none; }
   .btn-primary { @apply btn bg-primary text-on-primary; }
@@ -70,7 +70,7 @@
   .field { @apply w-full h-14 rounded-2xl bg-raised px-4 text-ink font-medium placeholder:text-dim outline-none ring-0 focus:ring-2 focus:ring-ink/80 transition; }
   .label { @apply block text-sm font-semibold mb-2; }
   .eyebrow { @apply text-[13px] font-semibold text-silver; }
-  .num { font-variant-numeric: tabular-nums; letter-spacing: -0.03em; }
+  .num { font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
   .pb-nav { padding-bottom: calc(env(safe-area-inset-bottom) + 7rem); }
   .pt-safe { padding-top: max(env(safe-area-inset-top), 1.25rem); }
 }

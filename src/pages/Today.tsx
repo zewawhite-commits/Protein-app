@@ -1,13 +1,13 @@
 import { useMemo, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Camera, Check, Flame, Plus, Search } from 'lucide-react';
+import { Check, ChevronRight, Droplet, Drumstick, Flame, Plus, Wheat } from 'lucide-react';
 import { useStore, goalOn } from '@/store/useStore';
 import { useDay, useFoodLookup } from '@/lib/hooks';
 import { addDays, fromKey, relativeDay, todayKey, weekOf } from '@/lib/dates';
 import { sumEntries, type Totals } from '@/lib/nutrition';
 import { dailyTargets, type Targets } from '@/lib/energy';
 import { DV_NOTE, MacroBar, NutrientList } from '@/components/Nutrients';
-import type { Food, LogEntry, Meal } from '@/lib/types';
+import type { Food, LogEntry } from '@/lib/types';
 import { Pill, Ring, Sheet, cx, fmt } from '@/components/ui';
 import { APP_NAME, CountUp } from '@/components/fx';
 import { EntryRow } from '@/components/EntryRow';
@@ -15,15 +15,8 @@ import { Suggestions } from '@/components/Suggestions';
 import { FoodSheet } from '@/components/FoodSheet';
 import { NotificationBell } from '@/components/Notifications';
 import { SaveMealButton } from '@/components/SavedMeals';
-import { QuickActions } from '@/components/QuickActions';
 import { ExerciseList } from '@/components/LogMenu';
 
-const MEALS: { key: Meal; label: string }[] = [
-  { key: 'breakfast', label: 'Breakfast' },
-  { key: 'lunch', label: 'Lunch' },
-  { key: 'dinner', label: 'Dinner' },
-  { key: 'snack', label: 'Snacks' },
-];
 
 export function entryAsFood(e: LogEntry, lookup: (id: string) => Food | undefined): Food {
   const live = lookup(e.foodId);
@@ -57,7 +50,7 @@ export default function Today() {
   }, [profile, goal, addBurned, burned]);
   const lookup = useFoodLookup();
   const [editing, setEditing] = useState<LogEntry | null>(null);
-  const { streak, weekHits } = useGoalStats(date);
+  const { streak } = useGoalStats(date);
 
   const isToday = date === today;
 
@@ -67,7 +60,7 @@ export default function Today() {
         <div className="flex items-center justify-between">
           <span className="flex items-center gap-2 lg:invisible">
             <Ring value={0.72} size={26} stroke={4} color="accent" track="line" />
-            <span className="text-[19px] font-bold tracking-tight">{APP_NAME}</span>
+            <span className="text-[22px] font-bold tracking-tight">{APP_NAME}</span>
           </span>
           <span className="flex items-center gap-2">
             <Pill>
@@ -77,9 +70,6 @@ export default function Today() {
             <NotificationBell />
           </span>
         </div>
-        <p className="mt-4 flex items-center gap-2 text-sm font-medium text-silver">
-          <span className="h-2 w-2 rounded-full bg-accent" /> {weekHits} of 7 days on goal this week
-        </p>
       </header>
 
       {(goal > 400 || (profileWeight ?? 0) > 300) && (
@@ -89,28 +79,17 @@ export default function Today() {
         </Link>
       )}
 
-      <div className="mb-5 flex gap-2">
-        <Link to={`/add${!isToday ? `?date=${date}` : ''}`} className="flex h-12 flex-1 items-center gap-3 rounded-full bg-surface px-4 text-[15px] text-dim" style={{ boxShadow: 'var(--shadow)' }}>
-          <Search size={18} className="text-silver" /> Search any food in the world
-        </Link>
-        <Link to={`/snap${!isToday ? `?date=${date}` : ''}`} className="grid h-12 w-12 place-items-center rounded-full bg-primary text-on-primary" aria-label="Snap a photo">
-          <Camera size={20} />
-        </Link>
-      </div>
-
-      <QuickActions dateQuery={!isToday ? `?date=${date}` : ''} />
-
       <WeekStrip date={date} onSelect={setDate} />
 
       <div className="lg:grid lg:grid-cols-[1.1fr_1fr] lg:items-start lg:gap-8">
       <div>
       <HeroCard totals={totals} goal={goal} targets={targets} entries={entries} burned={burned} addBurned={addBurned} />
-      {isToday && <Suggestions remaining={Math.max(0, goal - totals.protein)} />}
+      <MacroCards totals={totals} goal={goal} targets={targets} />
       </div>
 
       <section className="mt-8 lg:mt-5">
         <div className="mb-3 flex items-baseline justify-between px-1">
-          <h2 className="text-xl font-semibold tracking-tight">{isToday ? "Today's meals" : `${relativeDay(date)}'s meals`}</h2>
+          <h2 className="text-[20px] font-bold tracking-tight">{isToday ? 'Recently eaten' : `${relativeDay(date)}`}</h2>
           {entries.length > 0 && (
             <span className="flex items-center gap-4">
               <SaveMealButton entries={entries} />
@@ -122,8 +101,8 @@ export default function Today() {
           <Link to={`/add${!isToday ? `?date=${date}` : ''}`} className="card flex items-center gap-4 p-4 transition active:scale-[.99]">
             <span className="grid h-14 w-14 place-items-center rounded-[18px] bg-primary text-on-primary"><Plus size={24} strokeWidth={2.6} /></span>
             <span>
-              <span className="block font-semibold">Log your first meal</span>
-              <span className="block text-sm font-medium text-silver">Weigh it, find it, done.</span>
+              <span className="block font-semibold">You haven’t logged anything yet</span>
+              <span className="block text-sm font-medium text-silver">Tap + to scan, search or describe a meal.</span>
             </span>
           </Link>
         ) : (
@@ -135,6 +114,7 @@ export default function Today() {
       </div>
 
       <ExerciseList date={date} />
+      {isToday && <div className="mt-2"><Suggestions remaining={Math.max(0, goal - totals.protein)} /></div>}
 
       <FoodSheet food={editing ? entryAsFood(editing, lookup) : null} entry={editing ?? undefined} date={date} onClose={() => setEditing(null)} />
     </div>
@@ -142,27 +122,16 @@ export default function Today() {
 }
 
 function HeroCard({ totals, goal, targets, entries, burned = 0, addBurned }: { totals: Totals; goal: number; targets: Targets | null; entries: LogEntry[]; burned?: number; addBurned?: boolean }) {
-  const [page, setPage] = useState(0);
   const [allNutrients, setAllNutrients] = useState(false);
-  const scroller = useRef<HTMLDivElement>(null);
-  const perMeal = useMemo(
-    () => MEALS.map((m) => ({ ...m, ...sumEntries(entries.filter((e) => e.meal === m.key)) })),
-    [entries],
-  );
+  void entries;
   const kcalLeft = targets ? targets.kcal - totals.kcal : 0;
   const kcalPct = targets ? totals.kcal / targets.kcal : 0;
   const over = targets && kcalLeft < 0;
-  const pages = 3;
 
   return (
-    <section className="card mt-5 pb-4 pt-6">
-      <div
-        ref={scroller}
-        onScroll={(e) => setPage(Math.round(e.currentTarget.scrollLeft / e.currentTarget.clientWidth))}
-        className="flex snap-x snap-mandatory overflow-x-auto no-scrollbar"
-      >
-        {/* Page 1: calories + macros */}
-        <div className="w-full shrink-0 snap-center px-6">
+    <section className="card mt-5 pb-5 pt-6">
+      <div>
+        <div className="px-6">
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0">
               {targets ? (
@@ -191,11 +160,6 @@ function HeroCard({ totals, goal, targets, entries, burned = 0, addBurned }: { t
               </div>
             </Ring>
           </div>
-          <div className="mt-5 space-y-3">
-            <MacroBar label="Protein" value={totals.protein} target={goal} color="protein" />
-            <MacroBar label="Carbs" value={totals.carbs} target={targets?.carbs} color="carbs" incomplete={totals.incomplete.carbs} />
-            <MacroBar label="Fat" value={totals.fat} target={targets?.fat} color="fat" incomplete={totals.incomplete.fat} />
-          </div>
           {totals.protein >= goal && goal > 0 && (
             <span className="mt-3 inline-flex h-7 items-center gap-1.5 rounded-full bg-accent/10 px-2.5 text-xs font-semibold text-accent">
               <Check size={13} strokeWidth={3} /> Protein goal hit
@@ -203,46 +167,9 @@ function HeroCard({ totals, goal, targets, entries, burned = 0, addBurned }: { t
           )}
         </div>
 
-        {/* Page 2: nutrients */}
-        <div className="w-full shrink-0 snap-center px-6">
-          <div className="flex items-baseline justify-between">
-            <p className="text-[15px] font-semibold">Nutrients</p>
-            <button onClick={() => setAllNutrients(true)} className="text-sm font-semibold text-accent">See all</button>
-          </div>
-          <div className="mt-2">
-            <MacroBar label="Fibre" value={totals.fiber} target={targets?.fiber} color="fiber" incomplete={totals.incomplete.fiber} />
-          </div>
-          <NutrientList compact values={totals} incomplete={totals.incomplete} keys={['sugar', 'satFat', 'sodium', 'iron', 'calcium']} />
-        </div>
-
-        {/* Page 3: by meal */}
-        <div className="w-full shrink-0 snap-center px-6">
-          <p className="text-[15px] font-semibold">By meal</p>
-          <div className="mt-4 grid grid-cols-2 gap-2.5">
-            {perMeal.map((m) => (
-              <div key={m.key} className="tile p-3">
-                <p className="truncate text-[12px] font-semibold text-silver">{m.label}</p>
-                <p className="num mt-1 text-lg font-bold leading-none">{fmt(m.kcal)}<span className="text-xs text-silver"> kcal</span></p>
-                <p className="num mt-1.5 text-[12px] text-silver">
-                  <span className="text-accent">P {fmt(m.protein)}</span> · C {fmt(m.carbs)} · F {fmt(m.fat)}
-                </p>
-              </div>
-            ))}
-          </div>
-          <p className="mt-3 text-center text-[12px] font-medium text-dim">Protein · carbs · fat in grams</p>
-        </div>
       </div>
 
-      <div className="mt-4 flex justify-center gap-1.5">
-        {Array.from({ length: pages }, (_, i) => (
-          <button
-            key={i}
-            aria-label={`Page ${i + 1}`}
-            onClick={() => scroller.current?.scrollTo({ left: i * scroller.current.clientWidth, behavior: 'smooth' })}
-            className={cx('h-1.5 rounded-full transition-all', page === i ? 'w-5 bg-ink' : 'w-1.5 bg-line')}
-          />
-        ))}
-      </div>
+      <button onClick={() => setAllNutrients(true)} className="mx-6 mt-4 flex items-center gap-1 text-sm font-semibold text-accent">Vitamins, minerals & more <ChevronRight size={15} /></button>
 
       <Sheet open={allNutrients} onClose={() => setAllNutrients(false)} title="All nutrients">
         <div className="space-y-3">
@@ -334,3 +261,30 @@ export function useGoalStats(date = todayKey()) {
 
 export const useStreak = () => useGoalStats().streak;
 
+
+/** Three macro cards with rings (grams left), Cal AI-style. */
+function MacroCards({ totals, goal, targets }: { totals: Totals; goal: number; targets: Targets | null }) {
+  const items = [
+    { label: 'Protein', eaten: totals.protein, target: goal, color: 'accent' as const, icon: Drumstick },
+    { label: 'Carbs', eaten: totals.carbs, target: targets?.carbs ?? 0, color: 'carbs' as const, icon: Wheat },
+    { label: 'Fat', eaten: totals.fat, target: targets?.fat ?? 0, color: 'fat' as const, icon: Droplet },
+  ];
+  return (
+    <div className="mt-3 grid grid-cols-3 gap-3">
+      {items.map((m) => {
+        const left = m.target - m.eaten;
+        return (
+          <div key={m.label} className="card p-4">
+            <p className="num text-[22px] font-bold leading-none">{m.target ? `${fmt(Math.abs(left))}g` : `${fmt(m.eaten)}g`}</p>
+            <p className="mt-1 text-[13px] font-medium text-silver">{m.target ? `${m.label} ${left < 0 ? 'over' : 'left'}` : m.label}</p>
+            <div className="mt-3 flex justify-center">
+              <Ring value={m.target ? m.eaten / m.target : 0} size={72} stroke={7} color={m.color} track="raised">
+                <m.icon size={20} className={m.color === 'accent' ? 'text-accent' : m.color === 'carbs' ? 'text-[rgb(var(--carbs))]' : 'text-[rgb(var(--fat))]'} />
+              </Ring>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}

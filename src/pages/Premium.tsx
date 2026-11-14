@@ -13,8 +13,8 @@ import { Segmented, cx } from '@/components/ui';
 /** Planned prices, shown until live plans load from the payment provider (which sets the real charge). */
 const PREVIEW = [
   { name: 'Free', perks: ['Calories, macros & 13,000+ foods', 'Groups, progress & weight', '3 AI scans a month'], year: '$0', month: '', perMonth: '' },
-  { name: 'Plus', perks: ['60 AI scans a month', 'AI coach & eating plans'], year: '$24.99/yr', month: '$6.99/mo', perMonth: '≈ $2.08/mo', best: true },
-  { name: 'Pro', perks: ['200 AI scans a month', 'Everything in Plus'], year: '$39.99/yr', month: '$10.99/mo', perMonth: '≈ $3.33/mo' },
+  { name: 'Plus', perks: ['60 AI scans a month', 'AI coach & eating plans'], year: '$29.99/yr', month: '$4.99/mo', perMonth: '≈ $2.50/mo', best: true },
+  { name: 'Pro', perks: ['200 AI scans a month', 'Everything in Plus'], year: '$47.99/yr', month: '$7.99/mo', perMonth: '≈ $4.00/mo' },
 ];
 
 const TIER_INFO: Record<'free' | Tier, { name: string; perks: string[] }> = {
