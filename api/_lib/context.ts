@@ -14,6 +14,7 @@ export function cleanContext(raw: unknown): CoachContext {
     diet: str(c.diet, 20),
     country: str(c.country, 60),
     obstacles: Array.isArray(c.obstacles) ? c.obstacles.map((g: unknown) => String(g).slice(0, 40)).slice(0, 10) : undefined,
+    training: Array.isArray(c.training) ? c.training.map((g: unknown) => String(g).slice(0, 30)).slice(0, 12) : undefined,
     weightKg: num(c.weightKg, 400),
     goalWeightKg: num(c.goalWeightKg, 400),
     cuisines: Array.isArray(c.cuisines) ? c.cuisines.map((g: unknown) => String(g).slice(0, 30)).slice(0, 26) : undefined,

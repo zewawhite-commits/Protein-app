@@ -3,6 +3,8 @@
  * talks to, so it can later be backed by a server (e.g. Supabase) without
  * touching the screens.
  */
+import type { WorkoutPlan } from '@/lib/workout';
+import type { Recipe } from '@/lib/recipe';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { CustomFood, Food, LogEntry, Meal, Profile, ProgressPhoto, SavedMeal, SavedPlan, Settings, WeightEntry } from '@/lib/types';
@@ -33,6 +35,12 @@ interface State {
   addProgressPhoto: (p: Omit<ProgressPhoto, 'id'>) => void;
   removeProgressPhoto: (id: string) => void;
   savedPlans: SavedPlan[];
+  /** The latest AI workout guide the person kept. */
+  workoutPlan: { plan: WorkoutPlan; createdAt: number } | null;
+  setWorkoutPlan: (plan: WorkoutPlan | null) => void;
+  savedRecipes: { id: string; recipe: Recipe; createdAt: number }[];
+  saveRecipe: (recipe: Recipe) => string;
+  removeRecipe: (id: string) => void;
   saveMeal: (name: string, entries: LogEntry[]) => SavedMeal;
   removeSavedMeal: (id: string) => void;
   savePlan: (p: Omit<SavedPlan, 'id' | 'createdAt'>) => SavedPlan;
@@ -107,6 +115,15 @@ export const useStore = create<State>()(
         return plan;
       },
       removeSavedPlan: (id) => set((s) => ({ savedPlans: s.savedPlans.filter((m) => m.id !== id) })),
+      workoutPlan: null,
+      setWorkoutPlan: (plan) => set({ workoutPlan: plan ? { plan, createdAt: Date.now() } : null }),
+      savedRecipes: [],
+      saveRecipe: (recipe) => {
+        const id = crypto.randomUUID();
+        set((s) => ({ savedRecipes: [{ id, recipe, createdAt: Date.now() }, ...s.savedRecipes].slice(0, 60) }));
+        return id;
+      },
+      removeRecipe: (id) => set((s) => ({ savedRecipes: s.savedRecipes.filter((r) => r.id !== id) })),
 
       setPremium: (premium) => set({ premium }),
 
@@ -199,13 +216,15 @@ export const useStore = create<State>()(
           remoteFoods: d.remoteFoods ?? {},
           savedMeals: d.savedMeals ?? [],
           savedPlans: d.savedPlans ?? [],
+          workoutPlan: d.workoutPlan ?? null,
+          savedRecipes: d.savedRecipes ?? [],
           weights: d.weights ?? [],
           exercises: d.exercises ?? [],
         });
       },
 
       resetAll: () =>
-        set({ profile: null, settings: defaultSettings, entries: [], customFoods: [], goalHistory: {}, recentFoodIds: [], favoriteFoodIds: [], remoteFoods: {}, savedMeals: [], savedPlans: [], weights: [], exercises: [], progressPhotos: [], premium: null }),
+        set({ profile: null, settings: defaultSettings, entries: [], customFoods: [], goalHistory: {}, recentFoodIds: [], favoriteFoodIds: [], remoteFoods: {}, savedMeals: [], savedPlans: [], workoutPlan: null, savedRecipes: [], weights: [], exercises: [], progressPhotos: [], premium: null }),
     }),
     {
       name: 'protein-app',
@@ -225,7 +244,7 @@ useStore.subscribe((s, prev) => {
   const changed =
     s.entries !== prev.entries || s.profile !== prev.profile || s.customFoods !== prev.customFoods ||
     s.goalHistory !== prev.goalHistory || s.favoriteFoodIds !== prev.favoriteFoodIds ||
-    s.savedMeals !== prev.savedMeals || s.savedPlans !== prev.savedPlans || s.weights !== prev.weights || s.exercises !== prev.exercises;
+    s.savedMeals !== prev.savedMeals || s.savedPlans !== prev.savedPlans || s.workoutPlan !== prev.workoutPlan || s.savedRecipes !== prev.savedRecipes || s.weights !== prev.weights || s.exercises !== prev.exercises;
   if (changed && s.lastModified === prev.lastModified) useStore.setState({ lastModified: Date.now() });
 });
 
@@ -240,7 +259,7 @@ export function goalOn(date: string, goalHistory: Record<string, number>, profil
 
 export function exportData() {
   // Premium passes and personal API keys are never written to backup files.
-  const { profile, settings, entries, customFoods, goalHistory, recentFoodIds, favoriteFoodIds, remoteFoods, savedMeals, savedPlans, weights, exercises } = useStore.getState();
+  const { profile, settings, entries, customFoods, goalHistory, recentFoodIds, favoriteFoodIds, remoteFoods, savedMeals, savedPlans, workoutPlan, savedRecipes, weights, exercises } = useStore.getState();
   const safeSettings = settings;
-  return { app: 'protein-app', exportedAt: new Date().toISOString(), profile, settings: safeSettings, entries, customFoods, goalHistory, recentFoodIds, favoriteFoodIds, remoteFoods, savedMeals, savedPlans, weights, exercises };
+  return { app: 'protein-app', exportedAt: new Date().toISOString(), profile, settings: safeSettings, entries, customFoods, goalHistory, recentFoodIds, favoriteFoodIds, remoteFoods, savedMeals, savedPlans, workoutPlan, savedRecipes, weights, exercises };
 }

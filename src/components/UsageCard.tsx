@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { fetchUsage, type Usage } from '@/lib/premium';
 import { useSession } from '@/lib/account';
 
-const LABELS = { scan: 'AI scans', coach: 'Coach messages', plan: 'Eating plans', ideas: 'Meal ideas' } as const;
+const LABELS = { scan: 'AI scans', coach: 'Coach messages', workout: 'Workout guides', recipe: 'AI recipes', plan: 'Eating plans', ideas: 'Meal ideas' } as const;
 
 /** This month's AI usage, so people know where they stand before they hit a limit. */
 export function UsageCard() {
@@ -22,7 +22,7 @@ export function UsageCard() {
       </div>
       <div className="mt-3 space-y-2.5">
         {(Object.keys(LABELS) as (keyof typeof LABELS)[]).map((f) => {
-          const { used, limit } = u.features[f];
+          const { used, limit } = u.features[f] ?? { used: 0, limit: 0 };
           const text = limit === null ? 'Unlimited' : limit === 0 ? (f === 'plan' || f === 'ideas' ? 'Pro' : 'Plus') : `${Math.max(0, limit - used)} of ${limit} left`;
           return (
             <div key={f}>

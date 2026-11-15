@@ -38,6 +38,8 @@ const DIETS: Option<Diet>[] = [
 
 const OBSTACLES = ['Lack of consistency', 'Busy schedule', 'Unhealthy eating habits', 'No meal ideas', 'Lack of support', 'Cravings & snacking', 'Eating out a lot', 'Don’t know what to eat'];
 
+const TRAINING = ['Gym / weights', 'Running', 'Home workouts', 'Walking', 'HIIT', 'Cycling', 'Swimming', 'Football & sports', 'Yoga / Pilates', 'Dance'];
+
 export default function Onboarding() {
   const session = useSession();
   const saveProfile = useStore((s) => s.saveProfile);
@@ -77,12 +79,13 @@ export default function Onboarding() {
   // Extra answers (Cal AI-style interview).
   const [goalWeight, setGoalWeight] = useState('');
   const [pace, setPace] = useState(0.5);
+  const [training, setTraining] = useState<string[]>([]);
   const [obstacles, setObstacles] = useState<string[]>([]);
   const [hasCoach, setHasCoach] = useState<boolean>();
   const [kcalOverride, setKcalOverride] = useState<number>();
   const [proteinOverride, setProteinOverride] = useState<number>();
   const wantsChange = goals.includes('fatloss') || goals.includes('muscle');
-  const flow = ['welcome', 'goals', 'activity', 'diet', 'cuisines', 'about', ...(wantsChange ? ['goalweight'] : []), 'obstacles', 'coach', 'notify', 'plan'];
+  const flow = ['welcome', 'goals', 'activity', 'training', 'diet', 'cuisines', 'about', ...(wantsChange ? ['goalweight'] : []), 'obstacles', 'coach', 'notify', 'plan'];
   const at = flow[step];
   const STEPS = flow.length;
   const next = () => setStep((s) => Math.min(STEPS - 1, s + 1));
@@ -129,6 +132,7 @@ export default function Onboarding() {
       goalWeightKg: goalWeightKg ? round1(goalWeightKg) : undefined,
       paceKgPerWeek: goalWeightKg ? pace : undefined,
       obstacles: obstacles.length ? obstacles : undefined,
+      training: training.length ? training : undefined,
       hasCoach,
     });
   }
@@ -168,7 +172,7 @@ export default function Onboarding() {
           </Question>
         )}
         {at === 'activity' && (
-          <Question title="How active are you?" sub="Activity changes how much energy and protein your body uses.">
+          <Question title="How many workouts do you do per week?" sub="This helps us set your calories and protein, and build your workout guide.">
             {ACTIVITY.map((o) => <Choice key={o.value} option={o} selected={activity === o.value} onClick={() => pickActivity(o.value)} />)}
           </Question>
         )}
@@ -177,6 +181,20 @@ export default function Onboarding() {
             {DIETS.map((o) => <Choice key={o.value} option={o} selected={diet === o.value} onClick={() => { setDiet(o.value); next(); }} />)}
           </Question>
         )}
+        {at === 'training' && (
+          <Question title={activity === 'sedentary' ? 'What would you like to try?' : 'What kind of exercise do you do?'} sub="Pick all that apply — your AI workout guide is built around them.">
+            <div className="flex flex-wrap gap-2">
+              {TRAINING.map((c) => (
+                <button key={c} onClick={() => { haptic(); setTraining((cur) => (cur.includes(c) ? cur.filter((x) => x !== c) : [...cur, c])); }} className={cx('chip !h-11', training.includes(c) && 'chip-on')}>
+                  {training.includes(c) && <Check size={15} strokeWidth={3} />}{c}
+                </button>
+              ))}
+            </div>
+            <div className="flex-1" />
+            <button onClick={next} className="btn-primary mt-6 w-full">{training.length ? 'Continue' : 'Skip for now'}</button>
+          </Question>
+        )}
+
         {at === 'cuisines' && (
           <Question title="What do you like to eat?" sub="Pick every cuisine you enjoy — we’ll mix ideas from all of them.">
             <div className="flex flex-wrap gap-2">

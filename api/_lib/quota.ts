@@ -1,10 +1,10 @@
 /**
  * Plan limits for every AI feature, enforced on the server so they can't be bypassed.
  *
- *            scan  coach  plan  ideas   (per calendar month, UTC)
- *   free       3      5     0      0
- *   plus      ∞      ∞     0      0     ∞ = unlimited (with a hidden fair-use cap against abuse)
- *   pro       ∞      ∞     ∞      ∞     Pro adds AI eating plans and AI meal ideas
+ *            scan  coach  workout  recipe  plan  ideas   (per calendar month, UTC)
+ *   free       3      5      0        0      0     0
+ *   plus      ∞      ∞      ∞        ∞      0     0     ∞ = unlimited (with a hidden fair-use cap against abuse)
+ *   pro       ∞      ∞      ∞        ∞      ∞     ∞     Pro adds AI eating plans and AI meal ideas
  *
  * Rules:
  *  - AI features need a signed-in account (x-user-token: Supabase access token).
@@ -16,21 +16,21 @@
 import { bearer, readPass } from './premium';
 import { accountsConfigured, useScan, userFromToken } from './accounts';
 
-export type Feature = 'scan' | 'coach' | 'plan' | 'ideas';
+export type Feature = 'scan' | 'coach' | 'workout' | 'recipe' | 'plan' | 'ideas';
 export type PlanTier = 'free' | 'plus' | 'pro';
 
 const FAIR_USE = 900;
 
 const DEFAULTS: Record<PlanTier, Record<Feature, number>> = {
-  free: { scan: 3, coach: 5, plan: 0, ideas: 0 },
-  plus: { scan: FAIR_USE, coach: FAIR_USE * 3, plan: 0, ideas: 0 },
-  pro: { scan: FAIR_USE, coach: FAIR_USE * 3, plan: 90, ideas: FAIR_USE },
+  free: { scan: 3, coach: 5, workout: 0, recipe: 0, plan: 0, ideas: 0 },
+  plus: { scan: FAIR_USE, coach: FAIR_USE * 3, workout: FAIR_USE, recipe: FAIR_USE, plan: 0, ideas: 0 },
+  pro: { scan: FAIR_USE, coach: FAIR_USE * 3, workout: FAIR_USE, recipe: FAIR_USE, plan: 90, ideas: FAIR_USE },
 };
 
 /** Limits at or above this are shown as "Unlimited" (a fair-use cap, ~30 a day). */
 export const UNLIMITED = 900;
 
-const NAMES: Record<Feature, string> = { scan: 'AI scans', coach: 'coach messages', plan: 'eating plans', ideas: 'AI meal ideas' };
+const NAMES: Record<Feature, string> = { scan: 'AI scans', coach: 'coach messages', workout: 'workout guides', recipe: 'AI recipes', plan: 'eating plans', ideas: 'AI meal ideas' };
 
 export function limitFor(tier: PlanTier, feature: Feature): number {
   const v = Number(process.env[`LIMIT_${tier.toUpperCase()}_${feature.toUpperCase()}`]);
@@ -91,7 +91,7 @@ export async function gate(request: Request, feature: Feature, count = 1): Promi
 export async function usage(request: Request) {
   const { user, tier } = await whoIs(request);
   if (!user) return null;
-  const features: Feature[] = ['scan', 'coach', 'plan', 'ideas'];
+  const features: Feature[] = ['scan', 'coach', 'workout', 'recipe', 'plan', 'ideas'];
   const month = new Date().toISOString().slice(0, 7);
   const { admin } = await import('./accounts');
   const db = admin();

@@ -134,8 +134,8 @@ export function Segmented<T extends string>({ value, options, onChange, full }: 
           key={o.value}
           onClick={() => onChange(o.value)}
           className={cx(
-            'h-9 rounded-full px-4 text-sm font-semibold transition',
-            full && 'flex-1',
+            'h-9 whitespace-nowrap rounded-full text-sm font-semibold transition',
+            full ? 'min-w-0 flex-1 px-1.5' : 'px-4',
             value === o.value ? 'bg-surface text-ink shadow-[0_1px_3px_rgb(0_0_0/0.12)]' : 'text-silver',
           )}
         >

@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import { ArrowUp, ChevronRight, ImagePlus, Loader2, RotateCcw, Sparkles, X } from 'lucide-react';
 import { blobToBase64, resizeImage } from '@/lib/photos';
 import { aiHeaders } from '@/lib/premium';
+import { WorkoutView } from '@/components/WorkoutView';
+import { RecipeView } from '@/components/RecipeView';
 import { SignInButtons } from '@/components/SignIn';
 import { accountsEnabled, useSession } from '@/lib/account';
 import { useStore } from '@/store/useStore';
@@ -58,7 +60,7 @@ export function useCoachContext(): CoachContext {
       name: profile?.name || undefined,
       goals: profile?.goals ?? (profile?.goal ? [profile.goal] : undefined),
       activity: profile?.activity, diet: profile?.diet, country: profile?.country, cuisines: profile?.cuisines, avoid: profile?.avoid,
-      obstacles: profile?.obstacles, weightKg: profile?.bodyWeightKg ?? undefined, goalWeightKg: profile?.goalWeightKg,
+      obstacles: profile?.obstacles, training: profile?.training, weightKg: profile?.bodyWeightKg ?? undefined, goalWeightKg: profile?.goalWeightKg,
       age: profile?.age, sex: profile?.sex, pregnant: profile?.pregnant,
       targets: { kcal: t?.kcal, protein: goal || undefined, carbs: t?.carbs, fat: t?.fat, fiber: t?.fiber },
       today: { kcal: totals.kcal, protein: totals.protein, carbs: totals.carbs, fat: totals.fat, fiber: totals.fiber, sugar: totals.sugar, sodiumMg: totals.sodium },
@@ -69,7 +71,11 @@ export function useCoachContext(): CoachContext {
 }
 
 export default function Coach() {
-  const [view, setView] = useState<'chat' | 'plan'>(() => (new URLSearchParams(location.search).get('view') === 'plan' ? 'plan' : 'chat'));
+  type View = 'chat' | 'workout' | 'recipe' | 'plan';
+  const [view, setView] = useState<View>(() => {
+    const v = new URLSearchParams(location.search).get('view');
+    return v === 'plan' || v === 'workout' || v === 'recipe' ? v : 'chat';
+  });
   return (
     <div className="animate-fade-up">
       <header className="pt-safe flex items-center justify-between gap-3 pb-3">
@@ -81,8 +87,8 @@ export default function Coach() {
           </div>
         </div>
       </header>
-      <div className="mb-4"><Segmented full value={view} onChange={(v) => { haptic(); setView(v); }} options={[{ value: 'chat', label: 'Chat' }, { value: 'plan', label: 'My eating plan' }]} /></div>
-      {view === 'chat' ? <Chat /> : <PlanView />}
+      <div className="mb-4"><Segmented full value={view} onChange={(v) => { haptic(); setView(v); }} options={[{ value: 'chat', label: 'Chat' }, { value: 'workout', label: 'Workouts' }, { value: 'recipe', label: 'Recipes' }, { value: 'plan', label: 'Meal plan' }]} /></div>
+      {view === 'chat' ? <Chat /> : view === 'workout' ? <WorkoutView /> : view === 'recipe' ? <RecipeView /> : <PlanView />}
     </div>
   );
 }

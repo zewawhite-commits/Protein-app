@@ -13,13 +13,13 @@ import { Segmented, cx } from '@/components/ui';
 /** Planned prices, shown until live plans load from the payment provider (which sets the real charge). */
 const PREVIEW = [
   { name: 'Free', perks: ['Calories, macros & 13,000+ foods', 'Barcode, exercise, progress & feed', '3 AI scans + 5 coach messages a month'], year: '$0', month: '', perMonth: '' },
-  { name: 'Plus', perks: ['Unlimited AI photo scans & describe', 'Unlimited AI coach chat'], year: '$29.99/yr', month: '$4.99/mo', perMonth: '≈ $2.50/mo', best: true },
+  { name: 'Plus', perks: ['Unlimited AI photo scans & describe', 'Unlimited AI coach chat', 'AI workout guide for your week', 'AI recipes with full nutrition'], year: '$29.99/yr', month: '$4.99/mo', perMonth: '≈ $2.50/mo', best: true },
   { name: 'Pro', perks: ['Everything in Plus', 'AI eating plans built for you', 'AI meal ideas from your cuisines'], year: '$47.99/yr', month: '$7.99/mo', perMonth: '≈ $4.00/mo' },
 ];
 
 const TIER_INFO: Record<'free' | Tier, { name: string; perks: string[] }> = {
   free: { name: 'Free', perks: ['13,000+ foods, barcode, exercise & progress', 'Feed and groups', '3 AI scans + 5 coach messages a month'] },
-  plus: { name: 'Plus', perks: ['Unlimited AI photo scans & describe', 'Unlimited AI coach chat', 'Everything in Free'] },
+  plus: { name: 'Plus', perks: ['Unlimited AI photo scans & describe', 'Unlimited AI coach chat', 'AI workout guide for your week', 'AI recipes with full nutrition'] },
   pro: { name: 'Pro', perks: ['Everything in Plus', 'AI eating plans built for you', 'AI meal ideas from your cuisines'] },
 };
 
@@ -99,7 +99,7 @@ export default function Premium() {
           ))}
         </div>
         <h1 className="mt-5 text-[32px] font-extrabold leading-[1.1] tracking-tight">Reach your goal faster</h1>
-        <p className="mx-auto mt-2 max-w-sm text-[15px] text-silver">Snap any meal, chat with your AI coach and get eating plans built for you. Nutrition numbers always come from real food records.</p>
+        <p className="mx-auto mt-2 max-w-sm text-[15px] text-silver">Snap any meal, chat with your AI coach, and get workout guides, recipes and eating plans built for you. Nutrition numbers always come from real food records.</p>
       </div>
 
       {msg && <p className={cx('mt-4 rounded-2xl px-4 py-3 text-sm font-medium', msg.tone === 'ok' ? 'bg-accent/10 text-accent' : 'bg-danger/10 text-danger')}>{msg.text}</p>}
@@ -109,7 +109,7 @@ export default function Premium() {
           <p className="flex items-center gap-2 font-semibold"><Check size={18} className="text-accent" strokeWidth={3} /> You’re on {premium!.tier === 'pro' ? 'Pro' : 'Plus'}</p>
           <p className="mt-1 text-sm text-silver">
             {premium!.email} · renews or ends around {new Date(premium!.exp).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}
-            {' · '}Unlimited AI scans & coach{premium!.tier === 'pro' && ', eating plans & meal ideas'}
+            {' · '}Unlimited AI scans, coach, workouts & recipes{premium!.tier === 'pro' && ', eating plans & meal ideas'}
           </p>
           <div className="mt-4 grid gap-2">
             <Link to="/snap" className="btn-primary"><Camera size={18} /> Snap a meal</Link>

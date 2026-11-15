@@ -19,6 +19,7 @@ export interface CoachContext {
   cuisines?: string[];
   avoid?: string[];
   obstacles?: string[];
+  training?: string[];
   weightKg?: number;
   goalWeightKg?: number;
   age?: number;
@@ -83,6 +84,7 @@ export function contextText(c: CoachContext): string {
     `- Cuisines they enjoy: ${c.cuisines?.length ? c.cuisines.join(', ') : 'not given (offer a varied mix)'}`,
     `- Allergies / avoids (never suggest these): ${c.avoid?.length ? c.avoid.join(', ') : 'none given'}`,
     `- What gets in their way: ${c.obstacles?.length ? c.obstacles.join(', ') : 'not given'}`,
+    `- Exercise they do or want to try: ${c.training?.length ? c.training.join(', ') : 'not given'}`,
     `- Weight: ${c.weightKg ? `${Math.round(c.weightKg)} kg` : 'not given'}${c.goalWeightKg ? `; goal weight ${Math.round(c.goalWeightKg)} kg` : ''}`,
     `- Country: ${c.country || 'not given'}; age: ${c.age ?? 'not given'}; sex: ${c.sex || 'not given'}${c.pregnant ? '; pregnant or breastfeeding' : ''}`,
     `Daily targets: ${fmt(t.kcal, 'kcal')}, protein ${fmt(t.protein)}, carbs ${fmt(t.carbs)}, fat ${fmt(t.fat)}, fibre ${fmt(t.fiber)}`,
