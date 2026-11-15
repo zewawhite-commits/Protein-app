@@ -15,6 +15,18 @@ const item = (over: Partial<RecognitionResult['items'][number]>) => ({
   name: '', localName: '', cuisine: '', searchQueries: [], state: 'cooked' as const, estimatedGrams: 0, confidence: 'high' as const, ingredients: [], ...over,
 });
 
+describe('standard-recipe dishes', () => {
+  it('are built only from listed official records and show them', async () => {
+    const db = await loadFoodDb();
+    const egusi = db.foods.find((f) => f.name === 'Egusi soup')!;
+    expect(egusi.source).toBe('recipe');
+    expect(egusi.aliases).toContain('egushi');
+    expect(egusi.sourceNote).toMatch(/Melon seed.*\[FAO 06_013\]/);
+    expect(egusi.per100.protein).toBeGreaterThan(5);
+    expect(egusi.per100.kcal).toBeGreaterThan(100);
+  });
+});
+
 describe('international database coverage', () => {
   it.each([
     ['jollof', 'Jollof'], // WAFCT has jollof fonio/macaroni/spaghetti (no jollof rice record)
@@ -24,6 +36,13 @@ describe('international database coverage', () => {
     ['sushi', 'Sushi'],
     ['fufu', 'fufu'],
     ['bambara groundnut', 'Bambara'],
+    ['egusi', 'Egusi soup'],
+    ['egushi', 'Egusi soup'], // spelling slip
+    ['jollof rice', 'Jollof rice'],
+    ['moin moin', 'Moi moi'],
+    ['ackee', 'Ackee and saltfish'],
+    ['fish and chips', 'Fish and chips'],
+    ['chiken breast', 'Chicken'], // typo
   ])('finds %s', (q, expected) => {
     expect(searchFoods(q, { limit: 5 }).some((f) => f.name.toLowerCase().includes(expected.toLowerCase()))).toBe(true);
   });
@@ -49,7 +68,7 @@ describe('matching AI suggestions to records', () => {
 
   it('never carries nutrient numbers from the AI: candidates are database records', () => {
     const [m] = matchItems(sanitize({ isFood: true, note: '', items: [item({ name: 'Egg', searchQueries: ['egg whole cooked'] })] }), []);
-    for (const f of m.candidates) expect(['usda-sr', 'usda-fndds', 'fao-wafct', 'custom']).toContain(f.source);
+    for (const f of m.candidates) expect(['usda-sr', 'usda-fndds', 'fao-wafct', 'recipe', 'custom']).toContain(f.source);
   });
 
   it('sanitizes model output', () => {
@@ -73,8 +92,9 @@ import { confidentMatch } from './foods';
 describe('confident matching for AI-suggested foods', () => {
   it('never matches word fragments, but finds real records', async () => {
     await loadFoodDb();
-    expect(confidentMatch(['moi moi'])?.name ?? null).toBeNull();
-    expect(confidentMatch(['moi moi', 'cowpeas boiled'])?.name).toMatch(/cowpea/i);
+    expect(confidentMatch(['ogbono soup'])?.name ?? null).toBeNull(); // no record — never a lookalike
+    expect(confidentMatch(['ogbono soup', 'cowpeas boiled'])?.name).toMatch(/cowpea/i);
+    expect(confidentMatch(['moi moi'])?.name).toBe('Moi moi'); // standard recipe
     expect(confidentMatch(['chicken breast roasted'])?.name).toMatch(/chicken.*breast/i);
     expect(confidentMatch(['egg whole hard-boiled'])?.name).toMatch(/egg/i);
   });

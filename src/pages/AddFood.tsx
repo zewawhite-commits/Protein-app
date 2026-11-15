@@ -153,6 +153,16 @@ export default function AddFood() {
       )}
 
       {searching && <WorldProducts query={dq} onPick={setSelected} localCount={results.length} />}
+      {searching && (
+        <div className="card mt-6 p-5">
+          <p className="text-[17px] font-bold">Can’t find it?</p>
+          <p className="mt-1 text-sm text-silver">Describe the dish and AI breaks it into foods from the database, or scan the barcode on the pack.</p>
+          <div className="mt-4 grid grid-cols-2 gap-2">
+            <Link to={`/snap?mode=describe&q=${encodeURIComponent(dq)}`} className="btn-primary !h-12 text-sm">Describe it</Link>
+            <Link to="/barcode" className="btn-ghost !h-12 text-sm">Scan barcode</Link>
+          </div>
+        </div>
+      )}
 
       {db && (
         <p className="mt-6 text-center text-[12px] font-medium leading-relaxed text-dim">

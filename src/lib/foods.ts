@@ -6,7 +6,7 @@ import { EXTRA_KEYS } from './nutrients';
  */
 import type { CustomFood, Food, FoodSource, PrepState } from './types';
 
-type SourceCode = 's' | 'f' | 'w';
+type SourceCode = 's' | 'f' | 'w' | 'r';
 interface SourceInfo { name: string; release: string; citation: string }
 
 interface FoodsFile {
@@ -16,7 +16,7 @@ interface FoodsFile {
   generatedAt: string;
   categories: Record<string, string>;
   quickPicks: number[];
-  foods: [number | string, string, number, PrepState, number, number | null, number | null, number | null, number | null, [string, number][], SourceCode, (number | null)[]?][];
+  foods: [number | string, string, number, PrepState, number, number | null, number | null, number | null, number | null, [string, number][], SourceCode, (number | null)[]?, string?][];
 }
 
 export interface FoodDb {
@@ -27,7 +27,7 @@ export interface FoodDb {
   categories: string[];
 }
 
-const SOURCE_OF: Record<SourceCode, FoodSource> = { s: 'usda-sr', f: 'usda-fndds', w: 'fao-wafct' };
+const SOURCE_OF: Record<SourceCode, FoodSource> = { s: 'usda-sr', f: 'usda-fndds', w: 'fao-wafct', r: 'recipe' };
 
 /** Human-readable source line and link for a record. */
 export function sourceInfo(food: Pick<Food, 'source' | 'fdcId' | 'ref' | 'sourceNote'>): { label: string; url?: string } {
@@ -35,13 +35,14 @@ export function sourceInfo(food: Pick<Food, 'source' | 'fdcId' | 'ref' | 'source
     case 'usda-sr': return { label: `USDA SR Legacy · FDC ${food.fdcId}`, url: fdcUrl(food.fdcId!) };
     case 'usda-fndds': return { label: `USDA FNDDS · FDC ${food.fdcId}`, url: fdcUrl(food.fdcId!) };
     case 'fao-wafct': return { label: `FAO/INFOODS West Africa 2019 · ${food.ref}`, url: 'https://www.fao.org/infoods/infoods/tables-and-databases/faoinfoods-databases/en/' };
+    case 'recipe': return { label: `Standard recipe from USDA/FAO ingredients · ${food.sourceNote ?? ''}` };
     case 'off': return { label: `Open Food Facts · ${food.ref} (product label)`, url: `https://world.openfoodfacts.org/product/${food.ref}` };
     default: return { label: `Custom · ${food.sourceNote ?? ''}` };
   }
 }
 
 export const SOURCE_SHORT: Record<FoodSource, string> = {
-  'usda-sr': 'USDA', 'usda-fndds': 'USDA dish', 'fao-wafct': 'FAO W. Africa', off: 'Product', custom: 'Mine',
+  'usda-sr': 'USDA', 'usda-fndds': 'USDA dish', 'fao-wafct': 'FAO W. Africa', recipe: 'Recipe', off: 'Product', custom: 'Mine',
 };
 
 interface Indexed {
@@ -69,13 +70,17 @@ export function loadFoodDb(): Promise<FoodDb> {
         return r.json() as Promise<FoodsFile>;
       })
       .then((file) => {
-        const foods: Food[] = file.foods.map(([key, name, cat, state, protein, kcal, fat, carbs, fiber, portions, src, extra]) => {
-          const usda = src !== 'w';
+        const foods: Food[] = file.foods.map(([key, name, cat, state, protein, kcal, fat, carbs, fiber, portions, src, extra, note]) => {
+          const usda = src === 's' || src === 'f';
+          // Recipe rows carry their other names in brackets: "Egusi soup (egushi, melon seed soup)".
+          const m = src === 'r' ? /^(.*?) \((.*)\)$/.exec(name) : null;
           return {
-            id: usda ? `usda:${key}` : `wafct:${key}`,
+            id: usda ? `usda:${key}` : src === 'r' ? `recipe:${key}` : `wafct:${key}`,
             fdcId: usda ? Number(key) : undefined,
             ref: usda ? undefined : String(key),
-            name,
+            name: m ? m[1] : name,
+            ...(m && { aliases: m[2].split(', ') }),
+            ...(note && { sourceNote: note }),
             category: file.categories[cat] ?? 'Other',
             state,
             per100: { protein, kcal, fat, carbs, fiber, ...(extra && Object.fromEntries(EXTRA_KEYS.map((k, i) => [k, extra[i] ?? null]))) },
@@ -105,12 +110,13 @@ export function loadFoodDb(): Promise<FoodDb> {
 const tokenize = (s: string) => s.toLowerCase().normalize('NFKD').replace(/\p{M}/gu, '').replace(/[^\p{L}\p{N}%]+/gu, ' ').trim().split(/\s+/).filter(Boolean);
 
 function toIndexed(food: Food): Indexed {
-  return { food, lower: food.name.toLowerCase(), words: tokenize(food.name) };
+  const text = food.aliases?.length ? `${food.name} ${food.aliases.join(' ')}` : food.name;
+  return { food, lower: food.name.toLowerCase(), words: tokenize(text) };
 }
 
 /** Everyday words → the vocabulary USDA uses. */
 const SYNONYMS: Record<string, string> = {
-  chickpea: 'chickpeas', mince: 'ground', minced: 'ground', prawn: 'shrimp', prawns: 'shrimp',
+  chickpea: 'chickpeas', mince: 'ground', egushi: 'egusi', agushi: 'egusi', jolof: 'jollof', moin: 'moi', garri: 'gari', minced: 'ground', prawn: 'shrimp', prawns: 'shrimp',
   yoghurt: 'yogurt', porridge: 'oats', courgette: 'squash', aubergine: 'eggplant', eggs: 'egg', oat: 'oats',
 };
 
@@ -122,9 +128,48 @@ export interface SearchOptions {
 
 /** Word-prefix search; every query word must match the start of some word in the name. */
 export function searchFoods(query: string, opts: SearchOptions = {}): Food[] {
-  const { state = 'all', limit = 60, custom = [] } = opts;
   const terms = tokenize(query).map((t) => SYNONYMS[t] ?? t);
   if (!terms.length) return [];
+  const found = searchTerms(terms, opts);
+  if (found.length) return found;
+  // Nothing matched: allow for spelling slips ("egushi", "chiken", "brocoli").
+  const fixed = terms.map(closestWord);
+  return fixed.some((t, i) => t !== terms[i]) ? searchTerms(fixed, opts) : [];
+}
+
+let vocab: string[] | null = null;
+function closestWord(t: string): string {
+  if (t.length < 4) return t;
+  vocab ??= [...new Set(index.flatMap((it) => it.words))].filter((w) => w.length >= 3);
+  const max = t.length >= 7 ? 2 : 1;
+  let best = t;
+  let bestD = max + 1;
+  for (const w of vocab) {
+    if (Math.abs(w.length - t.length) > max) continue;
+    const d = editDistance(t, w, bestD);
+    if (d < bestD || (d === bestD && best !== t && w.length < best.length)) { best = w; bestD = d; }
+  }
+  return bestD <= max ? best : t;
+}
+
+/** Levenshtein distance, giving up early once it can't beat `cap`. */
+export function editDistance(a: string, b: string, cap = Infinity): number {
+  let prev = Array.from({ length: b.length + 1 }, (_, j) => j);
+  for (let i = 1; i <= a.length; i++) {
+    const cur = [i];
+    let rowMin = i;
+    for (let j = 1; j <= b.length; j++) {
+      cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+      rowMin = Math.min(rowMin, cur[j]);
+    }
+    if (rowMin > cap) return rowMin;
+    prev = cur;
+  }
+  return prev[b.length];
+}
+
+function searchTerms(terms: string[], opts: SearchOptions): Food[] {
+  const { state = 'all', limit = 60, custom = [] } = opts;
   const pool: Indexed[] = [...custom.filter((c) => !c.archived).map(toIndexed), ...index];
   const scored: { f: Food; s: number }[] = [];
   for (const it of pool) {
@@ -145,6 +190,7 @@ export function searchFoods(query: string, opts: SearchOptions = {}): Food[] {
     score -= it.words.length * 0.4; // prefer plainer descriptions
     if (it.food.source === 'custom') score += 8;
     if (quickPickIds.has(it.food.id)) score += 14;
+    if (it.food.source === 'recipe') score += 12;
     if (PROCESSED_CATEGORIES.has(it.food.category)) score -= 10;
     if (PROCESSED_WORDS.test(it.lower)) score -= 5;
     if (/\b(meat only|skinless|boneless|lean)\b/.test(it.lower)) score += 3;

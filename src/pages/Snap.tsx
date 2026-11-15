@@ -31,7 +31,7 @@ export default function Snap() {
   const { db } = useFoodDb();
 
   const [phase, setPhase] = useState<Phase>(params.get('mode') === 'describe' ? 'describe' : 'camera');
-  const [described, setDescribed] = useState('');
+  const [described, setDescribed] = useState(params.get('q') ?? '');
   const [photoId, setPhotoId] = useState<string>();
   const [error, setError] = useState('');
   const [left, setLeft] = useState<{ left: number; limit: number } | null>(null);

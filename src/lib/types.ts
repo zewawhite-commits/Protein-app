@@ -35,7 +35,7 @@ export interface Portion {
  * never estimated: usda-sr / usda-fndds (USDA FoodData Central), fao-wafct (FAO/INFOODS
  * West African table), off (Open Food Facts product label data), custom (entered with a cited source).
  */
-export type FoodSource = 'usda-sr' | 'usda-fndds' | 'fao-wafct' | 'off' | 'custom';
+export type FoodSource = 'usda-sr' | 'usda-fndds' | 'fao-wafct' | 'recipe' | 'off' | 'custom';
 
 export interface Food {
   /** "usda:<fdcId>" or "custom:<uuid>" */
@@ -49,8 +49,10 @@ export interface Food {
   per100: Per100;
   portions: Portion[];
   source: FoodSource;
-  /** For custom records: where the numbers came from (label, database, lab report…). */
+  /** For custom records: where the numbers came from (label, database, lab report…). For recipes: the ingredient list. */
   sourceNote?: string;
+  /** Other names and spellings (searchable, e.g. "egushi" for egusi soup). */
+  aliases?: string[];
 }
 
 export interface CustomFood extends Food {
