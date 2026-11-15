@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Check, ChevronRight, Droplet, Drumstick, Flame, Plus, Wheat } from 'lucide-react';
+import { Check, ChevronRight, Copy, Droplet, Drumstick, Flame, Plus, Wheat } from 'lucide-react';
 import { useStore, goalOn } from '@/store/useStore';
 import { useDay, useFoodLookup } from '@/lib/hooks';
 import { addDays, fromKey, relativeDay, todayKey, weekOf } from '@/lib/dates';
@@ -9,7 +9,7 @@ import { dailyTargets, type Targets } from '@/lib/energy';
 import { DV_NOTE, MacroBar, NutrientList } from '@/components/Nutrients';
 import type { Food, LogEntry } from '@/lib/types';
 import { Pill, Ring, Sheet, cx, fmt } from '@/components/ui';
-import { APP_NAME, CountUp } from '@/components/fx';
+import { APP_NAME, CountUp, haptic, toast } from '@/components/fx';
 import { EntryRow } from '@/components/EntryRow';
 import { Suggestions } from '@/components/Suggestions';
 import { FoodSheet } from '@/components/FoodSheet';
@@ -52,6 +52,7 @@ export default function Today() {
   const [editing, setEditing] = useState<LogEntry | null>(null);
   const { streak } = useGoalStats(date);
   const gentle = useStore((s) => !!s.settings.gentle);
+  const simple = useStore((s) => s.settings.tracking === 'simple');
 
   const isToday = date === today;
 
@@ -88,7 +89,7 @@ export default function Today() {
       <div className="lg:grid lg:grid-cols-[1.1fr_1fr] lg:items-start lg:gap-8">
       <div>
       <HeroCard totals={totals} goal={goal} targets={targets} entries={entries} burned={burned} addBurned={addBurned} />
-      <MacroCards totals={totals} goal={goal} targets={targets} />
+      <MacroCards totals={totals} goal={goal} targets={targets} simple={simple} />
       </div>
 
       <section className="mt-8 lg:mt-5">
@@ -102,6 +103,7 @@ export default function Today() {
           )}
         </div>
         {entries.length === 0 ? (
+          <>
           <Link to={`/add${!isToday ? `?date=${date}` : ''}`} className="card flex items-center gap-4 p-4 transition active:scale-[.99]">
             <span className="grid h-14 w-14 place-items-center rounded-[18px] bg-primary text-on-primary"><Plus size={24} strokeWidth={2.6} /></span>
             <span>
@@ -109,6 +111,8 @@ export default function Today() {
               <span className="block text-sm font-medium text-silver">Tap + to scan, search or describe a meal.</span>
             </span>
           </Link>
+          {isToday && <CopyYesterday />}
+          </>
         ) : (
           <div className="card p-2">
             {[...entries].reverse().map((e) => <EntryRow key={e.id} entry={e} onClick={() => setEditing(e)} />)}
@@ -255,12 +259,13 @@ export const useStreak = () => useGoalStats().streak;
 
 
 /** Protein, carbs and fat as three bars in one card (grams left). */
-function MacroCards({ totals, goal, targets }: { totals: Totals; goal: number; targets: Targets | null }) {
-  const items = [
+function MacroCards({ totals, goal, targets, simple }: { totals: Totals; goal: number; targets: Targets | null; simple?: boolean }) {
+  const all = [
     { label: 'Protein', eaten: totals.protein, target: goal, color: 'rgb(var(--accent))', icon: Drumstick },
     { label: 'Carbs', eaten: totals.carbs, target: targets?.carbs ?? 0, color: 'rgb(var(--carbs))', icon: Wheat },
     { label: 'Fat', eaten: totals.fat, target: targets?.fat ?? 0, color: 'rgb(var(--fat))', icon: Droplet },
   ];
+  const items = simple ? all.slice(0, 1) : all;
   return (
     <div className="card mt-3 space-y-4 p-5">
       {items.map((m) => {
@@ -299,5 +304,28 @@ function WelcomeBack() {
         <button onClick={() => setHidden(true)} className="btn-ghost !h-12 !px-5 text-sm">Not now</button>
       </div>
     </div>
+  );
+}
+
+/** Same breakfast as yesterday? One tap copies yesterday's foods (same meals and weights) to today. */
+function CopyYesterday() {
+  const entries = useStore((s) => s.entries);
+  const addEntry = useStore((s) => s.addEntry);
+  const y = addDays(todayKey(), -1);
+  const list = useMemo(() => entries.filter((e) => e.date === y), [entries, y]);
+  if (!list.length) return null;
+  const kcal = list.reduce((s, e) => s + ((e.food.per100.kcal ?? 0) * e.grams) / 100, 0);
+  return (
+    <button
+      onClick={() => {
+        haptic([10, 30, 10]);
+        list.forEach((e) => addEntry({ date: todayKey(), meal: e.meal, food: { ...e.food, id: e.foodId, category: '', portions: [] } as Food, grams: e.grams }));
+        toast(`Copied ${list.length} food${list.length > 1 ? 's' : ''} from yesterday — edit anything that changed`);
+      }}
+      className="mt-2 flex h-12 w-full items-center justify-center gap-2 rounded-full bg-surface text-sm font-semibold"
+      style={{ boxShadow: 'var(--shadow)' }}
+    >
+      <Copy size={16} /> Copy yesterday’s meals · {fmt(kcal)} kcal
+    </button>
   );
 }

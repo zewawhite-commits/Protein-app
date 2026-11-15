@@ -206,3 +206,45 @@ export function AverageCalories() {
     </section>
   );
 }
+
+/** Progress that isn't a number on the scale: training, consistency and protein. */
+export function BeyondTheScale() {
+  const entries = useStore((s) => s.entries);
+  const exercises = useStore((s) => s.exercises);
+  const goalHistory = useStore((s) => s.goalHistory);
+  const profile = useStore((s) => s.profile);
+  const stats = useMemo(() => {
+    const today = todayKey();
+    const from30 = addDays(today, -30), from7 = addDays(today, -7);
+    const month = entries.filter((e) => e.date > from30);
+    const days = new Set(month.map((e) => e.date));
+    const protein = new Map<string, number>();
+    for (const e of month) protein.set(e.date, (protein.get(e.date) ?? 0) + (e.food.per100.protein * e.grams) / 100);
+    const goal = profile ? (Object.values(goalHistory).pop() ?? profile.goalGrams ?? 0) : 0;
+    const proteinDays = goal > 0 ? [...protein.values()].filter((v) => v >= goal).length : 0;
+    const week = exercises.filter((x) => x.date > from7);
+    const mon = exercises.filter((x) => x.date > from30);
+    return { daysLogged: days.size, proteinDays, workoutsWeek: week.length, minutesMonth: mon.reduce((s, x) => s + x.minutes, 0), workoutsMonth: mon.length };
+  }, [entries, exercises, goalHistory, profile]);
+  const tiles: [string, string, string][] = [
+    [String(stats.workoutsWeek), 'workouts', 'this week'],
+    [String(stats.minutesMonth), 'minutes trained', 'last 30 days'],
+    [String(stats.daysLogged), 'days logged', 'last 30 days'],
+    [String(stats.proteinDays), 'protein-goal days', 'last 30 days'],
+  ];
+  return (
+    <section className="card p-5">
+      <h2 className="text-lg font-bold">Beyond the scale</h2>
+      <p className="mt-0.5 text-sm text-silver">Progress is more than your weight.</p>
+      <div className="mt-3 grid grid-cols-2 gap-2">
+        {tiles.map(([v, l, sub]) => (
+          <div key={l} className="rounded-2xl bg-raised p-3.5">
+            <p className="num text-[24px] font-extrabold leading-none">{v}</p>
+            <p className="mt-1 text-[14px] font-semibold">{l}</p>
+            <p className="text-xs text-silver">{sub}</p>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}

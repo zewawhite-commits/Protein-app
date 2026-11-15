@@ -333,6 +333,7 @@ function ItemCard({ match, done, onPick, manualUrl, onLogIngredients }: { match:
           {sub && <p className="mt-0.5 text-xs font-medium text-silver">{sub}</p>}
         </div>
         <div className="flex shrink-0 items-center gap-1.5">
+          {item.confidence !== 'high' && <span className={cx('rounded-full px-2.5 py-1 text-[12px] font-semibold', item.confidence === 'low' ? 'bg-warn/15 text-warn' : 'bg-raised text-silver')} title="How sure the AI is about what this food is">{item.confidence === 'low' ? 'Not sure — check' : 'Fairly sure'}</span>}
           {item.estimatedGrams > 0 && <span className="rounded-full border border-dashed border-silver/50 px-2.5 py-1 text-[12px] font-medium text-silver" title="Rough AI estimate from the photo">est. ~{item.estimatedGrams} g</span>}
           {done && <span className="grid h-7 w-7 place-items-center rounded-full bg-accent text-white"><Check size={15} strokeWidth={3} /></span>}
         </div>

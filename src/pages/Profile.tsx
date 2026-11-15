@@ -2,7 +2,7 @@ import { SignInButtons } from '@/components/SignIn';
 import { useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useEffect } from 'react';
-import { ArrowLeft, Flame, HeartHandshake, UserRound, KeyRound, LogOut, Mail, Scale, Settings as SettingsIcon, ChevronRight, Cloud, CreditCard, Database, Download, FileText, LifeBuoy, Lock, Moon, Receipt, RotateCcw, ShieldCheck, Smartphone, Sparkles, Sun, Trash2, Upload, XCircle } from 'lucide-react';
+import { ArrowLeft, Flame, HeartHandshake, SlidersHorizontal, Table, UserRound, KeyRound, LogOut, Mail, Scale, Settings as SettingsIcon, ChevronRight, Cloud, CreditCard, Database, Download, FileText, LifeBuoy, Lock, Moon, Receipt, RotateCcw, ShieldCheck, Smartphone, Sparkles, Sun, Trash2, Upload, XCircle } from 'lucide-react';
 import { useStore, exportData } from '@/store/useStore';
 import { fetchBilling, isPremiumActive, manageSubscription, type Billing } from '@/lib/premium';
 import { SUPPORT_EMAIL } from '@/pages/Legal';
@@ -34,6 +34,25 @@ export default function Profile({ mode = 'profile' }: { mode?: 'profile' | 'sett
 
   const fileRef = useRef<HTMLInputElement>(null);
 
+
+  /** Food history as a CSV that opens in Excel, Numbers or Google Sheets — easy to share with a coach or dietitian. */
+  function downloadCsv() {
+    const s = useStore.getState();
+    const q = (v: unknown) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+    const n = (v: number | null | undefined, g: number) => (v == null ? '' : Math.round((v * g) / 100 * 10) / 10);
+    const rows = [...s.entries].sort((a, b) => a.date.localeCompare(b.date)).map((e) =>
+      [e.date, e.meal, q(e.food.name), e.grams, n(e.food.per100.kcal, e.grams), n(e.food.per100.protein, e.grams), n(e.food.per100.carbs, e.grams), n(e.food.per100.fat, e.grams), n(e.food.per100.fiber, e.grams), n(e.food.per100.sugar, e.grams), n(e.food.per100.sodium, e.grams), q(e.food.source), q(e.note ?? '')].join(','));
+    const weights = s.weights.map((w) => [w.date, 'weight', '"Body weight (kg)"', w.kg, '', '', '', '', '', '', '', '', ''].join(','));
+    const workouts = s.exercises.map((x) => [x.date, 'exercise', q(`${x.type} (${x.minutes} min, ${x.intensity})`), '', -x.kcal, '', '', '', '', '', '', '', ''].join(','));
+    const csv = ['Date,Meal,Food,Grams,Calories (kcal),Protein (g),Carbs (g),Fat (g),Fibre (g),Sugar (g),Sodium (mg),Source,Note', ...rows, ...weights, ...workouts].join('\n');
+    const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `provora-food-log-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+    setMsg(rows.length ? `Downloaded ${rows.length} food entries.` : 'Downloaded — your log is empty so far.');
+  }
 
   function download() {
     const blob = new Blob([JSON.stringify(exportData(), null, 2)], { type: 'application/json' });
@@ -113,6 +132,10 @@ export default function Profile({ mode = 'profile' }: { mode?: 'profile' | 'sett
         <Row icon={<Scale size={18} />} label="Weight unit">
           <Segmented value={settings.bodyUnit} onChange={(u) => updateSettings({ bodyUnit: u })} options={[{ value: 'kg', label: 'kg' }, { value: 'lb', label: 'lb' }]} />
         </Row>
+        <Row icon={<SlidersHorizontal size={18} />} label="Tracking style">
+          <Segmented value={settings.tracking ?? 'detailed'} onChange={(t) => updateSettings({ tracking: t })} options={[{ value: 'simple', label: 'Simple' }, { value: 'detailed', label: 'Detailed' }]} />
+        </Row>
+        <p className="px-4 pb-2 text-xs leading-relaxed text-dim">Simple shows just calories and protein on Home. Detailed adds carbs, fat and every nutrient. Nothing is lost either way.</p>
         <Row icon={<HeartHandshake size={18} />} label="Gentle mode">
           <Toggle on={!!settings.gentle} onChange={(v) => updateSettings({ gentle: v })} label="Gentle mode" />
         </Row>
@@ -129,6 +152,7 @@ export default function Profile({ mode = 'profile' }: { mode?: 'profile' | 'sett
 
       <Group title="Your data">
         <p className="px-4 pb-1 pt-3 text-sm leading-relaxed text-silver">Your data is never sold and Provora has no ads. Photos and text you send to AI features are used only to answer you, not to train AI models.</p>
+        <button onClick={downloadCsv} className="w-full"><Row icon={<Table size={18} />} label="Download food log (spreadsheet)" chevron /></button>
         <button onClick={download} className="w-full"><Row icon={<Download size={18} />} label="Export backup" chevron /></button>
         <button onClick={() => fileRef.current?.click()} className="w-full"><Row icon={<Upload size={18} />} label="Restore backup" chevron /></button>
         <input ref={fileRef} type="file" accept="application/json,.json" hidden onChange={(e) => { void upload(e.target.files?.[0]); e.target.value = ''; }} />

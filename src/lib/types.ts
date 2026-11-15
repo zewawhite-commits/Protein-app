@@ -168,6 +168,8 @@ export interface Settings {
   addBurned?: boolean;
   /** Gentle mode: no streaks and no over-target notices — for people who find them stressful. */
   gentle?: boolean;
+  /** 'simple' shows calories and protein only; 'detailed' (default) shows every macro and nutrient. */
+  tracking?: 'simple' | 'detailed';
 }
 
 /** A meal the user saved to log again in one tap (food snapshots + the grams they weighed). */

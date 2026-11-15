@@ -9,7 +9,7 @@ import type { Meal } from '@/lib/types';
 import { Empty, PageHeader, Segmented, cx, fmt } from '@/components/ui';
 import { FoodVisual } from '@/components/FoodIcon';
 import { useStreak } from './Today';
-import { AverageCalories, WeightAndStreak, WeightChart } from '@/components/ProgressTop';
+import { AverageCalories, WeightAndStreak, WeightChart, BeyondTheScale } from '@/components/ProgressTop';
 import { ProgressPhotos } from '@/components/ProgressPhotos';
 
 type Range = '7' | '30' | '90';
@@ -77,6 +77,7 @@ export default function Insights() {
       <div className="mb-6 space-y-4">
         <WeightAndStreak />
         <WeightChart />
+        <BeyondTheScale />
         <ProgressPhotos />
         <AverageCalories />
       </div>

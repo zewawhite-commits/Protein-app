@@ -20,7 +20,7 @@ const minutes = (hhmm: string) => { const [h, m] = hhmm.split(':').map(Number); 
 
 export function computeNudges(o: {
   date: string; now: Date; entries: LogEntry[]; totals: Totals; proteinGoal: number; targets: Targets | null; streak: number;
-  times?: Partial<Record<'breakfast' | 'lunch' | 'dinner', string>> & { workoutOn?: boolean; workout?: string; weighOn?: boolean; weigh?: string };
+  times?: Partial<Record<'breakfast' | 'lunch' | 'dinner', string>> & { enabled?: boolean; workoutOn?: boolean; workout?: string; weighOn?: boolean; weigh?: string };
   workedOut?: boolean; weighed?: boolean; gentle?: boolean;
 }): Nudge[] {
   const out: Nudge[] = [];
@@ -28,7 +28,8 @@ export function computeNudges(o: {
   const logged = (m: Meal) => o.entries.some((e) => e.meal === m);
   const times = { ...MEAL_TIMES, ...o.times };
   for (const meal of ['breakfast', 'lunch', 'dinner'] as const) {
-    if (nowMin >= minutes(times[meal]) && !logged(meal)) {
+    // No nagging badge for unlogged meals unless they asked for meal reminders.
+    if (o.times?.enabled && nowMin >= minutes(times[meal]) && !logged(meal)) {
       out.push({ id: `${o.date}:meal:${meal}`, kind: 'meal', title: `Log your ${meal}`, body: `Whenever you’re ready — snap it, say it or search. A few seconds is enough.`, link: '/add' });
     }
   }
@@ -41,7 +42,8 @@ export function computeNudges(o: {
   const p = o.totals.protein;
   if (o.proteinGoal > 0 && p >= o.proteinGoal) {
     out.push({ id: `${o.date}:win:protein`, kind: 'win', title: 'Protein goal hit', body: `${Math.round(p)} g of ${o.proteinGoal} g today. Nice work.` });
-  } else if (o.proteinGoal > 0 && nowMin >= 17 * 60 && p < o.proteinGoal * 0.75) {
+  } else if (o.entries.length > 0 && o.proteinGoal > 0 && nowMin >= 17 * 60 && p < o.proteinGoal * 0.75) {
+    // Only a tip for days they're actually tracking — never a badge for a day off.
     out.push({ id: `${o.date}:tip:protein`, kind: 'tip', title: `${Math.round(o.proteinGoal - p)} g protein to go`, body: 'A protein-rich dinner or snack can close the gap. Ask the coach for ideas.', link: '/coach' });
   }
   if (!o.gentle && o.targets && o.totals.kcal > o.targets.kcal * 1.1) {
