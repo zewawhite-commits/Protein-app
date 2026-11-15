@@ -102,6 +102,8 @@ export default function Premium() {
         <p className="mx-auto mt-2 max-w-sm text-[15px] text-silver">Snap any meal, chat with your AI coach, and get workout guides, recipes and eating plans built for you. Nutrition numbers always come from real food records.</p>
       </div>
 
+      <p className="mt-4 rounded-2xl bg-accent/10 px-4 py-3 text-center text-sm font-semibold text-accent">Our promise: what’s free today stays free. No ads, ever.</p>
+
       {msg && <p className={cx('mt-4 rounded-2xl px-4 py-3 text-sm font-medium', msg.tone === 'ok' ? 'bg-accent/10 text-accent' : 'bg-danger/10 text-danger')}>{msg.text}</p>}
 
       {active ? (

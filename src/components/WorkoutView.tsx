@@ -14,6 +14,12 @@ import { haptic, toast } from './fx';
 
 const DAYS_FOR: Record<string, number> = { sedentary: 2, light: 3, active: 4, athlete: 5 };
 const PLACES: [WorkoutRequest['place'], string][] = [['gym', 'Gym'], ['home', 'Home'], ['outdoors', 'Outdoors']];
+const ADJUST: [string, Partial<WorkoutRequest>][] = [
+  ['Missed a session', { focus: 'I missed a session this week — rebuild the remaining days so nothing important is lost, without cramming' }],
+  ['Travelling, no equipment', { place: 'home', focus: 'travelling this week with no equipment, hotel-room friendly' }],
+  ['Only 20 minutes', { minutes: 20, focus: 'very short on time, keep the most effective moves' }],
+  ['Lighter week', { focus: 'tired or sore — make this a lighter recovery week with lower volume and intensity' }],
+];
 const LEVELS: [WorkoutRequest['level'], string][] = [['beginner', 'Beginner'], ['intermediate', 'Intermediate'], ['advanced', 'Advanced']];
 
 /** AI workout guide for the week (Plus and Pro). */
@@ -32,11 +38,11 @@ export function WorkoutView() {
   const [editing, setEditing] = useState(!saved);
   const [state, setState] = useState<{ busy: boolean; error?: string; premium?: boolean; signIn?: boolean }>({ busy: false });
 
-  async function make() {
+  async function make(r: WorkoutRequest = req) {
     haptic();
     setState({ busy: true });
     try {
-      const res = await fetch('/api/workout', { method: 'POST', headers: await aiHeaders(), body: JSON.stringify({ context, request: req }) });
+      const res = await fetch('/api/workout', { method: 'POST', headers: await aiHeaders(), body: JSON.stringify({ context, request: r }) });
       const isJson = res.headers.get('content-type')?.includes('application/json');
       if (!isJson || res.status === 404 || res.status === 501) throw new Error('Workout guides aren’t switched on yet. They work once the AI key is added on the server.');
       const data = (await res.json()) as WorkoutPlan & { error?: string };
@@ -77,7 +83,7 @@ export function WorkoutView() {
           </div>
           <input value={req.focus} onChange={(e) => setReq({ ...req, focus: e.target.value })} maxLength={200} placeholder="Anything else? e.g. ‘bad knee’, ‘glutes’, ‘5k run’" className="field mt-4" />
 
-          <button onClick={make} disabled={state.busy} className="btn-primary mt-4 w-full">
+          <button onClick={() => void make()} disabled={state.busy} className="btn-primary mt-4 w-full">
             {state.busy ? <><Loader2 size={18} className="animate-spin" /> Building your week…</> : 'Build my workout guide'}
           </button>
           {saved && !state.busy && <button onClick={() => setEditing(false)} className="mt-2 w-full text-sm font-semibold text-silver">Keep my current guide</button>}
@@ -98,6 +104,16 @@ export function WorkoutView() {
               </div>
               <button onClick={() => setEditing(true)} className="chip !h-9 shrink-0"><RotateCcw size={15} /> New guide</button>
             </div>
+          </section>
+          <section className="card p-4">
+            <p className="text-[14px] font-semibold">Life changed? Adjust this week</p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {ADJUST.map(([label, patch]) => (
+                <button key={label} disabled={state.busy} onClick={() => { const next = { ...req, ...patch }; setReq(next); void make(next); }} className="chip !h-9 text-[14px]">{label}</button>
+              ))}
+            </div>
+            {state.busy && <p className="mt-2 flex items-center gap-2 text-sm text-silver"><Loader2 size={15} className="animate-spin" /> Rebuilding your week…</p>}
+            {state.error && <p className="mt-2 text-sm text-silver">{state.error} {state.premium && <Link to="/premium" className="font-semibold text-accent">Get Plus</Link>}</p>}
           </section>
           {saved.plan.days.map((d, i) => <DayCard key={i} day={d} defaultOpen={i === 0} />)}
           {saved.plan.tips.length > 0 && (

@@ -435,7 +435,7 @@ export default function Onboarding() {
             {planChoice !== 'free' && (
               <button onClick={() => { haptic(); finish(); }} className="mt-2 h-11 w-full text-sm font-semibold text-silver">Not now — start free</button>
             )}
-            <p className="mt-1 text-center text-xs text-dim">No card needed for Free. You can try everything first and upgrade later.</p>
+            <p className="mt-1 text-center text-xs text-dim">No card needed for Free. What’s free today stays free — upgrade only if you want more AI.</p>
           </Question>
         )}
       </div>

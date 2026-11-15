@@ -53,12 +53,21 @@ export function ExerciseSheet({ open, onClose, date }: { open: boolean; onClose:
   const [intensity, setIntensity] = useState<Intensity>('medium');
   const [minutes, setMinutes] = useState('30');
   const [own, setOwn] = useState('');
+  const [name, setName] = useState('');
+  const [sets, setSets] = useState('');
+  const [reps, setReps] = useState('');
+  const [load, setLoad] = useState('');
+  const [secs, setSecs] = useState('');
+  const unit = useStore((s) => s.settings.bodyUnit);
   const mins = Number(minutes) || 0;
   const estimate = burnedKcal(type, intensity, mins, kg);
   const kcal = own ? Number(own) : estimate;
 
   function save() {
-    add({ date, type, intensity, minutes: mins, kcal, manual: !!own });
+    const num = (v: string) => (Number(v) > 0 ? Number(v) : undefined);
+    const detail = name.trim() ? { name: name.trim().slice(0, 40), sets: num(sets), reps: num(reps), weightKg: num(load) ? Math.round((unit === 'lb' ? num(load)! / 2.20462 : num(load)!) * 10) / 10 : undefined, seconds: num(secs) } : undefined;
+    add({ date, type, intensity, minutes: mins, kcal, manual: !!own, ...(detail && { detail }) });
+    setName(''); setSets(''); setReps(''); setLoad(''); setSecs('');
     haptic([10, 30, 10]);
     toast(`${EXERCISES[type].label} logged · ${fmt(kcal)} kcal`);
     setOwn('');
@@ -85,6 +94,19 @@ export function ExerciseSheet({ open, onClose, date }: { open: boolean; onClose:
         </div>
       </div>
       <p className="mt-2 text-xs text-dim">{own ? 'Using your number (e.g. from your watch).' : kg ? `Estimated from your weight and the activity. Type your own if your watch shows a number.` : 'Add your weight in Profile for an estimate.'}</p>
+      <p className="label mt-5">Exercise detail <span className="font-normal text-dim">(optional)</span></p>
+      <input className="field" maxLength={40} placeholder="e.g. Bench press, weighted plank, farmer’s carry" value={name} onChange={(e) => setName(e.target.value)} />
+      {name.trim() && (
+        <div className="mt-2 grid grid-cols-4 gap-2">
+          {([['Sets', sets, setSets, 2], ['Reps', reps, setReps, 3], [unit, load, setLoad, 5], ['Secs', secs, setSecs, 4]] as const).map(([l, v, set, max]) => (
+            <label key={l} className="rounded-2xl bg-raised p-2 text-center">
+              <span className="block text-xs font-semibold text-silver">{l}</span>
+              <input inputMode="decimal" value={v} onChange={(e) => set(e.target.value.replace(/[^\d.]/g, '').slice(0, max))} className="num mt-0.5 w-full bg-transparent text-center text-[16px] font-bold outline-none" placeholder="–" aria-label={l} />
+            </label>
+          ))}
+        </div>
+      )}
+      {name.trim() && <p className="mt-1.5 text-xs text-dim">Fill in what applies: weight and reps for lifts, weight and seconds for holds and carries.</p>}
       <label className="mt-4 flex items-center justify-between rounded-2xl bg-raised px-4 py-3">
         <span><span className="block font-semibold">Add burned calories to my budget</span><span className="text-xs text-silver">Your daily calories go up on workout days</span></span>
         <input type="checkbox" checked={addBurned} onChange={(e) => updateSettings({ addBurned: e.target.checked })} className="h-5 w-5 accent-[rgb(var(--accent))]" />
@@ -99,6 +121,7 @@ export function ExerciseList({ date }: { date: string }) {
   const all = useStore((s) => s.exercises);
   const list = useMemo(() => all.filter((e) => e.date === date), [all, date]);
   const remove = useStore((s) => s.removeExercise);
+  const unit = useStore((s) => s.settings.bodyUnit);
   if (!list.length) return null;
   return (
     <section className="mt-6">
@@ -108,7 +131,8 @@ export function ExerciseList({ date }: { date: string }) {
           <div key={e.id} className="flex items-center gap-4 p-3">
             <span className="grid h-12 w-12 place-items-center rounded-[16px] bg-raised"><Dumbbell size={20} /></span>
             <div className="min-w-0 flex-1">
-              <p className="font-bold">{EXERCISES[e.type].label}</p>
+              <p className="font-bold">{e.detail?.name ?? EXERCISES[e.type].label}</p>
+              {e.detail && <p className="num text-sm font-semibold">{describeDetail(e.detail, unit)}</p>}
               <p className="text-sm text-silver">{e.minutes} min · {e.intensity === 'low' ? 'light' : e.intensity === 'medium' ? 'moderate' : 'hard'}{e.manual ? '' : ' · estimate'}</p>
             </div>
             <p className="num text-right"><span className="block text-lg font-bold text-accent">+{fmt(e.kcal)}</span><span className="text-xs text-silver">kcal</span></p>
@@ -118,4 +142,11 @@ export function ExerciseList({ date }: { date: string }) {
       </div>
     </section>
   );
+}
+
+/** "3 × 8 · 60 kg" or "40 kg · 45 s". */
+export function describeDetail(d: NonNullable<import('@/lib/exercise').ExerciseEntry['detail']>, unit: 'kg' | 'lb'): string {
+  const w = d.weightKg ? `${fmt(unit === 'lb' ? d.weightKg * 2.20462 : d.weightKg, 1)} ${unit}` : '';
+  const sr = d.sets && d.reps ? `${d.sets} × ${d.reps}` : d.reps ? `${d.reps} reps` : d.sets ? `${d.sets} sets` : '';
+  return [sr, w, d.seconds ? `${d.seconds} s` : ''].filter(Boolean).join(' · ');
 }

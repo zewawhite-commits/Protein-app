@@ -53,6 +53,7 @@ export default function Today() {
   const { streak } = useGoalStats(date);
   const gentle = useStore((s) => !!s.settings.gentle);
   const simple = useStore((s) => s.settings.tracking === 'simple');
+  const quietAi = useStore((s) => !!s.settings.quietAi);
 
   const isToday = date === today;
 
@@ -122,7 +123,7 @@ export default function Today() {
       </div>
 
       <ExerciseList date={date} />
-      {isToday && <div className="mt-2"><Suggestions remaining={Math.max(0, goal - totals.protein)} /></div>}
+      {isToday && !quietAi && <div className="mt-2"><Suggestions remaining={Math.max(0, goal - totals.protein)} /></div>}
 
       <FoodSheet food={editing ? entryAsFood(editing, lookup) : null} entry={editing ?? undefined} date={date} onClose={() => setEditing(null)} />
     </div>

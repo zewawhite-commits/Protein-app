@@ -45,6 +45,7 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
   const updateEntry = useStore((s) => s.updateEntry);
   const removeEntry = useStore((s) => s.removeEntry);
   const [reported, setReported] = useState(false);
+  const [moveTo, setMoveTo] = useState('');
   const favs = useStore((s) => s.favoriteFoodIds);
   const toggleFavorite = useStore((s) => s.toggleFavorite);
   const rememberFood = useStore((s) => s.rememberFood);
@@ -104,7 +105,7 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
     if (g <= 0) { inputRef.current?.focus(); return; }
     savedRef.current = true;
     const crossesGoal = day.goal > 0 && before + (entry ? nutrientsFor(entry.food.per100, entry.grams).protein : 0) < day.goal && after >= day.goal;
-    if (entry) updateEntry(entry.id, { grams: round1(g), meal, photoId });
+    if (entry) updateEntry(entry.id, { grams: round1(g), meal, photoId, ...(moveTo && moveTo !== entry.date ? { date: moveTo } : {}) });
     else {
       const added = addEntry({ date, meal, food, grams: round1(g), photoId });
       haptic(12);
@@ -242,6 +243,12 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
 
       {/* Meal */}
       <Segmented full value={meal} onChange={setMeal} options={MEALS} />
+      {entry && (
+        <label className="flex items-center justify-between gap-3 rounded-2xl bg-raised px-4 py-2.5 text-sm">
+          <span className="font-semibold">Day</span>
+          <input type="date" max={todayKey()} value={moveTo || entry.date} onChange={(e) => setMoveTo(e.target.value)} className="bg-transparent text-right font-semibold outline-none" aria-label="Day this food was eaten" />
+        </label>
+      )}
 
       {/* Photo */}
       {photoUrl ? (

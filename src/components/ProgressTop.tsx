@@ -226,6 +226,19 @@ export function BeyondTheScale() {
     const mon = exercises.filter((x) => x.date > from30);
     return { daysLogged: days.size, proteinDays, workoutsWeek: week.length, minutesMonth: mon.reduce((s, x) => s + x.minutes, 0), workoutsMonth: mon.length };
   }, [entries, exercises, goalHistory, profile]);
+  const unit = useStore((s) => s.settings.bodyUnit);
+  // Heaviest weight logged per named exercise, and how much that is above the first time.
+  const bests = useMemo(() => {
+    const by = new Map<string, { name: string; first: number; kg: number }>();
+    for (const x of [...exercises].sort((a, b) => a.date.localeCompare(b.date))) {
+      if (!x.detail?.weightKg) continue;
+      const k = x.detail.name.trim().toLowerCase();
+      const cur = by.get(k);
+      if (!cur) by.set(k, { name: x.detail.name, first: x.detail.weightKg, kg: x.detail.weightKg });
+      else cur.kg = Math.max(cur.kg, x.detail.weightKg);
+    }
+    return [...by.values()].map((b) => ({ ...b, up: b.kg - b.first })).slice(-5);
+  }, [exercises]);
   const tiles: [string, string, string][] = [
     [String(stats.workoutsWeek), 'workouts', 'this week'],
     [String(stats.minutesMonth), 'minutes trained', 'last 30 days'],
@@ -236,6 +249,19 @@ export function BeyondTheScale() {
     <section className="card p-5">
       <h2 className="text-lg font-bold">Beyond the scale</h2>
       <p className="mt-0.5 text-sm text-silver">Progress is more than your weight.</p>
+      {bests.length > 0 && (
+        <div className="mt-3 rounded-2xl bg-raised p-3.5">
+          <p className="text-[14px] font-semibold">Strength bests</p>
+          <ul className="mt-1.5 space-y-1">
+            {bests.map((b) => (
+              <li key={b.name} className="flex items-center justify-between gap-3 text-[14px]">
+                <span className="min-w-0 truncate font-medium">{b.name}</span>
+                <span className="num shrink-0 font-bold">{fmt(unit === 'lb' ? b.kg * 2.20462 : b.kg, 1)} {unit}{b.up > 0 && <span className="ml-1.5 text-xs font-semibold text-accent">+{fmt(unit === 'lb' ? b.up * 2.20462 : b.up, 1)}</span>}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
       <div className="mt-3 grid grid-cols-2 gap-2">
         {tiles.map(([v, l, sub]) => (
           <div key={l} className="rounded-2xl bg-raised p-3.5">

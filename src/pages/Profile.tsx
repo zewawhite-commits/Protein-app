@@ -136,6 +136,10 @@ export default function Profile({ mode = 'profile' }: { mode?: 'profile' | 'sett
           <Segmented value={settings.tracking ?? 'detailed'} onChange={(t) => updateSettings({ tracking: t })} options={[{ value: 'simple', label: 'Simple' }, { value: 'detailed', label: 'Detailed' }]} />
         </Row>
         <p className="px-4 pb-2 text-xs leading-relaxed text-dim">Simple shows just calories and protein on Home. Detailed adds carbs, fat and every nutrient. Nothing is lost either way.</p>
+        <Row icon={<Sparkles size={18} />} label="Suggestions on Home">
+          <Toggle on={!settings.quietAi} onChange={(v) => updateSettings({ quietAi: !v })} label="Suggestions on Home" />
+        </Row>
+        <p className="px-4 pb-2 text-xs leading-relaxed text-dim">Turn off to hide “What to eat next”. The coach only ever speaks when you ask it.</p>
         <Row icon={<HeartHandshake size={18} />} label="Gentle mode">
           <Toggle on={!!settings.gentle} onChange={(v) => updateSettings({ gentle: v })} label="Gentle mode" />
         </Row>

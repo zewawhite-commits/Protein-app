@@ -170,6 +170,8 @@ export interface Settings {
   gentle?: boolean;
   /** 'simple' shows calories and protein only; 'detailed' (default) shows every macro and nutrient. */
   tracking?: 'simple' | 'detailed';
+  /** Hide the "What to eat next" suggestions on Home (AI only speaks when asked). */
+  quietAi?: boolean;
 }
 
 /** A meal the user saved to log again in one tap (food snapshots + the grams they weighed). */

@@ -26,6 +26,8 @@ export interface ExerciseEntry {
   kcal: number;
   /** True when the user typed the calories themselves. */
   manual?: boolean;
+  /** Optional detail for strength or timed work: any exercise, with sets, reps, weight and/or hold time. */
+  detail?: { name: string; sets?: number; reps?: number; weightKg?: number; seconds?: number };
 }
 
 export function burnedKcal(type: ExerciseType, intensity: Intensity, minutes: number, kg: number): number {
