@@ -6,7 +6,7 @@ import { EXTRA_KEYS } from './nutrients';
  */
 import type { CustomFood, Food, FoodSource, PrepState } from './types';
 
-type SourceCode = 's' | 'f' | 'w' | 'r';
+type SourceCode = 's' | 'f' | 'w' | 'u' | 'a' | 'r';
 interface SourceInfo { name: string; release: string; citation: string }
 
 interface FoodsFile {
@@ -27,7 +27,8 @@ export interface FoodDb {
   categories: string[];
 }
 
-const SOURCE_OF: Record<SourceCode, FoodSource> = { s: 'usda-sr', f: 'usda-fndds', w: 'fao-wafct', r: 'recipe' };
+const SOURCE_OF: Record<SourceCode, FoodSource> = { s: 'usda-sr', f: 'usda-fndds', w: 'fao-wafct', u: 'uk-cofid', a: 'au-afcd', r: 'recipe' };
+const ID_PREFIX: Record<SourceCode, string> = { s: 'usda', f: 'usda', w: 'wafct', u: 'cofid', a: 'afcd', r: 'recipe' };
 
 /** Human-readable source line and link for a record. */
 export function sourceInfo(food: Pick<Food, 'source' | 'fdcId' | 'ref' | 'sourceNote'>): { label: string; url?: string } {
@@ -35,6 +36,8 @@ export function sourceInfo(food: Pick<Food, 'source' | 'fdcId' | 'ref' | 'source
     case 'usda-sr': return { label: `USDA SR Legacy · FDC ${food.fdcId}`, url: fdcUrl(food.fdcId!) };
     case 'usda-fndds': return { label: `USDA FNDDS · FDC ${food.fdcId}`, url: fdcUrl(food.fdcId!) };
     case 'fao-wafct': return { label: `FAO/INFOODS West Africa 2019 · ${food.ref}`, url: 'https://www.fao.org/infoods/infoods/tables-and-databases/faoinfoods-databases/en/' };
+    case 'uk-cofid': return { label: `UK CoFID 2021 (McCance & Widdowson) · ${food.ref}`, url: 'https://www.gov.uk/government/publications/composition-of-foods-integrated-dataset-cofid' };
+    case 'au-afcd': return { label: `Australian Food Composition Database · ${food.ref}`, url: 'https://www.foodstandards.gov.au/science-data/food-nutrient-databases/afcd' };
     case 'recipe': return { label: `Standard recipe from USDA/FAO ingredients · ${food.sourceNote ?? ''}` };
     case 'off': return { label: `Open Food Facts · ${food.ref} (product label)`, url: `https://world.openfoodfacts.org/product/${food.ref}` };
     default: return { label: `Custom · ${food.sourceNote ?? ''}` };
@@ -42,7 +45,7 @@ export function sourceInfo(food: Pick<Food, 'source' | 'fdcId' | 'ref' | 'source
 }
 
 export const SOURCE_SHORT: Record<FoodSource, string> = {
-  'usda-sr': 'USDA', 'usda-fndds': 'USDA dish', 'fao-wafct': 'FAO W. Africa', recipe: 'Recipe', off: 'Product', custom: 'Mine',
+  'usda-sr': 'USDA', 'usda-fndds': 'USDA dish', 'fao-wafct': 'FAO W. Africa', 'uk-cofid': 'UK', 'au-afcd': 'Australia', recipe: 'Recipe', off: 'Product', custom: 'Mine',
 };
 
 interface Indexed {
@@ -75,7 +78,7 @@ export function loadFoodDb(): Promise<FoodDb> {
           // Recipe rows carry their other names in brackets: "Egusi soup (egushi, melon seed soup)".
           const m = src === 'r' ? /^(.*?) \((.*)\)$/.exec(name) : null;
           return {
-            id: usda ? `usda:${key}` : src === 'r' ? `recipe:${key}` : `wafct:${key}`,
+            id: `${ID_PREFIX[src]}:${key}`,
             fdcId: usda ? Number(key) : undefined,
             ref: usda ? undefined : String(key),
             name: m ? m[1] : name,

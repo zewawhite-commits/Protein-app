@@ -68,7 +68,7 @@ describe('matching AI suggestions to records', () => {
 
   it('never carries nutrient numbers from the AI: candidates are database records', () => {
     const [m] = matchItems(sanitize({ isFood: true, note: '', items: [item({ name: 'Egg', searchQueries: ['egg whole cooked'] })] }), []);
-    for (const f of m.candidates) expect(['usda-sr', 'usda-fndds', 'fao-wafct', 'recipe', 'custom']).toContain(f.source);
+    for (const f of m.candidates) expect(['usda-sr', 'usda-fndds', 'fao-wafct', 'uk-cofid', 'au-afcd', 'recipe', 'custom']).toContain(f.source);
   });
 
   it('sanitizes model output', () => {

@@ -166,7 +166,7 @@ export default function AddFood() {
 
       {db && (
         <p className="mt-6 text-center text-[12px] font-medium leading-relaxed text-dim">
-          {db.foods.length.toLocaleString()} foods from USDA FoodData Central and FAO/INFOODS · packaged products from Open Food Facts
+          {db.foods.length.toLocaleString()} foods from USDA, UK (McCance &amp; Widdowson), Australia (FSANZ) and FAO/INFOODS tables · millions of packaged products from Open Food Facts
         </p>
       )}
 
