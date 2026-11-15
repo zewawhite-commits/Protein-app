@@ -120,7 +120,7 @@ function toIndexed(food: Food): Indexed {
 /** Everyday words → the vocabulary USDA uses. */
 const SYNONYMS: Record<string, string> = {
   chickpea: 'chickpeas', mince: 'ground', egushi: 'egusi', agushi: 'egusi', jolof: 'jollof', moin: 'moi', garri: 'gari', minced: 'ground', prawn: 'shrimp', prawns: 'shrimp',
-  yoghurt: 'yogurt', porridge: 'oats', courgette: 'squash', aubergine: 'eggplant', eggs: 'egg', oat: 'oats',
+  yoghurt: 'yogurt', courgette: 'squash', aubergine: 'eggplant', eggs: 'egg', oat: 'oats',
 };
 
 export interface SearchOptions {
@@ -130,7 +130,24 @@ export interface SearchOptions {
 }
 
 /** Word-prefix search; every query word must match the start of some word in the name. */
+/** Local dish names → the name the food tables use (when the dish is already there under another name). */
+const PHRASES: [RegExp, string][] = [
+  [/\bbiltong\b/, 'beef jerky'], [/\bboerewors\b/, 'sausage pork and beef'], [/\bnyama choma\b/, 'goat roasted'],
+  [/\blechon\b/, 'pork roasted'], [/\blumpia\b/, 'spring roll'], [/\bdim sum\b/, 'dumpling'], [/\bfried noodles\b/, 'chow mein'],
+  [/\b(dodo|alloco|maduros|platanos)\b/, 'plantain cooked with oil'], [/\basado\b/, 'beef flank'], [/\bofada rice\b/, 'rice brown'],
+  [/\bchips\b(?! and)/, 'french fries'], [/\bcrisps\b/, 'potato chips'], [/\baubergine\b/, 'eggplant'], [/\bcoriander\b/, 'cilantro'],
+  [/\bswede\b/, 'rutabaga'], [/\bgarbanzo\b/, 'chickpeas'], [/\brocket\b/, 'arugula'], [/\bspring onions?\b/, 'scallions'],
+];
+
 export function searchFoods(query: string, opts: SearchOptions = {}): Food[] {
+  const direct = searchWith(query, opts);
+  if (direct.length) return direct;
+  let alt = query.toLowerCase();
+  for (const [re, to] of PHRASES) alt = alt.replace(re, to);
+  return alt !== query.toLowerCase() ? searchWith(alt, opts) : [];
+}
+
+function searchWith(query: string, opts: SearchOptions): Food[] {
   const terms = tokenize(query).map((t) => SYNONYMS[t] ?? t);
   if (!terms.length) return [];
   const found = searchTerms(terms, opts);

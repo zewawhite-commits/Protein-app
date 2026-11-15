@@ -43,6 +43,13 @@ describe('international database coverage', () => {
     ['ackee', 'Ackee and saltfish'],
     ['fish and chips', 'Fish and chips'],
     ['chiken breast', 'Chicken'], // typo
+    ['doro wat', 'Doro wat'],
+    ['bulgogi', 'Bulgogi'],
+    ['feijoada', 'Feijoada'],
+    ['biltong', 'jerky'], // local name → table name
+    ['jacket potato', 'Jacket potato'],
+    ['haggis', 'Haggis'], // UK table
+    ['lamington', 'lamington'], // Australian table
   ])('finds %s', (q, expected) => {
     expect(searchFoods(q, { limit: 5 }).some((f) => f.name.toLowerCase().includes(expected.toLowerCase()))).toBe(true);
   });
