@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { activeSubscription, readPass, signPass } from './_lib/premium';
-import { POST as activate } from './premium/activate';
-import { POST as checkout } from './premium/checkout';
-import { POST as recognize } from './recognize';
+import { activeSubscription, readPass, signPass } from '../_lib/premium';
+import { POST as activate } from '../_premium/activate';
+import { POST as checkout } from '../_premium/checkout';
+import { POST as recognize } from '../recognize';
 
 const DAY = 86_400_000;
 const iso = (ms: number) => new Date(ms).toISOString();
@@ -213,7 +213,7 @@ describe('plan limits (quota)', () => {
   });
 
   it('keeps plans and ideas for paid tiers, and uses the pass tier limits', async () => {
-    const { gate, limitFor } = await import('./_lib/quota');
+    const { gate, limitFor } = await import('../_lib/quota');
     fakeSupabase({});
     const free = await gate(call({}, 'jwt'), 'plan');
     expect(free.ok).toBe(false);
@@ -227,7 +227,7 @@ describe('plan limits (quota)', () => {
   });
 
   it('gives Plus the workout guide and recipes, but keeps eating plans for Pro', async () => {
-    const { gate } = await import('./_lib/quota');
+    const { gate } = await import('../_lib/quota');
     fakeSupabase({});
     expect((await gate(call({}, 'jwt'), 'workout')).ok).toBe(false); // free
     const plus = signPass({ email: 'me@example.com', cid: 1, plan: 'PLN_month', tier: 'plus', exp: Date.now() + 86400e3 });
@@ -239,7 +239,7 @@ describe('plan limits (quota)', () => {
   });
 
   it('lets admins test without limits', async () => {
-    const { gate } = await import('./_lib/quota');
+    const { gate } = await import('../_lib/quota');
     fakeSupabase({ [`scan:${U}`]: 999 }, 'boss@example.com');
     process.env.ADMIN_EMAILS = 'boss@example.com';
     expect(await gate(call({}, 'jwt'), 'scan')).toMatchObject({ ok: true, left: Infinity });
@@ -248,7 +248,7 @@ describe('plan limits (quota)', () => {
 
 describe('owner stats', () => {
   it('summarises sign-up, return and week-2 retention from stored logs', async () => {
-    const { summarize } = await import('./_lib/stats');
+    const { summarize } = await import('../_lib/stats');
     const now = Date.parse('2026-11-30T12:00:00Z');
     const day = (n: number) => new Date(now - n * 864e5).toISOString().slice(0, 10);
     const rows = [
@@ -264,5 +264,31 @@ describe('owner stats', () => {
     const s = summarize(rows as never, now);
     expect(s).toMatchObject({ accounts: 4, finishedSetup: 3, loggedFood: 3, loggedTwoDays: 2, day2Rate: 67, activeLast7Days: 1, loggedWeight: 1, loggedWorkout: 1 });
     expect(s.week2).toEqual({ eligible: 2, returned: 1, rate: 50 });
+  });
+});
+
+describe('deployment limits', () => {
+  it('stays within the 12 server functions Vercel Hobby allows', async () => {
+    const { readdirSync, statSync } = await import('node:fs');
+    const { join } = await import('node:path');
+    const count = (dir: string): number => readdirSync(dir).reduce((n, f) => {
+      if (f.startsWith('_') || f.startsWith('.')) return n; // underscore folders/files aren't deployed as functions
+      const p = join(dir, f);
+      return n + (statSync(p).isDirectory() ? count(p) : /\.(ts|js)$/.test(f) && !/\.test\./.test(f) ? 1 : 0);
+    }, 0);
+    expect(count('api')).toBeLessThanOrEqual(12);
+  });
+
+  it('routes every premium action through the single function', async () => {
+    const { GET, POST } = await import('../premium/[action]');
+    delete process.env.PAYSTACK_SECRET_KEY;
+    const plans = await GET(new Request('https://x/api/premium/plans'));
+    expect(plans.status).toBe(200);
+    expect(await plans.json()).toMatchObject({ enabled: false });
+    for (const a of ['checkout', 'activate', 'manage', 'billing']) {
+      const r = await POST(new Request(`https://x/api/premium/${a}`, { method: 'POST', body: '{}' }));
+      expect(r.status).not.toBe(404); // reached the real handler (payments off → its own error)
+    }
+    expect((await POST(new Request('https://x/api/premium/nope', { method: 'POST', body: '{}' }))).status).toBe(404);
   });
 });
