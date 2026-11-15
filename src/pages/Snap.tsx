@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Check, ChevronRight, ImagePlus, Loader2, RotateCcw, Search, Sparkles, X, Zap } from 'lucide-react';
+import { ArrowLeft, Check, ChevronRight, ImagePlus, Loader2, Mic, RotateCcw, Search, Sparkles, X, Zap } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 import { useFoodDb, usePhotoUrl } from '@/lib/hooks';
 import { deletePhoto, getPhoto, savePhoto } from '@/lib/photos';
@@ -103,6 +103,29 @@ export default function Snap() {
     setPhase('camera');
   }
 
+  // Voice: the phone's own speech-to-text fills the description box (nothing is recorded or stored).
+  type Recognizer = { lang: string; interimResults: boolean; continuous: boolean; start: () => void; stop: () => void; onresult: ((e: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null; onend: (() => void) | null; onerror: (() => void) | null };
+  const SR = typeof window !== 'undefined' ? ((window as unknown as Record<string, unknown>).SpeechRecognition ?? (window as unknown as Record<string, unknown>).webkitSpeechRecognition) as (new () => Recognizer) | undefined : undefined;
+  const canListen = !!SR;
+  const [listening, setListening] = useState(false);
+  const recRef = useRef<Recognizer | null>(null);
+  function listen() {
+    haptic();
+    if (listening) { recRef.current?.stop(); return; }
+    if (!SR) return;
+    const rec = new SR();
+    rec.lang = navigator.language || 'en-GB';
+    rec.interimResults = false;
+    rec.continuous = false;
+    const before = described.trim();
+    rec.onresult = (e) => { const said = Array.from(e.results).map((r) => r[0].transcript).join(' ').trim(); if (said) setDescribed((before ? `${before}, ` : '') + said); };
+    rec.onend = () => setListening(false);
+    rec.onerror = () => { setListening(false); toast('Couldn’t hear that — check microphone permission, or type it.'); };
+    recRef.current = rec;
+    setListening(true);
+    try { rec.start(); } catch { setListening(false); }
+  }
+
   const manualUrl = (q = '') => `/add?${new URLSearchParams({ ...(q && { q }), ...(photoId && { photo: photoId }), ...(date !== todayKey() && { date }) })}`;
 
   // Signed out: say so before they take a photo, not after.
@@ -127,14 +150,22 @@ export default function Snap() {
           <button onClick={back} className="grid h-11 w-11 place-items-center rounded-full bg-surface" style={{ boxShadow: 'var(--shadow)' }} aria-label="Back"><ArrowLeft size={20} /></button>
         </header>
         <h1 className="text-[30px] font-extrabold leading-tight tracking-tight">Describe your meal</h1>
-        <p className="mt-1 text-[15px] text-silver">Type what you ate — we’ll find each food. You check and weigh.</p>
+        <p className="mt-1 text-[15px] text-silver">Type or say what you ate — we’ll find each food. You check and weigh.</p>
         <textarea autoFocus value={described} onChange={(e) => setDescribed(e.target.value)} maxLength={500} rows={4} placeholder="e.g. 2 scrambled eggs, a slice of wholemeal toast and a latte" className="field mt-5 !h-auto resize-none py-4 text-[17px]" />
         <div className="mt-3 flex flex-wrap gap-2">
           {['Chicken Caesar salad', 'Bowl of porridge with banana', 'Cheeseburger and fries', 'Two slices of pepperoni pizza'].map((x) => (
             <button key={x} onClick={() => setDescribed(x)} className="chip !h-9">{x}</button>
           ))}
         </div>
-        <button onClick={() => void analyse(null, described)} disabled={described.trim().length < 3} className="btn-primary mt-6 w-full">Find foods</button>
+        <div className="mt-6 flex gap-2">
+          {canListen && (
+            <button onClick={listen} className={cx('btn !h-14 !w-14 shrink-0 !px-0', listening ? 'bg-danger text-white' : 'bg-surface text-ink')} style={{ boxShadow: 'var(--shadow)' }} aria-label={listening ? 'Stop listening' : 'Say what you ate'}>
+              <Mic size={22} />
+            </button>
+          )}
+          <button onClick={() => void analyse(null, described)} disabled={described.trim().length < 3} className="btn-primary flex-1">Find foods</button>
+        </div>
+        {canListen && <p className="mt-2 text-xs text-dim">{listening ? 'Listening… say what you ate, then tap the mic again.' : 'Tap the mic to say it instead of typing.'}</p>}
       </div>
     );
   }

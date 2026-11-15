@@ -52,6 +52,8 @@ interface Indexed {
   food: Food;
   lower: string;
   words: string[];
+  /** How many of `words` come from the name itself (the rest are other names / spellings). */
+  nameWords: number;
 }
 
 let dbPromise: Promise<FoodDb> | null = null;
@@ -114,7 +116,7 @@ const tokenize = (s: string) => s.toLowerCase().normalize('NFKD').replace(/\p{M}
 
 function toIndexed(food: Food): Indexed {
   const text = food.aliases?.length ? `${food.name} ${food.aliases.join(' ')}` : food.name;
-  return { food, lower: food.name.toLowerCase(), words: tokenize(text) };
+  return { food, lower: food.name.toLowerCase(), words: tokenize(text), nameWords: tokenize(food.name).length };
 }
 
 /** Everyday words → the vocabulary USDA uses. */
@@ -139,7 +141,12 @@ const PHRASES: [RegExp, string][] = [
   [/\bswede\b/, 'rutabaga'], [/\bgarbanzo\b/, 'chickpeas'], [/\brocket\b/, 'arugula'], [/\bspring onions?\b/, 'scallions'],
 ];
 
+/** One-word everyday names that mean a specific food. */
+const EXACT: Record<string, string> = { toast: 'bread white toasted', steak: 'beef steak lean', mash: 'potato mashed', chips: 'french fries', eggs: 'egg whole cooked', rice: 'rice white cooked', pasta: 'pasta cooked', chicken: 'chicken breast' };
+
 export function searchFoods(query: string, opts: SearchOptions = {}): Food[] {
+  const exact = EXACT[query.trim().toLowerCase()];
+  if (exact) { const hit = searchWith(exact, opts); if (hit.length) return [...hit, ...searchWith(query, opts).filter((f) => !hit.some((h) => h.id === f.id))].slice(0, opts.limit ?? 60); }
   const direct = searchWith(query, opts);
   if (direct.length) return direct;
   let alt = query.toLowerCase();
@@ -191,15 +198,18 @@ export function editDistance(a: string, b: string, cap = Infinity): number {
 function searchTerms(terms: string[], opts: SearchOptions): Food[] {
   const { state = 'all', limit = 60, custom = [] } = opts;
   const pool: Indexed[] = [...custom.filter((c) => !c.archived).map(toIndexed), ...index];
+  const phrase = terms.join(' ');
   const scored: { f: Food; s: number }[] = [];
   for (const it of pool) {
     if (state !== 'all' && it.food.state !== state) continue;
     let score = 0;
     let ok = true;
+    let firstPos = -1;
     for (let i = 0; i < terms.length; i++) {
       const t = terms[i];
       const pos = it.words.findIndex((w) => w.startsWith(t) || (t.length > 3 && w.startsWith(t.replace(/s$/, ''))));
       if (pos === -1) { ok = false; break; }
+      if (i === 0) firstPos = pos;
       // Earlier matches are more relevant; the first word is the food's main name in USDA naming.
       // USDA prefixes many foods with a group word ("Fish, salmon…"); treat the word after it as the main name.
       const lead = pos === 0 || (pos === 1 && GROUP_WORDS.has(it.words[0]));
@@ -210,7 +220,10 @@ function searchTerms(terms: string[], opts: SearchOptions): Food[] {
     score -= it.words.length * 0.4; // prefer plainer descriptions
     if (it.food.source === 'custom') score += 8;
     if (quickPickIds.has(it.food.id)) score += 14;
-    if (it.food.source === 'recipe') score += 12;
+    // A dish people ask for by name ("jollof rice", "moin moin") — not when the word is incidental ("toast" in beans on toast).
+    if (it.food.source === 'recipe' && (firstPos === 0 || firstPos >= it.nameWords)) score += 12;
+    // The exact phrase appears in the name ("sesame seeds" → "Seeds, sesame seeds, whole", not sesame paste).
+    if (terms.length > 1 && it.lower.includes(phrase)) score += 10;
     if (PROCESSED_CATEGORIES.has(it.food.category)) score -= 10;
     if (PROCESSED_WORDS.test(it.lower)) score -= 5;
     if (/\b(meat only|skinless|boneless|lean)\b/.test(it.lower)) score += 3;

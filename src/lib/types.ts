@@ -55,9 +55,18 @@ export interface Food {
   aliases?: string[];
 }
 
+/** A homemade recipe's ingredients (snapshots, so it still works offline and can be edited later). */
+export interface RecipeDef {
+  ingredients: { foodId: string; name: string; grams: number; per100: Per100 }[];
+  cookedGrams: number;
+  servings: number;
+}
+
 export interface CustomFood extends Food {
   source: 'custom';
   sourceNote: string;
+  /** Set when this food is a recipe the person built from ingredients. */
+  recipe?: RecipeDef;
   createdAt: number;
   updatedAt: number;
   archived?: boolean;

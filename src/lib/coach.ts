@@ -30,6 +30,10 @@ export interface CoachContext {
   /** Totals so far today, from the app's database calculations. */
   today?: { kcal?: number; protein?: number; carbs?: number; fat?: number; fiber?: number; sugar?: number; sodiumMg?: number };
   eatenToday?: string[];
+  /** Foods logged over the last week (so suggestions can vary and fit their habits). */
+  recentFoods?: string[];
+  /** Plain-language progress facts worked out by the app (weight trend, consistency). */
+  progress?: string[];
   localTime?: string;
 }
 
@@ -90,6 +94,9 @@ export function contextText(c: CoachContext): string {
     `Daily targets: ${fmt(t.kcal, 'kcal')}, protein ${fmt(t.protein)}, carbs ${fmt(t.carbs)}, fat ${fmt(t.fat)}, fibre ${fmt(t.fiber)}`,
     `Eaten so far today: ${fmt(d.kcal, 'kcal')}, protein ${fmt(d.protein)}, carbs ${fmt(d.carbs)}, fat ${fmt(d.fat)}, fibre ${fmt(d.fiber)}, sugars ${fmt(d.sugar)}, sodium ${fmt(d.sodiumMg, 'mg')}`,
     `Foods logged today: ${c.eatenToday?.length ? c.eatenToday.join('; ') : 'nothing yet'}`,
+    `Foods they logged in the last 7 days: ${c.recentFoods?.length ? c.recentFoods.join('; ') : 'none yet'} — build on what they like, but vary your suggestions and don’t keep recommending the same meals.`,
+    `Progress (calculated by the app): ${c.progress?.length ? c.progress.join(' ') : 'not enough data yet'}`,
+    'Tone: supportive and practical. Never shame food choices or call foods good or bad; a missed day or a higher weigh-in is normal.',
     `Local time: ${c.localTime || 'unknown'}`,
   ].join('\n');
 }

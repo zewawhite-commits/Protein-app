@@ -82,8 +82,11 @@ function candidatesFor(queries: string[], state: RecognizedItem['state'], custom
   const seen = new Set<string>();
   const out: Food[] = [];
   for (const q of queries) {
-    const sameState = state !== 'na' ? searchFoods(q, { custom, state, limit: 3 }) : [];
-    for (const f of [...sameState, ...searchFoods(q, { custom, limit: 3 })]) {
+    // Best name matches first; only records in the opposite state (raw when the food is cooked) are pushed down.
+    const all = searchFoods(q, { custom, limit: 6 });
+    const fits = all.filter((f) => state === 'na' || f.state === state || f.state === 'na');
+    const sameState = !fits.length && state !== 'na' ? searchFoods(q, { custom, state, limit: 3 }) : [];
+    for (const f of [...fits, ...sameState, ...all].slice(0, 6)) {
       if (!seen.has(f.id)) { seen.add(f.id); out.push(f); }
     }
     if (out.length >= max) break;

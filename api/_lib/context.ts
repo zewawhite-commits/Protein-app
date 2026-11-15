@@ -25,6 +25,8 @@ export function cleanContext(raw: unknown): CoachContext {
     targets: nums(c.targets, ['kcal', 'protein', 'carbs', 'fat', 'fiber'], 20000),
     today: nums(c.today, ['kcal', 'protein', 'carbs', 'fat', 'fiber', 'sugar', 'sodiumMg'], 50000),
     eatenToday: Array.isArray(c.eatenToday) ? c.eatenToday.map((s: unknown) => String(s).slice(0, 60)).slice(0, 20) : [],
+    recentFoods: Array.isArray(c.recentFoods) ? c.recentFoods.map((s: unknown) => String(s).slice(0, 50)).slice(0, 25) : [],
+    progress: Array.isArray(c.progress) ? c.progress.map((s: unknown) => String(s).slice(0, 160)).slice(0, 6) : [],
     localTime: str(c.localTime, 40),
   };
 }

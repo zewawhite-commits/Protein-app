@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bookmark, Camera, Dumbbell, PenLine, ScanBarcode, Search, Trash2 } from 'lucide-react';
+import { Bookmark, Camera, ChefHat, Dumbbell, PenLine, ScanBarcode, Search, Trash2 } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 import { todayKey } from '@/lib/dates';
 import { EXERCISES, burnedKcal, type ExerciseType, type Intensity } from '@/lib/exercise';
@@ -16,9 +16,10 @@ export function LogMenu({ open, onClose, date }: { open: boolean; onClose: () =>
   const items = [
     { icon: Camera, label: 'Scan food', sub: 'Photo of your meal', to: `/snap${q}` },
     { icon: ScanBarcode, label: 'Barcode', sub: 'Packaged foods', to: `/barcode${q}` },
-    { icon: PenLine, label: 'Describe', sub: 'Type what you ate', to: `/snap${q ? `${q}&` : '?'}mode=describe` },
+    { icon: PenLine, label: 'Describe', sub: 'Type or say it', to: `/snap${q ? `${q}&` : '?'}mode=describe` },
     { icon: Search, label: 'Food database', sub: '18,000+ foods', to: `/add${q}` },
     { icon: Bookmark, label: 'Saved meals', sub: 'Log in one tap', to: `/add?tab=saved${q ? `&${q.slice(1)}` : ''}` },
+    { icon: ChefHat, label: 'My recipes', sub: 'Homemade dishes', to: `/add?tab=custom${q ? `&${q.slice(1)}` : ''}` },
   ];
   return (
     <>

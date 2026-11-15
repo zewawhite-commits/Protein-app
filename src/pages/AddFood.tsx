@@ -1,6 +1,6 @@
 import { useDeferredValue, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Camera, ChevronRight, Globe2, Heart, Loader2, Search, X } from 'lucide-react';
+import { ArrowLeft, Camera, ChevronRight, Globe2, Heart, Loader2, Search, X, ChefHat } from 'lucide-react';
 import { haptic, toast } from '@/components/fx';
 import { useFoodDb, useFoodLookup, usePhotoUrl } from '@/lib/hooks';
 import { SOURCE_SHORT, searchFoods, splitName } from '@/lib/foods';
@@ -9,7 +9,7 @@ import { deletePhoto } from '@/lib/photos';
 import { fitsDiet } from '@/lib/goals';
 import { relativeDay, todayKey } from '@/lib/dates';
 import { useStore } from '@/store/useStore';
-import type { Food, PrepState } from '@/lib/types';
+import type { CustomFood, Food, PrepState } from '@/lib/types';
 import { FoodSheet } from '@/components/FoodSheet';
 import { FoodVisual } from '@/components/FoodIcon';
 import { WorldFoods } from '@/components/WorldFoods';
@@ -25,7 +25,7 @@ const STATES: { value: PrepState | 'all'; label: string }[] = [
 ];
 
 type Tab = 'picks' | 'recent' | 'favs' | 'saved' | 'custom';
-const TABS: [Tab, string][] = [['recent', 'Recent'], ['picks', 'High protein'], ['favs', 'Favourites'], ['saved', 'Saved meals'], ['custom', 'My foods']];
+const TABS: [Tab, string][] = [['recent', 'Recent'], ['picks', 'Popular'], ['favs', 'Favourites'], ['saved', 'Saved meals'], ['custom', 'My recipes']];
 
 export default function AddFood() {
   const nav = useNavigate();
@@ -141,6 +141,16 @@ export default function AddFood() {
       {db && !searching && tab === 'picks' && <PhotoCards foods={list} onPick={setSelected} />}
 
       {!searching && tab === 'saved' && <SavedMealsList date={date} />}
+      {!searching && tab === 'custom' && (
+        <Link to="/recipe" className="card mb-3 mt-1 flex items-center gap-4 p-4 transition active:scale-[.99]">
+          <span className="grid h-12 w-12 shrink-0 place-items-center rounded-[16px] bg-accent text-white"><ChefHat size={22} /></span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-[16px] font-bold">Create a recipe</span>
+            <span className="block text-sm text-silver">Add ingredients and the cooked weight — we work out the nutrition.</span>
+          </span>
+          <ChevronRight size={20} className="shrink-0 text-dim" />
+        </Link>
+      )}
       {db && list.length > 0 && !(tab === 'saved' && !searching) && (
         <div className="card mt-1 p-2">
           {list.map((f) => <FoodRow key={f.id} food={f} onClick={() => setSelected(f)} />)}
@@ -148,7 +158,7 @@ export default function AddFood() {
       )}
       {db && list.length === 0 && !searching && tab !== 'saved' && (
         <p className="py-12 text-center text-sm font-medium text-silver">
-          {tab === 'recent' ? 'Foods you log show up here.' : tab === 'favs' ? 'Tap the heart on any food to keep it here for quick logging.' : tab === 'custom' ? 'No custom foods yet.' : 'Nothing here.'}
+          {tab === 'recent' ? 'Foods you log show up here.' : tab === 'favs' ? 'Tap the heart on any food to keep it here for quick logging.' : tab === 'custom' ? 'Your recipes will appear here.' : 'Nothing here.'}
         </p>
       )}
 
@@ -241,6 +251,7 @@ function FoodRow({ food, onClick }: { food: Food; onClick: () => void }) {
         <p className="num mt-1 text-[12px] font-medium text-dim">{fmt(food.per100.protein, 1)}g protein · 100g</p>
       </div>
     </button>
+      {'recipe' in food && (food as CustomFood).recipe && <Link to={`/recipe?id=${encodeURIComponent(food.id)}`} className="grid h-10 shrink-0 place-items-center rounded-full bg-raised px-3 text-xs font-bold text-accent">Edit</Link>}
     <button
       onClick={() => { haptic(); rememberFood(food); toggleFavorite(food.id); toast(isFav ? 'Removed from favourites' : 'Saved to favourites'); }}
       className={cx('grid h-11 w-11 shrink-0 place-items-center rounded-full transition active:scale-90', isFav ? 'text-accent' : 'text-dim')}

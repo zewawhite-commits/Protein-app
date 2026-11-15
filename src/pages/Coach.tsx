@@ -12,7 +12,7 @@ import { useDay, useFoodDb } from '@/lib/hooks';
 import { confidentMatch, splitName } from '@/lib/foods';
 import { dailyTargets } from '@/lib/energy';
 import { nutrientsFor } from '@/lib/nutrition';
-import { todayKey } from '@/lib/dates';
+import { todayKey, addDays } from '@/lib/dates';
 import type { CoachContext, CoachFood, CoachReply, ChatTurn } from '@/lib/coach';
 import type { Food } from '@/lib/types';
 import { FoodVisual } from '@/components/FoodIcon';
@@ -54,6 +54,20 @@ const STARTERS = [
 export function useCoachContext(): CoachContext {
   const profile = useStore((s) => s.profile);
   const { entries, totals, goal } = useDay(todayKey());
+  const allEntries = useStore((s) => s.entries);
+  const weights = useStore((s) => s.weights);
+  const extra = useMemo(() => {
+    const from = addDays(todayKey(), -7);
+    const week = allEntries.filter((e) => e.date > from);
+    const counts = new Map<string, number>();
+    for (const e of week) { const n = splitName(e.food.name).title.split(',')[0]; counts.set(n, (counts.get(n) ?? 0) + 1); }
+    const recentFoods = [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 20).map(([n, c]) => (c > 1 ? `${n} ×${c}` : n));
+    const progress: string[] = [`Logged food on ${new Set(week.map((e) => e.date)).size} of the last 7 days.`];
+    const mean = (a: string, b: string) => { const v = weights.filter((w) => w.date > a && w.date <= b).map((w) => w.kg); return v.length ? v.reduce((s, n) => s + n, 0) / v.length : null; };
+    const now = mean(from, todayKey()), prev = mean(addDays(todayKey(), -14), from);
+    if (now != null) progress.push(`7-day average weight ${now.toFixed(1)} kg${prev != null ? ` (${now - prev >= 0 ? '+' : ''}${(now - prev).toFixed(1)} kg vs the week before)` : ''}.`);
+    return { recentFoods, progress };
+  }, [allEntries, weights]);
   return useMemo<CoachContext>(() => {
     const t = profile ? dailyTargets(profile, goal) : null;
     return {
@@ -64,10 +78,11 @@ export function useCoachContext(): CoachContext {
       age: profile?.age, sex: profile?.sex, pregnant: profile?.pregnant,
       targets: { kcal: t?.kcal, protein: goal || undefined, carbs: t?.carbs, fat: t?.fat, fiber: t?.fiber },
       today: { kcal: totals.kcal, protein: totals.protein, carbs: totals.carbs, fat: totals.fat, fiber: totals.fiber, sugar: totals.sugar, sodiumMg: totals.sodium },
+      ...extra,
       eatenToday: entries.map((e) => `${splitName(e.food.name).title} (${Math.round(e.grams)} g, ${e.meal})`),
       localTime: new Date().toLocaleString(undefined, { weekday: 'long', hour: '2-digit', minute: '2-digit' }),
     };
-  }, [profile, goal, totals, entries]);
+  }, [profile, goal, totals, entries, extra]);
 }
 
 export default function Coach() {

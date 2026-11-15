@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Camera, ChevronDown, ExternalLink, Heart, ImagePlus, Minus, Plus, Trash2, ArrowLeftRight, Scale } from 'lucide-react';
+import { Camera, ChevronDown, ExternalLink, Heart, ImagePlus, Minus, Plus, Trash2, Copy, ArrowLeftRight, Scale } from 'lucide-react';
 import type { Food, LogEntry, Meal } from '@/lib/types';
 import { nutrientsFor, round1, scale } from '@/lib/nutrition';
 import { EXTRA_KEYS } from '@/lib/nutrients';
@@ -292,6 +292,14 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
         {entry && (
           <button onClick={() => { removeEntry(entry.id); onClose(); }} className="btn-ghost !px-5 text-danger" aria-label="Delete entry">
             <Trash2 size={20} />
+          </button>
+        )}
+        {entry && (
+          <button
+            onClick={() => { haptic(); addEntry({ date: todayKey(), meal: mealForNow(), food, grams: round1(g > 0 ? g : entry.grams) }); toast('Logged again for today'); onClose(); }}
+            className="btn-ghost !px-4 text-sm"
+          >
+            <Copy size={18} /> Log again
           </button>
         )}
         {!entry && (
