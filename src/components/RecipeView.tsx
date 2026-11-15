@@ -10,6 +10,7 @@ import { mealForNow, todayKey } from '@/lib/dates';
 import type { Recipe } from '@/lib/recipe';
 import { useCoachContext } from '@/pages/Coach';
 import { SignInButtons } from './SignIn';
+import { PlanBadge } from './PlanBadge';
 import { MacroBar } from './Nutrients';
 import { cx, fmt } from './ui';
 import { haptic, toast } from './fx';
@@ -53,6 +54,7 @@ export function RecipeView() {
 
   return (
     <div className="space-y-4 pb-6">
+      <PlanBadge needs="plus" what="AI recipes with full nutrition" />
       <section className="card p-5">
         <p className="flex items-center gap-2 text-[17px] font-bold"><ChefHat size={18} className="text-accent" /> Recipes</p>
         <p className="mt-1 text-sm text-silver">Any dish from anywhere — with calories, protein and more worked out from the food database.</p>

@@ -79,7 +79,7 @@ export function Layout() {
         <button
           onClick={() => setMenu(true)}
           className="grid h-[68px] w-[68px] shrink-0 place-items-center rounded-full bg-primary text-on-primary transition active:scale-95"
-          style={{ boxShadow: '0 10px 30px -8px rgb(0 0 0 / 0.45)' }}
+          style={{ boxShadow: '0 10px 26px -8px rgb(18 152 104 / 0.55)' }}
           aria-label="Log food"
         >
           <Plus size={28} strokeWidth={2.6} />

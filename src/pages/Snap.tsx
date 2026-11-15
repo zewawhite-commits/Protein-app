@@ -150,7 +150,7 @@ export default function Snap() {
         </button>
       </header>
 
-      <div className="relative overflow-hidden rounded-[28px] bg-raised" style={{ aspectRatio: '4 / 3' }}>
+      <div className={cx('relative overflow-hidden rounded-[28px] bg-raised', !photoUrl && 'h-16')} style={photoUrl ? { aspectRatio: '4 / 3' } : undefined}>
         {photoUrl && <img src={photoUrl} alt="Your meal" className="h-full w-full object-cover" />}
         {phase === 'analyzing' && (
           <div className="absolute inset-0 grid place-items-center bg-black/35 backdrop-blur-[1px]">
@@ -169,7 +169,7 @@ export default function Snap() {
       {phase === 'results' && (
         <>
           <p className="mt-4 px-1 text-[14px] font-medium leading-relaxed text-silver">
-            Tap the closest match, then weigh. AI identifies the food — protein always comes from the database record.
+            Tap the closest match, then weigh. AI identifies the food — calories and nutrients always come from the database record.
             {note && <span className="mt-1 block text-ink/80">{note}</span>}
           </p>
           {left && (
@@ -320,8 +320,8 @@ function ItemCard({ match, done, onPick, manualUrl, onLogIngredients }: { match:
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="num text-[15px] font-bold leading-none">{fmt(f.per100.protein, 1)}<span className="text-[12px] text-silver">g</span></p>
-                  <p className="mt-0.5 text-[12px] text-dim">/100g</p>
+                  <p className="num text-[15px] font-bold leading-none">{f.per100.kcal != null ? fmt(f.per100.kcal) : '–'}<span className="text-[12px] text-silver"> kcal</span></p>
+                  <p className="num mt-0.5 text-[12px] text-dim">{fmt(f.per100.protein, 1)}g protein /100g</p>
                 </div>
                 <ChevronRight size={15} className="text-dim" />
               </button>

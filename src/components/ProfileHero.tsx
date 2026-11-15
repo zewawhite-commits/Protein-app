@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Camera, Crown, Flame, Pencil, Scale, Target, Users } from 'lucide-react';
+import { Camera, Crown, Flame, Pencil, Scale, Target, CalendarCheck } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 import { usePhotoUrl } from '@/lib/hooks';
 import { cropSquare, savePhoto, deletePhoto } from '@/lib/photos';
@@ -67,7 +67,7 @@ export function ProfileHero({ onEdit }: { onEdit: () => void }) {
           <Stat icon={<Flame size={15} />} value={fmt(streak)} label="Streak" />
           <Stat icon={<Scale size={15} />} value={current ? fmt(fromKg(current, unit), 1) : '—'} label={unit} />
           <Stat icon={<Target size={15} />} value={profile.goalWeightKg ? fmt(fromKg(profile.goalWeightKg, unit), 1) : '—'} label="Goal" />
-          <Stat icon={<Users size={15} />} value={fmt(days)} label="Days" />
+          <Stat icon={<CalendarCheck size={15} />} value={fmt(days)} label="Logged" />
         </div>
       </section>
 

@@ -237,8 +237,8 @@ function FoodRow({ food, onClick }: { food: Food; onClick: () => void }) {
         </div>
       </div>
       <div className="shrink-0 text-right">
-        <p className="num text-lg font-bold leading-none">{fmt(food.per100.protein, 1)}<span className="text-xs font-medium text-silver">g</span></p>
-        <p className="mt-1 text-[12px] font-medium text-dim">per 100g</p>
+        <p className="num text-lg font-bold leading-none">{food.per100.kcal != null ? fmt(food.per100.kcal) : '–'}<span className="text-xs font-medium text-silver"> kcal</span></p>
+        <p className="num mt-1 text-[12px] font-medium text-dim">{fmt(food.per100.protein, 1)}g protein · 100g</p>
       </div>
     </button>
     <button

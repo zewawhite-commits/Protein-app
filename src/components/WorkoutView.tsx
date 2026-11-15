@@ -8,6 +8,7 @@ import { burnedKcal } from '@/lib/exercise';
 import type { WorkoutDay, WorkoutPlan, WorkoutRequest } from '@/lib/workout';
 import { useCoachContext } from '@/pages/Coach';
 import { SignInButtons } from './SignIn';
+import { PlanBadge } from './PlanBadge';
 import { cx } from './ui';
 import { haptic, toast } from './fx';
 
@@ -52,6 +53,7 @@ export function WorkoutView() {
 
   return (
     <div className="space-y-4 pb-6">
+      <PlanBadge needs="plus" what="Your AI workout guide" />
       {editing ? (
         <section className="card p-5">
           <p className="flex items-center gap-2 text-[17px] font-bold"><Dumbbell size={18} className="text-accent" /> Your workout guide</p>

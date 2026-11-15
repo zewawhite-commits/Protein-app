@@ -107,7 +107,7 @@ export function Confetti() {
     return () => { burstListeners.delete(l); };
   }, []);
   if (!key) return null;
-  const colors = ['rgb(var(--accent))', 'rgb(var(--ink))', 'rgb(var(--silver))', '#8fb4ff'];
+  const colors = ['rgb(var(--accent))', 'rgb(var(--ink))', 'rgb(var(--silver))', 'rgb(var(--glow))'];
   return createPortal(
     <div key={key} className="pointer-events-none fixed inset-0 z-[70] overflow-hidden" aria-hidden>
       {Array.from({ length: 36 }, (_, i) => {

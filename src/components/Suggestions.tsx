@@ -24,7 +24,7 @@ function amountLine(food: Food, remaining: number): string {
   // The smallest sensible serving (1 egg, 1 oz of nuts), not a cupful.
   const serving = [...(food.portions ?? [])].filter((x) => x.grams >= 25 && x.grams <= 400).sort((a, b) => a.grams - b.grams)[0];
   const g = serving?.grams ?? 150;
-  return `${serving ? `${serving.label} (${fmt(g)} g)` : `${g} g`} gives ${fmt((food.per100.protein * g) / 100)} g protein`;
+  return `${serving ? `${serving.label.split(' (')[0].split(',')[0]} (${fmt(g)} g)` : `${g} g`} gives ${fmt((food.per100.protein * g) / 100)} g protein`;
 }
 
 /**
