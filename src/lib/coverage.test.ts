@@ -16,3 +16,10 @@ it('finds the large majority of popular world dishes', () => {
   console.log(`${DISHES.length - missing.length}/${DISHES.length} world dishes found. Missing: ${missing.join(', ')}`);
   expect(missing.length / DISHES.length).toBeLessThan(0.1);
 });
+
+it('keeps the food database small enough for the offline cache (or the production build fails)', async () => {
+  const { statSync } = await import('node:fs');
+  const limit = Number(/maximumFileSizeToCacheInBytes:\s*(\d+)\s*\*\s*1024\s*\*\s*1024/.exec(readFileSync('vite.config.ts', 'utf8'))?.[1]) * 1024 * 1024;
+  expect(limit).toBeGreaterThan(0);
+  expect(statSync('public/data/foods.json').size).toBeLessThan(limit);
+});
