@@ -65,6 +65,10 @@ export function useCoachContext(): CoachContext {
     const progress: string[] = [`Logged food on ${new Set(week.map((e) => e.date)).size} of the last 7 days.`];
     const mean = (a: string, b: string) => { const v = weights.filter((w) => w.date > a && w.date <= b).map((w) => w.kg); return v.length ? v.reduce((s, n) => s + n, 0) / v.length : null; };
     const now = mean(from, todayKey()), prev = mean(addDays(todayKey(), -14), from);
+    const st = useStore.getState();
+    const trained = st.exercises.filter((x) => x.date > from);
+    if (trained.length) progress.push(`${trained.length} workout${trained.length > 1 ? 's' : ''} in the last 7 days (${trained.reduce((s, x) => s + x.minutes, 0)} minutes)${trained.some((x) => x.date === todayKey()) ? ', including one today — recovery food and protein matter today' : ''}.`);
+    else progress.push('No workouts logged in the last 7 days.');
     if (now != null) progress.push(`7-day average weight ${now.toFixed(1)} kg${prev != null ? ` (${now - prev >= 0 ? '+' : ''}${(now - prev).toFixed(1)} kg vs the week before)` : ''}.`);
     return { recentFoods, progress };
   }, [allEntries, weights]);

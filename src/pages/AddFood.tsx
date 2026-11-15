@@ -1,13 +1,13 @@
 import { useDeferredValue, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Camera, ChevronRight, Globe2, Heart, Loader2, Search, X, ChefHat } from 'lucide-react';
+import { ArrowLeft, Camera, ChevronRight, Globe2, Heart, Loader2, Search, X, ChefHat, Plus } from 'lucide-react';
 import { haptic, toast } from '@/components/fx';
 import { useFoodDb, useFoodLookup, usePhotoUrl } from '@/lib/hooks';
 import { SOURCE_SHORT, searchFoods, splitName } from '@/lib/foods';
 import { searchProducts } from '@/lib/openFoodFacts';
 import { deletePhoto } from '@/lib/photos';
 import { fitsDiet } from '@/lib/goals';
-import { relativeDay, todayKey } from '@/lib/dates';
+import { addDays, mealForNow, relativeDay, todayKey } from '@/lib/dates';
 import { useStore } from '@/store/useStore';
 import type { CustomFood, Food, PrepState } from '@/lib/types';
 import { FoodSheet } from '@/components/FoodSheet';
@@ -130,6 +130,8 @@ export default function AddFood() {
           <ChevronRight size={20} className="shrink-0 text-dim" />
         </Link>
       )}
+
+      {!searching && !photoId && <Usuals date={date} onDone={back} />}
 
       {!searching && !photoId && <WorldFoods onSearch={(v) => { setQ(v); window.scrollTo({ top: 0, behavior: 'smooth' }); }} />}
 
@@ -287,5 +289,56 @@ function PhotoCards({ foods, onPick }: { foods: Food[]; onPick: (f: Food) => voi
         );
       })}
     </div>
+  );
+}
+
+/**
+ * Meal memory: what this person usually eats at this time of day (from the last 30 days),
+ * with their usual amount. One tap logs it; they can still change the weight afterwards.
+ */
+function Usuals({ date, onDone }: { date: string; onDone: () => void }) {
+  const entries = useStore((s) => s.entries);
+  const addEntry = useStore((s) => s.addEntry);
+  const meal = mealForNow();
+  const usual = useMemo(() => {
+    const from = addDays(todayKey(), -30);
+    const by = new Map<string, { e: (typeof entries)[number]; grams: number[] }>();
+    for (const e of entries) {
+      if (e.date <= from || e.meal !== meal) continue;
+      const cur = by.get(e.foodId) ?? { e, grams: [] };
+      cur.grams.push(e.grams);
+      by.set(e.foodId, cur);
+    }
+    const today = new Set(entries.filter((e) => e.date === date).map((e) => e.foodId));
+    return [...by.values()]
+      .filter((x) => x.grams.length >= 2 && !today.has(x.e.foodId))
+      .sort((a, b) => b.grams.length - a.grams.length)
+      .slice(0, 4)
+      .map((x) => ({ e: x.e, times: x.grams.length, grams: [...x.grams].sort((a, b) => a - b)[Math.floor(x.grams.length / 2)] }));
+  }, [entries, meal, date]);
+  if (!usual.length) return null;
+  const log = (u: (typeof usual)[number]) => {
+    haptic();
+    const added = addEntry({ date, meal, food: { ...u.e.food, id: u.e.foodId, category: '', portions: [] } as Food, grams: u.grams });
+    toast(`Logged ${splitName(u.e.food.name).title.split(',')[0]} · ${fmt(u.grams)} g`, { action: { label: 'Undo', run: () => useStore.getState().removeEntry(added.id) } });
+  };
+  return (
+    <section className="mb-5">
+      <div className="mb-2 flex items-center justify-between px-1">
+        <p className="text-[15px] font-semibold">Your usual {meal}</p>
+        {usual.length > 1 && <button onClick={() => { usual.forEach(log); onDone(); }} className="text-sm font-semibold text-accent">Log all</button>}
+      </div>
+      <div className="card p-1.5">
+        {usual.map((u) => (
+          <button key={u.e.foodId} onClick={() => log(u)} className="flex w-full items-center gap-3 rounded-[18px] px-3 py-2.5 text-left transition active:bg-raised">
+            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-accent/10 text-accent"><Plus size={17} /></span>
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-[15px] font-semibold">{splitName(u.e.food.name).title.split(',')[0]}</span>
+              <span className="num block text-xs text-silver">{fmt(u.grams)} g · {u.e.food.per100.kcal != null ? `${fmt((u.e.food.per100.kcal * u.grams) / 100)} kcal · ` : ''}logged {u.times}× this month</span>
+            </span>
+          </button>
+        ))}
+      </div>
+    </section>
   );
 }

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { ArrowLeft, Loader2, ScanBarcode } from 'lucide-react';
 import { productByBarcode } from '@/lib/openFoodFacts';
 import { todayKey } from '@/lib/dates';
@@ -83,7 +83,15 @@ export default function Barcode() {
         <input id="bc" inputMode="numeric" className="field flex-1 text-lg font-semibold tracking-wider" value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 14))} placeholder="5012345678900" />
         <button onClick={() => void lookup(code)} disabled={code.length < 8 || state.busy} className="btn-primary !px-5">Find</button>
       </div>
-      {state.error && <p className="mt-3 rounded-2xl bg-raised p-3 text-sm text-silver">{state.error}</p>}
+      {state.error && (
+        <div className="mt-3 rounded-2xl bg-raised p-4">
+          <p className="text-sm text-silver">{state.error}</p>
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            <Link to="/add" className="btn-primary !h-11 text-sm">Search by name</Link>
+            <Link to="/snap?mode=describe" className="btn-ghost !h-11 !bg-surface text-sm">Describe it</Link>
+          </div>
+        </div>
+      )}
       <p className="mt-4 text-xs text-dim">Product data from Open Food Facts (label values per 100 g).</p>
 
       <FoodSheet food={food} date={date} onClose={() => setFood(null)} onSaved={back} />

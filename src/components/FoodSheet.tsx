@@ -44,6 +44,7 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
   const addEntry = useStore((s) => s.addEntry);
   const updateEntry = useStore((s) => s.updateEntry);
   const removeEntry = useStore((s) => s.removeEntry);
+  const [reported, setReported] = useState(false);
   const favs = useStore((s) => s.favoriteFoodIds);
   const toggleFavorite = useStore((s) => s.toggleFavorite);
   const rememberFood = useStore((s) => s.rememberFood);
@@ -284,6 +285,21 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
               )}
               {entry && ' · values as logged'}
             </p>
+            {reported ? (
+              <p className="mt-2 text-xs font-semibold text-accent">Thanks — we’ll check this food.</p>
+            ) : (
+              <button
+                onClick={() => {
+                  const why = prompt('What looks wrong with this food? (e.g. calories too high, wrong serving size)');
+                  if (!why?.trim()) return;
+                  void fetch('/api/feedback', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ items: [{ aiName: `REPORT: ${why.trim()}`.slice(0, 80), chosenFoodId: food.id, chosenName: food.name, rank: -1, kind: 'item' }] }) }).catch(() => undefined);
+                  setReported(true);
+                }}
+                className="mt-2 text-xs font-semibold text-silver underline"
+              >
+                Something wrong with these numbers? Report it
+              </button>
+            )}
           </div>
         )}
       </div>
