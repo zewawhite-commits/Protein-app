@@ -3,45 +3,46 @@
 @tailwind utilities;
 
 /*
- * Design tokens. Palette: ivory, black, charcoal, silver + electric blue.
- * "primary" is the action colour (black on ivory, ivory on black).
- * "accent" (electric blue) is reserved for progress and goal states.
+ * Design tokens — Provora's own look: warm cream paper, deep evergreen and a fresh
+ * emerald for progress. "primary" is the action colour; "accent" marks progress and goals.
  */
 :root,
 [data-theme='light'] {
-  --bg: 247 247 249;        /* clean cool white */
+  --bg: 249 247 242;        /* warm cream */
   --surface: 255 255 255;   /* cards */
-  --raised: 242 242 246;    /* tiles inside cards */
-  --line: 230 230 236;      /* hairlines, empty ring track */
-  --ink: 14 14 16;          /* black text */
-  --silver: 92 94 102;      /* secondary text */
-  --dim: 138 140 147;       /* tertiary text */
-  --primary: 14 14 16;      /* buttons, FAB */
-  --on-primary: 255 255 255;
-  --accent: 30 108 255;     /* electric blue */
-  --danger: 222 60 60;
-  --warn: 196 140 40;
-  --carbs: 240 152 40;      /* amber */
-  --fat: 160 96 230;        /* violet */
-  --shadow: 0 1px 2px rgb(20 20 30 / 0.04), 0 6px 20px -6px rgb(20 20 30 / 0.07), 0 0 0 1px rgb(20 20 30 / 0.03);
+  --raised: 243 240 232;    /* tiles inside cards */
+  --line: 231 227 216;      /* hairlines, empty tracks */
+  --ink: 20 30 25;          /* near-black green */
+  --silver: 88 98 92;       /* secondary text */
+  --dim: 134 142 136;       /* tertiary text */
+  --primary: 17 61 46;      /* evergreen: buttons, FAB, hero */
+  --on-primary: 250 248 242;
+  --accent: 14 142 98;      /* emerald */
+  --glow: 190 240 120;      /* lime highlight on evergreen */
+  --danger: 214 64 54;
+  --warn: 204 124 30;
+  --carbs: 232 148 36;      /* amber */
+  --fat: 226 96 84;         /* coral */
+  --shadow: 0 1px 2px rgb(30 40 30 / 0.04), 0 8px 22px -8px rgb(30 40 30 / 0.09), 0 0 0 1px rgb(30 40 30 / 0.03);
   color-scheme: light;
 }
 
 [data-theme='dark'] {
-  --bg: 8 8 9;
-  --surface: 22 22 24;
-  --raised: 32 32 35;
-  --line: 44 44 48;
-  --ink: 245 242 234;       /* ivory */
-  --silver: 172 174 180;
-  --dim: 126 128 134;
-  --primary: 245 242 234;
-  --on-primary: 10 10 11;
-  --accent: 56 128 255;
-  --danger: 255 100 100;
-  --warn: 230 180 90;
-  --carbs: 250 170 70;
-  --fat: 180 125 250;
+  --bg: 9 13 11;
+  --surface: 19 26 22;
+  --raised: 29 38 33;
+  --line: 42 53 47;
+  --ink: 240 242 234;
+  --silver: 168 178 170;
+  --dim: 120 132 124;
+  --primary: 190 240 120;   /* lime on dark */
+  --on-primary: 12 28 20;
+  --accent: 70 208 150;
+  --glow: 190 240 120;
+  --danger: 255 110 100;
+  --warn: 236 176 90;
+  --carbs: 246 172 76;
+  --fat: 250 130 116;
   --shadow: 0 0 0 1px rgb(255 255 255 / 0.04), 0 12px 32px -12px rgb(0 0 0 / 0.6);
   color-scheme: dark;
 }
