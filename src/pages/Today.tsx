@@ -132,31 +132,31 @@ function HeroCard({ totals, goal, targets, entries, burned = 0, addBurned }: { t
   const pct = Math.max(0, Math.min(1, kcalPct));
   const R = 84, C = Math.PI * R; // half-circle arc length
   return (
-    <section className="mt-5 overflow-hidden rounded-[32px] px-6 pb-5 pt-6 text-white" style={{ background: 'linear-gradient(140deg, rgb(52 199 137) 0%, rgb(18 158 108) 60%, rgb(12 140 104) 100%)', boxShadow: '0 14px 30px -14px rgb(18 152 104 / 0.55)' }}>
-      <div className="relative mx-auto w-[220px]">
+    <section className="mt-4 overflow-hidden rounded-[28px] px-5 pb-4 pt-4 text-white" style={{ background: 'linear-gradient(140deg, rgb(52 199 137) 0%, rgb(18 158 108) 60%, rgb(12 140 104) 100%)', boxShadow: '0 14px 30px -14px rgb(18 152 104 / 0.55)' }}>
+      <div className="relative mx-auto w-[168px]">
         <svg viewBox="0 0 200 112" className="w-full" aria-hidden>
           <path d="M 16 100 A 84 84 0 0 1 184 100" fill="none" stroke="rgb(255 255 255 / 0.28)" strokeWidth="14" strokeLinecap="round" strokeDasharray={targets ? undefined : '2 14'} />
           {targets && <path d="M 16 100 A 84 84 0 0 1 184 100" fill="none" stroke={over ? 'rgb(255 214 120)' : 'white'} strokeWidth="14" strokeLinecap="round" strokeDasharray={`${C * pct} ${C}`} style={{ transition: 'stroke-dasharray .6s ease' }} />}
         </svg>
         <div className="absolute inset-x-0 bottom-0 text-center">
-          <CountUp value={targets ? Math.abs(Math.round(kcalLeft)) : Math.round(totals.kcal)} className={cx('num font-extrabold leading-none', Math.abs(kcalLeft) >= 10000 ? 'text-[38px]' : 'text-[46px]')} />
-          <p className="mt-1 text-[13px] font-semibold opacity-90">{targets ? (over ? 'kcal over' : 'kcal left') : 'kcal eaten'}</p>
+          <CountUp value={targets ? Math.abs(Math.round(kcalLeft)) : Math.round(totals.kcal)} className={cx('num font-extrabold leading-none', Math.abs(kcalLeft) >= 10000 ? 'text-[30px]' : 'text-[36px]')} />
+          <p className="mt-0.5 text-[12px] font-semibold opacity-90">{targets ? (over ? 'kcal over' : 'kcal left') : 'kcal eaten'}</p>
         </div>
       </div>
       {targets ? (
-        <div className="mt-4 grid grid-cols-3 gap-2 text-center">
-          <div><p className="num text-[17px] font-bold">{fmt(totals.kcal)}{totals.incomplete.kcal && '*'}</p><p className="text-xs opacity-85">Eaten</p></div>
-          <div className="border-x border-white/25"><p className="num text-[17px] font-bold">{fmt(targets.kcal)}</p><p className="text-xs opacity-85">Goal</p></div>
-          <div><p className="num text-[17px] font-bold">{burned > 0 ? `${addBurned ? '+' : ''}${fmt(burned)}` : '0'}</p><p className="text-xs opacity-85">Burned</p></div>
+        <div className="mt-3 grid grid-cols-3 gap-2 text-center">
+          <div><p className="num text-[15px] font-bold leading-tight">{fmt(totals.kcal)}{totals.incomplete.kcal && '*'}</p><p className="text-xs opacity-85">Eaten</p></div>
+          <div className="border-x border-white/25"><p className="num text-[15px] font-bold leading-tight">{fmt(targets.kcal)}</p><p className="text-xs opacity-85">Goal</p></div>
+          <div><p className="num text-[15px] font-bold leading-tight">{burned > 0 ? `${addBurned ? '+' : ''}${fmt(burned)}` : '0'}</p><p className="text-xs opacity-85">Burned</p></div>
         </div>
       ) : (
         <Link to="/profile?edit=1" className="mt-3 block text-center text-sm font-semibold underline">Add height & age for a calorie goal</Link>
       )}
-      <div className="mt-4 flex items-center justify-between gap-3">
+      <div className="mt-3 flex items-center justify-between gap-3">
         {totals.protein >= goal && goal > 0 ? (
           <span className="inline-flex h-7 items-center gap-1.5 rounded-full bg-white/20 px-2.5 text-xs font-semibold text-white"><Check size={13} strokeWidth={3} /> Protein goal hit</span>
         ) : <span />}
-        <button onClick={() => setAllNutrients(true)} className="flex h-9 items-center gap-1 rounded-full bg-white/20 px-3.5 text-sm font-semibold text-white">Vitamins, minerals & more <ChevronRight size={15} /></button>
+        <button onClick={() => setAllNutrients(true)} className="flex h-8 items-center gap-1 rounded-full bg-white/20 px-3 text-[13px] font-semibold text-white">Vitamins, minerals & more <ChevronRight size={15} /></button>
       </div>
 
       <Sheet open={allNutrients} onClose={() => setAllNutrients(false)} title="All nutrients">
