@@ -12,11 +12,11 @@
   --surface: 255 255 255;   /* cards */
   --raised: 243 240 232;    /* tiles inside cards */
   --line: 231 227 216;      /* hairlines, empty tracks */
-  --ink: 20 30 25;          /* near-black green */
+  --ink: 24 32 28;          /* soft black */
   --silver: 88 98 92;       /* secondary text */
   --dim: 134 142 136;       /* tertiary text */
-  --primary: 17 61 46;      /* evergreen: buttons, FAB, hero */
-  --on-primary: 250 248 242;
+  --primary: 18 152 104;    /* fresh green: buttons, FAB */
+  --on-primary: 255 255 255;
   --accent: 14 142 98;      /* emerald */
   --glow: 190 240 120;      /* lime highlight on evergreen */
   --danger: 214 64 54;
