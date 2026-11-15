@@ -93,3 +93,24 @@ describe('smart calorie target', () => {
     expect(targetFromBurn({ sex: 'female', bodyWeightKg: 60, goalWeightKg: 50, paceKgPerWeek: 1, goals: ['fatloss'] } as never, 1600)).toBe(1200);
   });
 });
+
+import { labelPer100, sanitizeLabel } from './label';
+
+describe('food label reading', () => {
+  const base = { isLabel: true, name: 'Skyr', basis: 'per100g' as const, servingGrams: 150, kcal: 63, protein: 10.6, carbs: 4, fat: 0.2, fiber: null, sugar: 4, satFat: 0.1, sodiumMg: null, saltG: 0.1, note: '' };
+  it('keeps printed values, converts salt to sodium and leaves missing ones unknown', () => {
+    const p = labelPer100(sanitizeLabel(base))!;
+    expect(p).toMatchObject({ kcal: 63, protein: 10.6, carbs: 4, fat: 0.2, sodium: 40 });
+    expect(p.fiber).toBeNull();
+  });
+  it('scales per-serving labels by the printed serving size, or refuses without one', () => {
+    const perServing = { ...base, basis: 'perServing' as const, servingGrams: 30, kcal: 120, protein: 6, carbs: 15, fat: 4 };
+    expect(labelPer100(sanitizeLabel(perServing))).toMatchObject({ kcal: 400, protein: 20, carbs: 50 });
+    expect(labelPer100(sanitizeLabel({ ...perServing, servingGrams: 0 }))).toBeNull();
+  });
+  it('rejects non-labels and impossible readings', () => {
+    expect(labelPer100(sanitizeLabel({ ...base, isLabel: false }))).toBeNull();
+    expect(labelPer100(sanitizeLabel({ ...base, protein: 60, carbs: 50, fat: 20 }))).toBeNull(); // 130 g of macros in 100 g
+    expect(labelPer100(sanitizeLabel({ ...base, kcal: null, protein: null }))).toBeNull();
+  });
+});

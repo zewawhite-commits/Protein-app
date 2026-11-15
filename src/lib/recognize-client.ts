@@ -1,4 +1,5 @@
 import { aiHeaders } from './premium';
+import type { LabelRead } from './label';
 /**
  * Browser side of photo recognition, plus matching AI suggestions to database records.
  * Nutrient values always come from the matched database record, never from the AI.
@@ -45,7 +46,12 @@ export async function recognizePhoto(photo: Blob, premiumToken?: string): Promis
   return send({ image: await toBase64(photo), mediaType: photo.type || 'image/jpeg' }, premiumToken);
 }
 
-async function send(payload: { image?: string; mediaType?: string; text?: string }, premiumToken?: string): Promise<RecognitionResult> {
+/** Read a nutrition label from a photo (uses one AI scan). */
+export async function readLabelPhoto(photo: Blob): Promise<LabelRead> {
+  return (await send({ image: await toBase64(photo), mediaType: photo.type || 'image/jpeg', label: true })) as unknown as LabelRead;
+}
+
+async function send(payload: { image?: string; mediaType?: string; text?: string; label?: boolean }, premiumToken?: string): Promise<RecognitionResult> {
   void premiumToken;
   let res: Response;
   try {

@@ -4,19 +4,20 @@ import { ArrowLeft, Check, ChevronRight, ImagePlus, Loader2, Mic, RotateCcw, Sea
 import { useStore } from '@/store/useStore';
 import { useFoodDb, usePhotoUrl } from '@/lib/hooks';
 import { deletePhoto, getPhoto, savePhoto } from '@/lib/photos';
-import { matchItems, sendFeedback, PremiumRequiredError, SignInRequiredError, recognizePhoto, recognizeText, RecognitionUnavailableError, ScanLimitError, type MatchedItem } from '@/lib/recognize-client';
+import { matchItems, sendFeedback, PremiumRequiredError, SignInRequiredError, readLabelPhoto, recognizePhoto, recognizeText, RecognitionUnavailableError, ScanLimitError, type MatchedItem } from '@/lib/recognize-client';
 import { refreshPremium } from '@/lib/premium';
 import { SOURCE_SHORT, searchFoods, splitName } from '@/lib/foods';
 import { mealForNow, todayKey } from '@/lib/dates';
-import type { Food } from '@/lib/types';
+import type { Food, Per100 } from '@/lib/types';
 import { FoodSheet } from '@/components/FoodSheet';
 import { SignInButtons } from '@/components/SignIn';
 import { accountsEnabled, useSession } from '@/lib/account';
 import { FoodVisual } from '@/components/FoodIcon';
 import { Segmented, StateBadge, cx, fmt } from '@/components/ui';
 import { haptic, toast } from '@/components/fx';
+import { labelPer100 } from '@/lib/label';
 
-type Phase = 'camera' | 'describe' | 'signin' | 'analyzing' | 'results' | 'unavailable' | 'premium' | 'limit' | 'error';
+type Phase = 'camera' | 'describe' | 'signin' | 'analyzing' | 'results' | 'label' | 'unavailable' | 'premium' | 'limit' | 'error';
 
 export default function Snap() {
   const session = useSession();
@@ -39,6 +40,9 @@ export default function Snap() {
   const [matches, setMatches] = useState<MatchedItem[]>([]);
   const [pick, setPick] = useState<{ food: Food; grams?: number; label: string; index: number } | null>(null);
   const [logged, setLogged] = useState<Set<number>>(new Set());
+  const labelMode = params.get('mode') === 'label';
+  const [label, setLabel] = useState<{ name: string; per100: Per100; servingGrams: number; unit: 'g' | 'ml'; note: string } | null>(null);
+  const upsertCustomFood = useStore((s) => s.upsertCustomFood);
   const photoUrl = usePhotoUrl(photoId);
 
   // Remove the photo on exit if nothing was logged with it.
@@ -62,6 +66,18 @@ export default function Snap() {
     try {
       await refreshPremium();
       const token = useStore.getState().premium?.token ?? premiumToken;
+      if (labelMode && small) {
+        const read = await readLabelPhoto(small);
+        const per100 = labelPer100(read);
+        if (!per100) {
+          setError(!read.isLabel ? read.note || 'That doesn’t look like a nutrition label. Photograph the nutrition table on the pack.' : read.basis === 'perServing' && !read.servingGrams ? 'This label only gives values per serving and the serving size isn’t readable. Try including the serving size in the photo.' : 'Couldn’t read the numbers clearly. Try again with the label flat and well lit.');
+          setPhase('error');
+          return;
+        }
+        setLabel({ name: read.name, per100, servingGrams: read.servingGrams, unit: read.basis === 'per100ml' ? 'ml' : 'g', note: read.note });
+        setPhase('label');
+        return;
+      }
       const result = small ? await recognizePhoto(small, token) : await recognizeText(text ?? '', token);
       await waitForDb();
       if (!result.isFood || !result.items.length) {
@@ -250,6 +266,39 @@ export default function Snap() {
             <button onClick={back} className="btn-primary mt-3 w-full">Done · {logged.size} logged</button>
           )}
         </>
+      )}
+
+      {phase === 'label' && label && (
+        <div className="mt-4">
+          <p className="px-1 text-[14px] font-medium leading-relaxed text-silver">Read from the label. Check the numbers against the pack and fix anything that’s off — then save.</p>
+          {label.note && <p className="mt-2 rounded-2xl bg-warn/15 px-4 py-3 text-sm font-medium">{label.note}</p>}
+          <div className="card mt-3 p-5">
+            <label className="label" htmlFor="lb-name">Product name</label>
+            <input id="lb-name" className="field" maxLength={60} placeholder="e.g. Protein yoghurt, strawberry" value={label.name} onChange={(e) => setLabel({ ...label, name: e.target.value })} />
+            <p className="label mt-4">Per 100 {label.unit}</p>
+            <div className="grid grid-cols-2 gap-2">
+              {([['kcal', 'Calories', 'kcal'], ['protein', 'Protein', 'g'], ['carbs', 'Carbs', 'g'], ['sugar', 'of which sugars', 'g'], ['fat', 'Fat', 'g'], ['satFat', 'of which saturates', 'g'], ['fiber', 'Fibre', 'g'], ['sodium', 'Sodium', 'mg']] as const).map(([k, l, u]) => (
+                <label key={k} className="rounded-2xl bg-raised px-3 py-2">
+                  <span className="block text-xs font-semibold text-silver">{l} ({u})</span>
+                  <input inputMode="decimal" aria-label={l} className="num mt-0.5 w-full bg-transparent text-[17px] font-bold outline-none" placeholder="not on label" value={label.per100[k] ?? ''} onChange={(e) => { const v = e.target.value.replace(/[^\d.]/g, ''); setLabel({ ...label, per100: { ...label.per100, [k]: v === '' ? (k === 'protein' ? 0 : null) : Number(v) } }); }} />
+                </label>
+              ))}
+            </div>
+            <p className="mt-3 text-xs leading-relaxed text-dim">These are the manufacturer’s numbers as printed. Empty boxes weren’t on the label and stay unknown.</p>
+            <button
+              disabled={label.name.trim().length < 2}
+              onClick={() => {
+                const food = upsertCustomFood({ name: label.name.trim(), category: 'My foods', state: 'na', per100: label.per100, portions: label.servingGrams > 0 ? [{ label: '1 serving', grams: Math.round(label.servingGrams) }] : [], sourceNote: 'Read from a photo of the nutrition label, checked by you' });
+                toast('Saved to My recipes & foods');
+                setPick({ food, grams: label.servingGrams > 0 ? Math.round(label.servingGrams) : undefined, label: food.name, index: 0 });
+              }}
+              className="btn-primary mt-4 w-full"
+            >
+              {label.name.trim().length < 2 ? 'Add the product name' : 'Save and log'}
+            </button>
+          </div>
+          {logged.size > 0 && <button onClick={back} className="btn-ghost mt-3 w-full">Done</button>}
+        </div>
       )}
 
       {phase === 'unavailable' && (

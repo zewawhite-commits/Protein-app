@@ -10,6 +10,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { recognizeWithClient } from '../src/lib/recognition';
 import { gate } from './_lib/quota';
+import { readLabelWithClient } from '../src/lib/label';
 
 const MAX_BYTES = 5 * 1024 * 1024;
 const TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
@@ -20,7 +21,7 @@ export async function POST(request: Request): Promise<Response> {
   const g = await gate(request, 'scan');
   if (!g.ok) return json(g.body, g.status);
   if (Number.isFinite(g.left)) scansLeft = g.left;
-  let body: { image?: string; mediaType?: string; text?: string };
+  let body: { image?: string; mediaType?: string; text?: string; label?: boolean };
   try {
     body = await request.json();
   } catch {
@@ -35,6 +36,10 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   try {
+    if (body.label === true && !text) {
+      const label = await readLabelWithClient(new Anthropic(), image!, mediaType);
+      return json(scansLeft != null ? { ...label, scansLeft, scanLimit: g.limit } : label, 200);
+    }
     const result = await recognizeWithClient(new Anthropic(), text ? null : image!, mediaType, text || undefined);
     return json(scansLeft != null ? { ...result, scansLeft, scanLimit: g.limit } : result, 200);
   } catch (e) {
