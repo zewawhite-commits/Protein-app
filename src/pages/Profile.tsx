@@ -61,6 +61,7 @@ export default function Profile() {
 
       <ProfileHero onEdit={() => setEditing(true)} />
       <UsageCard />
+      <PreferencesCard onEdit={() => setEditing(true)} />
 
       <Group title="Appearance">
         <Row icon={settings.theme === 'light' ? <Sun size={18} /> : <Moon size={18} />} label="Theme">
@@ -239,5 +240,45 @@ function SubscriptionGroup() {
       {note && <p className="px-4 pb-3 text-sm text-silver">{note}</p>}
       <p className="px-4 pb-3 pt-1 text-xs text-dim">Payments are processed securely by Paystack. We never see or store your full card number.</p>
     </Group>
+  );
+}
+
+const GOAL_LABEL: Record<string, string> = { muscle: 'Build muscle', fatloss: 'Lose fat', performance: 'Sports performance', maintain: 'Maintain', health: 'Eat healthier' };
+const DIET_LABEL: Record<string, string> = { all: 'Eats everything', pescatarian: 'Pescatarian', vegetarian: 'Vegetarian', vegan: 'Vegan' };
+const ACTIVITY_LABEL: Record<string, string> = { sedentary: '0 workouts a week', light: '1–2 workouts a week', active: '3–5 workouts a week', athlete: '6+ workouts a week' };
+
+/** Everything they picked in onboarding, visible and editable. */
+function PreferencesCard({ onEdit }: { onEdit: () => void }) {
+  const p = useStore((s) => s.profile);
+  if (!p) return null;
+  const rows: [string, string[], string?][] = [
+    ['Goals', (p.goals ?? (p.goal ? [p.goal] : [])).map((g) => GOAL_LABEL[g] ?? g)],
+    ['Exercise', [...(p.activity ? [ACTIVITY_LABEL[p.activity]] : []), ...(p.training ?? [])]],
+    ['How you eat', [...(p.diet ? [DIET_LABEL[p.diet]] : []), ...(p.dietPrefs ?? [])]],
+    ['Cuisines', p.cuisines ?? []],
+    ['Avoids', p.avoid ?? [], 'danger'],
+  ];
+  return (
+    <section className="mt-6">
+      <div className="mb-3 flex items-center justify-between px-1">
+        <p className="text-sm font-semibold text-silver">Your preferences</p>
+        <button onClick={onEdit} className="text-sm font-semibold text-accent">Edit</button>
+      </div>
+      <div className="card space-y-4 p-5">
+        {rows.map(([label, items, tone]) => (
+          <div key={label}>
+            <p className="text-xs font-semibold uppercase tracking-wide text-dim">{label}</p>
+            {items.length ? (
+              <div className="mt-1.5 flex flex-wrap gap-1.5">
+                {items.map((i) => <span key={i} className={cx('rounded-full px-3 py-1 text-[13px] font-semibold', tone ? 'bg-danger/10 text-danger' : 'bg-raised')}>{i}</span>)}
+              </div>
+            ) : (
+              <button onClick={onEdit} className="mt-1 text-sm text-silver">Not set — add</button>
+            )}
+          </div>
+        ))}
+        <p className="text-xs text-dim">Used for your food suggestions, AI coach, recipes, workouts and plans.</p>
+      </div>
+    </section>
   );
 }

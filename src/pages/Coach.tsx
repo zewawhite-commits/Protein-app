@@ -59,7 +59,7 @@ export function useCoachContext(): CoachContext {
     return {
       name: profile?.name || undefined,
       goals: profile?.goals ?? (profile?.goal ? [profile.goal] : undefined),
-      activity: profile?.activity, diet: profile?.diet, country: profile?.country, cuisines: profile?.cuisines, avoid: profile?.avoid,
+      activity: profile?.activity, diet: [profile?.diet, ...(profile?.dietPrefs ?? [])].filter(Boolean).join(', ') || undefined, country: profile?.country, cuisines: profile?.cuisines, avoid: profile?.avoid,
       obstacles: profile?.obstacles, training: profile?.training, weightKg: profile?.bodyWeightKg ?? undefined, goalWeightKg: profile?.goalWeightKg,
       age: profile?.age, sex: profile?.sex, pregnant: profile?.pregnant,
       targets: { kcal: t?.kcal, protein: goal || undefined, carbs: t?.carbs, fat: t?.fat, fiber: t?.fiber },

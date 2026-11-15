@@ -108,6 +108,8 @@ export interface Profile {
   country?: string;
   activity?: ActivityLevel;
   diet?: Diet;
+  /** Extra eating preferences, as many as they like (Halal, Gluten-free, Keto…). */
+  dietPrefs?: string[];
   /** Cuisines the person enjoys (any from around the world); used to mix suggestions. */
   cuisines?: string[];
   /** Allergies and foods they avoid; AI suggestions must leave these out. */

@@ -7,3 +7,9 @@ export const CUISINES = [
 
 /** Common allergies and foods people avoid. */
 export const AVOIDS = ['Peanuts', 'Tree nuts', 'Dairy', 'Eggs', 'Fish', 'Shellfish', 'Gluten', 'Soy', 'Sesame', 'Pork', 'Beef', 'Alcohol'];
+
+/** Extra eating preferences (pick any number). */
+export const DIET_PREFS = ['Halal', 'Kosher', 'Gluten-free', 'Dairy-free', 'Low-carb', 'Keto', 'High-protein', 'Mediterranean', 'Intermittent fasting', 'Low-sugar', 'Plant-based most days'];
+
+/** Kinds of exercise (onboarding and profile). */
+export const TRAINING = ['Gym / weights', 'Running', 'Home workouts', 'Walking', 'HIIT', 'Cycling', 'Swimming', 'Football & sports', 'Yoga / Pilates', 'Dance'];

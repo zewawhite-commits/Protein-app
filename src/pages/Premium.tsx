@@ -33,7 +33,7 @@ export default function Premium() {
   const active = isPremiumActive(premium);
   const [catalog, setCatalog] = useState<{ plans: PlanInfo[]; accountRequired: boolean } | null | undefined>(undefined);
   const [billing, setBilling] = useState<Billing>('yearly');
-  const [tier, setTier] = useState<Tier>('plus');
+  const [tier, setTier] = useState<Tier>(() => (new URLSearchParams(location.search).get('tier') === 'pro' ? 'pro' : 'plus'));
   const [email, setEmail] = useState(premium?.email ?? '');
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ tone: 'ok' | 'err'; text: string } | null>(null);

@@ -1,3 +1,5 @@
+import { useNavigate } from 'react-router-dom';
+import { DIET_PREFS, TRAINING } from '@/lib/cuisines';
 import { useState, type ReactNode } from 'react';
 import { ArrowLeft, Check, Bike, Coffee, Droplet, Drumstick, Dumbbell, Flame, HeartPulse, Leaf, Loader2, Mail, Pencil, Phone, Rabbit, Scale, Sofa, Soup, ThumbsDown, ThumbsUp, Trophy, Turtle, Fish, Salad, Utensils, Wheat, Zap, Footprints } from 'lucide-react';
 import { useStore } from '@/store/useStore';
@@ -38,9 +40,14 @@ const DIETS: Option<Diet>[] = [
 
 const OBSTACLES = ['Lack of consistency', 'Busy schedule', 'Unhealthy eating habits', 'No meal ideas', 'Lack of support', 'Cravings & snacking', 'Eating out a lot', 'Don’t know what to eat'];
 
-const TRAINING = ['Gym / weights', 'Running', 'Home workouts', 'Walking', 'HIIT', 'Cycling', 'Swimming', 'Football & sports', 'Yoga / Pilates', 'Dance'];
+const PLAN_CHOICES = [
+  { tier: 'free' as const, name: 'Free', price: '$0', sub: 'forever', perks: ['Calories, macros & 18,000+ foods', 'Barcode, exercise, progress & feed', '3 AI scans + 5 coach messages a month'] },
+  { tier: 'plus' as const, name: 'Plus', price: '$2.50/mo', sub: '$29.99 a year · or $4.99/mo', badge: 'Most popular', perks: ['Unlimited AI photo scans & coach', 'AI workout guide for your week', 'AI recipes with full nutrition'] },
+  { tier: 'pro' as const, name: 'Pro', price: '$4.00/mo', sub: '$47.99 a year · or $7.99/mo', perks: ['Everything in Plus', 'AI eating plans built for you', 'AI meal ideas from your cuisines'] },
+];
 
 export default function Onboarding() {
+  const navigate = useNavigate();
   const session = useSession();
   const saveProfile = useStore((s) => s.saveProfile);
   const unit = useStore((s) => s.settings.bodyUnit);
@@ -49,14 +56,20 @@ export default function Onboarding() {
   const [step, setStep] = useState(0);
   const [goals, setGoals] = useState<FitnessGoal[]>([]);
   const [activity, setActivity] = useState<ActivityLevel>();
-  const [diet, setDiet] = useState<Diet>();
+  const [diets, setDiets] = useState<Diet[]>([]);
+  const [dietPrefs, setDietPrefs] = useState<string[]>([]);
+  // The most flexible style picked sets what we suggest (e.g. vegetarian + pescatarian → fish is fine).
+  const diet: Diet | undefined = (['all', 'pescatarian', 'vegetarian', 'vegan'] as Diet[]).find((d) => diets.includes(d));
   const [cuisines, setCuisines] = useState<string[]>([]);
   const [avoid, setAvoid] = useState<string[]>([]);
   const [name, setName] = useState('');
   const [age, setAge] = useState('');
   const [sex, setSex] = useState<'female' | 'male' | 'unspecified'>('unspecified');
   const [pregnant, setPregnant] = useState(false);
-  const [country, setCountry] = useState('');
+  const [country, setCountry] = useState(() => {
+    const region = (navigator.language.split('-')[1] ?? '').toUpperCase();
+    return COUNTRY_DATA.find(([iso]) => iso === region)?.[1] ?? '';
+  });
   const [weight, setWeight] = useState('');
   const [gPerKg, setGPerKg] = useState(1.6);
 
@@ -80,12 +93,13 @@ export default function Onboarding() {
   const [goalWeight, setGoalWeight] = useState('');
   const [pace, setPace] = useState(0.5);
   const [training, setTraining] = useState<string[]>([]);
+  const [planChoice, setPlanChoice] = useState<'free' | 'plus' | 'pro'>('plus');
   const [obstacles, setObstacles] = useState<string[]>([]);
   const [hasCoach, setHasCoach] = useState<boolean>();
   const [kcalOverride, setKcalOverride] = useState<number>();
   const [proteinOverride, setProteinOverride] = useState<number>();
   const wantsChange = goals.includes('fatloss') || goals.includes('muscle');
-  const flow = ['welcome', 'goals', 'activity', 'training', 'diet', 'cuisines', 'about', ...(wantsChange ? ['goalweight'] : []), 'obstacles', 'coach', 'notify', 'plan'];
+  const flow = ['welcome', 'goals', 'activity', 'training', 'diet', 'cuisines', 'about', ...(wantsChange ? ['goalweight'] : []), 'obstacles', 'coach', 'notify', 'plan', 'choose'];
   const at = flow[step];
   const STEPS = flow.length;
   const next = () => setStep((s) => Math.min(STEPS - 1, s + 1));
@@ -123,6 +137,7 @@ export default function Onboarding() {
       country: country || undefined,
       activity,
       diet,
+      dietPrefs: dietPrefs.length ? dietPrefs : undefined,
       heightCm: heightOk ? Math.round(heightNum) : undefined,
       cuisines: cuisines.length ? cuisines : undefined,
       avoid: avoid.length ? avoid : undefined,
@@ -178,7 +193,17 @@ export default function Onboarding() {
         )}
         {at === 'diet' && (
           <Question title="How do you eat?" sub="We’ll tailor food suggestions. You can still log anything.">
-            {DIETS.map((o) => <Choice key={o.value} option={o} selected={diet === o.value} onClick={() => { setDiet(o.value); next(); }} />)}
+            {DIETS.map((o) => <Choice key={o.value} option={o} selected={diets.includes(o.value)} onClick={() => { haptic(); setDiets((cur) => (cur.includes(o.value) ? cur.filter((x) => x !== o.value) : [...cur, o.value])); }} />)}
+            <p className="label mt-6">Anything else? Pick as many as you like</p>
+            <div className="flex flex-wrap gap-2">
+              {DIET_PREFS.map((c) => (
+                <button key={c} onClick={() => { haptic(); setDietPrefs((cur) => (cur.includes(c) ? cur.filter((x) => x !== c) : [...cur, c])); }} className={cx('chip !h-11', dietPrefs.includes(c) && 'chip-on')}>
+                  {dietPrefs.includes(c) && <Check size={15} strokeWidth={3} />}{c}
+                </button>
+              ))}
+            </div>
+            <div className="flex-1" />
+            <button onClick={next} className="btn-primary mt-6 w-full">{diets.length || dietPrefs.length ? 'Continue' : 'Skip for now'}</button>
           </Question>
         )}
         {at === 'training' && (
@@ -231,7 +256,7 @@ export default function Onboarding() {
             {!ageOk && <p className="mt-1 text-sm text-danger">Enter an age between 13 and 110.</p>}
 
             <span className="label mt-5">Sex</span>
-            <Segmented full value={sex} onChange={(v) => { haptic(); setSex(v); }} options={[{ value: 'female', label: 'Female' }, { value: 'male', label: 'Male' }, { value: 'unspecified', label: 'Prefer not to say' }]} />
+            <Segmented full value={sex} onChange={(v) => { haptic(); setSex(v); }} options={[{ value: 'female', label: 'Female' }, { value: 'male', label: 'Male' }, { value: 'unspecified', label: 'Rather not say' }]} />
             {sex === 'female' && (
               <label className="mt-3 flex items-center gap-3 rounded-2xl bg-surface p-3 text-sm" style={{ boxShadow: 'var(--shadow)' }}>
                 <input type="checkbox" checked={pregnant} onChange={(e) => setPregnant(e.target.checked)} className="h-5 w-5 accent-[rgb(var(--accent))]" />
@@ -370,8 +395,35 @@ export default function Onboarding() {
             </div>
             <p className="mt-3 text-center text-xs text-dim">Calories estimated with the Mifflin–St Jeor equation. A starting point, not medical advice.</p>
             <div className="flex-1" />
-            <button onClick={() => { haptic([10, 40, 10]); finish(); }} className="btn-primary mt-8 w-full">Let’s get started!</button>
+            <button onClick={() => { haptic([10, 40, 10]); next(); }} className="btn-primary mt-8 w-full">Continue</button>
           </div>
+        )}
+        {at === 'choose' && (
+          <Question title="Choose your plan" sub="Start free and upgrade any time. Cancel whenever you like.">
+            <div className="space-y-3">
+              {PLAN_CHOICES.map((p) => (
+                <button key={p.tier} onClick={() => { haptic(); setPlanChoice(p.tier); }} className={cx('card w-full p-5 text-left transition active:scale-[.99]', planChoice === p.tier && 'ring-2 ring-ink')}>
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="flex items-center gap-2 text-[19px] font-extrabold">{p.name}{p.badge && <span className="whitespace-nowrap rounded-full bg-primary px-2.5 py-0.5 text-xs font-bold text-on-primary">{p.badge}</span>}</p>
+                    <p className="text-right"><span className="text-[19px] font-extrabold">{p.price}</span><span className="block text-xs text-silver">{p.sub}</span></p>
+                  </div>
+                  <ul className="mt-3 space-y-1.5">{p.perks.map((x) => <li key={x} className="flex items-start gap-2 text-[14px] text-silver"><Check size={16} strokeWidth={3} className="mt-0.5 shrink-0 text-accent" />{x}</li>)}</ul>
+                </button>
+              ))}
+            </div>
+            <div className="flex-1" />
+            <button
+              onClick={() => {
+                haptic([10, 40, 10]);
+                // Paid choice: open checkout for that plan as soon as the app opens.
+                if (planChoice !== 'free') navigate(`/premium?tier=${planChoice}`, { replace: true });
+                finish();
+              }}
+              className="btn-primary mt-6 w-full"
+            >
+              {planChoice === 'free' ? 'Start for free' : `Continue with ${planChoice === 'pro' ? 'Pro' : 'Plus'}`}
+            </button>
+          </Question>
         )}
       </div>
     </div>

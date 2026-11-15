@@ -2,7 +2,10 @@ import { useState } from 'react';
 import type { Profile } from '@/lib/types';
 import { dailyGoal, fromKg, round1, toKg } from '@/lib/nutrition';
 import { dailyTargets, estimateKcal } from '@/lib/energy';
-import { AVOIDS, CUISINES } from '@/lib/cuisines';
+import { AVOIDS, CUISINES, DIET_PREFS, TRAINING } from '@/lib/cuisines';
+import type { Diet } from '@/lib/types';
+
+const DIET_STYLES: [Diet, string][] = [['all', 'Everything'], ['pescatarian', 'Pescatarian'], ['vegetarian', 'Vegetarian'], ['vegan', 'Vegan']];
 import { useStore } from '@/store/useStore';
 import { Segmented, cx, fmt } from './ui';
 
@@ -31,6 +34,9 @@ export function ProfileForm({ initial, submitLabel, onSaved }: { initial?: Profi
   const [age, setAge] = useState(initial?.age ? String(initial.age) : '');
   const [cuisines, setCuisines] = useState<string[]>(initial?.cuisines ?? []);
   const [avoid, setAvoid] = useState<string[]>(initial?.avoid ?? []);
+  const [diet, setDiet] = useState<Diet | undefined>(initial?.diet);
+  const [dietPrefs, setDietPrefs] = useState<string[]>(initial?.dietPrefs ?? []);
+  const [training, setTraining] = useState<string[]>(initial?.training ?? []);
   const toggle = (set: typeof setCuisines, v: string) => set((cur) => (cur.includes(v) ? cur.filter((x) => x !== v) : [...cur, v]));
   const [height, setHeight] = useState(initial?.heightCm ? String(initial.heightCm) : '');
   const [kcalMode, setKcalMode] = useState<'auto' | 'fixed'>(initial?.calorieMode ?? 'auto');
@@ -50,6 +56,9 @@ export function ProfileForm({ initial, submitLabel, onSaved }: { initial?: Profi
     age: ageNum || undefined,
     cuisines: cuisines.length ? cuisines : undefined,
     avoid: avoid.length ? avoid : undefined,
+    diet,
+    dietPrefs: dietPrefs.length ? dietPrefs : undefined,
+    training: training.length ? training : undefined,
     heightCm: heightNum || undefined,
     calorieMode: kcalMode,
     calorieGoal: Number(kcalFixed) || undefined,
@@ -180,7 +189,16 @@ export function ProfileForm({ initial, submitLabel, onSaved }: { initial?: Profi
       </div>
 
       <div>
-        <span className="label">Cuisines you enjoy</span>
+        <span className="label">How you eat</span>
+        <div className="flex flex-wrap gap-2">
+          {DIET_STYLES.map(([v, l]) => <button type="button" key={v} onClick={() => setDiet(v)} className={cx('chip !h-9', diet === v && 'chip-on')}>{l}</button>)}
+          {DIET_PREFS.map((c) => <button type="button" key={c} onClick={() => toggle(setDietPrefs, c)} className={cx('chip !h-9', dietPrefs.includes(c) && 'chip-on')}>{c}</button>)}
+        </div>
+        <span className="label mt-4">Exercise you do</span>
+        <div className="flex flex-wrap gap-2">
+          {TRAINING.map((c) => <button type="button" key={c} onClick={() => toggle(setTraining, c)} className={cx('chip !h-9', training.includes(c) && 'chip-on')}>{c}</button>)}
+        </div>
+        <span className="label mt-4">Cuisines you enjoy</span>
         <div className="flex flex-wrap gap-2">
           {CUISINES.map((c) => <button type="button" key={c} onClick={() => toggle(setCuisines, c)} className={cx('chip !h-9', cuisines.includes(c) && 'chip-on')}>{c}</button>)}
         </div>

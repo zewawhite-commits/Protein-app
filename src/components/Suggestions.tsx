@@ -4,7 +4,7 @@ import { ChevronRight, Loader2, Sparkles } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 import { useFoodDb } from '@/lib/hooks';
 import { confidentMatch, splitName } from '@/lib/foods';
-import { fitsDiet } from '@/lib/goals';
+import { fitsPrefs } from '@/lib/goals';
 import { gramsForProtein } from '@/lib/nutrition';
 import { todayKey } from '@/lib/dates';
 import type { Food } from '@/lib/types';
@@ -45,7 +45,7 @@ export function Suggestions({ remaining }: { remaining: number }) {
     // Whole foods only, one of each kind ("Ground beef" once, not crumbles + patty), short names.
     const seen = new Set<string>();
     return db.quickPicks
-      .filter((f) => fitsDiet(f, profile?.diet) && !eatenIds.has(f.id) && f.state !== 'raw' && f.state !== 'dry' && !/powder|supplement|isolate|bar\b/i.test(f.name))
+      .filter((f) => fitsPrefs(f, profile) && !eatenIds.has(f.id) && f.state !== 'raw' && f.state !== 'dry' && !/powder|supplement|isolate|bar\b/i.test(f.name))
       .sort((a, b) => b.per100.protein - a.per100.protein)
       .filter((f) => {
         const short = splitName(f.name).title.split(',')[0].trim().toLowerCase();
@@ -55,7 +55,7 @@ export function Suggestions({ remaining }: { remaining: number }) {
       })
       .slice(0, 4)
       .map((f) => { const short = splitName(f.name).title.split(',')[0].trim(); return { key: f.id, title: short, food: f, query: short }; });
-  }, [db, entries, profile?.diet]);
+  }, [db, entries, profile]);
 
   const aiRows: Row[] = useMemo(
     () =>

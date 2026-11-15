@@ -43,6 +43,34 @@ const MEAT = /\b(chicken|beef|pork|lamb|turkey|veal|ham|bacon|sausage|duck)\b/i;
 const FISH = /\b(fish|salmon|tuna|shrimp|crustaceans|mollusks|cod|sardine)\b/i;
 const ANIMAL = /\b(egg|milk|cheese|yogurt|whey|cream|butter|honey)\b/i;
 
+const AVOID_RULES: Record<string, RegExp> = {
+  Peanuts: /\bpeanut/i,
+  'Tree nuts': /\b(almond|cashew|walnut|pecan|hazelnut|pistachio|macadamia|brazil nut|nuts?)\b/i,
+  Dairy: /\b(milk|cheese|yogh?urt|cream|butter|whey|ghee|paneer)\b/i,
+  Eggs: /\beggs?\b/i,
+  Fish: FISH,
+  Shellfish: /\b(shrimp|prawns?|crab|lobster|crustaceans?|mollusks?|mussels?|oysters?|clams?|squid|scallops?|crayfish)\b/i,
+  Gluten: /\b(wheat|bread|pasta|spaghetti|macaroni|barley|rye|flour|couscous|noodles?|biscuits?|cake|pizza|chapati|naan|roti|pita)\b/i,
+  Soy: /\b(soy|soya|tofu|edamame|miso|tempeh)\b/i,
+  Sesame: /\b(sesame|tahini)\b/i,
+  Pork: /\b(pork|ham|bacon|sausages?|lard|gammon)\b/i,
+  Beef: /\bbeef\b/i,
+  Alcohol: /\b(beer|wine|alcohol|spirits|vodka|whisky|rum|cider|lager)\b/i,
+};
+const PREF_AVOIDS: Record<string, string[]> = { Halal: ['Pork', 'Alcohol'], Kosher: ['Pork', 'Shellfish'], 'Gluten-free': ['Gluten'], 'Dairy-free': ['Dairy'] };
+
+/** Whether a food fits everything the person picked: diet, extra preferences and allergies. */
+export function fitsPrefs(food: Pick<Food, 'name' | 'per100'>, p: { diet?: Diet; dietPrefs?: string[]; avoid?: string[] } | null | undefined): boolean {
+  if (!p) return true;
+  if (!fitsDiet(food, p.diet)) return false;
+  const avoid = new Set([...(p.avoid ?? []), ...(p.dietPrefs ?? []).flatMap((d) => PREF_AVOIDS[d] ?? [])]);
+  for (const a of avoid) if (AVOID_RULES[a]?.test(food.name)) return false;
+  const prefs = p.dietPrefs ?? [];
+  if ((prefs.includes('Keto') || prefs.includes('Low-carb')) && (food.per100.carbs ?? 0) > (prefs.includes('Keto') ? 5 : 15)) return false;
+  if (prefs.includes('Low-sugar') && (food.per100.sugar ?? 0) > 10) return false;
+  return true;
+}
+
 /** Whether a food fits a diet, judged from its name (used to tailor suggestions, never to hide search results). */
 export function fitsDiet(food: Pick<Food, 'name'>, diet: Diet | undefined): boolean {
   if (!diet || diet === 'all') return true;
