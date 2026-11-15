@@ -37,7 +37,7 @@ export default function Premium() {
   const [email, setEmail] = useState(premium?.email ?? '');
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ tone: 'ok' | 'err'; text: string } | null>(null);
-  const [restoring, setRestoring] = useState(false);
+  const [restoring, setRestoring] = useState(() => new URLSearchParams(location.search).get('restore') === '1');
   const [ref, setRef] = useState('');
   const handled = useRef(false);
 

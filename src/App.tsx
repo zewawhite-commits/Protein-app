@@ -20,6 +20,8 @@ const Premium = lazy(() => import('./pages/Premium'));
 const Coach = lazy(() => import('./pages/Coach'));
 const Barcode = lazy(() => import('./pages/Barcode'));
 const Groups = lazy(() => import('./pages/Groups'));
+const Privacy = lazy(() => import('./pages/Legal').then((m) => ({ default: m.Privacy })));
+const Terms = lazy(() => import('./pages/Legal').then((m) => ({ default: m.Terms })));
 const Feed = lazy(() => import('./pages/Groups').then((m) => ({ default: m.CommunityFeedPage })));
 
 export default function App() {
@@ -28,6 +30,9 @@ export default function App() {
   useCloudSync();
   useMealReminders();
   const profile = useStore((s) => s.profile);
+  // Legal pages open from the welcome screen too, before a profile exists.
+  const path = typeof location !== 'undefined' ? location.pathname : '';
+  if (!profile && (path === '/privacy' || path === '/terms')) return <Suspense fallback={null}>{path === '/privacy' ? <Privacy /> : <Terms />}</Suspense>;
   if (!profile) return <Onboarding />;
   return (
     <Suspense fallback={null}>
@@ -47,6 +52,8 @@ export default function App() {
         <Route path="snap" element={<Snap />} />
         <Route path="barcode" element={<Barcode />} />
         <Route path="premium" element={<Premium />} />
+        <Route path="privacy" element={<Privacy />} />
+        <Route path="terms" element={<Terms />} />
         <Route path="add" element={<div className="mx-auto max-w-lg px-5 pb-16 md:max-w-2xl md:px-8 lg:max-w-3xl"><AddFood /></div>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

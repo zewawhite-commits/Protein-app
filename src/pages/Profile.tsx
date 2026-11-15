@@ -1,9 +1,11 @@
 import { SignInButtons } from '@/components/SignIn';
 import { useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { ChevronRight, Cloud, Database, Download, Moon, ShieldCheck, Smartphone, Sparkles, Sun, Trash2, Upload } from 'lucide-react';
+import { useEffect } from 'react';
+import { ChevronRight, Cloud, CreditCard, Database, Download, FileText, LifeBuoy, Lock, Moon, Receipt, RotateCcw, ShieldCheck, Smartphone, Sparkles, Sun, Trash2, Upload, XCircle } from 'lucide-react';
 import { useStore, exportData } from '@/store/useStore';
-import { isPremiumActive } from '@/lib/premium';
+import { fetchBilling, isPremiumActive, manageSubscription, type Billing } from '@/lib/premium';
+import { SUPPORT_EMAIL } from '@/pages/Legal';
 import { accountsEnabled, signOut, useSession } from '@/lib/account';
 
 import { allPhotoIds, deletePhoto } from '@/lib/photos';
@@ -23,6 +25,7 @@ export default function Profile() {
   const [editing, setEditingState] = useState(params.get('edit') === '1');
   const setEditing = (v: boolean) => { setEditingState(v); if (!v && params.get('edit')) setParams({}, { replace: true }); };
   const [msg, setMsg] = useState<string | null>(null);
+  const [adminTaps, setAdminTaps] = useState(0);
   const fileRef = useRef<HTMLInputElement>(null);
 
 
@@ -68,6 +71,7 @@ export default function Profile() {
       <AccountCard />
 
       <PremiumCard />
+      <SubscriptionGroup />
 
       <Group title="Your data">
         <button onClick={download} className="w-full"><Row icon={<Download size={18} />} label="Export backup" chevron /></button>
@@ -77,14 +81,22 @@ export default function Profile() {
       </Group>
       {msg && <p className="mt-2 px-1 text-sm font-semibold text-silver">{msg}</p>}
 
-      <Group title="Administration">
-        <Row icon={<ShieldCheck size={18} />} label="Admin mode">
-          <Toggle on={settings.adminMode} onChange={(v) => updateSettings({ adminMode: v })} label="Admin mode" />
-        </Row>
-        {settings.adminMode && (
-          <Link to="/admin" className="block"><Row icon={<Database size={18} />} label="Nutrition records" chevron /></Link>
-        )}
+      <Group title="Support & legal">
+        {SUPPORT_EMAIL && <a href={`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent('Provora support')}`} className="block"><Row icon={<LifeBuoy size={18} />} label="Contact support" chevron /></a>}
+        <Link to="/privacy" className="block"><Row icon={<Lock size={18} />} label="Privacy policy" chevron /></Link>
+        <Link to="/terms" className="block"><Row icon={<FileText size={18} />} label="Terms of use" chevron /></Link>
       </Group>
+
+      {(settings.adminMode || adminTaps >= 7) && (
+        <Group title="Administration">
+          <Row icon={<ShieldCheck size={18} />} label="Admin mode">
+            <Toggle on={settings.adminMode} onChange={(v) => updateSettings({ adminMode: v })} label="Admin mode" />
+          </Row>
+          {settings.adminMode && (
+            <Link to="/admin" className="block"><Row icon={<Database size={18} />} label="Nutrition records" chevron /></Link>
+          )}
+        </Group>
+      )}
 
       <Group title="About">
         <div className="px-3.5 py-3 text-sm font-medium leading-relaxed text-silver">
@@ -96,6 +108,9 @@ export default function Profile() {
           <p className="mt-1.5">On iPhone: Share → Add to Home Screen. On Android: menu → Install app. Works offline once installed.</p>
         </div>
       </Group>
+
+      {/* Tap the version 7 times to show admin tools (hidden from normal users). */}
+      <button onClick={() => setAdminTaps((n) => n + 1)} className="mt-8 w-full pb-4 text-center text-xs font-medium text-dim">Provora {__APP_VERSION__}</button>
 
       <Sheet open={editing} onClose={() => setEditing(false)} title="Edit profile">
         <ProfileForm initial={profile} submitLabel="Save" onSaved={() => setEditing(false)} />
@@ -137,6 +152,7 @@ export function Toggle({ on, onChange, label }: { on: boolean; onChange: (v: boo
 function PremiumCard() {
   const premium = useStore((s) => s.premium);
   const active = isPremiumActive(premium);
+  if (active) return null; // the Subscription section shows the plan
   return (
     <Link to="/premium" className="mt-6 block overflow-hidden rounded-[28px] bg-primary p-5 text-on-primary transition active:scale-[.99]">
       <div className="flex items-center gap-4">
@@ -178,5 +194,50 @@ function AccountCard() {
         )}
       </div>
     </section>
+  );
+}
+
+/** Plan, renewal date and card on file, with manage / cancel / restore. */
+function SubscriptionGroup() {
+  const premium = useStore((s) => s.premium);
+  const active = isPremiumActive(premium);
+  const [billing, setBilling] = useState<Billing | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [note, setNote] = useState('');
+  useEffect(() => { if (active) void fetchBilling().then(setBilling); }, [active]);
+
+  async function manage() {
+    setBusy(true);
+    setNote('');
+    try { await manageSubscription(); } catch (e) { setNote((e as Error).message); } finally { setBusy(false); }
+  }
+  const date = (v: string | number) => new Date(v).toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' });
+
+  return (
+    <Group title="Subscription">
+      <Row icon={<Sparkles size={18} />} label="Plan">
+        <span className="text-sm font-semibold text-silver">{active ? `${premium!.tier === 'pro' ? 'Pro' : 'Plus'}${billing?.interval ? ` · ${billing.interval === 'annually' ? 'yearly' : billing.interval}` : ''}` : 'Free'}</span>
+      </Row>
+      {active ? (
+        <>
+          <Row icon={<Receipt size={18} />} label={billing?.status === 'non-renewing' ? 'Ends on' : 'Renews on'}>
+            <span className="text-sm font-semibold text-silver">{date(billing?.nextPayment ?? premium!.exp)}</span>
+          </Row>
+          <button onClick={manage} disabled={busy} className="w-full">
+            <Row icon={<CreditCard size={18} />} label="Payment method" chevron>
+              <span className="text-sm font-semibold text-silver">{billing?.card ? `${billing.card.brand.replace(/^\w/, (c) => c.toUpperCase())} •••• ${billing.card.last4}` : 'Update card'}</span>
+            </Row>
+          </button>
+          <button onClick={manage} disabled={busy} className="w-full"><Row icon={<XCircle size={18} />} label="Cancel subscription" chevron /></button>
+        </>
+      ) : (
+        <>
+          <Link to="/premium" className="block"><Row icon={<CreditCard size={18} />} label="Upgrade" chevron><span className="text-sm font-semibold text-accent">From $2.50/mo</span></Row></Link>
+          <Link to="/premium?restore=1" className="block"><Row icon={<RotateCcw size={18} />} label="Restore purchase" chevron /></Link>
+        </>
+      )}
+      {note && <p className="px-4 pb-3 text-sm text-silver">{note}</p>}
+      <p className="px-4 pb-3 pt-1 text-xs text-dim">Payments are processed securely by Paystack. We never see or store your full card number.</p>
+    </Group>
   );
 }

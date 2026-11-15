@@ -26,6 +26,7 @@ export default defineConfig({
   define: {
     'import.meta.env.VITE_SUPABASE_URL': JSON.stringify(supabaseUrl),
     'import.meta.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(supabaseAnon),
+    __APP_VERSION__: JSON.stringify(process.env.npm_package_version ?? '1.0.0'),
   },
   resolve: { alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) } },
   plugins: [

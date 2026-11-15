@@ -131,3 +131,24 @@ export async function fetchUsage(): Promise<Usage | null> {
     return null;
   }
 }
+
+export interface Billing {
+  status: string;
+  plan: string | null;
+  interval: string | null;
+  amount: number;
+  currency: string;
+  nextPayment: string | null;
+  card: { brand: string; last4: string; expMonth: string; expYear: string } | null;
+}
+
+/** Subscription and card on file (from Paystack), or null if unavailable. */
+export async function fetchBilling(): Promise<Billing | null> {
+  const token = useStore.getState().premium?.token;
+  if (!token) return null;
+  try {
+    return await call<Billing>('billing', { token });
+  } catch {
+    return null;
+  }
+}
