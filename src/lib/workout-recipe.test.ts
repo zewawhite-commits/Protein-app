@@ -64,3 +64,32 @@ describe('gentle mode', () => {
     expect(computeNudges({ ...base, gentle: true }).some((n) => /warn:kcal|win:streak/.test(n.id))).toBe(false);
   });
 });
+
+import { measuredBurn, targetFromBurn } from './energy';
+
+describe('smart calorie target', () => {
+  const key = (n: number) => { const d = new Date('2026-11-01T00:00:00'); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); };
+  const eat = (n: number, kcal: number) => ({ date: key(n), grams: 100, food: { per100: { kcal } } });
+  it('works out real burn from intake and weight trend', () => {
+    // 2,000 kcal a day for 21 days while losing 0.5 kg a week → burning about 2,550
+    const entries = Array.from({ length: 21 }, (_, i) => eat(i, 2000));
+    const weights = [0, 5, 10, 15, 20].map((n) => ({ date: key(n), kg: 80 - (0.5 / 7) * n }));
+    const m = measuredBurn(entries, weights, key(20), 2500)!;
+    expect(m.kcal).toBeGreaterThan(2500);
+    expect(m.kcal).toBeLessThan(2600);
+    expect(m.kgPerWeek).toBeCloseTo(-0.5, 1);
+  });
+  it('waits for enough data and ignores implausible results', () => {
+    expect(measuredBurn([eat(0, 2000)], [{ date: key(0), kg: 80 }], key(20), 2500)).toBeNull();
+    // Barely-logged days (under 800 kcal) don't count as full days.
+    const thin = Array.from({ length: 21 }, (_, i) => eat(i, 300));
+    const weights = [0, 5, 10, 15, 20].map((n) => ({ date: key(n), kg: 80 }));
+    expect(measuredBurn(thin, weights, key(20), 2500)).toBeNull();
+    // Clamped to within 25% of the formula.
+    const wild = Array.from({ length: 21 }, (_, i) => eat(i, 6000));
+    expect(measuredBurn(wild, weights, key(20), 2400)!.kcal).toBeLessThanOrEqual(3000);
+  });
+  it('never suggests a target below the safe floor', () => {
+    expect(targetFromBurn({ sex: 'female', bodyWeightKg: 60, goalWeightKg: 50, paceKgPerWeek: 1, goals: ['fatloss'] } as never, 1600)).toBe(1200);
+  });
+});

@@ -79,3 +79,54 @@ export function dailyTargets(p: Profile, proteinGoal: number): Targets | null {
   const carbs = Math.max(0, Math.round((c.kcal - proteinGoal * 4 - fat * 9) / 4));
   return { kcal: c.kcal, protein: proteinGoal, carbs, fat, fiber: Math.round((c.kcal / 1000) * 14), estimated: c.estimated };
 }
+
+/**
+ * What the person actually burns, worked out from their own data rather than a formula:
+ *   burn ≈ average calories eaten − (weight change × 7,700 kcal/kg ÷ days)
+ * Weight change is the slope of a straight line through their weigh-ins, so one odd
+ * weigh-in doesn't swing it. Needs enough data to mean something, and is kept within
+ * ±25% of the formula estimate so a few unlogged meals can't produce a silly number.
+ */
+export function measuredBurn(
+  entries: { date: string; grams: number; food: { per100: { kcal: number | null } } }[],
+  weights: { date: string; kg: number }[],
+  today: string,
+  formulaKcal: number | null,
+  windowDays = 28,
+): { kcal: number; loggedDays: number; weighIns: number; days: number; kgPerWeek: number; avgEaten: number } | null {
+  const from = new Date(`${today}T00:00:00`);
+  from.setDate(from.getDate() - windowDays);
+  const fromKey = `${from.getFullYear()}-${String(from.getMonth() + 1).padStart(2, '0')}-${String(from.getDate()).padStart(2, '0')}`;
+  const w = weights.filter((x) => x.date > fromKey && x.date <= today).sort((a, b) => a.date.localeCompare(b.date));
+  if (w.length < 4) return null;
+  const day = (d: string) => new Date(`${d}T00:00:00`).getTime() / 864e5;
+  const span = day(w[w.length - 1].date) - day(w[0].date);
+  if (span < 13) return null;
+  // Days with a believable full log (at least 800 kcal) between the first and last weigh-in.
+  const perDay = new Map<string, number>();
+  for (const e of entries) {
+    if (e.date < w[0].date || e.date > w[w.length - 1].date) continue;
+    perDay.set(e.date, (perDay.get(e.date) ?? 0) + ((e.food.per100.kcal ?? 0) * e.grams) / 100);
+  }
+  const full = [...perDay.values()].filter((v) => v >= 800);
+  if (full.length < 10 || full.length < span * 0.6) return null;
+  const avgEaten = full.reduce((s, v) => s + v, 0) / full.length;
+  // Least-squares slope of weight over time (kg per day).
+  const xs = w.map((x) => day(x.date)), ys = w.map((x) => x.kg);
+  const mx = xs.reduce((s, v) => s + v, 0) / xs.length, my = ys.reduce((s, v) => s + v, 0) / ys.length;
+  const slope = xs.reduce((s, x, i) => s + (x - mx) * (ys[i] - my), 0) / xs.reduce((s, x) => s + (x - mx) ** 2, 0);
+  let kcal = avgEaten - slope * KCAL_PER_KG;
+  if (formulaKcal) kcal = Math.min(formulaKcal * 1.25, Math.max(formulaKcal * 0.75, kcal));
+  return { kcal: Math.round(kcal / 10) * 10, loggedDays: full.length, weighIns: w.length, days: Math.round(span), kgPerWeek: slope * 7, avgEaten: Math.round(avgEaten) };
+}
+
+/** Daily target from a measured burn, at the person's chosen pace, never below the safe floor. */
+export function targetFromBurn(p: Profile, burn: number): number {
+  const floor = p.sex === 'male' ? 1500 : 1200;
+  const goals = p.goals?.length ? p.goals : p.goal ? [p.goal] : [];
+  let kcal = burn * calorieAdjust(goals, p.pregnant);
+  if (p.goalWeightKg && p.bodyWeightKg && p.paceKgPerWeek && !p.pregnant && Math.abs(p.goalWeightKg - p.bodyWeightKg) >= 0.5) {
+    kcal = burn + ((p.goalWeightKg < p.bodyWeightKg ? -1 : 1) * p.paceKgPerWeek * KCAL_PER_KG) / 7;
+  }
+  return Math.round(Math.max(floor, kcal) / 10) * 10;
+}

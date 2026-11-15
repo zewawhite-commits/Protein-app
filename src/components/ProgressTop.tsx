@@ -3,6 +3,7 @@ import { ArrowRight, Flag, Flame, Minus, Plus } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 import { addDays, formatDay, fromKey, lastNDays, todayKey, weekOf } from '@/lib/dates';
 import { fromKg, round1, sumEntries, toKg } from '@/lib/nutrition';
+import { calorieGoal, maintenanceKcal, measuredBurn, targetFromBurn } from '@/lib/energy';
 import { Segmented, Sheet, cx, fmt } from './ui';
 import { CountUp, haptic, toast } from './fx';
 
@@ -271,6 +272,59 @@ export function BeyondTheScale() {
           </div>
         ))}
       </div>
+    </section>
+  );
+}
+
+/**
+ * A calorie target that learns from results: compares what they ate with how their weight
+ * actually moved, and offers (never forces) an updated target.
+ */
+export function SmartTarget() {
+  const entries = useStore((s) => s.entries);
+  const weights = useStore((s) => s.weights);
+  const profile = useStore((s) => s.profile);
+  const saveProfile = useStore((s) => s.saveProfile);
+  const unit = useStore((s) => s.settings.bodyUnit);
+  const m = useMemo(() => (profile ? measuredBurn(entries, weights, todayKey(), maintenanceKcal(profile)) : null), [entries, weights, profile]);
+  if (!profile) return null;
+  const current = calorieGoal(profile)?.kcal;
+  if (!m) {
+    const from = addDays(todayKey(), -28);
+    const w = weights.filter((x) => x.date > from).length;
+    const d = new Set(entries.filter((e) => e.date > from).map((e) => e.date)).size;
+    return (
+      <section className="card p-5">
+        <h2 className="text-lg font-bold">Smart calorie target</h2>
+        <p className="mt-1 text-sm leading-relaxed text-silver">After about two weeks of logging and a few weigh-ins, Provora works out what your body really burns and fine-tunes your target, instead of relying on a formula.</p>
+        <div className="mt-3 grid grid-cols-2 gap-2 text-center">
+          <div className="rounded-2xl bg-raised py-3"><p className="num text-[18px] font-extrabold">{Math.min(d, 10)}<span className="text-sm text-silver"> / 10</span></p><p className="text-xs text-silver">days logged</p></div>
+          <div className="rounded-2xl bg-raised py-3"><p className="num text-[18px] font-extrabold">{Math.min(w, 4)}<span className="text-sm text-silver"> / 4</span></p><p className="text-xs text-silver">weigh-ins</p></div>
+        </div>
+      </section>
+    );
+  }
+  const suggested = targetFromBurn(profile, m.kcal);
+  const diff = current ? suggested - current : 0;
+  return (
+    <section className="card p-5">
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="text-lg font-bold">Smart calorie target</h2>
+        <span className="rounded-full bg-accent/10 px-2.5 py-1 text-xs font-bold text-accent">From your data</span>
+      </div>
+      <p className="mt-2 text-sm leading-relaxed text-silver">
+        Over the last {m.days} days you ate about <b className="num text-ink">{fmt(m.avgEaten)} kcal</b> a day and your weight moved <b className="num text-ink">{m.kgPerWeek > 0 ? '+' : ''}{fmt(fromKg(m.kgPerWeek, unit), 2)} {unit}</b> a week. That means you burn about <b className="num text-ink">{fmt(m.kcal)} kcal</b> a day.
+      </p>
+      <div className="mt-3 flex items-center justify-between rounded-2xl bg-raised px-4 py-3">
+        <div>
+          <p className="num text-[22px] font-extrabold leading-none">{fmt(suggested)} <span className="text-sm font-bold text-silver">kcal</span></p>
+          <p className="mt-1 text-xs text-silver">{Math.abs(diff) < 50 ? 'Your current target is already right' : `Suggested target (${diff > 0 ? '+' : ''}${fmt(diff)} vs now)`}</p>
+        </div>
+        {Math.abs(diff) >= 50 && (
+          <button onClick={() => { haptic([10, 30, 10]); saveProfile({ ...profile, calorieMode: 'fixed', calorieGoal: suggested }); toast('Calorie target updated'); }} className="btn-primary !h-11 !px-5 text-sm">Use this</button>
+        )}
+      </div>
+      <p className="mt-2 text-xs leading-relaxed text-dim">Based on {m.loggedDays} logged days and {m.weighIns} weigh-ins. It gets more accurate the more completely you log. You can change your target any time in Settings.</p>
     </section>
   );
 }
