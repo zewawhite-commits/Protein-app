@@ -142,6 +142,12 @@ export interface Reminders {
   breakfast: string;
   lunch: string;
   dinner: string;
+  /** Optional daily workout reminder (HH:MM) — skipped on days a workout is already logged. */
+  workoutOn?: boolean;
+  workout?: string;
+  /** Optional weigh-in reminder (HH:MM) — skipped once today's weight is logged. */
+  weighOn?: boolean;
+  weigh?: string;
 }
 
 export interface Settings {

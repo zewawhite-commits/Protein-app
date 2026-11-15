@@ -2,18 +2,20 @@ import { SignInButtons } from '@/components/SignIn';
 import { useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useEffect } from 'react';
-import { ArrowLeft, Bell, Flame, KeyRound, LogOut, Mail, Scale, Settings as SettingsIcon, ChevronRight, Cloud, CreditCard, Database, Download, FileText, LifeBuoy, Lock, Moon, Receipt, RotateCcw, ShieldCheck, Smartphone, Sparkles, Sun, Trash2, Upload, XCircle } from 'lucide-react';
+import { ArrowLeft, Flame, UserRound, KeyRound, LogOut, Mail, Scale, Settings as SettingsIcon, ChevronRight, Cloud, CreditCard, Database, Download, FileText, LifeBuoy, Lock, Moon, Receipt, RotateCcw, ShieldCheck, Smartphone, Sparkles, Sun, Trash2, Upload, XCircle } from 'lucide-react';
 import { useStore, exportData } from '@/store/useStore';
 import { fetchBilling, isPremiumActive, manageSubscription, type Billing } from '@/lib/premium';
 import { SUPPORT_EMAIL } from '@/pages/Legal';
-import { accountsEnabled, changeEmail, deleteAccount, signOut, useSession } from '@/lib/account';
+import { accountsEnabled, changeEmail, deleteAccount, setPassword, signOut, useSession } from '@/lib/account';
 
 import { allPhotoIds, deletePhoto } from '@/lib/photos';
 import type { Theme } from '@/lib/types';
 import { ProfileForm } from '@/components/ProfileForm';
 import { ProfileHero } from '@/components/ProfileHero';
 import { UsageCard } from '@/components/UsageCard';
-import { PageHeader, Segmented, Sheet, cx } from '@/components/ui';
+import { PageHeader, Segmented, Sheet, cx, fmt } from '@/components/ui';
+import { ReminderSettings } from '@/components/Notifications';
+import { calorieGoal } from '@/lib/energy';
 
 export default function Profile({ mode = 'profile' }: { mode?: 'profile' | 'settings' }) {
   const isSettings = mode === 'settings';
@@ -28,15 +30,8 @@ export default function Profile({ mode = 'profile' }: { mode?: 'profile' | 'sett
   const setEditing = (v: boolean) => { setEditingState(v); if (!v && params.get('edit')) setParams({}, { replace: true }); };
   const [msg, setMsg] = useState<string | null>(null);
   const [adminTaps, setAdminTaps] = useState(0);
+  const dailyKcal = calorieGoal(profile)?.kcal;
 
-  async function toggleReminders(on: boolean) {
-    const current = settings.reminders ?? { enabled: false, breakfast: '09:30', lunch: '14:00', dinner: '20:00' };
-    if (!on) return updateSettings({ reminders: { ...current, enabled: false } });
-    if (!('Notification' in window)) return setMsg('This browser can’t show reminders. Add Provora to your home screen first.');
-    const perm = Notification.permission === 'granted' ? 'granted' : await Notification.requestPermission();
-    if (perm === 'granted') updateSettings({ reminders: { ...current, enabled: true } });
-    else setMsg('Reminders are blocked. Allow notifications for Provora in your phone settings.');
-  }
   const fileRef = useRef<HTMLInputElement>(null);
 
 
@@ -94,6 +89,21 @@ export default function Profile({ mode = 'profile' }: { mode?: 'profile' | 'sett
 
       {isSettings && (
         <>
+      <Group title="Personal details">
+        {([
+          ['Name', profile.name || 'Add your name'],
+          ['Age', profile.age ? `${profile.age}` : 'Add'],
+          ['Height', profile.heightCm ? (settings.bodyUnit === 'lb' ? `${Math.floor(profile.heightCm / 2.54 / 12)} ft ${Math.round((profile.heightCm / 2.54) % 12)} in` : `${profile.heightCm} cm`) : 'Add'],
+          ['Weight', profile.bodyWeightKg ? `${fmt(settings.bodyUnit === 'lb' ? profile.bodyWeightKg * 2.20462 : profile.bodyWeightKg, 1)} ${settings.bodyUnit}` : 'Add'],
+          ['Goal weight', profile.goalWeightKg ? `${fmt(settings.bodyUnit === 'lb' ? profile.goalWeightKg * 2.20462 : profile.goalWeightKg, 1)} ${settings.bodyUnit}` : 'Not set'],
+          ['Daily calories', dailyKcal ? `${fmt(dailyKcal)} kcal` : 'Add height & age'],
+        ] as const).map(([label, value]) => (
+          <button key={label} onClick={() => setEditing(true)} className="w-full">
+            <Row icon={<UserRound size={18} />} label={label} chevron><span className="max-w-[50%] truncate text-sm font-semibold text-silver">{value}</span></Row>
+          </button>
+        ))}
+      </Group>
+
       <AccountCard />
 
       <Group title="Preferences">
@@ -103,13 +113,15 @@ export default function Profile({ mode = 'profile' }: { mode?: 'profile' | 'sett
         <Row icon={<Scale size={18} />} label="Weight unit">
           <Segmented value={settings.bodyUnit} onChange={(u) => updateSettings({ bodyUnit: u })} options={[{ value: 'kg', label: 'kg' }, { value: 'lb', label: 'lb' }]} />
         </Row>
-        <Row icon={<Bell size={18} />} label="Meal reminders">
-          <Toggle on={!!settings.reminders?.enabled} onChange={(v) => void toggleReminders(v)} label="Meal reminders" />
-        </Row>
         <Row icon={<Flame size={18} />} label="Add exercise calories to my budget">
           <Toggle on={!!settings.addBurned} onChange={(v) => updateSettings({ addBurned: v })} label="Add exercise calories" />
         </Row>
       </Group>
+
+      <section className="mt-6">
+        <p className="mb-3 px-1 text-sm font-semibold text-silver">Reminders</p>
+        <div className="card px-5 pb-5 [&>section]:mt-0 [&>section]:pt-5"><ReminderSettings /></div>
+      </section>
 
       <Group title="Your data">
         <button onClick={download} className="w-full"><Row icon={<Download size={18} />} label="Export backup" chevron /></button>
@@ -213,6 +225,8 @@ function AccountCard() {
   const session = useSession();
   const premiumActive = useStore((s) => isPremiumActive(s.premium));
   const [changing, setChanging] = useState(false);
+  const [pwOpen, setPwOpen] = useState(false);
+  const [pw, setPw] = useState('');
   const [email, setEmail] = useState('');
   const [note, setNote] = useState('');
   const [busy, setBusy] = useState(false);
@@ -239,7 +253,7 @@ function AccountCard() {
       <Row icon={<Cloud size={18} />} label="Signed in as">
         <span className="max-w-[55%] truncate text-sm font-semibold text-silver">{session.user.email}</span>
       </Row>
-      <Row icon={<KeyRound size={18} />} label="Sign-in method">
+      <Row icon={<ShieldCheck size={18} />} label="Sign-in method">
         <span className="text-sm font-semibold text-silver">{viaGoogle ? 'Google' : 'Email code'}</span>
       </Row>
       {!viaGoogle && (
@@ -250,6 +264,15 @@ function AccountCard() {
           <div className="flex gap-2">
             <input type="email" inputMode="email" autoComplete="email" className="field !h-12 flex-1" placeholder="new@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
             <button disabled={busy || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())} onClick={() => run(() => changeEmail(email.trim()), 'Check your new inbox and confirm to finish the change.')} className="btn-primary !h-12 !px-4 text-sm">Save</button>
+          </div>
+        </div>
+      )}
+      <button onClick={() => setPwOpen((v) => !v)} className="w-full"><Row icon={<KeyRound size={18} />} label="Set or change password" chevron /></button>
+      {pwOpen && (
+        <div className="px-3 pb-3">
+          <div className="flex gap-2">
+            <input type="password" autoComplete="new-password" className="field !h-12 flex-1" placeholder="New password (8+ characters)" value={pw} onChange={(e) => setPw(e.target.value)} />
+            <button disabled={busy || pw.length < 8} onClick={() => run(async () => { await setPassword(pw); setPw(''); setPwOpen(false); }, 'Password saved. You can sign in with it, or keep using Google or an email code.')} className="btn-primary !h-12 !px-4 text-sm">Save</button>
           </div>
         </div>
       )}
@@ -266,7 +289,7 @@ function AccountCard() {
         <Row icon={<Trash2 size={18} />} label={busy ? 'Deleting…' : 'Delete account'} danger />
       </button>
       {note && <p className="px-4 pb-3 text-sm text-silver">{note}</p>}
-      <p className="px-4 pb-3 pt-1 text-xs text-dim">Provora has no passwords to remember or leak: you sign in with Google or a one-time code sent to your email.</p>
+      <p className="px-4 pb-3 pt-1 text-xs text-dim">You can always sign in with Google or a one-time email code. A password is optional.</p>
     </Group>
   );
 }

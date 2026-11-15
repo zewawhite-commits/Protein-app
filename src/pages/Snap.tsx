@@ -178,7 +178,17 @@ export default function Snap() {
               <span>Unlimited →</span>
             </Link>
           )}
-          <div className="mt-4 space-y-3">
+          <PlateSummary
+            matches={matches}
+            logged={logged}
+            onLogAll={(rows) => {
+              rows.forEach((r, k) => addEntry({ date, meal: mealForNow(), food: r.food, grams: r.grams, photoId: k === 0 ? photoId : undefined, note: 'Portion estimated by AI — edit to your real weight' }));
+              setLogged((s) => { const n = new Set(s); rows.forEach((r) => n.add(r.index)); return n; });
+              toast(`Logged ${rows.length} food${rows.length > 1 ? 's' : ''} — tap any to set the real weight`);
+            }}
+          />
+          <p className="mt-5 px-1 text-[15px] font-semibold">Check each food</p>
+          <div className="mt-2 space-y-3">
             {matches.map((m, i) => (
               <ItemCard
                 key={i}
@@ -465,6 +475,52 @@ function IngredientList({ match, onLog }: { match: MatchedItem; onLog: (rows: { 
       <button onClick={() => { haptic(12); onLog(ready.map((r) => ({ food: r.options[r.choice], grams: Number(r.grams) }))); }} disabled={!ready.length} className="btn-primary mt-1 w-full !h-12 text-sm">
         {ready.length ? `Add ${ready.length} ingredient${ready.length > 1 ? 's' : ''} · ${fmt(total, 1)} g protein` : 'Enter at least one weight'}
       </button>
+    </div>
+  );
+}
+
+/**
+ * The whole plate at a glance: every food found, with totals from the best database match
+ * and the AI's portion estimate. Clearly an estimate until the person weighs each food.
+ */
+function PlateSummary({ matches, logged, onLogAll }: { matches: MatchedItem[]; logged: Set<number>; onLogAll: (rows: { food: Food; grams: number; index: number }[]) => void }) {
+  const rows = matches.map((m, index) => ({ index, name: m.item.name, food: m.candidates[0], grams: m.item.estimatedGrams }));
+  const usable = rows.filter((r) => r.food && r.grams > 0) as { index: number; name: string; food: Food; grams: number }[];
+  const t = usable.reduce((a, r) => {
+    const k = r.grams / 100;
+    return { kcal: a.kcal + (r.food.per100.kcal ?? 0) * k, protein: a.protein + r.food.per100.protein * k, carbs: a.carbs + (r.food.per100.carbs ?? 0) * k, fat: a.fat + (r.food.per100.fat ?? 0) * k };
+  }, { kcal: 0, protein: 0, carbs: 0, fat: 0 });
+  const todo = usable.filter((r) => !logged.has(r.index));
+  const missing = rows.length - usable.length;
+  if (!usable.length) return null;
+  return (
+    <div className="card mt-4 p-5">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-[17px] font-bold">Whole plate</p>
+        <span className="rounded-full border border-dashed border-silver/60 px-2.5 py-1 text-[12px] font-semibold text-silver">Estimate</span>
+      </div>
+      <div className="mt-3 grid grid-cols-4 gap-2 text-center">
+        {([['Calories', t.kcal, ''], ['Protein', t.protein, 'g'], ['Carbs', t.carbs, 'g'], ['Fat', t.fat, 'g']] as const).map(([l, v, u]) => (
+          <div key={l} className="rounded-2xl bg-raised py-3">
+            <p className="num text-[18px] font-extrabold">{fmt(v)}{u}</p>
+            <p className="text-xs text-silver">{l}</p>
+          </div>
+        ))}
+      </div>
+      <ul className="mt-3 space-y-1.5">
+        {rows.map((r) => (
+          <li key={r.index} className="flex items-center justify-between gap-3 text-[14px]">
+            <span className="min-w-0 truncate font-medium">{logged.has(r.index) && <Check size={14} strokeWidth={3} className="mr-1 inline text-accent" />}{r.name}</span>
+            <span className="num shrink-0 text-silver">{r.food && r.grams > 0 ? `~${fmt(r.grams)} g · ${fmt(((r.food.per100.kcal ?? 0) * r.grams) / 100)} kcal` : 'pick a match below'}</span>
+          </li>
+        ))}
+      </ul>
+      <p className="mt-3 text-xs leading-relaxed text-dim">
+        Nutrition comes from the food database. Portion sizes are the AI’s guess from the photo — a photo can’t weigh food, so weigh it for exact numbers.{missing > 0 ? ` ${missing} food${missing > 1 ? 's' : ''} need a match first.` : ''}
+      </p>
+      {todo.length > 0 && (
+        <button onClick={() => { haptic([10, 30, 10]); onLogAll(todo); }} className="btn-primary mt-4 w-full">Log whole plate · {fmt(todo.reduce((a, r) => a + ((r.food.per100.kcal ?? 0) * r.grams) / 100, 0))} kcal</button>
+      )}
     </div>
   );
 }

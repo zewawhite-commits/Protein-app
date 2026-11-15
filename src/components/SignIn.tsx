@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Loader2 } from 'lucide-react';
-import { signInWithEmail, signInWithGoogle, verifyEmailCode } from '@/lib/account';
+import { signInWithEmail, signInWithGoogle, signInWithPassword, verifyEmailCode } from '@/lib/account';
 import { GoogleIcon } from './BrandIcons';
 
 const validEmail = (e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e.trim());
@@ -12,6 +12,8 @@ export function SignInButtons() {
   const [sent, setSent] = useState(false);
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState('');
+  const [usePw, setUsePw] = useState(false);
+  const [pw, setPw] = useState('');
   const run = async (fn: () => Promise<void>, after?: () => void) => {
     setNote('');
     setBusy(true);
@@ -50,6 +52,13 @@ export function SignInButtons() {
           {busy ? <Loader2 size={16} className="animate-spin" /> : 'Get code'}
         </button>
       </div>
+      {usePw && (
+        <div className="mt-2 flex gap-2">
+          <input type="password" autoComplete="current-password" className="field !h-12 flex-1" placeholder="Password" value={pw} onChange={(e) => setPw(e.target.value)} />
+          <button disabled={busy || !validEmail(email) || pw.length < 6} onClick={() => run(() => signInWithPassword(email.trim(), pw))} className="btn-primary !h-12 !px-4 text-sm">Sign in</button>
+        </div>
+      )}
+      <button onClick={() => setUsePw((v) => !v)} className="mt-2 text-sm font-semibold text-silver">{usePw ? 'Use an email code instead' : 'I have a password'}</button>
       {note && <p className="mt-2 text-sm text-silver">{note}</p>}
     </div>
   );

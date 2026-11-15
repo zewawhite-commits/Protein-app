@@ -10,6 +10,7 @@ const WORLD: { label: string; q: string; cuisine: string }[] = [
   { label: 'Spaghetti', q: 'spaghetti with meat sauce', cuisine: 'Italian' },
   { label: 'Beef curry', q: 'beef curry', cuisine: 'Indian' },
   { label: 'Tacos', q: 'taco', cuisine: 'Mexican' },
+  { label: 'Jollof rice', q: 'jollof', cuisine: 'West African' },
   { label: 'Salmon', q: 'salmon cooked', cuisine: 'Mediterranean' },
   { label: 'Pad Thai', q: 'pad thai', cuisine: 'Thai' },
   { label: 'Hummus', q: 'hummus', cuisine: 'Middle Eastern' },
@@ -22,7 +23,8 @@ const WORLD: { label: string; q: string; cuisine: string }[] = [
   { label: 'Biryani', q: 'biryani', cuisine: 'Pakistani' },
   { label: 'Paella', q: 'paella', cuisine: 'Spanish' },
   { label: 'Bibimbap', q: 'bibimbap', cuisine: 'Korean' },
-  { label: 'Egusi soup', q: 'egusi', cuisine: 'West African' },
+  { label: 'Tikka masala', q: 'chicken tikka masala', cuisine: 'Indian' },
+  { label: 'Caesar salad', q: 'caesar salad', cuisine: 'American' },
   { label: 'Greek yogurt', q: 'yogurt greek plain', cuisine: 'Mediterranean' },
   { label: 'Injera', q: 'injera', cuisine: 'East African' },
   { label: 'Empanada', q: 'empanada', cuisine: 'Latin American' },
@@ -32,7 +34,6 @@ const WORLD: { label: string; q: string; cuisine: string }[] = [
   { label: 'Pierogi', q: 'pierogi', cuisine: 'Eastern European' },
   { label: 'Plantain', q: 'plantain cooked', cuisine: 'Caribbean' },
   { label: 'Adobo', q: 'adobo', cuisine: 'Filipino' },
-  { label: 'Jollof rice', q: 'jollof', cuisine: 'West African' },
 ];
 
 export function WorldFoods({ onSearch }: { onSearch: (q: string) => void }) {

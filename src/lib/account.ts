@@ -196,3 +196,16 @@ export async function deleteAccount() {
   useStore.getState().resetAll();
   useStore.setState({ ownerId: undefined, lastModified: undefined });
 }
+
+/** Sets or changes the account password (optional: Google and email codes keep working). */
+export async function setPassword(password: string) {
+  if (!supabase) return;
+  const { error } = await supabase.auth.updateUser({ password });
+  if (error) throw error;
+}
+
+export async function signInWithPassword(email: string, password: string) {
+  if (!supabase) return;
+  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error) throw new Error(/invalid login/i.test(error.message) ? 'Wrong email or password. You can also get a code by email instead.' : error.message);
+}

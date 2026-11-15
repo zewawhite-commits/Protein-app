@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Bell, BellRing, Flame, Lightbulb, PartyPopper, TriangleAlert, Utensils } from 'lucide-react';
+import { Bell, BellRing, Dumbbell, Flame, Lightbulb, PartyPopper, Scale, TriangleAlert, Utensils } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 import { useDay } from '@/lib/hooks';
 import { todayKey } from '@/lib/dates';
 import { dailyTargets } from '@/lib/energy';
-import { computeNudges, dueReminder, MEAL_TIMES, type Nudge } from '@/lib/nudges';
+import { computeNudges, dueExtra, dueReminder, EXTRA_TIMES, MEAL_TIMES, type Nudge } from '@/lib/nudges';
 import type { Reminders } from '@/lib/types';
 import { Sheet, cx } from './ui';
 import { haptic, toast } from './fx';
@@ -23,9 +23,11 @@ function useNudges(): Nudge[] {
   const { streak } = useGoalStats();
   const [now, setNow] = useState(() => new Date());
   useEffect(() => { const t = setInterval(() => setNow(new Date()), 60_000); return () => clearInterval(t); }, []);
+  const workedOut = useStore((s) => s.exercises.some((e) => e.date === date));
+  const weighed = useStore((s) => s.weights.some((w) => w.date === date));
   return useMemo(
-    () => computeNudges({ date, now, entries, totals, proteinGoal: goal, targets: profile ? dailyTargets(profile, goal) : null, streak, times: reminders }),
-    [date, now, entries, totals, goal, profile, streak, reminders],
+    () => computeNudges({ date, now, entries, totals, proteinGoal: goal, targets: profile ? dailyTargets(profile, goal) : null, streak, times: reminders, workedOut, weighed }),
+    [date, now, entries, totals, goal, profile, streak, reminders, workedOut, weighed],
   );
 }
 
@@ -79,7 +81,7 @@ export function NotificationBell() {
   );
 }
 
-function ReminderSettings() {
+export function ReminderSettings() {
   const reminders = useStore((s) => s.settings.reminders) ?? DEFAULT_REMINDERS;
   const updateSettings = useStore((s) => s.updateSettings);
   const supported = typeof window !== 'undefined' && 'Notification' in window;
@@ -94,6 +96,17 @@ function ReminderSettings() {
     set({ enabled: true });
     toast('Meal reminders on');
   }
+  async function toggleExtra(key: 'workoutOn' | 'weighOn') {
+    haptic();
+    if (reminders[key]) return set({ [key]: false });
+    if (supported && Notification.permission !== 'granted') await Notification.requestPermission().catch(() => undefined);
+    set({ [key]: true });
+  }
+  const Switch = ({ on, onClick, label }: { on: boolean; onClick: () => void; label: string }) => (
+    <button onClick={onClick} role="switch" aria-checked={on} aria-label={label} className={cx('relative h-8 w-14 shrink-0 rounded-full transition', on ? 'bg-accent' : 'bg-line')}>
+      <span className={cx('absolute top-1 h-6 w-6 rounded-full bg-white shadow transition-all', on ? 'left-7' : 'left-1')} />
+    </button>
+  );
 
   return (
     <section className="mt-6">
@@ -114,7 +127,17 @@ function ReminderSettings() {
           </label>
         ))}
       </div>
-      <p className="mt-2 text-xs text-dim">Reminders arrive while Provora is open or running in the background. Reminders when the app is fully closed will come with a future update.</p>
+      {([['workoutOn', 'workout', 'Workout reminder', 'A nudge to train, skipped once you log a workout.', Dumbbell], ['weighOn', 'weigh', 'Weigh-in reminder', 'Skipped once today’s weight is logged.', Scale]] as const).map(([onKey, timeKey, title, sub, Icon]) => (
+        <div key={onKey} className="mt-4 flex items-center gap-3">
+          <div className="min-w-0 flex-1">
+            <p className="flex items-center gap-2 text-[15px] font-semibold"><Icon size={16} className="text-accent" /> {title}</p>
+            <p className="text-sm text-silver">{sub}</p>
+          </div>
+          <input type="time" aria-label={`${title} time`} disabled={!reminders[onKey]} value={reminders[timeKey] ?? EXTRA_TIMES[timeKey]} onChange={(e) => set({ [timeKey]: e.target.value })} className={cx('w-[88px] rounded-2xl bg-raised px-2 py-2 text-center text-[15px] font-semibold outline-none', !reminders[onKey] && 'opacity-50')} />
+          <Switch on={!!reminders[onKey]} onClick={() => void toggleExtra(onKey)} label={title} />
+        </div>
+      ))}
+      <p className="mt-3 text-xs text-dim">Reminders arrive while Provora is open or running in the background on your phone. They can’t reach you yet when the app is fully closed.</p>
     </section>
   );
 }
@@ -123,7 +146,7 @@ function ReminderSettings() {
 export function useMealReminders() {
   const reminders = useStore((s) => s.settings.reminders);
   useEffect(() => {
-    if (!reminders?.enabled || !('Notification' in window)) return;
+    if (!(reminders?.enabled || reminders?.workoutOn || reminders?.weighOn) || !('Notification' in window)) return;
     const check = async () => {
       if (Notification.permission !== 'granted') return;
       const date = todayKey();
@@ -131,11 +154,15 @@ export function useMealReminders() {
       let sent: string[] = [];
       try { sent = JSON.parse(localStorage.getItem(key) ?? '[]'); } catch { /* ignore */ }
       const entries = useStore.getState().entries.filter((e) => e.date === date);
-      const meal = dueReminder(new Date(), entries, reminders, sent);
-      if (!meal) return;
-      try { localStorage.setItem(key, JSON.stringify([...sent, meal])); } catch { /* ignore */ }
-      const title = `Time to log your ${meal}`;
-      const options = { body: 'Snap it or search — it only takes a few seconds.', icon: `${import.meta.env.BASE_URL}icons/icon-192.png`, tag: `meal-${meal}` };
+      const st = useStore.getState();
+      const meal = reminders.enabled ? dueReminder(new Date(), entries, reminders, sent) : null;
+      const extra = meal ? null : dueExtra(new Date(), reminders, { workedOut: st.exercises.some((e) => e.date === date), weighed: st.weights.some((w) => w.date === date) }, sent);
+      const what = meal ?? extra;
+      if (!what) return;
+      try { localStorage.setItem(key, JSON.stringify([...sent, what])); } catch { /* ignore */ }
+      const title = meal ? `Time to log your ${meal}` : extra === 'workout' ? 'Time to move' : 'Quick weigh-in?';
+      const text = meal ? 'Snap it, say it or search — a few seconds is enough.' : extra === 'workout' ? 'Your workout guide is ready when you are.' : 'Log today’s weight to keep your trend up to date.';
+      const options = { body: text, icon: `${import.meta.env.BASE_URL}icons/icon-192.png`, tag: `provora-${what}` };
       const reg = await navigator.serviceWorker?.getRegistration().catch(() => undefined);
       if (reg) await reg.showNotification(title, options);
       else new Notification(title, options);

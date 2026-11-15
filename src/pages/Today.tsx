@@ -80,6 +80,7 @@ export default function Today() {
       )}
 
       <WeekStrip date={date} onSelect={setDate} />
+      {isToday && <WelcomeBack />}
 
       <div className="lg:grid lg:grid-cols-[1.1fr_1fr] lg:items-start lg:gap-8">
       <div>
@@ -274,6 +275,26 @@ function MacroCards({ totals, goal, targets }: { totals: Totals; goal: number; t
           </div>
         );
       })}
+    </div>
+  );
+}
+
+/** After a few days away: a friendly restart, never a broken-streak scolding or a demand to backfill. */
+function WelcomeBack() {
+  const entries = useStore((s) => s.entries);
+  const name = useStore((s) => s.profile?.name);
+  const [hidden, setHidden] = useState(false);
+  const last = useMemo(() => entries.reduce((m, e) => (e.date > m ? e.date : m), ''), [entries]);
+  const today = todayKey();
+  if (hidden || !last || last >= addDays(today, -2)) return null;
+  return (
+    <div className="card mt-4 p-5">
+      <p className="text-[17px] font-bold">Welcome back{name ? `, ${name}` : ''}</p>
+      <p className="mt-1 text-sm leading-relaxed text-silver">Good to see you. No need to fill in the days you missed — just pick up with your next meal. Your progress and history are all still here.</p>
+      <div className="mt-4 flex gap-2">
+        <Link to="/add" className="btn-primary !h-12 flex-1 text-sm">Log a meal</Link>
+        <button onClick={() => setHidden(true)} className="btn-ghost !h-12 !px-5 text-sm">Not now</button>
+      </div>
     </div>
   );
 }

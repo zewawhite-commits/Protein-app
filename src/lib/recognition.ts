@@ -87,7 +87,7 @@ const SYSTEM = `You identify foods in photos for a nutrition-tracking app used w
 
 For each distinct food you can see, return one item. If a plate has separable parts (e.g. rice, grilled chicken, fried plantain), list them separately. If the food is a combined dish whose parts can't be weighed apart (a curry, soup, stew, sandwich, sushi roll), return the dish as one item.
 
-Recognise dishes from any cuisine in the world — African, Asian, European, the Americas, Middle Eastern, Pacific — as well as packaged products, drinks, snacks, fruit and street food. Look at every part of the photo (sides, sauces, drinks) before answering; prefer the most specific dish name you are confident in, and lower "confidence" when unsure rather than guessing. Use the specific dish name in English in "name" and the local name in "localName" (e.g. name "Spicy rice with tomato and chicken", localName "Jollof rice").
+Recognise dishes from any cuisine in the world — African, Asian, European, the Americas, Middle Eastern, Pacific — as well as packaged products, drinks, snacks, fruit and street food. Be complete: before answering, scan the whole photo and list EVERYTHING that will be eaten or drunk, not only the main protein — the carbohydrate (rice, bread, pasta, potatoes, swallow), vegetables and salad, sauces, dips, dressings and gravy, toppings (cheese, nuts, seeds, avocado), visible oil or butter, side dishes, fruit, desserts and drinks. Small items count. Then prefer the most specific dish name you are confident in, and lower "confidence" when unsure rather than guessing. Use the specific dish name in English in "name" and the local name in "localName" (e.g. name "Spicy rice with tomato and chicken", localName "Jollof rice").
 
 "searchQueries" are used to look the food up in food-composition databases (USDA, FAO/INFOODS) and a packaged-product database. Give 2–4 short queries, most specific first, then more generic fallbacks that such databases are likely to contain, e.g. ["jollof rice", "rice tomato sauce", "rice white cooked"] or ["chicken thigh roasted", "chicken roasted"]. For a branded packaged product, include the brand and product name.
 
@@ -118,7 +118,7 @@ export async function recognizeWithClient(client: Anthropic, imageBase64: string
         content: imageBase64
           ? [
               { type: 'image', source: { type: 'base64', media_type: mediaType as 'image/jpeg', data: imageBase64 } },
-              { type: 'text', text: 'Identify the foods in this photo.' },
+              { type: 'text', text: 'Identify every food and drink in this photo — the whole plate, not just the main item.' },
             ]
           : [{ type: 'text', text: `There is no photo. The person described what they ate: "${description ?? ''}". Identify each food from the description (treat it as if you had seen it). Use any amounts they give for estimatedGrams (convert cups, pieces, slices to grams); otherwise estimate a typical portion.` }],
       },
@@ -133,7 +133,7 @@ export async function recognizeWithClient(client: Anthropic, imageBase64: string
 
 /** Defensive cleanup of the model output before it reaches the UI. */
 export function sanitize(raw: RecognitionResult): RecognitionResult {
-  const items = (raw.items ?? []).slice(0, 8).map((i) => ({
+  const items = (raw.items ?? []).slice(0, 14).map((i) => ({
     ...i,
     name: String(i.name ?? '').slice(0, 80),
     localName: String(i.localName ?? '').slice(0, 80),

@@ -51,8 +51,9 @@ export function WeightAndStreak() {
         </div>
         <div className="card flex flex-col items-center justify-center p-4 text-center">
           <span className="grid h-14 w-14 place-items-center rounded-full bg-[rgb(var(--carbs))]/12 text-[rgb(var(--carbs))]"><Flame size={28} fill="currentColor" fillOpacity={0.25} strokeWidth={2.2} /></span>
-          <p className="num -mt-1 text-[22px] font-extrabold text-[rgb(var(--carbs))]">{streak}</p>
-          <p className="text-sm font-bold text-[rgb(var(--carbs))]">Day streak</p>
+          <p className="num -mt-1 text-[22px] font-extrabold text-[rgb(var(--carbs))]">{week.filter((d) => days.has(d)).length}<span className="text-base"> of 7</span></p>
+          <p className="text-sm font-bold text-[rgb(var(--carbs))]">days this week</p>
+          <p className="num mt-0.5 text-xs font-semibold text-dim">{streak > 1 ? `${streak}-day streak` : 'Every logged day counts'}</p>
           <div className="mt-2 grid grid-cols-7 gap-1">
             {week.map((d) => (
               <div key={d} className="flex flex-col items-center gap-1">
@@ -120,6 +121,13 @@ export function WeightChart() {
   const first = weights[0]?.kg, last = weights[weights.length - 1]?.kg;
   const pct = goalKg && first != null && last != null && first !== goalKg ? Math.round(Math.max(0, Math.min(1, (first - last) / (first - goalKg))) * 100) : null;
   const a = active != null ? pts[active] : null;
+  // Rolling averages smooth out day-to-day swings.
+  const avg = useMemo(() => {
+    const mean = (from: string, to: string) => { const v = weights.filter((w) => w.date > from && w.date <= to).map((w) => w.kg); return v.length ? v.reduce((s, n) => s + n, 0) / v.length : null; };
+    const today = todayKey();
+    const now = mean(addDays(today, -7), today);
+    return now == null ? null : { now, prev: mean(addDays(today, -14), addDays(today, -7)) };
+  }, [weights]);
 
   return (
     <section className="card p-5">
@@ -152,6 +160,19 @@ export function WeightChart() {
           <div className="num flex justify-between text-xs font-semibold text-silver"><span>{fmt(lo)} {unit}</span><span>{goal != null ? `Goal ${fmt(goal, 1)}` : ''}</span><span>{fmt(hi)} {unit}</span></div>
         </div>
       )}
+      {avg && (
+        <div className="mt-3 grid grid-cols-2 gap-2 text-center">
+          <div className="rounded-2xl bg-raised py-3">
+            <p className="num text-[18px] font-extrabold">{fmt(fromKg(avg.now, unit), 1)} {unit}</p>
+            <p className="text-xs text-silver">7-day average</p>
+          </div>
+          <div className="rounded-2xl bg-raised py-3">
+            <p className="num text-[18px] font-extrabold">{avg.prev == null ? '—' : `${avg.now - avg.prev > 0 ? '+' : ''}${fmt(fromKg(avg.now - avg.prev, unit), 1)} ${unit}`}</p>
+            <p className="text-xs text-silver">vs the week before</p>
+          </div>
+        </div>
+      )}
+      {weights.length >= 2 && <p className="mt-2 text-xs leading-relaxed text-dim">Weight naturally moves 1–2 kg day to day with water, salt and meals. The average is your real trend — one higher day isn’t a setback.</p>}
       <div className="mt-3"><Segmented full value={range} onChange={setRange} options={[{ value: '90', label: '90D' }, { value: '182', label: '6M' }, { value: '365', label: '1Y' }, { value: 'all', label: 'All' }]} /></div>
       {weights.length >= 2 && (
         <p className="mt-3 rounded-2xl bg-accent/10 px-3 py-2 text-center text-sm font-semibold text-accent">
