@@ -15,6 +15,7 @@ import { ProfileHero } from '@/components/ProfileHero';
 import { UsageCard } from '@/components/UsageCard';
 import { PageHeader, Segmented, Sheet, cx, fmt } from '@/components/ui';
 import { ReminderSettings } from '@/components/Notifications';
+import { OwnerStats } from '@/components/OwnerStats';
 import { calorieGoal } from '@/lib/energy';
 
 export default function Profile({ mode = 'profile' }: { mode?: 'profile' | 'settings' }) {
@@ -124,6 +125,7 @@ export default function Profile({ mode = 'profile' }: { mode?: 'profile' | 'sett
       </Group>
 
       <AccountCard />
+      <OwnerStats />
 
       <Group title="Preferences">
         <Row icon={settings.theme === 'light' ? <Sun size={18} /> : <Moon size={18} />} label="Theme">

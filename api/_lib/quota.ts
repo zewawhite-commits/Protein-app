@@ -43,7 +43,7 @@ export function limitFor(tier: PlanTier, feature: Feature): number {
   return DEFAULTS[tier][feature];
 }
 
-const isAdmin = (email: string) =>
+export const isAdmin = (email: string) =>
   (process.env.ADMIN_EMAILS ?? '').split(',').map((e) => e.trim().toLowerCase()).filter(Boolean).includes(email.toLowerCase());
 
 export interface Allowed { ok: true; tier: PlanTier; left: number; limit: number }

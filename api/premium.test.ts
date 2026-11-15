@@ -245,3 +245,24 @@ describe('plan limits (quota)', () => {
     expect(await gate(call({}, 'jwt'), 'scan')).toMatchObject({ ok: true, left: Infinity });
   });
 });
+
+describe('owner stats', () => {
+  it('summarises sign-up, return and week-2 retention from stored logs', async () => {
+    const { summarize } = await import('./_lib/stats');
+    const now = Date.parse('2026-11-30T12:00:00Z');
+    const day = (n: number) => new Date(now - n * 864e5).toISOString().slice(0, 10);
+    const rows = [
+      // joined 20 days ago, logged in week 1 and week 2 → retained
+      { updated_at: '', data: { profile: { createdAt: now - 20 * 864e5 }, entries: [{ date: day(20) }, { date: day(19) }, { date: day(10) }], weights: [1] } },
+      // joined 20 days ago, logged only on day 1 → not retained
+      { updated_at: '', data: { profile: { createdAt: now - 20 * 864e5 }, entries: [{ date: day(20) }] } },
+      // joined 3 days ago, logging → too new to count for week 2
+      { updated_at: '', data: { profile: { createdAt: now - 3 * 864e5 }, entries: [{ date: day(3) }, { date: day(1) }], exercises: [1] } },
+      // signed in but never finished sign-up
+      { updated_at: '', data: {} },
+    ];
+    const s = summarize(rows as never, now);
+    expect(s).toMatchObject({ accounts: 4, finishedSetup: 3, loggedFood: 3, loggedTwoDays: 2, day2Rate: 67, activeLast7Days: 1, loggedWeight: 1, loggedWorkout: 1 });
+    expect(s.week2).toEqual({ eligible: 2, returned: 1, rate: 50 });
+  });
+});
