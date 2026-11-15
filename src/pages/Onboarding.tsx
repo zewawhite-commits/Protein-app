@@ -105,7 +105,11 @@ export default function Onboarding() {
   const next = () => setStep((s) => Math.min(STEPS - 1, s + 1));
   const back = () => setStep((s) => Math.max(0, s - 1));
   const goalWeightNum = Number(goalWeight.replace(',', '.'));
-  const goalWeightKg = goalWeightNum >= minW && goalWeightNum <= maxW ? toKg(goalWeightNum, unit) : undefined;
+  const goalWeightRaw = goalWeightNum >= minW && goalWeightNum <= maxW ? toKg(goalWeightNum, unit) : undefined;
+  // Don't set a target below a healthy weight for their height (BMI 18.5).
+  const minHealthyKg = heightOk && heightNum ? 18.5 * (heightNum / 100) ** 2 : undefined;
+  const goalTooLow = !!(goalWeightRaw && minHealthyKg && goalWeightRaw < minHealthyKg - 0.05);
+  const goalWeightKg = goalTooLow ? undefined : goalWeightRaw;
   const losing = goalWeightKg != null && weightKg != null && goalWeightKg < weightKg;
 
   function pickActivity(a: ActivityLevel) {
@@ -308,6 +312,11 @@ export default function Onboarding() {
               <input id="ob-goalweight" className="field !h-20 pr-16 text-center text-[34px] font-extrabold" inputMode="decimal" maxLength={5} value={goalWeight} onChange={(e) => setGoalWeight(e.target.value.replace(/[^\d.,]/g, ''))} placeholder={weightKg ? String(round1(fromKg(weightKg * (goals.includes('fatloss') ? 0.92 : 1.05), unit))) : unit === 'kg' ? '70' : '155'} />
               <span className="pointer-events-none absolute right-6 top-1/2 -translate-y-1/2 text-xl font-semibold text-silver">{unit}</span>
             </div>
+            {goalTooLow && minHealthyKg && (
+              <p className="mt-3 rounded-2xl bg-warn/15 px-4 py-3 text-sm font-medium text-ink">
+                That’s below a healthy weight for your height. The lowest goal we’ll set is {fmt(fromKg(minHealthyKg, unit), 1)} {unit}. If you’re unsure what’s right for you, a doctor or dietitian can help.
+              </p>
+            )}
             {goalWeightKg && weightKg && (
               <p className="num mt-2 text-center text-[15px] font-semibold">
                 {Math.abs(goalWeightKg - weightKg) < 0.5 ? 'That’s about your weight now — we’ll help you maintain.' : `${losing ? 'Lose' : 'Gain'} ${fmt(Math.abs(fromKg(goalWeightKg - weightKg, unit)), 1)} ${unit}`}
@@ -331,7 +340,7 @@ export default function Onboarding() {
               </div>
             )}
             <div className="flex-1" />
-            <button onClick={() => { if (!losing && pace > 0.5) setPace(0.25); next(); }} className="btn-primary mt-6 w-full">{goalWeightKg ? 'Continue' : 'Skip for now'}</button>
+            <button onClick={() => { if (!losing && pace > 0.5) setPace(0.25); next(); }} disabled={goalTooLow} className="btn-primary mt-6 w-full">{goalWeightKg ? 'Continue' : goalTooLow ? 'Choose a higher goal' : 'Skip for now'}</button>
           </Question>
         )}
         {at === 'obstacles' && (
@@ -384,7 +393,7 @@ export default function Onboarding() {
             <div className="card mt-4 p-5">
               <p className="text-[17px] font-bold">Your daily recommendation</p>
               <p className="text-sm text-silver">Tap any number to edit it.</p>
-              <EditTile big icon={Flame} tone="text-ink" label="Calories" unit="kcal" value={targets?.kcal} onChange={(v) => setKcalOverride(v)} min={800} max={8000} />
+              <EditTile big icon={Flame} tone="text-ink" label="Calories" unit="kcal" value={targets?.kcal} onChange={(v) => setKcalOverride(v)} min={1200} max={8000} />
               <div className="mt-2.5 grid grid-cols-3 gap-2.5">
                 <EditTile icon={Drumstick} tone="text-accent" label="Protein" unit="g" value={total} onChange={(v) => setProteinOverride(v)} min={20} max={400} />
                 <EditTile icon={Wheat} tone="text-[rgb(var(--carbs))]" label="Carbs" unit="g" value={targets?.carbs} />

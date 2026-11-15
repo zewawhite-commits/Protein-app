@@ -185,7 +185,7 @@ export default function Premium() {
               <button onClick={() => chosen && run(() => startCheckout(email.trim(), chosen.id))} disabled={!chosen || ((!session || !session.user.email) && !validEmail) || busy} className="btn-primary mt-5 w-full">
                 {busy ? <Loader2 size={18} className="animate-spin" /> : <Lock size={16} />} Get {TIER_INFO[tier].name}{chosen ? ` · ${displayPrice(chosen)}` : ''}
               </button>
-              <p className="mt-3 text-center text-xs text-silver">Secure payment by Paystack · cancel any time{chargedInOtherCurrency(chosen) && <><br />Charged as {formatPrice(chosen!)}; your bank converts it to your currency.</>}</p>
+              <p className="mt-3 text-center text-xs leading-relaxed text-silver">{chosen ? <>Renews automatically at {displayPrice(chosen)} every {intervalLabel(chosen.interval)} until you cancel. </> : null}Cancel in two taps under Profile → Subscription — you keep your plan until the period ends, and your log and history stay yours on Free.<br />Secure payment by Paystack · no hidden fees{chargedInOtherCurrency(chosen) && <><br />Charged as {formatPrice(chosen!)}; your bank converts it to your currency.</>}</p>
               <button onClick={() => (session ? run(restoreForAccount, 'Your plan is restored on this phone.') : setRestoring(true))} className="mt-4 w-full text-center text-sm font-semibold text-silver">
                 Already subscribed? Restore
               </button>

@@ -56,3 +56,11 @@ describe('workout and weigh-in reminders', () => {
     expect(over.title + over.body).not.toMatch(/fail|bad|guilt/i);
   });
 });
+
+describe('gentle mode', () => {
+  it('drops streak and over-target notices', () => {
+    const base = { date: '2026-11-16', now: new Date(2026, 10, 16, 21, 0), entries: [], totals: { kcal: 2600, protein: 0, carbs: 0, fat: 0, fiber: 0, sodium: 0 } as never, proteinGoal: 0, targets: { kcal: 2000, fiber: 28 } as never, streak: 5 };
+    expect(computeNudges(base).some((n) => /warn:kcal|win:streak/.test(n.id))).toBe(true);
+    expect(computeNudges({ ...base, gentle: true }).some((n) => /warn:kcal|win:streak/.test(n.id))).toBe(false);
+  });
+});

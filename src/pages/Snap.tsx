@@ -6,7 +6,7 @@ import { useFoodDb, usePhotoUrl } from '@/lib/hooks';
 import { deletePhoto, getPhoto, savePhoto } from '@/lib/photos';
 import { matchItems, sendFeedback, PremiumRequiredError, SignInRequiredError, recognizePhoto, recognizeText, RecognitionUnavailableError, ScanLimitError, type MatchedItem } from '@/lib/recognize-client';
 import { refreshPremium } from '@/lib/premium';
-import { SOURCE_SHORT, splitName } from '@/lib/foods';
+import { SOURCE_SHORT, searchFoods, splitName } from '@/lib/foods';
 import { mealForNow, todayKey } from '@/lib/dates';
 import type { Food } from '@/lib/types';
 import { FoodSheet } from '@/components/FoodSheet';
@@ -212,6 +212,7 @@ export default function Snap() {
           <PlateSummary
             matches={matches}
             logged={logged}
+            onAddExtra={(food, grams) => { addEntry({ date, meal: mealForNow(), food, grams, note: 'Cooking fat added to a scanned meal' }); toast(`Added ${grams} g ${splitName(food.name).title.toLowerCase()}`); }}
             onLogAll={(rows) => {
               rows.forEach((r, k) => addEntry({ date, meal: mealForNow(), food: r.food, grams: r.grams, photoId: k === 0 ? photoId : undefined, note: 'Portion estimated by AI — edit to your real weight' }));
               setLogged((s) => { const n = new Set(s); rows.forEach((r) => n.add(r.index)); return n; });
@@ -514,7 +515,8 @@ function IngredientList({ match, onLog }: { match: MatchedItem; onLog: (rows: { 
  * The whole plate at a glance: every food found, with totals from the best database match
  * and the AI's portion estimate. Clearly an estimate until the person weighs each food.
  */
-function PlateSummary({ matches, logged, onLogAll }: { matches: MatchedItem[]; logged: Set<number>; onLogAll: (rows: { food: Food; grams: number; index: number }[]) => void }) {
+function PlateSummary({ matches, logged, onLogAll, onAddExtra }: { matches: MatchedItem[]; logged: Set<number>; onLogAll: (rows: { food: Food; grams: number; index: number }[]) => void; onAddExtra: (food: Food, grams: number) => void }) {
+  const [extras, setExtras] = useState<string[]>([]);
   const rows = matches.map((m, index) => ({ index, name: m.item.name, food: m.candidates[0], grams: m.item.estimatedGrams }));
   const usable = rows.filter((r) => r.food && r.grams > 0) as { index: number; name: string; food: Food; grams: number }[];
   const t = usable.reduce((a, r) => {
@@ -549,6 +551,20 @@ function PlateSummary({ matches, logged, onLogAll }: { matches: MatchedItem[]; l
       <p className="mt-3 text-xs leading-relaxed text-dim">
         Nutrition comes from the food database. Portion sizes are the AI’s guess from the photo — a photo can’t weigh food, so weigh it for exact numbers.{missing > 0 ? ` ${missing} food${missing > 1 ? 's' : ''} need a match first.` : ''}
       </p>
+      <div className="mt-4 rounded-2xl bg-raised p-3.5">
+        <p className="text-[14px] font-semibold">Cooked with oil or butter?</p>
+        <p className="text-xs text-silver">Photos can’t see it, and it’s the most common reason scans come out too low.</p>
+        <div className="mt-2.5 flex flex-wrap gap-2">
+          {([['1 tsp oil', 'oil olive', 5], ['1 tbsp oil', 'oil olive', 14], ['Butter', 'butter salted', 10]] as const).map(([label, q, g]) => {
+            const done = extras.includes(label);
+            return (
+              <button key={label} disabled={done} onClick={() => { const f = searchFoods(q, { limit: 1 })[0]; if (!f) return; haptic(); onAddExtra(f, g); setExtras((x) => [...x, label]); }} className={cx('chip !h-9 !bg-surface text-[14px]', done && '!text-accent')}>
+                {done ? <Check size={14} strokeWidth={3} /> : '+'} {label} · {g} g
+              </button>
+            );
+          })}
+        </div>
+      </div>
       {todo.length > 0 && (
         <button onClick={() => { haptic([10, 30, 10]); onLogAll(todo); }} className="btn-primary mt-4 w-full">Log whole plate · {fmt(todo.reduce((a, r) => a + ((r.food.per100.kcal ?? 0) * r.grams) / 100, 0))} kcal</button>
       )}

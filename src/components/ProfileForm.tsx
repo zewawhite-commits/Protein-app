@@ -71,7 +71,7 @@ export function ProfileForm({ initial, submitLabel, onSaved }: { initial?: Profi
   };
   const goal = dailyGoal(draft);
   const kcalNum = Number(kcalFixed);
-  const kcalOk = kcalMode === 'auto' || (kcalNum >= 800 && kcalNum <= 8000);
+  const kcalOk = kcalMode === 'auto' || (kcalNum >= 1200 && kcalNum <= 8000);
   const valid = goal > 0 && goal < 1000 && (mode === 'fixed' || !!weightKg) && ageOk && heightOk && kcalOk;
   const estimate = estimateKcal(draft);
   const targets = dailyTargets(draft, goal);

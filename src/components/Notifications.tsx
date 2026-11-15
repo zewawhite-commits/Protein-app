@@ -23,11 +23,12 @@ function useNudges(): Nudge[] {
   const { streak } = useGoalStats();
   const [now, setNow] = useState(() => new Date());
   useEffect(() => { const t = setInterval(() => setNow(new Date()), 60_000); return () => clearInterval(t); }, []);
+  const gentle = useStore((s) => !!s.settings.gentle);
   const workedOut = useStore((s) => s.exercises.some((e) => e.date === date));
   const weighed = useStore((s) => s.weights.some((w) => w.date === date));
   return useMemo(
-    () => computeNudges({ date, now, entries, totals, proteinGoal: goal, targets: profile ? dailyTargets(profile, goal) : null, streak, times: reminders, workedOut, weighed }),
-    [date, now, entries, totals, goal, profile, streak, reminders, workedOut, weighed],
+    () => computeNudges({ date, now, entries, totals, proteinGoal: goal, targets: profile ? dailyTargets(profile, goal) : null, streak, times: reminders, workedOut, weighed, gentle }),
+    [date, now, entries, totals, goal, profile, streak, reminders, workedOut, weighed, gentle],
   );
 }
 

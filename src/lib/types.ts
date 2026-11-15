@@ -166,6 +166,8 @@ export interface Settings {
   reminders?: Reminders;
   /** Add calories burned by logged exercise to the day's calorie budget. */
   addBurned?: boolean;
+  /** Gentle mode: no streaks and no over-target notices — for people who find them stressful. */
+  gentle?: boolean;
 }
 
 /** A meal the user saved to log again in one tap (food snapshots + the grams they weighed). */

@@ -2,7 +2,7 @@ import { SignInButtons } from '@/components/SignIn';
 import { useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useEffect } from 'react';
-import { ArrowLeft, Flame, UserRound, KeyRound, LogOut, Mail, Scale, Settings as SettingsIcon, ChevronRight, Cloud, CreditCard, Database, Download, FileText, LifeBuoy, Lock, Moon, Receipt, RotateCcw, ShieldCheck, Smartphone, Sparkles, Sun, Trash2, Upload, XCircle } from 'lucide-react';
+import { ArrowLeft, Flame, HeartHandshake, UserRound, KeyRound, LogOut, Mail, Scale, Settings as SettingsIcon, ChevronRight, Cloud, CreditCard, Database, Download, FileText, LifeBuoy, Lock, Moon, Receipt, RotateCcw, ShieldCheck, Smartphone, Sparkles, Sun, Trash2, Upload, XCircle } from 'lucide-react';
 import { useStore, exportData } from '@/store/useStore';
 import { fetchBilling, isPremiumActive, manageSubscription, type Billing } from '@/lib/premium';
 import { SUPPORT_EMAIL } from '@/pages/Legal';
@@ -113,6 +113,10 @@ export default function Profile({ mode = 'profile' }: { mode?: 'profile' | 'sett
         <Row icon={<Scale size={18} />} label="Weight unit">
           <Segmented value={settings.bodyUnit} onChange={(u) => updateSettings({ bodyUnit: u })} options={[{ value: 'kg', label: 'kg' }, { value: 'lb', label: 'lb' }]} />
         </Row>
+        <Row icon={<HeartHandshake size={18} />} label="Gentle mode">
+          <Toggle on={!!settings.gentle} onChange={(v) => updateSettings({ gentle: v })} label="Gentle mode" />
+        </Row>
+        <p className="px-4 pb-2 text-xs leading-relaxed text-dim">Hides streaks and “over target” notices. If tracking ever makes you anxious about food, switch this on, pause reminders, or take a break — your data stays safe. In the UK, Beat offers free support: <a className="font-semibold text-accent" href="https://www.beateatingdisorders.org.uk" target="_blank" rel="noreferrer">beateatingdisorders.org.uk</a>.</p>
         <Row icon={<Flame size={18} />} label="Add exercise calories to my budget">
           <Toggle on={!!settings.addBurned} onChange={(v) => updateSettings({ addBurned: v })} label="Add exercise calories" />
         </Row>
@@ -124,6 +128,7 @@ export default function Profile({ mode = 'profile' }: { mode?: 'profile' | 'sett
       </section>
 
       <Group title="Your data">
+        <p className="px-4 pb-1 pt-3 text-sm leading-relaxed text-silver">Your data is never sold and Provora has no ads. Photos and text you send to AI features are used only to answer you, not to train AI models.</p>
         <button onClick={download} className="w-full"><Row icon={<Download size={18} />} label="Export backup" chevron /></button>
         <button onClick={() => fileRef.current?.click()} className="w-full"><Row icon={<Upload size={18} />} label="Restore backup" chevron /></button>
         <input ref={fileRef} type="file" accept="application/json,.json" hidden onChange={(e) => { void upload(e.target.files?.[0]); e.target.value = ''; }} />

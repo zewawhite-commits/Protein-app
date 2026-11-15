@@ -51,6 +51,7 @@ export default function Today() {
   const lookup = useFoodLookup();
   const [editing, setEditing] = useState<LogEntry | null>(null);
   const { streak } = useGoalStats(date);
+  const gentle = useStore((s) => !!s.settings.gentle);
 
   const isToday = date === today;
 
@@ -63,10 +64,12 @@ export default function Today() {
             <span className="text-[22px] font-bold tracking-tight">{APP_NAME}</span>
           </span>
           <span className="flex items-center gap-2">
-            <Pill>
-              <Flame size={15} className="text-accent" fill="currentColor" fillOpacity={0.2} />
-              <span className="num">{streak}</span>
-            </Pill>
+            {!gentle && (
+              <Pill>
+                <Flame size={15} className="text-accent" fill="currentColor" fillOpacity={0.2} />
+                <span className="num">{streak}</span>
+              </Pill>
+            )}
             <NotificationBell />
           </span>
         </div>

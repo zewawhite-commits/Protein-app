@@ -21,7 +21,7 @@ const minutes = (hhmm: string) => { const [h, m] = hhmm.split(':').map(Number); 
 export function computeNudges(o: {
   date: string; now: Date; entries: LogEntry[]; totals: Totals; proteinGoal: number; targets: Targets | null; streak: number;
   times?: Partial<Record<'breakfast' | 'lunch' | 'dinner', string>> & { workoutOn?: boolean; workout?: string; weighOn?: boolean; weigh?: string };
-  workedOut?: boolean; weighed?: boolean;
+  workedOut?: boolean; weighed?: boolean; gentle?: boolean;
 }): Nudge[] {
   const out: Nudge[] = [];
   const nowMin = o.now.getHours() * 60 + o.now.getMinutes();
@@ -44,7 +44,7 @@ export function computeNudges(o: {
   } else if (o.proteinGoal > 0 && nowMin >= 17 * 60 && p < o.proteinGoal * 0.75) {
     out.push({ id: `${o.date}:tip:protein`, kind: 'tip', title: `${Math.round(o.proteinGoal - p)} g protein to go`, body: 'A protein-rich dinner or snack can close the gap. Ask the coach for ideas.', link: '/coach' });
   }
-  if (o.targets && o.totals.kcal > o.targets.kcal * 1.1) {
+  if (!o.gentle && o.targets && o.totals.kcal > o.targets.kcal * 1.1) {
     out.push({ id: `${o.date}:warn:kcal`, kind: 'warn', title: 'A bigger day today', body: `About ${Math.round(o.totals.kcal - o.targets.kcal)} kcal above your target. One day doesn’t change your trend — it’s the week that counts.` });
   }
   if (o.totals.sodium > 2300) {
@@ -53,7 +53,7 @@ export function computeNudges(o: {
   if (o.targets && nowMin >= 18 * 60 && o.entries.length >= 2 && o.totals.fiber < o.targets.fiber * 0.5) {
     out.push({ id: `${o.date}:tip:fiber`, kind: 'tip', title: 'Low on fibre', body: 'Beans, lentils, vegetables, fruit or whole grains would help.', link: '/add?q=beans cooked' });
   }
-  if (o.streak >= 3) {
+  if (!o.gentle && o.streak >= 3) {
     out.push({ id: `${o.date}:win:streak`, kind: 'win', title: `${o.streak}-day streak`, body: 'You’ve hit your protein goal several days running. Lovely consistency.' });
   }
   return out;

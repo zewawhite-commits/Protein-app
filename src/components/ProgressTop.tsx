@@ -29,6 +29,7 @@ export function WeightAndStreak() {
   const goal = profile?.goalWeightKg;
   const pct = current && start && goal && start !== goal ? Math.max(0, Math.min(1, (start - current) / (start - goal))) : 0;
   const { streak, days } = useLogStreak();
+  const gentle = useStore((s) => !!s.settings.gentle);
   const week = weekOf(todayKey());
 
   return (
@@ -53,7 +54,7 @@ export function WeightAndStreak() {
           <span className="grid h-14 w-14 place-items-center rounded-full bg-[rgb(var(--carbs))]/12 text-[rgb(var(--carbs))]"><Flame size={28} fill="currentColor" fillOpacity={0.25} strokeWidth={2.2} /></span>
           <p className="num -mt-1 text-[22px] font-extrabold text-[rgb(var(--carbs))]">{week.filter((d) => days.has(d)).length}<span className="text-base"> of 7</span></p>
           <p className="text-sm font-bold text-[rgb(var(--carbs))]">days this week</p>
-          <p className="num mt-0.5 text-xs font-semibold text-dim">{streak > 1 ? `${streak}-day streak` : 'Every logged day counts'}</p>
+          <p className="num mt-0.5 text-xs font-semibold text-dim">{!gentle && streak > 1 ? `${streak}-day streak` : 'Every logged day counts'}</p>
           <div className="mt-2 grid grid-cols-7 gap-1">
             {week.map((d) => (
               <div key={d} className="flex flex-col items-center gap-1">
