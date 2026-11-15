@@ -277,7 +277,7 @@ export default function Snap() {
           <p className="flex items-center gap-2 text-[17px] font-bold"><Sparkles size={18} className="text-accent" /> You’re out of AI scans</p>
           <p className="mt-2 text-sm leading-relaxed text-silver">{error || 'AI scans come with Plus and Pro.'} Picking the food yourself is always free.</p>
           <div className="mt-4 grid gap-2">
-            <Link to="/premium" className="btn-primary"><Sparkles size={17} /> Upgrade — from $2.50/month</Link>
+            <Link to="/premium" className="btn-primary"><Sparkles size={17} /> Upgrade — from $2.08/month</Link>
             <Link to={manualUrl()} className="btn-ghost">Pick food manually</Link>
           </div>
         </div>
