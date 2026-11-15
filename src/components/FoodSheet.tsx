@@ -108,7 +108,7 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
       const added = addEntry({ date, meal, food, grams: round1(g), photoId });
       haptic(12);
       if (!crossesGoal)
-        toast(`Added ${fmt(n.protein, 1)} g protein`, { action: { label: 'Undo', run: () => useStore.getState().removeEntry(added.id) } });
+        toast(n.kcal != null ? `Added ${fmt(n.kcal)} kcal · ${fmt(n.protein)} g protein` : `Added ${fmt(n.protein, 1)} g protein`, { action: { label: 'Undo', run: () => useStore.getState().removeEntry(added.id) } });
     }
     if (crossesGoal) {
       haptic([20, 60, 20]);
@@ -305,7 +305,7 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
           </button>
         )}
         <button onClick={save} disabled={g <= 0 || busy} className="btn-primary flex-1">
-          {entry ? 'Save changes' : g > 0 ? `Add ${fmt(n.protein, 1)} g to ${MEALS.find((m) => m.value === meal)?.label ?? 'log'}` : 'Enter the weight first'}
+          {entry ? 'Save changes' : g > 0 ? `Add to ${MEALS.find((m) => m.value === meal)?.label ?? 'log'}${n.kcal != null ? ` · ${fmt(n.kcal)} kcal` : ''}` : 'Enter the weight first'}
         </button>
       </div>
     </div>

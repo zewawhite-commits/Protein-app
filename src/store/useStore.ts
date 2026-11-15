@@ -49,6 +49,8 @@ interface State {
   premium: { token: string; exp: number; email: string; plan: string; tier?: 'plus' | 'pro'; scanLimit?: number } | null;
   /** When user data last changed (epoch ms); used to decide which copy wins in cloud sync. */
   lastModified?: number;
+  /** Account whose data is on this device (so one person's log never syncs into another's account). */
+  ownerId?: string;
   setPremium: (p: State['premium']) => void;
 
   saveProfile: (p: Profile) => void;

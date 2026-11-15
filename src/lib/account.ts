@@ -18,7 +18,7 @@ export const accountsEnabled = !!(url && anon);
 export const supabase: SupabaseClient | null = accountsEnabled ? createClient(url!, anon!, { auth: { persistSession: true, detectSessionInUrl: true } }) : null;
 
 /** Where to land after an email/Google sign-in: the page you were on. */
-const returnUrl = () => `${window.location.origin}${window.location.pathname}`;
+const returnUrl = () => `${window.location.origin}${window.location.pathname}${window.location.search}`;
 
 export async function signInWithGoogle() {
   if (!supabase) return;
@@ -56,8 +56,23 @@ export async function verifyPhoneCode(phone: string, token: string) {
   if (error) throw error;
 }
 
+/**
+ * Signs out. The log is saved to the account first and then removed from this phone,
+ * so the next person to use it starts clean and nothing is mixed between accounts.
+ */
 export async function signOut() {
-  await supabase?.auth.signOut();
+  if (!supabase) return;
+  const { data } = await supabase.auth.getSession();
+  const userId = data.session?.user.id;
+  if (userId && useStore.getState().ownerId === userId) {
+    try { await push(userId, true); } catch { /* still sign out */ }
+  }
+  await supabase.auth.signOut();
+  if (userId) {
+    lastPushed = '';
+    useStore.getState().resetAll();
+    useStore.setState({ ownerId: undefined, lastModified: undefined });
+  }
 }
 
 export function useSession(): Session | null | undefined {
@@ -86,21 +101,52 @@ export async function syncOnSignIn(userId: string) {
   if (!supabase) return;
   const { data, error } = await supabase.from('user_data').select('data, updated_at').eq('user_id', userId).maybeSingle();
   if (error) throw error;
-  const local = useStore.getState();
+  let local = useStore.getState();
+  // Data on this phone belongs to a different account: don't mix it in. Start from this account's own copy.
+  if (local.ownerId && local.ownerId !== userId) {
+    local.resetAll();
+    useStore.setState({ ownerId: undefined, lastModified: undefined });
+    lastPushed = '';
+    local = useStore.getState();
+  }
+  // Used the app as a guest, then signed in to an account that already has data:
+  // keep the account's profile and history and add what was logged as a guest. Nothing is lost.
+  if (data && !local.ownerId && (local.entries.length || local.weights.length || local.exercises.length)) {
+    const remote = data.data as Snapshot;
+    const byId = <T extends { id: string }>(a: T[] = [], b: T[] = []) => [...a, ...b.filter((x) => !a.some((y) => y.id === x.id))];
+    const merged = {
+      ...remote,
+      entries: byId(remote.entries, local.entries),
+      exercises: byId(remote.exercises, local.exercises),
+      savedMeals: byId(remote.savedMeals, local.savedMeals),
+      customFoods: byId(remote.customFoods, local.customFoods),
+      weights: [...(remote.weights ?? []), ...local.weights.filter((w) => !(remote.weights ?? []).some((r) => r.date === w.date))].sort((a, b) => a.date.localeCompare(b.date)),
+      profile: remote.profile ?? local.profile,
+    } as Snapshot;
+    useStore.getState().importData(merged);
+    useStore.setState({ lastModified: Date.now(), premium: local.premium, ownerId: userId });
+    await push(userId, true);
+    return;
+  }
   const localUpdated = local.lastModified ?? 0;
   const remoteUpdated = data ? new Date(data.updated_at as string).getTime() : 0;
-  if (data && (remoteUpdated > localUpdated || (!local.profile && !local.entries.length))) {
+  // A guest who only did the sign-up questions, then signed in to an existing account: the account wins.
+  if (data && (remoteUpdated > localUpdated || !local.ownerId || (!local.profile && !local.entries.length))) {
     const snap = data.data as Snapshot;
     useStore.getState().importData(snap);
-    useStore.setState({ lastModified: remoteUpdated, premium: local.premium });
+    useStore.setState({ lastModified: remoteUpdated, premium: local.premium, ownerId: userId });
     lastPushed = JSON.stringify(snap);
   } else {
+    useStore.setState({ ownerId: userId });
     await push(userId);
   }
 }
 
-async function push(userId: string) {
+async function push(userId: string, force = false) {
   if (!supabase) return;
+  // Never upload a log that belongs to someone else.
+  if (useStore.getState().ownerId !== userId) return;
+  if (force) lastPushed = '';
   const snap = exportData();
   const body = JSON.stringify({ ...snap, exportedAt: undefined });
   if (body === lastPushed) return;

@@ -17,7 +17,7 @@ export function LogMenu({ open, onClose, date }: { open: boolean; onClose: () =>
     { icon: Camera, label: 'Scan food', sub: 'Photo of your meal', to: `/snap${q}` },
     { icon: ScanBarcode, label: 'Barcode', sub: 'Packaged foods', to: `/barcode${q}` },
     { icon: PenLine, label: 'Describe', sub: 'Type what you ate', to: `/snap${q ? `${q}&` : '?'}mode=describe` },
-    { icon: Search, label: 'Food database', sub: '13,000+ foods', to: `/add${q}` },
+    { icon: Search, label: 'Food database', sub: '18,000+ foods', to: `/add${q}` },
     { icon: Bookmark, label: 'Saved meals', sub: 'Log in one tap', to: `/add?tab=saved${q ? `&${q.slice(1)}` : ''}` },
   ];
   return (

@@ -21,7 +21,8 @@ function amountLine(food: Food, remaining: number): string {
   const grams = gramsForProtein(food.per100.protein, remaining);
   if (grams && grams <= 350) return `~${fmt(grams)} g covers what’s left`;
   // Use the food's own serving (e.g. "2 tbsp, 32 g" for peanut butter) rather than a fixed 150 g.
-  const serving = food.portions?.find((x) => x.grams >= 15 && x.grams <= 400);
+  // The smallest sensible serving (1 egg, 1 oz of nuts), not a cupful.
+  const serving = [...(food.portions ?? [])].filter((x) => x.grams >= 25 && x.grams <= 400).sort((a, b) => a.grams - b.grams)[0];
   const g = serving?.grams ?? 150;
   return `${serving ? `${serving.label} (${fmt(g)} g)` : `${g} g`} gives ${fmt((food.per100.protein * g) / 100)} g protein`;
 }

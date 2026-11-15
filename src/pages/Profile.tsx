@@ -184,7 +184,7 @@ function AccountCard() {
               <p className="truncate font-semibold">{session.user.email}</p>
               <p className="text-xs text-silver">Your data is saved to your account</p>
             </div>
-            <button onClick={() => void signOut()} className="chip !h-9">Sign out</button>
+            <button onClick={() => { if (confirm('Sign out? Your log is saved to your account and removed from this phone.')) void signOut(); }} className="chip !h-9">Sign out</button>
           </div>
         ) : (
           <>

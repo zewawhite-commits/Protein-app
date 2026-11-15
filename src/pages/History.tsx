@@ -79,8 +79,8 @@ function Days({ query }: { query: string }) {
                     <p className="mt-0.5 truncate text-xs font-medium text-silver">{names}</p>
                   </div>
                   <div className="text-right">
-                    <p className={cx('num text-lg font-bold leading-none', hit && 'text-accent')}>{fmt(protein)}<span className="text-xs text-silver">/{fmt(goal)}g</span></p>
-                    <p className="mt-1 text-[12px] font-semibold text-dim">{es.length} items</p>
+                    <p className="num text-lg font-bold leading-none">{fmt(es.reduce((sum, e) => sum + ((e.food.per100.kcal ?? 0) * e.grams) / 100, 0))}<span className="text-xs text-silver"> kcal</span></p>
+                    <p className={cx('num mt-1 text-[12px] font-semibold', hit ? 'text-accent' : 'text-dim')}>{fmt(protein)}/{fmt(goal)} g protein</p>
                   </div>
                   <ChevronRight size={16} className="shrink-0 text-dim" />
                 </Link>
