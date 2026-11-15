@@ -1,12 +1,12 @@
 import { SignInButtons } from '@/components/SignIn';
 import { useRef, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useEffect } from 'react';
-import { ChevronRight, Cloud, CreditCard, Database, Download, FileText, LifeBuoy, Lock, Moon, Receipt, RotateCcw, ShieldCheck, Smartphone, Sparkles, Sun, Trash2, Upload, XCircle } from 'lucide-react';
+import { ArrowLeft, Bell, Flame, KeyRound, LogOut, Mail, Scale, Settings as SettingsIcon, ChevronRight, Cloud, CreditCard, Database, Download, FileText, LifeBuoy, Lock, Moon, Receipt, RotateCcw, ShieldCheck, Smartphone, Sparkles, Sun, Trash2, Upload, XCircle } from 'lucide-react';
 import { useStore, exportData } from '@/store/useStore';
 import { fetchBilling, isPremiumActive, manageSubscription, type Billing } from '@/lib/premium';
 import { SUPPORT_EMAIL } from '@/pages/Legal';
-import { accountsEnabled, signOut, useSession } from '@/lib/account';
+import { accountsEnabled, changeEmail, deleteAccount, signOut, useSession } from '@/lib/account';
 
 import { allPhotoIds, deletePhoto } from '@/lib/photos';
 import type { Theme } from '@/lib/types';
@@ -15,7 +15,9 @@ import { ProfileHero } from '@/components/ProfileHero';
 import { UsageCard } from '@/components/UsageCard';
 import { PageHeader, Segmented, Sheet, cx } from '@/components/ui';
 
-export default function Profile() {
+export default function Profile({ mode = 'profile' }: { mode?: 'profile' | 'settings' }) {
+  const isSettings = mode === 'settings';
+  const navigate = useNavigate();
   const profile = useStore((s) => s.profile)!;
   const settings = useStore((s) => s.settings);
   const updateSettings = useStore((s) => s.updateSettings);
@@ -26,6 +28,15 @@ export default function Profile() {
   const setEditing = (v: boolean) => { setEditingState(v); if (!v && params.get('edit')) setParams({}, { replace: true }); };
   const [msg, setMsg] = useState<string | null>(null);
   const [adminTaps, setAdminTaps] = useState(0);
+
+  async function toggleReminders(on: boolean) {
+    const current = settings.reminders ?? { enabled: false, breakfast: '09:30', lunch: '14:00', dinner: '20:00' };
+    if (!on) return updateSettings({ reminders: { ...current, enabled: false } });
+    if (!('Notification' in window)) return setMsg('This browser can’t show reminders. Add Provora to your home screen first.');
+    const perm = Notification.permission === 'granted' ? 'granted' : await Notification.requestPermission();
+    if (perm === 'granted') updateSettings({ reminders: { ...current, enabled: true } });
+    else setMsg('Reminders are blocked. Allow notifications for Provora in your phone settings.');
+  }
   const fileRef = useRef<HTMLInputElement>(null);
 
 
@@ -57,22 +68,48 @@ export default function Profile() {
 
   return (
     <div className="animate-fade-up">
-      <PageHeader title="Profile" />
+      {isSettings ? (
+        <header className="pt-safe flex items-center gap-3 pb-2">
+          <button onClick={() => navigate('/profile')} className="grid h-11 w-11 place-items-center rounded-full bg-surface" style={{ boxShadow: 'var(--shadow)' }} aria-label="Back"><ArrowLeft size={20} /></button>
+          <h1 className="text-[28px] font-extrabold tracking-tight">Settings</h1>
+        </header>
+      ) : (
+        <PageHeader title="Profile" right={<Link to="/settings" className="grid h-11 w-11 place-items-center rounded-full bg-surface" style={{ boxShadow: 'var(--shadow)' }} aria-label="Settings"><SettingsIcon size={20} /></Link>} />
+      )}
 
-      <ProfileHero onEdit={() => setEditing(true)} />
-      <UsageCard />
-      <PreferencesCard onEdit={() => setEditing(true)} />
+      {!isSettings && (
+        <>
+          <ProfileHero onEdit={() => setEditing(true)} />
+          <UsageCard />
+          <PreferencesCard onEdit={() => setEditing(true)} />
+          <PremiumCard />
+          <SubscriptionGroup />
+          <Group title="More">
+            <Link to="/settings" className="block"><Row icon={<SettingsIcon size={18} />} label="Settings & account" chevron /></Link>
+            <Link to="/privacy" className="block"><Row icon={<Lock size={18} />} label="Privacy policy" chevron /></Link>
+            <Link to="/terms" className="block"><Row icon={<FileText size={18} />} label="Terms of use" chevron /></Link>
+          </Group>
+        </>
+      )}
 
-      <Group title="Appearance">
+      {isSettings && (
+        <>
+      <AccountCard />
+
+      <Group title="Preferences">
         <Row icon={settings.theme === 'light' ? <Sun size={18} /> : <Moon size={18} />} label="Theme">
           <Segmented<Theme> value={settings.theme} onChange={(t) => updateSettings({ theme: t })} options={[{ value: 'dark', label: 'Dark' }, { value: 'light', label: 'Light' }, { value: 'system', label: 'Auto' }]} />
         </Row>
+        <Row icon={<Scale size={18} />} label="Weight unit">
+          <Segmented value={settings.bodyUnit} onChange={(u) => updateSettings({ bodyUnit: u })} options={[{ value: 'kg', label: 'kg' }, { value: 'lb', label: 'lb' }]} />
+        </Row>
+        <Row icon={<Bell size={18} />} label="Meal reminders">
+          <Toggle on={!!settings.reminders?.enabled} onChange={(v) => void toggleReminders(v)} label="Meal reminders" />
+        </Row>
+        <Row icon={<Flame size={18} />} label="Add exercise calories to my budget">
+          <Toggle on={!!settings.addBurned} onChange={(v) => updateSettings({ addBurned: v })} label="Add exercise calories" />
+        </Row>
       </Group>
-
-      <AccountCard />
-
-      <PremiumCard />
-      <SubscriptionGroup />
 
       <Group title="Your data">
         <button onClick={download} className="w-full"><Row icon={<Download size={18} />} label="Export backup" chevron /></button>
@@ -112,6 +149,8 @@ export default function Profile() {
 
       {/* Tap the version 7 times to show admin tools (hidden from normal users). */}
       <button onClick={() => setAdminTaps((n) => n + 1)} className="mt-8 w-full pb-4 text-center text-xs font-medium text-dim">Provora {__APP_VERSION__}</button>
+        </>
+      )}
 
       <Sheet open={editing} onClose={() => setEditing(false)} title="Edit profile">
         <ProfileForm initial={profile} submitLabel="Save" onSaved={() => setEditing(false)} />
@@ -172,29 +211,63 @@ function PremiumCard() {
 
 function AccountCard() {
   const session = useSession();
+  const premiumActive = useStore((s) => isPremiumActive(s.premium));
+  const [changing, setChanging] = useState(false);
+  const [email, setEmail] = useState('');
+  const [note, setNote] = useState('');
+  const [busy, setBusy] = useState(false);
   if (!accountsEnabled) return null;
+  const run = async (fn: () => Promise<void>, ok?: string) => {
+    setBusy(true); setNote('');
+    try { await fn(); if (ok) setNote(ok); } catch (e) { setNote((e as Error).message); } finally { setBusy(false); }
+  };
+  if (!session) {
+    return (
+      <section className="mt-6">
+        <p className="mb-3 px-1 text-sm font-semibold text-silver">Account</p>
+        <div className="card p-5">
+          <p className="font-semibold">Save your data to an account</p>
+          <p className="mt-0.5 text-xs text-silver">Use the app on any phone and never lose your log.</p>
+          <div className="mt-3"><SignInButtons /></div>
+        </div>
+      </section>
+    );
+  }
+  const viaGoogle = session.user.app_metadata?.provider === 'google';
   return (
-    <section className="mt-6">
-      <p className="mb-3 px-1 text-sm font-semibold text-silver">Account</p>
-      <div className="card p-4">
-        {session ? (
-          <div className="flex items-center gap-3">
-            <span className="grid h-10 w-10 place-items-center rounded-full bg-raised"><Cloud size={18} /></span>
-            <div className="min-w-0 flex-1">
-              <p className="truncate font-semibold">{session.user.email}</p>
-              <p className="text-xs text-silver">Your data is saved to your account</p>
-            </div>
-            <button onClick={() => { if (confirm('Sign out? Your log is saved to your account and removed from this phone.')) void signOut(); }} className="chip !h-9">Sign out</button>
+    <Group title="Account">
+      <Row icon={<Cloud size={18} />} label="Signed in as">
+        <span className="max-w-[55%] truncate text-sm font-semibold text-silver">{session.user.email}</span>
+      </Row>
+      <Row icon={<KeyRound size={18} />} label="Sign-in method">
+        <span className="text-sm font-semibold text-silver">{viaGoogle ? 'Google' : 'Email code'}</span>
+      </Row>
+      {!viaGoogle && (
+        <button onClick={() => setChanging((v) => !v)} className="w-full"><Row icon={<Mail size={18} />} label="Change email" chevron /></button>
+      )}
+      {changing && (
+        <div className="px-3 pb-3">
+          <div className="flex gap-2">
+            <input type="email" inputMode="email" autoComplete="email" className="field !h-12 flex-1" placeholder="new@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
+            <button disabled={busy || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())} onClick={() => run(() => changeEmail(email.trim()), 'Check your new inbox and confirm to finish the change.')} className="btn-primary !h-12 !px-4 text-sm">Save</button>
           </div>
-        ) : (
-          <>
-            <p className="font-semibold">Save your data to an account</p>
-            <p className="mt-0.5 text-xs text-silver">Use the app on any phone and never lose your log.</p>
-            <div className="mt-3"><SignInButtons /></div>
-          </>
-        )}
-      </div>
-    </section>
+        </div>
+      )}
+      <button onClick={() => { if (confirm('Sign out? Your log is saved to your account and removed from this phone.')) void signOut(); }} className="w-full"><Row icon={<LogOut size={18} />} label="Sign out" chevron /></button>
+      <button
+        disabled={busy}
+        onClick={() => {
+          if (premiumActive && !confirm('You have an active subscription. Cancel it first under Profile → Subscription, or you may still be charged. Continue anyway?')) return;
+          if (!confirm('Delete your account? Your log, photos, posts and profile are removed for good. This cannot be undone.')) return;
+          void run(deleteAccount);
+        }}
+        className="w-full"
+      >
+        <Row icon={<Trash2 size={18} />} label={busy ? 'Deleting…' : 'Delete account'} danger />
+      </button>
+      {note && <p className="px-4 pb-3 text-sm text-silver">{note}</p>}
+      <p className="px-4 pb-3 pt-1 text-xs text-dim">Provora has no passwords to remember or leak: you sign in with Google or a one-time code sent to your email.</p>
+    </Group>
   );
 }
 

@@ -174,3 +174,25 @@ export function useCloudSync() {
   }, [userId]);
   return session;
 }
+
+/** Starts an email change: Supabase emails a confirmation to the new address. */
+export async function changeEmail(email: string) {
+  if (!supabase) return;
+  const { error } = await supabase.auth.updateUser({ email }, { emailRedirectTo: `${window.location.origin}/settings` });
+  if (error) throw error;
+}
+
+/** Permanently deletes the account and everything linked to it, then clears this phone. */
+export async function deleteAccount() {
+  if (!supabase) return;
+  const token = await accessToken();
+  if (!token) throw new Error('Sign in again to delete your account.');
+  const res = await fetch('/api/account', { method: 'DELETE', headers: { 'x-user-token': token } });
+  const isJson = res.headers.get('content-type')?.includes('application/json');
+  const data = isJson ? ((await res.json()) as { error?: string }) : {};
+  if (!res.ok) throw new Error(data.error || 'Could not delete the account. Try again.');
+  await supabase.auth.signOut().catch(() => undefined);
+  lastPushed = '';
+  useStore.getState().resetAll();
+  useStore.setState({ ownerId: undefined, lastModified: undefined });
+}

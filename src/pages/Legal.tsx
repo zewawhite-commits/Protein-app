@@ -52,7 +52,7 @@ export function Privacy() {
       <p>Food, weight and body details can be health information. We use it only to provide the app to you, and we never share it for advertising. {APP_NAME} gives general guidance, not medical advice.</p>
 
       <H>Your rights</H>
-      <p>You can see, export and delete your data at any time: Profile → Export backup, and Profile → Delete all data. Signing out stops syncing. You can ask us to delete your account and everything linked to it by contacting {contact}. If you’re in the UK or EU you also have the right to object, restrict processing and complain to your data protection authority (in the UK, the ICO).</p>
+      <p>You can see, export and delete your data at any time: Settings → Export backup, and Settings → Delete account, which removes your account and everything linked to it straight away. You can also contact {contact}. If you’re in the UK or EU you also have the right to object, restrict processing and complain to your data protection authority (in the UK, the ICO).</p>
 
       <H>How long we keep it</H>
       <p>We keep your data while your account is active. When you delete it, it’s removed from our systems within 30 days, except records we must keep by law, such as payment records.</p>

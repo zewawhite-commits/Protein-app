@@ -47,6 +47,7 @@ export default function App() {
           <Route path="groups" element={<Groups />} />
           <Route path="feed" element={<Feed />} />
           <Route path="profile" element={<Profile />} />
+          <Route path="settings" element={<Profile mode="settings" />} />
           <Route path="admin" element={<Admin />} />
         </Route>
         <Route path="snap" element={<Snap />} />
