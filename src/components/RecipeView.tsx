@@ -30,7 +30,7 @@ export function RecipeView() {
   const ideas = useMemo(() => {
     const c = profile?.cuisines?.[0];
     const g = profile?.goals?.includes('muscle') ? 'High-protein' : profile?.goals?.includes('fatloss') ? 'Light' : 'Healthy';
-    return [`${g} dinner in 30 minutes`, c ? `${c} dish, lighter` : 'Egusi soup', 'Meal-prep lunches for 4', 'Breakfast with eggs', 'Vegetarian curry', 'Something with chicken'];
+    return [`${g} dinner in 30 minutes`, c ? `${c} dish, lighter` : 'Chicken stir-fry', 'Meal-prep lunches for 4', 'Breakfast with eggs', 'Vegetarian curry', 'Something with chicken'];
   }, [profile]);
 
   async function make(text = ask) {

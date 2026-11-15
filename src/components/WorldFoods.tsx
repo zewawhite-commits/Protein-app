@@ -10,12 +10,15 @@ const WORLD: { label: string; q: string; cuisine: string }[] = [
   { label: 'Spaghetti', q: 'spaghetti with meat sauce', cuisine: 'Italian' },
   { label: 'Beef curry', q: 'beef curry', cuisine: 'Indian' },
   { label: 'Tacos', q: 'taco', cuisine: 'Mexican' },
-  { label: 'Jollof rice', q: 'jollof', cuisine: 'West African' },
   { label: 'Salmon', q: 'salmon cooked', cuisine: 'Mediterranean' },
   { label: 'Pad Thai', q: 'pad thai', cuisine: 'Thai' },
   { label: 'Hummus', q: 'hummus', cuisine: 'Middle Eastern' },
-  { label: 'Burger', q: 'hamburger', cuisine: 'Fast food' },
+  { label: 'Burger', q: 'cheeseburger', cuisine: 'Fast food' },
+  { label: 'Pizza', q: 'pizza cheese', cuisine: 'Fast food' },
   { label: 'Ramen', q: 'ramen', cuisine: 'Japanese' },
+  { label: 'Fries', q: 'french fries', cuisine: 'Fast food' },
+  { label: 'Fried chicken', q: 'fried chicken', cuisine: 'Fast food' },
+  { label: 'Doner kebab', q: 'doner kebab', cuisine: 'Fast food' },
   { label: 'Biryani', q: 'biryani', cuisine: 'Pakistani' },
   { label: 'Paella', q: 'paella', cuisine: 'Spanish' },
   { label: 'Bibimbap', q: 'bibimbap', cuisine: 'Korean' },
@@ -29,6 +32,7 @@ const WORLD: { label: string; q: string; cuisine: string }[] = [
   { label: 'Pierogi', q: 'pierogi', cuisine: 'Eastern European' },
   { label: 'Plantain', q: 'plantain cooked', cuisine: 'Caribbean' },
   { label: 'Adobo', q: 'adobo', cuisine: 'Filipino' },
+  { label: 'Jollof rice', q: 'jollof', cuisine: 'West African' },
 ];
 
 export function WorldFoods({ onSearch }: { onSearch: (q: string) => void }) {
@@ -38,7 +42,8 @@ export function WorldFoods({ onSearch }: { onSearch: (q: string) => void }) {
     if (!liked?.length) return WORLD;
     const fav = WORLD.filter((w) => liked.includes(w.cuisine));
     const rest = WORLD.filter((w) => !liked.includes(w.cuisine));
-    const out: typeof WORLD = [];
+    // The row always opens with a couple of everyday picks, then mixes in their cuisines.
+    const out: typeof WORLD = rest.splice(0, 2);
     while (fav.length || rest.length) {
       if (fav.length) out.push(fav.shift()!);
       if (rest.length) out.push(rest.shift()!);

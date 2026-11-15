@@ -130,7 +130,7 @@ export default function Snap() {
         <p className="mt-1 text-[15px] text-silver">Type what you ate — we’ll find each food. You check and weigh.</p>
         <textarea autoFocus value={described} onChange={(e) => setDescribed(e.target.value)} maxLength={500} rows={4} placeholder="e.g. 2 scrambled eggs, a slice of wholemeal toast and a latte" className="field mt-5 !h-auto resize-none py-4 text-[17px]" />
         <div className="mt-3 flex flex-wrap gap-2">
-          {['Chicken Caesar salad', 'Bowl of porridge with banana', 'Jollof rice and grilled chicken', 'Two slices of pepperoni pizza'].map((x) => (
+          {['Chicken Caesar salad', 'Bowl of porridge with banana', 'Cheeseburger and fries', 'Two slices of pepperoni pizza'].map((x) => (
             <button key={x} onClick={() => setDescribed(x)} className="chip !h-9">{x}</button>
           ))}
         </div>
