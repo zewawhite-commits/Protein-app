@@ -1,10 +1,10 @@
+import { SignInButtons } from '@/components/SignIn';
 import { useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { ChevronRight, Cloud, Database, Download, Moon, ShieldCheck, Smartphone, Sparkles, Sun, Trash2, Upload } from 'lucide-react';
 import { useStore, exportData } from '@/store/useStore';
 import { isPremiumActive } from '@/lib/premium';
-import { accountsEnabled, signInWithEmail, signInWithGoogle, signOut, useSession } from '@/lib/account';
-import { GoogleIcon } from '@/components/BrandIcons';
+import { accountsEnabled, signOut, useSession } from '@/lib/account';
 
 import { allPhotoIds, deletePhoto } from '@/lib/photos';
 import type { Theme } from '@/lib/types';
@@ -144,7 +144,7 @@ function PremiumCard() {
         <div className="min-w-0 flex-1">
           <p className="font-semibold">{active ? `${premium!.tier === 'pro' ? 'Pro' : 'Plus'} is active` : 'Upgrade to Plus or Pro'}</p>
           <p className="truncate text-[14px] opacity-70">
-            {active ? `${premium!.email} · until ${new Date(premium!.exp).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}` : 'AI photo recognition for every meal'}
+            {active ? `${premium!.email} · until ${new Date(premium!.exp).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}` : 'Unlimited AI scans and coach'}
           </p>
         </div>
         <ChevronRight size={18} className="opacity-60" />
@@ -155,8 +155,6 @@ function PremiumCard() {
 
 function AccountCard() {
   const session = useSession();
-  const [email, setEmail] = useState('');
-  const [note, setNote] = useState('');
   if (!accountsEnabled) return null;
   return (
     <section className="mt-6">
@@ -175,18 +173,7 @@ function AccountCard() {
           <>
             <p className="font-semibold">Save your data to an account</p>
             <p className="mt-0.5 text-xs text-silver">Use the app on any phone and never lose your log.</p>
-            <button onClick={() => signInWithGoogle().catch((e: Error) => setNote(e.message))} className="btn mt-3 w-full bg-raised text-ink"><GoogleIcon /> Continue with Google</button>
-            <div className="mt-2 flex gap-2">
-              <input type="email" inputMode="email" className="field !h-12 flex-1" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
-              <button
-                disabled={!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())}
-                onClick={() => signInWithEmail(email.trim()).then(() => setNote('Check your email for a sign-in link.'), (e: Error) => setNote(e.message))}
-                className="btn-ghost !h-12 !px-4 text-sm"
-              >
-                Email link
-              </button>
-            </div>
-            {note && <p className="mt-2 text-xs text-silver">{note}</p>}
+            <div className="mt-3"><SignInButtons /></div>
           </>
         )}
       </div>

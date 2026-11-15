@@ -20,8 +20,10 @@ interface Row { key: string; title: string; sub?: string; why?: string; food?: F
 function amountLine(food: Food, remaining: number): string {
   const grams = gramsForProtein(food.per100.protein, remaining);
   if (grams && grams <= 350) return `~${fmt(grams)} g covers what’s left`;
-  const portion = 150;
-  return `${portion} g gives ${fmt((food.per100.protein * portion) / 100)} g protein`;
+  // Use the food's own serving (e.g. "2 tbsp, 32 g" for peanut butter) rather than a fixed 150 g.
+  const serving = food.portions?.find((x) => x.grams >= 15 && x.grams <= 400);
+  const g = serving?.grams ?? 150;
+  return `${serving ? `${serving.label} (${fmt(g)} g)` : `${g} g`} gives ${fmt((food.per100.protein * g) / 100)} g protein`;
 }
 
 /**
@@ -40,11 +42,19 @@ export function Suggestions({ remaining }: { remaining: number }) {
   const baseRows: Row[] = useMemo(() => {
     if (!db) return [];
     const eatenIds = new Set(entries.filter((e) => e.date === todayKey()).map((e) => e.foodId));
+    // Whole foods only, one of each kind ("Ground beef" once, not crumbles + patty), short names.
+    const seen = new Set<string>();
     return db.quickPicks
-      .filter((f) => fitsDiet(f, profile?.diet) && !eatenIds.has(f.id) && f.state !== 'raw' && f.state !== 'dry')
+      .filter((f) => fitsDiet(f, profile?.diet) && !eatenIds.has(f.id) && f.state !== 'raw' && f.state !== 'dry' && !/powder|supplement|isolate|bar\b/i.test(f.name))
       .sort((a, b) => b.per100.protein - a.per100.protein)
+      .filter((f) => {
+        const short = splitName(f.name).title.split(',')[0].trim().toLowerCase();
+        if (seen.has(short)) return false;
+        seen.add(short);
+        return true;
+      })
       .slice(0, 4)
-      .map((f) => ({ key: f.id, title: splitName(f.name).title, food: f, query: splitName(f.name).title }));
+      .map((f) => { const short = splitName(f.name).title.split(',')[0].trim(); return { key: f.id, title: short, food: f, query: short }; });
   }, [db, entries, profile?.diet]);
 
   const aiRows: Row[] = useMemo(

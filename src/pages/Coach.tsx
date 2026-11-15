@@ -4,6 +4,7 @@ import { ArrowUp, ChevronRight, ImagePlus, Loader2, RotateCcw, Sparkles, X } fro
 import { blobToBase64, resizeImage } from '@/lib/photos';
 import { aiHeaders } from '@/lib/premium';
 import { SignInButtons } from '@/components/SignIn';
+import { accountsEnabled, useSession } from '@/lib/account';
 import { useStore } from '@/store/useStore';
 import { useDay, useFoodDb } from '@/lib/hooks';
 import { confidentMatch, splitName } from '@/lib/foods';
@@ -87,6 +88,7 @@ export default function Coach() {
 }
 
 function Chat() {
+  const session = useSession();
   const [msgs, setMsgs] = useState<Msg[]>(load);
   const [text, setText] = useState('');
   const [busy, setBusy] = useState(false);
@@ -149,6 +151,12 @@ function Chat() {
             <div className="mt-4 flex flex-wrap gap-2">
               {STARTERS.map((s) => <button key={s} onClick={() => (s.startsWith('Send a photo') ? fileRef.current?.click() : send(s))} className="chip !h-9 !bg-raised text-[14px]">{s.startsWith('Send a photo') && <ImagePlus size={15} />}{s}</button>)}
             </div>
+            {accountsEnabled && session === null && (
+              <div className="mt-5 border-t border-line pt-4">
+                <p className="mb-3 text-sm font-semibold">Sign in free to chat — 5 coach messages a month</p>
+                <SignInButtons />
+              </div>
+            )}
           </div>
         )}
 

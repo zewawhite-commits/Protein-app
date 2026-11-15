@@ -1,9 +1,9 @@
+import { SignInButtons } from '@/components/SignIn';
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Camera, Check, Loader2, Lock, Mail, MessageCircle, NotebookPen } from 'lucide-react';
+import { ArrowLeft, Camera, Check, Loader2, Lock, MessageCircle, NotebookPen } from 'lucide-react';
 import { useStore } from '@/store/useStore';
-import { accountsEnabled, signInWithEmail, signInWithGoogle, useSession } from '@/lib/account';
-import { GoogleIcon } from '@/components/BrandIcons';
+import { accountsEnabled, useSession } from '@/lib/account';
 import {
   activate, chargedInOtherCurrency, displayPrice, fetchPlans, formatPrice, USD_PRICES, intervalLabel, isPremiumActive, manageSubscription, restoreForAccount, startCheckout,
   type PlanInfo, type Tier,
@@ -162,7 +162,7 @@ export default function Premium() {
                   onClick={() => setTier(t)}
                   price={displayPrice(p)}
                   sub={`per ${intervalLabel(p.interval)}`}
-                  badge={save > 0 ? `Save ${save}%` : t === 'pro' ? 'Most scans' : undefined}
+                  badge={save > 0 ? `Save ${save}%` : t === 'pro' ? 'Plans + ideas' : undefined}
                   scans={p.scans}
                 />
               );
@@ -172,13 +172,7 @@ export default function Premium() {
           {needsAccount ? (
             <div className="mt-6">
               <p className="mb-3 text-center text-sm text-silver">Create a free account to subscribe — your plan follows you to any phone.</p>
-              <div className="grid gap-2.5">
-                <button disabled={busy} onClick={() => run(signInWithGoogle)} className="btn bg-surface text-ink" style={{ boxShadow: 'var(--shadow)' }}><GoogleIcon /> Continue with Google</button>
-                <div className="flex gap-2">
-                  <input type="email" inputMode="email" className="field flex-1" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
-                  <button disabled={busy || !validEmail} onClick={() => run(() => signInWithEmail(email.trim()), 'Check your email for a sign-in link.')} className="btn-ghost !h-14 !px-4"><Mail size={18} /></button>
-                </div>
-              </div>
+              <SignInButtons />
             </div>
           ) : !restoring ? (
             <>

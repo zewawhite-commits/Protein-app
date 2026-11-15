@@ -11,6 +11,7 @@ import { mealForNow, todayKey } from '@/lib/dates';
 import type { Food } from '@/lib/types';
 import { FoodSheet } from '@/components/FoodSheet';
 import { SignInButtons } from '@/components/SignIn';
+import { accountsEnabled, useSession } from '@/lib/account';
 import { FoodVisual } from '@/components/FoodIcon';
 import { Segmented, StateBadge, cx, fmt } from '@/components/ui';
 import { haptic, toast } from '@/components/fx';
@@ -18,6 +19,7 @@ import { haptic, toast } from '@/components/fx';
 type Phase = 'camera' | 'describe' | 'signin' | 'analyzing' | 'results' | 'unavailable' | 'premium' | 'limit' | 'error';
 
 export default function Snap() {
+  const session = useSession();
   const nav = useNavigate();
   const [params] = useSearchParams();
   const date = params.get('date') ?? todayKey();
@@ -103,6 +105,20 @@ export default function Snap() {
 
   const manualUrl = (q = '') => `/add?${new URLSearchParams({ ...(q && { q }), ...(photoId && { photo: photoId }), ...(date !== todayKey() && { date }) })}`;
 
+  // Signed out: say so before they take a photo, not after.
+  if (accountsEnabled && session === null && (phase === 'camera' || phase === 'describe')) {
+    return (
+      <div className="mx-auto min-h-dvh max-w-lg animate-fade-up px-5 pb-12 md:max-w-2xl md:px-8">
+        <header className="pt-safe flex items-center pb-4">
+          <button onClick={back} className="grid h-11 w-11 place-items-center rounded-full bg-surface" style={{ boxShadow: 'var(--shadow)' }} aria-label="Back"><ArrowLeft size={20} /></button>
+        </header>
+        <h1 className="text-[30px] font-extrabold leading-tight tracking-tight">Sign in to use AI</h1>
+        <p className="mt-2 text-[15px] leading-relaxed text-silver">A free account gets 3 AI scans and 5 coach messages a month, and keeps your log safe on any phone.</p>
+        <div className="card mt-6 p-5"><SignInButtons /></div>
+        <Link to={manualUrl()} className="btn-ghost mt-3 w-full">Search foods instead — always free</Link>
+      </div>
+    );
+  }
   if (phase === 'camera') return <Camera onClose={back} onCapture={(b) => void analyse(b)} />;
   if (phase === 'describe') {
     return (
