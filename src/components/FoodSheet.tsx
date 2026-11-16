@@ -105,7 +105,7 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
     if (g <= 0) { inputRef.current?.focus(); return; }
     savedRef.current = true;
     const crossesGoal = day.goal > 0 && before + (entry ? nutrientsFor(entry.food.per100, entry.grams).protein : 0) < day.goal && after >= day.goal;
-    if (entry) updateEntry(entry.id, { grams: round1(g), meal, photoId, ...(moveTo && moveTo !== entry.date ? { date: moveTo } : {}) });
+    if (entry) updateEntry(entry.id, { grams: round1(g), meal, photoId, ...(moveTo && moveTo !== entry.date ? { date: moveTo } : {}), ...(entry.note?.startsWith('Portion estimated') && round1(g) !== entry.grams ? { note: 'Weight set by you' } : {}) });
     else {
       const added = addEntry({ date, meal, food, grams: round1(g), photoId });
       haptic(12);

@@ -1,3 +1,4 @@
+import { Logo } from '@/components/Logo';
 import { useMemo, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Check, ChevronRight, Copy, Droplet, Drumstick, Flame, Plus, Wheat } from 'lucide-react';
@@ -62,15 +63,17 @@ export default function Today() {
       <header className="pt-safe pb-4">
         <div className="flex items-center justify-between">
           <span className="flex items-center gap-2 lg:invisible">
-            <Ring value={0.72} size={26} stroke={4} color="accent" track="line" />
+            <Logo size={30} />
             <span className="text-[22px] font-bold tracking-tight">{APP_NAME}</span>
           </span>
           <span className="flex items-center gap-2">
             {!gentle && (
-              <Pill>
-                <Flame size={15} className="text-accent" fill="currentColor" fillOpacity={0.2} />
-                <span className="num">{streak}</span>
-              </Pill>
+              <Link to="/insights" aria-label={`${streak}-day streak — see your progress`} className="transition active:scale-95">
+                <Pill>
+                  <Flame size={15} className="text-accent" fill="currentColor" fillOpacity={0.2} />
+                  <span className="num">{streak}</span>
+                </Pill>
+              </Link>
             )}
             <NotificationBell />
           </span>
@@ -85,6 +88,14 @@ export default function Today() {
       )}
 
       <WeekStrip date={date} onSelect={setDate} />
+      {!isToday && (
+        <div className="mt-4 flex items-center gap-3 rounded-[22px] bg-accent/10 px-4 py-3">
+          <span className="min-w-0 flex-1 text-[15px] font-semibold text-accent">Viewing {fromKey(date).toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })}</span>
+          <Link to={`/add?date=${date}`} className="shrink-0 rounded-full bg-accent px-3.5 py-1.5 text-sm font-bold text-white">+ Add food</Link>
+          <button onClick={() => setDate(today)} className="shrink-0 text-sm font-semibold text-accent">Today</button>
+        </div>
+      )}
+      {isToday && <Restored />}
       {isToday && <WelcomeBack />}
 
       <div className="lg:grid lg:grid-cols-[1.1fr_1fr] lg:items-start lg:gap-8">
@@ -328,5 +339,31 @@ function CopyYesterday() {
     >
       <Copy size={16} /> Copy yesterday’s meals · {fmt(kcal)} kcal
     </button>
+  );
+}
+
+/** After signing in to an account that already has answers: explain why setup was skipped, and offer to redo it. */
+function Restored() {
+  const [show, setShow] = useState(() => { try { return sessionStorage.getItem('provora-restored') === '1'; } catch { return false; } });
+  if (!show) return null;
+  const close = () => { try { sessionStorage.removeItem('provora-restored'); } catch { /* ignore */ } setShow(false); };
+  return (
+    <div className="card mt-4 p-5">
+      <p className="text-[17px] font-bold">Welcome back</p>
+      <p className="mt-1 text-sm leading-relaxed text-silver">This account already had your goals and history, so we restored them instead of asking the setup questions again.</p>
+      <div className="mt-4 flex gap-2">
+        <button onClick={close} className="btn-primary !h-12 flex-1 text-sm">Looks right</button>
+        <button
+          onClick={() => {
+            if (!confirm('Answer the setup questions again? Your food log and history stay.')) return;
+            close();
+            useStore.setState({ profile: null });
+          }}
+          className="btn-ghost !h-12 !px-4 text-sm"
+        >
+          Redo setup
+        </button>
+      </div>
+    </div>
   );
 }

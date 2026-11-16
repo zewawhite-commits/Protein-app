@@ -3,7 +3,7 @@ import { ArrowLeft } from 'lucide-react';
 import { APP_NAME } from '@/components/fx';
 
 export const SUPPORT_EMAIL: string | undefined = import.meta.env.VITE_SUPPORT_EMAIL || undefined;
-const UPDATED = '15 November 2026';
+const UPDATED = '16 November 2026';
 
 function Page({ title, children }: { title: string; children: React.ReactNode }) {
   const navigate = useNavigate();
@@ -31,7 +31,7 @@ export function Privacy() {
       <ul className="list-disc space-y-2 pl-5">
         <li><b>What you enter:</b> your food log, weights, workouts, goals, body details (age, height, weight, sex) and preferences such as cuisines and allergies.</li>
         <li><b>Account:</b> if you sign in, your email address and, with Google, your name and profile picture.</li>
-        <li><b>Photos:</b> meal photos you scan and progress photos. Progress photos stay on your phone unless you choose to share them.</li>
+        <li><b>Photos:</b> meal photos you scan and progress photos. They’re stored on your phone, not on our servers, unless you post one to the feed. Before a photo is stored or sent anywhere, the app re-saves it, which removes hidden details such as the location it was taken.</li>
         <li><b>Community:</b> posts, comments, reactions, group messages, your username and profile photo — visible to other members.</li>
         <li><b>Payments:</b> handled by Paystack. We receive your plan, payment status and the card brand and last four digits — never your full card number.</li>
         <li><b>Usage counts:</b> how many AI features you used this month, to apply plan limits.</li>
@@ -40,7 +40,7 @@ export function Privacy() {
       <H>How we use it</H>
       <ul className="list-disc space-y-2 pl-5">
         <li>To run the app: calculate your targets, show your progress and keep your data in sync across devices.</li>
-        <li>To provide AI features: when you scan a meal, describe food, chat with the coach or ask for a workout, recipe or plan, the photo or text and the relevant parts of your profile and today’s log are sent to our AI provider (Anthropic) to produce a reply. They are not used to train AI models.</li>
+        <li>To provide AI features: when you scan a meal or label, describe food, chat with the coach or ask for a workout, recipe or plan, the photo or text and the relevant parts of your profile and recent log are sent to our AI provider, Anthropic, to produce a reply. Your first name may be included so the coach can address you; your email address and account details are not sent. Under Anthropic’s commercial terms, this data isn’t used to train their models.</li>
         <li>To take payments and manage your subscription.</li>
         <li>To keep the service safe and fix problems.</li>
       </ul>
@@ -52,7 +52,7 @@ export function Privacy() {
       <p>Food, weight and body details can be health information. We use it only to provide the app to you, and we never share it for advertising. {APP_NAME} gives general guidance, not medical advice.</p>
 
       <H>Your rights</H>
-      <p>You can see, export and delete your data at any time: Settings → Export backup, and Settings → Delete account, which removes your account and everything linked to it straight away. You can also contact {contact}. If you’re in the UK or EU you also have the right to object, restrict processing and complain to your data protection authority (in the UK, the ICO).</p>
+      <p>You can see, export and delete your data at any time: Settings → Export backup, and Settings → Delete account, which removes your account and everything linked to it straight away. You can also contact {contact}. Depending on where you live, data-protection law — including the Nigeria Data Protection Act 2023, the UK GDPR and the EU GDPR — also gives you the right to correct your data, object to or restrict how it’s used, and complain to a data-protection authority (the Nigeria Data Protection Commission, or the ICO in the UK).</p>
 
       <H>How long we keep it</H>
       <p>We keep your data while your account is active. When you delete it, it’s removed from our systems within 30 days, except records we must keep by law, such as payment records.</p>

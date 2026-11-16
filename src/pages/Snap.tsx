@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Check, ChevronRight, ImagePlus, Loader2, Mic, RotateCcw, Search, Sparkles, X, Zap } from 'lucide-react';
+import { ArrowLeft, Check, ChevronRight, ImagePlus, Loader2, Mic, ScanBarcode, ScanLine, ScanText, RotateCcw, Search, Sparkles, X, Zap } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 import { useFoodDb, usePhotoUrl } from '@/lib/hooks';
 import { deletePhoto, getPhoto, savePhoto } from '@/lib/photos';
@@ -40,7 +40,7 @@ export default function Snap() {
   const [matches, setMatches] = useState<MatchedItem[]>([]);
   const [pick, setPick] = useState<{ food: Food; grams?: number; label: string; index: number } | null>(null);
   const [logged, setLogged] = useState<Set<number>>(new Set());
-  const labelMode = params.get('mode') === 'label';
+  const [labelMode, setLabelMode] = useState(params.get('mode') === 'label');
   const [label, setLabel] = useState<{ name: string; per100: Per100; servingGrams: number; unit: 'g' | 'ml'; note: string } | null>(null);
   const upsertCustomFood = useStore((s) => s.upsertCustomFood);
   const photoUrl = usePhotoUrl(photoId);
@@ -158,7 +158,7 @@ export default function Snap() {
       </div>
     );
   }
-  if (phase === 'camera') return <Camera onClose={back} onCapture={(b) => void analyse(b)} />;
+  if (phase === 'camera') return <Camera onClose={back} onCapture={(b) => void analyse(b)} mode={labelMode ? 'label' : 'food'} onMode={(m) => { haptic(); setLabelMode(m === 'label'); }} onBarcode={() => nav(`/barcode${date !== todayKey() ? `?date=${date}` : ''}`)} />;
   if (phase === 'describe') {
     return (
       <div className="mx-auto min-h-dvh max-w-lg animate-fade-up px-5 pb-12 md:max-w-2xl md:px-8">
@@ -229,8 +229,8 @@ export default function Snap() {
             matches={matches}
             logged={logged}
             onAddExtra={(food, grams) => { addEntry({ date, meal: mealForNow(), food, grams, note: 'Cooking fat added to a scanned meal' }); toast(`Added ${grams} g ${splitName(food.name).title.toLowerCase()}`); }}
-            onLogAll={(rows) => {
-              rows.forEach((r, k) => addEntry({ date, meal: mealForNow(), food: r.food, grams: r.grams, photoId: k === 0 ? photoId : undefined, note: 'Portion estimated by AI — edit to your real weight' }));
+            onLogAll={(rows: { food: Food; grams: number; index: number; confirmed: boolean }[]) => {
+              rows.forEach((r, k) => addEntry({ date, meal: mealForNow(), food: r.food, grams: r.grams, photoId: k === 0 ? photoId : undefined, note: r.confirmed ? 'Weight set by you' : 'Portion estimated by AI — edit to your real weight' }));
               setLogged((s) => { const n = new Set(s); rows.forEach((r) => n.add(r.index)); return n; });
               toast(`Logged ${rows.length} food${rows.length > 1 ? 's' : ''} — tap any to set the real weight`);
             }}
@@ -327,7 +327,7 @@ export default function Snap() {
           <p className="flex items-center gap-2 text-[17px] font-bold"><Sparkles size={18} className="text-accent" /> You’re out of AI scans</p>
           <p className="mt-2 text-sm leading-relaxed text-silver">{error || 'AI scans come with Plus and Pro.'} Picking the food yourself is always free.</p>
           <div className="mt-4 grid gap-2">
-            <Link to="/premium" className="btn-primary"><Sparkles size={17} /> Upgrade — from $2.08/month</Link>
+            <Link to="/premium" className="btn-primary"><Sparkles size={17} /> Upgrade to Plus — $4.99/month</Link>
             <Link to={manualUrl()} className="btn-ghost">Pick food manually</Link>
           </div>
         </div>
@@ -436,7 +436,7 @@ function ItemCard({ match, done, onPick, manualUrl, onLogIngredients }: { match:
 }
 
 /** Full-screen camera with a live viewfinder. Falls back to the system camera/gallery picker. */
-function Camera({ onClose, onCapture }: { onClose: () => void; onCapture: (b: Blob) => void }) {
+function Camera({ onClose, onCapture, mode, onMode, onBarcode }: { onClose: () => void; onCapture: (b: Blob) => void; mode: 'food' | 'label'; onMode: (m: 'food' | 'label') => void; onBarcode: () => void }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const captureRef = useRef<HTMLInputElement>(null);
@@ -489,7 +489,7 @@ function Camera({ onClose, onCapture }: { onClose: () => void; onCapture: (b: Bl
 
       <div className="absolute inset-x-0 top-0 flex items-center justify-between px-5" style={{ paddingTop: 'max(env(safe-area-inset-top), 1.25rem)' }}>
         <button onClick={onClose} className="grid h-11 w-11 place-items-center rounded-full bg-black/45 backdrop-blur-md" aria-label="Close camera"><X size={20} /></button>
-        <span className="flex items-center gap-1.5 rounded-full bg-black/45 px-3.5 py-2 text-xs font-semibold backdrop-blur-md"><Sparkles size={13} /> Snap your food</span>
+        <span className="flex items-center gap-1.5 rounded-full bg-black/45 px-3.5 py-2 text-xs font-semibold backdrop-blur-md"><Sparkles size={13} /> {mode === 'label' ? 'Fit the nutrition table in the frame' : 'Fit the whole plate in the frame'}</span>
         <span className="w-11" />
       </div>
 
@@ -503,8 +503,24 @@ function Camera({ onClose, onCapture }: { onClose: () => void; onCapture: (b: Bl
         </div>
       )}
 
-      <div className="absolute inset-x-0 bottom-0 flex items-center justify-between px-10" style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 2rem)' }}>
-        <button onClick={() => fileRef.current?.click()} className="grid h-12 w-12 place-items-center rounded-full bg-white/15 backdrop-blur-md" aria-label="Choose from gallery"><ImagePlus size={22} /></button>
+      <div className="absolute inset-x-0 bottom-0" style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 2rem)' }}>
+      <div className="mx-auto mb-5 grid max-w-md grid-cols-4 gap-2 px-4">
+        {([['food', 'Scan food', ScanLine], ['barcode', 'Barcode', ScanBarcode], ['label', 'Food label', ScanText], ['library', 'Library', ImagePlus]] as const).map(([m, label, Icon]) => {
+          const on = m === mode;
+          return (
+            <button
+              key={m}
+              onClick={() => (m === 'barcode' ? onBarcode() : m === 'library' ? fileRef.current?.click() : onMode(m))}
+              className={cx('flex flex-col items-center gap-1 rounded-2xl py-2.5 text-[12px] font-semibold backdrop-blur-md transition active:scale-95', on ? 'bg-white text-black' : 'bg-black/45 text-white')}
+              aria-pressed={on}
+            >
+              <Icon size={19} /> {label}
+            </button>
+          );
+        })}
+      </div>
+      <div className="flex items-center justify-between px-10">
+        <span className="w-12" />
         <button
           onClick={() => (live === 'on' ? shoot() : captureRef.current?.click())}
           className="grid h-20 w-20 place-items-center rounded-full border-4 border-white/90 transition active:scale-95"
@@ -513,6 +529,7 @@ function Camera({ onClose, onCapture }: { onClose: () => void; onCapture: (b: Bl
           <span className="h-[62px] w-[62px] rounded-full bg-white" />
         </button>
         <span className="w-12" />
+      </div>
       </div>
 
       <input ref={fileRef} type="file" accept="image/*" hidden onChange={(e) => e.target.files?.[0] && onCapture(e.target.files[0])} />
@@ -565,10 +582,12 @@ function IngredientList({ match, onLog }: { match: MatchedItem; onLog: (rows: { 
  * The whole plate at a glance: every food found, with totals from the best database match
  * and the AI's portion estimate. Clearly an estimate until the person weighs each food.
  */
-function PlateSummary({ matches, logged, onLogAll, onAddExtra }: { matches: MatchedItem[]; logged: Set<number>; onLogAll: (rows: { food: Food; grams: number; index: number }[]) => void; onAddExtra: (food: Food, grams: number) => void }) {
+function PlateSummary({ matches, logged, onLogAll, onAddExtra }: { matches: MatchedItem[]; logged: Set<number>; onLogAll: (rows: { food: Food; grams: number; index: number; confirmed: boolean }[]) => void; onAddExtra: (food: Food, grams: number) => void }) {
   const [extras, setExtras] = useState<string[]>([]);
-  const rows = matches.map((m, index) => ({ index, name: m.item.name, food: m.candidates[0], grams: m.item.estimatedGrams }));
-  const usable = rows.filter((r) => r.food && r.grams > 0) as { index: number; name: string; food: Food; grams: number }[];
+  // Grams the person typed in, by food; anything not typed is still the AI's estimate.
+  const [set, setSet] = useState<Record<number, number>>({});
+  const rows = matches.map((m, index) => ({ index, name: m.item.name, food: m.candidates[0], grams: set[index] ?? m.item.estimatedGrams, confirmed: set[index] != null }));
+  const usable = rows.filter((r) => r.food && r.grams > 0) as { index: number; name: string; food: Food; grams: number; confirmed: boolean }[];
   const t = usable.reduce((a, r) => {
     const k = r.grams / 100;
     return { kcal: a.kcal + (r.food.per100.kcal ?? 0) * k, protein: a.protein + r.food.per100.protein * k, carbs: a.carbs + (r.food.per100.carbs ?? 0) * k, fat: a.fat + (r.food.per100.fat ?? 0) * k };
@@ -580,7 +599,7 @@ function PlateSummary({ matches, logged, onLogAll, onAddExtra }: { matches: Matc
     <div className="card mt-4 p-5">
       <div className="flex items-center justify-between gap-3">
         <p className="text-[17px] font-bold">Whole plate</p>
-        <span className="rounded-full border border-dashed border-silver/60 px-2.5 py-1 text-[12px] font-semibold text-silver">Estimate</span>
+        <span className="rounded-full border border-dashed border-silver/60 px-2.5 py-1 text-[12px] font-semibold text-silver">{usable.length && usable.every((r) => r.confirmed) ? 'Your weights' : 'Estimate'}</span>
       </div>
       <div className="mt-3 grid grid-cols-4 gap-2 text-center">
         {([['Calories', t.kcal, ''], ['Protein', t.protein, 'g'], ['Carbs', t.carbs, 'g'], ['Fat', t.fat, 'g']] as const).map(([l, v, u]) => (
@@ -592,14 +611,23 @@ function PlateSummary({ matches, logged, onLogAll, onAddExtra }: { matches: Matc
       </div>
       <ul className="mt-3 space-y-1.5">
         {rows.map((r) => (
-          <li key={r.index} className="flex items-center justify-between gap-3 text-[14px]">
-            <span className="min-w-0 truncate font-medium">{logged.has(r.index) && <Check size={14} strokeWidth={3} className="mr-1 inline text-accent" />}{r.name}</span>
-            <span className="num shrink-0 text-silver">{r.food && r.grams > 0 ? `~${fmt(r.grams)} g · ${fmt(((r.food.per100.kcal ?? 0) * r.grams) / 100)} kcal` : 'pick a match below'}</span>
+          <li key={r.index} className="flex items-center justify-between gap-2 text-[14px]">
+            <span className="min-w-0 flex-1 truncate font-medium">{logged.has(r.index) && <Check size={14} strokeWidth={3} className="mr-1 inline text-accent" />}{r.name}</span>
+            {r.food ? (
+              <>
+                <label className={cx('flex shrink-0 items-center rounded-xl px-2 py-1', r.confirmed ? 'bg-accent/10 text-accent' : 'border border-dashed border-silver/50 text-silver')} title={r.confirmed ? 'Weight you entered' : 'AI estimate — tap to enter the real weight'}>
+                  {!r.confirmed && <span className="mr-0.5">~</span>}
+                  <input inputMode="numeric" aria-label={`Grams of ${r.name}`} disabled={logged.has(r.index)} value={r.grams || ''} onChange={(e) => { const g = Number(e.target.value.replace(/\D/g, '').slice(0, 4)); setSet((s) => ({ ...s, [r.index]: g })); }} className="num w-11 bg-transparent text-right font-semibold outline-none" />
+                  <span className="ml-0.5">g</span>
+                </label>
+                <span className="num w-[70px] shrink-0 text-right text-silver">{fmt(((r.food.per100.kcal ?? 0) * r.grams) / 100)} kcal</span>
+              </>
+            ) : <span className="shrink-0 text-silver">pick a match below</span>}
           </li>
         ))}
       </ul>
       <p className="mt-3 text-xs leading-relaxed text-dim">
-        Nutrition comes from the food database. Portion sizes are the AI’s guess from the photo — a photo can’t weigh food, so weigh it for exact numbers.{missing > 0 ? ` ${missing} food${missing > 1 ? 's' : ''} need a match first.` : ''}
+        Nutrition comes from the food database. Weights marked ~ are the AI’s guess from the photo — a photo can’t weigh food. Tap a weight to enter the real one.{missing > 0 ? ` ${missing} food${missing > 1 ? 's' : ''} need a match first.` : ''}
       </p>
       <div className="mt-4 rounded-2xl bg-raised p-3.5">
         <p className="text-[14px] font-semibold">Cooked with oil or butter?</p>

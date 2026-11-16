@@ -1,8 +1,9 @@
+import { Logo } from './Logo';
 import { useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { LogMenu } from './LogMenu';
 import { BarChart3, Camera, House, Plus, Sparkles, UserRound, Users } from 'lucide-react';
-import { Ring, cx } from './ui';
+import { cx } from './ui';
 import { APP_NAME } from './fx';
 
 const tabs = [
@@ -28,7 +29,7 @@ export function Layout() {
       {/* Side menu (large screens) */}
       <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-line/60 bg-surface px-4 py-6 lg:flex">
         <div className="flex items-center gap-2.5 px-3">
-          <Ring value={0.72} size={28} stroke={4} color="accent" track="line" />
+          <Logo size={30} />
           <span className="text-xl font-bold tracking-tight">{APP_NAME}</span>
         </div>
         <button onClick={() => nav(`/add${q}`)} className="btn-primary mt-8 w-full !h-12"><Plus size={18} /> Log food</button>

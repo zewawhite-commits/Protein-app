@@ -12,9 +12,9 @@ import { Segmented, cx } from '@/components/ui';
 
 /** Planned prices, shown until live plans load from the payment provider (which sets the real charge). */
 const PREVIEW = [
-  { name: 'Free', perks: ['Calories, macros & 18,000+ foods', 'Barcode, exercise, progress & feed', '3 AI scans + 5 coach messages a month'], year: '$0', month: '', perMonth: '' },
-  { name: 'Plus', perks: ['Unlimited AI photo scans & describe', 'Unlimited AI coach chat', 'AI workout guide for your week', 'AI recipes with full nutrition'], year: '$24.99/yr', month: '$4.99/mo', perMonth: '≈ $2.08/mo', best: true },
-  { name: 'Pro', perks: ['Everything in Plus', 'AI eating plans built for you', 'AI meal ideas from your cuisines'], year: '$39.99/yr', month: '$7.99/mo', perMonth: '≈ $3.33/mo' },
+  { name: 'Free', perks: ['Calories, macros & 18,000+ foods', 'Barcode, exercise, progress & feed', '3 AI scans + 5 coach messages a month'], month: '$0', year: 'forever' },
+  { name: 'Plus', perks: ['Unlimited AI photo scans & describe', 'Unlimited AI coach chat', 'AI workout guide for your week', 'AI recipes with full nutrition'], month: '$4.99/mo', year: 'or $41.99 a year · save 30%', best: true },
+  { name: 'Pro', perks: ['Everything in Plus', 'AI eating plans built for you', 'AI meal ideas from your cuisines'], month: '$7.99/mo', year: 'or $76.99 a year · save 20%' },
 ];
 
 const TIER_INFO: Record<'free' | Tier, { name: string; perks: string[] }> = {
@@ -131,8 +131,8 @@ export default function Premium() {
                     <ul className="mt-2 space-y-1 text-sm text-silver">{t.perks.map((x) => <li key={x} className="flex items-center gap-2"><Check size={15} className="text-accent" strokeWidth={3} />{x}</li>)}</ul>
                   </div>
                   <div className="text-right">
-                    <p className="num text-[22px] font-extrabold">{t.year}</p>
-                    {t.month && <p className="num text-sm text-silver">{t.perMonth} · or {t.month}</p>}
+                    <p className="num text-[22px] font-extrabold">{t.month}</p>
+                    <p className="num text-sm text-silver">{t.year}</p>
                   </div>
                 </div>
               </div>

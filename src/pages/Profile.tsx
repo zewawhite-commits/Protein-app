@@ -99,6 +99,11 @@ export default function Profile({ mode = 'profile' }: { mode?: 'profile' | 'sett
           <PreferencesCard onEdit={() => setEditing(true)} />
           <PremiumCard />
           <SubscriptionGroup />
+          <Group title="Appearance">
+            <Row icon={settings.theme === 'light' ? <Sun size={18} /> : <Moon size={18} />} label="Theme">
+              <Segmented<Theme> value={settings.theme} onChange={(t) => updateSettings({ theme: t })} options={[{ value: 'dark', label: 'Dark' }, { value: 'light', label: 'Light' }, { value: 'system', label: 'Auto' }]} />
+            </Row>
+          </Group>
           <Group title="More">
             <Link to="/settings" className="block"><Row icon={<SettingsIcon size={18} />} label="Settings & account" chevron /></Link>
             <Link to="/privacy" className="block"><Row icon={<Lock size={18} />} label="Privacy policy" chevron /></Link>
@@ -158,6 +163,7 @@ export default function Profile({ mode = 'profile' }: { mode?: 'profile' | 'sett
 
       <Group title="Your data">
         <p className="px-4 pb-1 pt-3 text-sm leading-relaxed text-silver">Your data is never sold and Provora has no ads. Photos and text you send to AI features are used only to answer you, not to train AI models.</p>
+        <button onClick={() => { if (confirm('Answer the setup questions again? Your food log and history stay.')) useStore.setState({ profile: null }); }} className="w-full"><Row icon={<RotateCcw size={18} />} label="Redo setup questions" chevron /></button>
         <button onClick={downloadCsv} className="w-full"><Row icon={<Table size={18} />} label="Download food log (spreadsheet)" chevron /></button>
         <button onClick={download} className="w-full"><Row icon={<Download size={18} />} label="Export backup" chevron /></button>
         <button onClick={() => fileRef.current?.click()} className="w-full"><Row icon={<Upload size={18} />} label="Restore backup" chevron /></button>
@@ -364,7 +370,7 @@ function SubscriptionGroup() {
         </>
       ) : (
         <>
-          <Link to="/premium" className="block"><Row icon={<CreditCard size={18} />} label="Upgrade" chevron><span className="text-sm font-semibold text-accent">From $2.08/mo</span></Row></Link>
+          <Link to="/premium" className="block"><Row icon={<CreditCard size={18} />} label="Upgrade" chevron><span className="text-sm font-semibold text-accent">From $4.99/mo</span></Row></Link>
           <Link to="/premium?restore=1" className="block"><Row icon={<RotateCcw size={18} />} label="Restore purchase" chevron /></Link>
         </>
       )}

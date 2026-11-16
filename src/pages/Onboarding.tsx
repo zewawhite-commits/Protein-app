@@ -1,3 +1,4 @@
+import { Logo } from '@/components/Logo';
 import { useNavigate } from 'react-router-dom';
 import { DIET_PREFS, TRAINING } from '@/lib/cuisines';
 import { useState, type ReactNode } from 'react';
@@ -13,7 +14,7 @@ import { AVOIDS, CUISINES } from '@/lib/cuisines';
 import { dailyGoal, fromKg, round1, toKg } from '@/lib/nutrition';
 import { dailyTargets, weeksToGoal } from '@/lib/energy';
 import type { ActivityLevel, Diet, FitnessGoal } from '@/lib/types';
-import { Ring, Segmented, cx, fmt } from '@/components/ui';
+import { Segmented, cx, fmt } from '@/components/ui';
 import { haptic } from '@/components/fx';
 
 type Option<T> = { value: T; label: string; sub: string; icon: typeof Dumbbell };
@@ -42,8 +43,8 @@ const OBSTACLES = ['Lack of consistency', 'Busy schedule', 'Unhealthy eating hab
 
 const PLAN_CHOICES = [
   { tier: 'free' as const, name: 'Free', price: '$0', sub: 'forever', perks: ['Calories, macros & 18,000+ foods', 'Barcode, exercise, progress & feed', '3 AI scans + 5 coach messages a month'] },
-  { tier: 'plus' as const, name: 'Plus', price: '$2.08/mo', sub: '$24.99 a year · or $4.99/mo', badge: 'Most popular', perks: ['Unlimited AI photo scans & coach', 'AI workout guide for your week', 'AI recipes with full nutrition'] },
-  { tier: 'pro' as const, name: 'Pro', price: '$3.33/mo', sub: '$39.99 a year · or $7.99/mo', perks: ['Everything in Plus', 'AI eating plans built for you', 'AI meal ideas from your cuisines'] },
+  { tier: 'plus' as const, name: 'Plus', price: '$4.99/mo', sub: 'or $41.99 a year · save 30%', badge: 'Most popular', perks: ['Unlimited AI photo scans & coach', 'AI workout guide for your week', 'AI recipes with full nutrition'] },
+  { tier: 'pro' as const, name: 'Pro', price: '$7.99/mo', sub: 'or $76.99 a year · save 20%', perks: ['Everything in Plus', 'AI eating plans built for you', 'AI meal ideas from your cuisines'] },
 ];
 
 export default function Onboarding() {
@@ -506,7 +507,7 @@ function Welcome({ signedIn, email, onStart }: { signedIn: boolean; email?: stri
   return (
     <div className="relative mx-auto flex min-h-dvh max-w-lg flex-col px-5 md:max-w-xl pb-8">
       <div className="pt-safe mt-10 flex items-center gap-3 animate-fade-up">
-        <Ring value={0.72} size={40} stroke={5} color="ink" track="line" />
+        <Logo size={44} />
         <span className="text-lg font-semibold tracking-tight">Provora</span>
       </div>
       <h1 className="mt-12 animate-fade-up text-[44px] font-extrabold leading-[1.02] tracking-tight">

@@ -133,6 +133,8 @@ export async function syncOnSignIn(userId: string) {
   // A guest who only did the sign-up questions, then signed in to an existing account: the account wins.
   if (data && (remoteUpdated > localUpdated || !local.ownerId || (!local.profile && !local.entries.length))) {
     const snap = data.data as Snapshot;
+    // Signing in on a new phone skips the setup questions — say why, once.
+    if (!local.profile && snap.profile) { try { sessionStorage.setItem('provora-restored', '1'); } catch { /* ignore */ } }
     useStore.getState().importData(snap);
     useStore.setState({ lastModified: remoteUpdated, premium: local.premium, ownerId: userId });
     lastPushed = JSON.stringify(snap);

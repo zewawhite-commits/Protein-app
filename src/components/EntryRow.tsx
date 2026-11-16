@@ -17,6 +17,7 @@ export function EntryRow({ entry, onClick }: { entry: LogEntry; onClick?: () => 
         <p className="num mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm font-medium text-silver">
           <StateBadge state={entry.food.state} className="shrink-0" />
           <span className="whitespace-nowrap">{fmt(entry.grams)} g</span>
+          {entry.note?.startsWith('Portion estimated') && <span className="whitespace-nowrap rounded-full border border-dashed border-silver/60 px-1.5 text-[11px] font-semibold leading-4" title="The AI guessed this weight from the photo. Tap to set the real weight.">estimated</span>}
           <span className="whitespace-nowrap"><span className="text-accent">P {fmt(n.protein, n.protein < 10 ? 1 : 0)}</span>{n.carbs != null && <> · C {fmt(n.carbs)}</>}{n.fat != null && <> · F {fmt(n.fat)}</>}</span>
         </p>
       </div>
