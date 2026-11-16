@@ -134,7 +134,7 @@ export default function Today() {
       </div>
 
       <ExerciseList date={date} />
-      {isToday && !quietAi && <div className="mt-2"><Suggestions remaining={Math.max(0, goal - totals.protein)} /></div>}
+      {isToday && !quietAi && <div className="mt-2"><Suggestions remaining={Math.max(0, goal - totals.protein)} kcalLeft={targets ? targets.kcal - totals.kcal : undefined} /></div>}
 
       <FoodSheet food={editing ? entryAsFood(editing, lookup) : null} entry={editing ?? undefined} date={date} onClose={() => setEditing(null)} />
     </div>

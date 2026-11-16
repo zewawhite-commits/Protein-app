@@ -34,7 +34,9 @@ export async function POST(request: Request): Promise<Response> {
     return json({ ...(await coachWithClient(new Anthropic(), turns, cleanContext(body?.context), image)), quota: { left: coach.left, limit: coach.limit, tier: coach.tier } });
   } catch (e) {
     if (e instanceof Anthropic.RateLimitError) return json({ error: 'Busy — try again in a moment.' }, 429);
+    if (e instanceof Anthropic.APIError) console.error('[ai]', e.status, e.message);
     if (e instanceof Anthropic.APIError) return json({ error: `Coach service error (${e.status ?? 'network'}).` }, 502);
+    console.error('[chat]', (e as Error)?.message ?? e);
     return json({ error: (e as Error).message || 'Could not reply.' }, 500);
   }
 }

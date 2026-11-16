@@ -48,7 +48,9 @@ export async function POST(request: Request): Promise<Response> {
     return json(scansLeft != null ? { ...result, scansLeft, scanLimit: g.limit } : result, 200);
   } catch (e) {
     if (e instanceof Anthropic.RateLimitError) return json({ error: 'Busy — try again in a moment.' }, 429);
+    if (e instanceof Anthropic.APIError) console.error('[ai]', e.status, e.message);
     if (e instanceof Anthropic.APIError) return json({ error: `Recognition service error (${e.status ?? 'network'}).` }, 502);
+    console.error('[recognize]', (e as Error)?.message ?? e);
     return json({ error: (e as Error).message || 'Recognition failed.' }, 500);
   }
 }

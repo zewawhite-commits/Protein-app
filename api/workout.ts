@@ -18,7 +18,9 @@ export async function POST(request: Request): Promise<Response> {
     return json(await workoutWithClient(new Anthropic(), cleanContext(body?.context), cleanWorkoutRequest(body?.request), contextText));
   } catch (e) {
     if (e instanceof Anthropic.RateLimitError) return json({ error: 'Busy — try again in a moment.' }, 429);
+    if (e instanceof Anthropic.APIError) console.error('[ai]', e.status, e.message);
     if (e instanceof Anthropic.APIError) return json({ error: `Workout service error (${e.status ?? 'network'}).` }, 502);
+    console.error('[workout]', (e as Error)?.message ?? e);
     return json({ error: (e as Error).message || 'Could not make a workout guide.' }, 500);
   }
 }

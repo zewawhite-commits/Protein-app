@@ -7,6 +7,10 @@ interface Stats {
   loggedWeight: number; loggedWorkout: number; avgDaysLogged: number; day2Rate: number | null;
   week2: { eligible: number; returned: number; rate: number | null };
   aiThisMonth: Record<string, { people: number; uses: number }>;
+  activeToday?: number;
+  retention?: Record<'day1' | 'day7' | 'day30', { eligible: number; returned: number; rate: number | null }>;
+  topFoods?: { name: string; entries: number; people: number }[];
+  aiCost?: { estimatedUsd: number; perActivePerson: number; people: number };
 }
 const AI_LABEL: Record<string, string> = { scan: 'AI scans', coach: 'Coach messages', workout: 'Workout guides', recipe: 'AI recipes', plan: 'Eating plans', ideas: 'Meal ideas' };
 
@@ -34,7 +38,9 @@ export function OwnerStats() {
     ['Active this week', String(s.activeLast7Days), `${s.activeLast30Days} in the last 30 days`],
     ['Logged a weight', String(s.loggedWeight), `${s.loggedWorkout} logged a workout`],
     ['Average days logged', String(s.avgDaysLogged), 'per account'],
+    ...(s.activeToday != null ? [['Logged today', String(s.activeToday), 'people'] as [string, string, string]] : []),
   ];
+  const ret = s.retention;
   return (
     <section className="mt-6">
       <p className="mb-3 px-1 text-sm font-semibold text-silver">Your app’s numbers <span className="font-normal text-dim">(only you see this)</span></p>
@@ -48,6 +54,31 @@ export function OwnerStats() {
             </div>
           ))}
         </div>
+        {ret && (
+          <div className="mt-3 rounded-2xl bg-raised p-3.5">
+            <p className="text-[14px] font-semibold">Retention</p>
+            <div className="mt-2 grid grid-cols-3 gap-2 text-center">
+              {([['Day 1', ret.day1, 'next day'], ['Week 1', ret.day7, 'days 7–13'], ['Month 1', ret.day30, 'days 30–36']] as const).map(([l, r, w]) => (
+                <div key={l}>
+                  <p className="num text-[20px] font-extrabold leading-none">{pct(r.rate)}</p>
+                  <p className="mt-1 text-[13px] font-semibold">{l}</p>
+                  <p className="text-[11px] text-silver">{r.eligible ? `${r.returned} of ${r.eligible} · ${w}` : 'not enough time yet'}</p>
+                </div>
+              ))}
+            </div>
+            <p className="mt-2 text-[12px] text-dim">Share of people who logged food in that window after joining.</p>
+          </div>
+        )}
+        {s.topFoods && s.topFoods.length > 0 && (
+          <div className="mt-3 rounded-2xl bg-raised p-3.5">
+            <p className="text-[14px] font-semibold">Most-logged foods (30 days)</p>
+            <ol className="mt-1.5 space-y-1 text-[14px]">
+              {s.topFoods.map((f, i) => (
+                <li key={f.name} className="flex justify-between gap-3"><span className="truncate">{i + 1}. {f.name}</span><span className="num shrink-0 text-silver">{f.people} people · {f.entries}×</span></li>
+              ))}
+            </ol>
+          </div>
+        )}
         {Object.keys(s.aiThisMonth).length > 0 && (
           <div className="mt-3 rounded-2xl bg-raised p-3.5">
             <p className="text-[14px] font-semibold">AI use this month</p>
@@ -56,6 +87,12 @@ export function OwnerStats() {
                 <li key={k} className="flex justify-between"><span>{AI_LABEL[k] ?? k}</span><span className="num font-semibold">{v.uses} <span className="font-normal text-silver">by {v.people} people</span></span></li>
               ))}
             </ul>
+            {s.aiCost && (
+              <p className="mt-2 border-t border-line pt-2 text-[14px]">
+                Estimated AI cost: <b className="num">${s.aiCost.estimatedUsd.toFixed(2)}</b> this month · <span className="num">${s.aiCost.perActivePerson.toFixed(2)}</span> per person using AI
+                <span className="block text-[12px] text-dim">A rough estimate from typical request sizes. Your real bill is in the Anthropic console.</span>
+              </p>
+            )}
           </div>
         )}
         <p className="mt-3 text-xs leading-relaxed text-dim">Totals only, from signed-in users’ own logs. People using the app without an account aren’t counted.</p>

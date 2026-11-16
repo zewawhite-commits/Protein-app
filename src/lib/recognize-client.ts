@@ -139,5 +139,6 @@ export function matchItems(result: RecognitionResult & { popular?: Record<string
 /** Fire-and-forget: tell the server which record the person chose (anonymous, for review). */
 export function sendFeedback(items: { aiName: string; localName?: string; cuisine?: string; chosenFoodId: string; chosenName: string; rank: number; kind: 'item' | 'ingredient' }[]) {
   if (!items.length) return;
-  void fetch('/api/feedback', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ items }), keepalive: true }).catch(() => {});
+  // Signed-in only (the server ignores anonymous corrections), so it can't be spammed.
+  void aiHeaders().then((headers) => fetch('/api/feedback', { method: 'POST', headers, body: JSON.stringify({ items }), keepalive: true })).catch(() => {});
 }

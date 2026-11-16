@@ -96,10 +96,13 @@ export function plannedPrice(tier: Tier, billing: 'monthly' | 'yearly'): { price
   return { price: `$${y.toFixed(2)}`, sub: `per year · just $${(y / 12).toFixed(2)} a month`, save: Math.round((1 - y / (m * 12)) * 100) };
 }
 
-export const USD_PRICES: Record<string, number> = { plus_monthly: 4.99, plus_yearly: 23.95, pro_monthly: 7.99, pro_yearly: 38.35 };
+import { USD_PRICES } from './prices';
+export { USD_PRICES };
 
 /** Price as shown to people: the dollar price for known plans, otherwise the provider's own. */
 export function displayPrice(p: PlanInfo): string {
+  // A dollar plan shows exactly what Paystack will charge; other currencies show the dollar price with a note.
+  if (p.currency === 'USD') return `$${p.amount.toFixed(2)}`;
   const usd = USD_PRICES[p.id];
   return usd != null ? `$${usd.toFixed(2)}` : formatPrice(p);
 }

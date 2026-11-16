@@ -28,5 +28,11 @@ export async function GET(request: Request): Promise<Response> {
     ai[f].people++;
     ai[f].uses += u.scans as number;
   }
-  return json({ ...summarize(rows), aiThisMonth: ai });
+  // Rough AI cost per use (US$), from the model's per-token price and typical request sizes.
+  // An estimate for planning, not a bill: check the Anthropic console for real spend.
+  const COST: Record<string, number> = { scan: 0.05, coach: 0.04, workout: 0.2, recipe: 0.12, plan: 0.25, ideas: 0.02 };
+  const totalCost = Object.entries(ai).reduce((a, [k, v]) => a + v.uses * (COST[k] ?? 0.05), 0);
+  const people = new Set((usage ?? []).map((u) => String(u.subscriber).split(':').pop())).size;
+  const aiCost = { estimatedUsd: Math.round(totalCost * 100) / 100, perActivePerson: people ? Math.round((totalCost / people) * 100) / 100 : 0, people };
+  return json({ ...summarize(rows), aiThisMonth: ai, aiCost });
 }

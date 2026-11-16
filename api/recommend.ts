@@ -28,15 +28,25 @@ export async function POST(request: Request): Promise<Response> {
     cuisines: Array.isArray(body.cuisines) ? body.cuisines.map((g) => String(g).slice(0, 30)).slice(0, 26) : undefined,
     avoid: Array.isArray(body.avoid) ? body.avoid.map((g) => String(g).slice(0, 30)).slice(0, 20) : undefined,
     eatenToday: Array.isArray(body.eatenToday) ? body.eatenToday.map((s) => String(s).slice(0, 60)).slice(0, 15) : [],
+    remainingKcal: typeof body.remainingKcal === 'number' && Math.abs(body.remainingKcal) < 10000 ? Math.round(body.remainingKcal) : undefined,
+    recent: Array.isArray(body.recent) ? body.recent.map((s) => String(s).slice(0, 60)).slice(0, 25) : undefined,
+    meal: (['breakfast', 'lunch', 'dinner', 'snack'] as const).includes(body.meal as 'snack') ? body.meal : undefined,
+    maxMinutes: typeof body.maxMinutes === 'number' && body.maxMinutes > 0 && body.maxMinutes <= 240 ? Math.round(body.maxMinutes) : undefined,
+    budget: body.budget === 'low' ? 'low' : 'any',
+    onHand: typeof body.onHand === 'string' ? body.onHand.slice(0, 200) : undefined,
   };
   try {
     // The prompt asks the AI to respect the avoid list; this checks it did.
     const avoid = avoidSet({ avoid: req.avoid });
-    const ideas = (await ideasWithClient(new Anthropic(), req)).filter((i) => !allergensIn(`${i.name} ${i.localName}`, avoid).length);
+    const ideas = (await ideasWithClient(new Anthropic(), req))
+      .filter((i) => !allergensIn(`${i.name} ${i.localName}`, avoid).length)
+      .map((i) => (allergensIn(i.swap, avoid).length ? { ...i, swap: '' } : i));
     return json({ ideas });
   } catch (e) {
     if (e instanceof Anthropic.RateLimitError) return json({ error: 'Busy — try again in a moment.' }, 429);
+    if (e instanceof Anthropic.APIError) console.error('[ai]', e.status, e.message);
     if (e instanceof Anthropic.APIError) return json({ error: `Suggestion service error (${e.status ?? 'network'}).` }, 502);
+    console.error('[recommend]', (e as Error)?.message ?? e);
     return json({ error: (e as Error).message || 'Could not get suggestions.' }, 500);
   }
 }

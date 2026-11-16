@@ -4,6 +4,9 @@ import { BrowserRouter } from 'react-router-dom';
 import './index.css';
 import App from './App';
 import { loadFoodDb } from './lib/foods';
+import { installErrorReporting } from './lib/errors';
+
+installErrorReporting();
 
 // Start fetching the food database immediately so search is instant.
 void loadFoodDb().catch(() => {});

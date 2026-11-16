@@ -26,7 +26,9 @@ export async function POST(request: Request): Promise<Response> {
     return json({ ...r, allergens: found(r) });
   } catch (e) {
     if (e instanceof Anthropic.RateLimitError) return json({ error: 'Busy — try again in a moment.' }, 429);
+    if (e instanceof Anthropic.APIError) console.error('[ai]', e.status, e.message);
     if (e instanceof Anthropic.APIError) return json({ error: `Plan service error (${e.status ?? 'network'}).` }, 502);
+    console.error('[plan]', (e as Error)?.message ?? e);
     return json({ error: (e as Error).message || 'Could not make a plan.' }, 500);
   }
 }

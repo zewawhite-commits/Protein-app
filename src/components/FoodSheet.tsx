@@ -108,9 +108,12 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
     const crossesGoal = day.goal > 0 && before + (entry ? nutrientsFor(entry.food.per100, entry.grams).protein : 0) < day.goal && after >= day.goal;
     if (entry) updateEntry(entry.id, { grams: round1(g), meal, photoId, ...(moveTo && moveTo !== entry.date ? { date: moveTo } : {}), ...(entry.note?.startsWith('Portion estimated') && round1(g) !== entry.grams ? { note: 'Weight set by you' } : {}) });
     else {
+      // Same food on the same day in the last 2 minutes: probably a double tap, so say so and offer undo.
+      const dup = useStore.getState().entries.some((e) => e.date === date && e.foodId === food.id && Date.now() - e.loggedAt < 120_000);
       const added = addEntry({ date, meal, food, grams: round1(g), photoId });
       haptic(12);
-      if (!crossesGoal)
+      if (dup) toast('You logged this a moment ago too — tap Undo if it was a mistake', { action: { label: 'Undo', run: () => useStore.getState().removeEntry(added.id) }, ms: 6000 });
+      else if (!crossesGoal)
         toast(n.kcal != null ? `Added ${fmt(n.kcal)} kcal · ${fmt(n.protein)} g protein` : `Added ${fmt(n.protein, 1)} g protein`, { action: { label: 'Undo', run: () => useStore.getState().removeEntry(added.id) } });
     }
     if (crossesGoal) {

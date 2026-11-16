@@ -193,5 +193,6 @@ export const json = (data: unknown, status = 200) =>
 
 export function fail(e: unknown) {
   if (e instanceof PaystackError) return json({ error: e.message }, e.status >= 500 ? 502 : 400);
+  console.error('[premium]', (e as Error)?.message ?? e);
   return json({ error: (e as Error).message || 'Something went wrong.' }, 500);
 }

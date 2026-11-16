@@ -25,6 +25,7 @@ export async function DELETE(request: Request): Promise<Response> {
     if (error) return json({ error: error.message }, 500);
     return json({ ok: true });
   } catch (e) {
+    console.error('[account]', (e as Error)?.message ?? e);
     return json({ error: (e as Error).message || 'Could not delete the account.' }, 500);
   }
 }

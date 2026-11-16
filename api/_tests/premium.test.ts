@@ -264,6 +264,11 @@ describe('owner stats', () => {
     const s = summarize(rows as never, now);
     expect(s).toMatchObject({ accounts: 4, finishedSetup: 3, loggedFood: 3, loggedTwoDays: 2, day2Rate: 67, activeLast7Days: 1, loggedWeight: 1, loggedWorkout: 1 });
     expect(s.week2).toEqual({ eligible: 2, returned: 1, rate: 50 });
+    expect(s.retention.day1).toEqual({ eligible: 3, returned: 1, rate: 33 });
+    expect(s.retention.day7).toEqual({ eligible: 2, returned: 1, rate: 50 });
+    expect(s.retention.day30).toEqual({ eligible: 0, returned: 0, rate: null });
+    const foods = summarize([{ updated_at: '', data: { entries: [{ date: day(1), food: { name: 'Jollof rice (party jollof)' } }, { date: day(2), food: { name: 'Jollof rice (party jollof)' } }] } }] as never, now);
+    expect(foods.topFoods).toEqual([{ name: 'Jollof rice', entries: 2, people: 1 }]);
   });
 });
 
