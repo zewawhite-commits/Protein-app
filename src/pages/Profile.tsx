@@ -1,3 +1,4 @@
+import { TargetCheck } from '@/components/NutritionInsights';
 import { SignInButtons } from '@/components/SignIn';
 import { useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
@@ -97,6 +98,7 @@ export default function Profile({ mode = 'profile' }: { mode?: 'profile' | 'sett
         <>
           <ProfileHero onEdit={() => setEditing(true)} />
           <UsageCard />
+          <TargetCheck />
           <TrialCard className="mt-5" />
           <InviteCard className="mt-5" />
           <PreferencesCard onEdit={() => setEditing(true)} />

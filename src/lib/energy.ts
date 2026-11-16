@@ -130,3 +130,28 @@ export function targetFromBurn(p: Profile, burn: number): number {
   }
   return Math.round(Math.max(floor, kcal) / 10) * 10;
 }
+
+/**
+ * Sanity checks on a person's targets, so an unusual number is explained rather than
+ * silently used. Ranges are common general guidance, not medical advice:
+ *  - protein 0.8 g/kg (adult RDA) to ~2.2 g/kg (upper end used for muscle gain / fat loss)
+ *  - calories below ~1,200 (women) / 1,500 (men) are hard to meet nutrient needs on without supervision
+ *  - calories far above maintenance are rarely intended
+ */
+export function targetWarnings(p: Profile, proteinGoal: number, kcal?: number | null): string[] {
+  const out: string[] = [];
+  const kg = p.bodyWeightKg;
+  if (kg && proteinGoal > 0) {
+    const perKg = proteinGoal / kg;
+    if (perKg > 2.5) out.push(`Your protein goal is ${Math.round(perKg * 10) / 10} g per kg of body weight — above the ~1.6–2.2 g/kg usually recommended even for building muscle. More isn’t harmful for most healthy people, but it’s rarely needed.`);
+    else if (perKg < 0.8 && !p.pregnant) out.push(`Your protein goal is ${Math.round(perKg * 10) / 10} g per kg — below the 0.8 g/kg adults generally need.`);
+  }
+  if (kcal) {
+    const floor = p.sex === 'male' ? 1500 : 1200;
+    if (kcal < floor) out.push(`${Math.round(kcal)} kcal a day is below ${floor} kcal, which makes it hard to get enough nutrients. Consider a slower pace, or check with a professional.`);
+    const m = maintenanceKcal(p);
+    if (m && kcal > m * 1.35) out.push(`${Math.round(kcal)} kcal is well above your estimated maintenance (~${Math.round(m / 50) * 50} kcal). Fine if you’re bulking on purpose or very active.`);
+  }
+  if (p.pregnant && kcal && p.calorieMode === 'fixed') out.push('While pregnant or breastfeeding, follow the calorie advice from your midwife or doctor.');
+  return out;
+}

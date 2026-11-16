@@ -1,3 +1,4 @@
+import { EatingPatterns, NutrientGaps, TargetCheck } from '@/components/NutritionInsights';
 import { useMemo, useState } from 'react';
 import { BarChart3 } from 'lucide-react';
 import { useStore, goalOn } from '@/store/useStore';
@@ -79,6 +80,9 @@ export default function Insights() {
         <WeightChart />
         <SmartTarget />
         <BeyondTheScale />
+        <TargetCheck />
+        <NutrientGaps />
+        <EatingPatterns />
         <ProgressPhotos />
         <AverageCalories />
       </div>
