@@ -4,7 +4,10 @@ import type { Food, LogEntry, Meal } from '@/lib/types';
 import { nutrientsFor, round1, scale } from '@/lib/nutrition';
 import { EXTRA_KEYS } from '@/lib/nutrients';
 import { MACRO_COLOR, NutrientList } from './Nutrients';
-import { counterparts, sourceInfo, splitName } from '@/lib/foods';
+import { counterparts, similarFoods, sourceInfo, splitName } from '@/lib/foods';
+import { fitsDiet } from '@/lib/goals';
+import { foodAllergens } from '@/lib/allergens';
+import { useAvoid } from './Allergy';
 import { deletePhoto, savePhoto } from '@/lib/photos';
 import { useFoodDb, usePhotoUrl, useDay } from '@/lib/hooks';
 import { useStore } from '@/store/useStore';
@@ -33,6 +36,14 @@ interface Props {
   preset?: { photoId?: string; aiEstimate?: number };
 }
 
+type Unit = 'g' | 'ml' | 'oz';
+const UNIT_G: Record<Unit, number> = { g: 1, ml: 1, oz: 28.3495 };
+const UNIT_NAME: Record<Unit, string> = { g: 'grams', ml: 'millilitres', oz: 'ounces' };
+const toUnit = (grams: number, u: Unit) => String(Math.round((grams / UNIT_G[u]) * (u === 'oz' ? 10 : 1)) / (u === 'oz' ? 10 : 1));
+/** Drinks, soups and other foods people measure by volume. */
+export const isLiquid = (food: { name: string; category?: string }) =>
+  /beverage|drink/i.test(food.category ?? '') || /\b(milk|juice|water|soda|cola|tea|coffee|latte|drink|smoothie|shake|beer|wine|kefir|broth|soup|yogh?urt drink|zobo|kunu)\b/i.test(food.name);
+
 export function FoodSheet({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Props) {
   return (
     <Sheet open={!!food} onClose={onClose} title={entry ? 'Edit entry' : 'Add food'}>
@@ -54,7 +65,10 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
   const day = useDay(date);
 
   // The weight is always what the user enters; nothing is pre-filled for a new entry.
-  const [grams, setGrams] = useState(entry ? String(entry.grams) : '');
+  // The amount typed, in the chosen unit; nutrition always uses grams.
+  const liquid = isLiquid(food);
+  const [unit, setUnitState] = useState<Unit>(() => { try { const u = localStorage.getItem('provora-unit') as Unit | null; return u === 'oz' || (u === 'ml' && liquid) ? u : 'g'; } catch { return 'g'; } });
+  const [grams, setGrams] = useState(entry ? toUnit(entry.grams, unit) : '');
   const [meal, setMeal] = useState<Meal>(entry?.meal ?? mealForNow());
   const [photoId, setPhotoId] = useState<string | undefined>(entry?.photoId ?? preset?.photoId);
   const [busy, setBusy] = useState(false);
@@ -74,15 +88,26 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
 
   // In edit mode, use the snapshot stored with the entry (what was logged), not today's record.
   const per100 = entry ? entry.food.per100 : food.per100;
-  const g = Math.max(0, Number(grams.replace(',', '.')) || 0);
+  const g = Math.max(0, (Number(grams.replace(',', '.')) || 0) * UNIT_G[unit]);
+  /** Set the amount from a weight in grams, shown in the current unit. */
+  const setG = (v: number) => setGrams(toUnit(v, unit));
+  const setUnit = (u: Unit) => { setGrams(g ? toUnit(g, u) : ''); setUnitState(u); try { localStorage.setItem('provora-unit', u); } catch { /* ignore */ } };
   const n = nutrientsFor(per100, g);
   const { title, detail } = splitName(food.name);
   const alt = useMemo(() => (db ? counterparts(food, db.foods) : []), [db, food]);
+  const avoid = useAvoid();
+  const diet = useStore((s) => s.profile?.diet ?? 'all');
+  // "Don't have it?" swaps from everyday foods and world dishes that fit the person's diet and avoid list.
+  const similar = useMemo(() => {
+    if (!db) return [];
+    const pool = [...db.quickPicks, ...db.foods.filter((f) => f.source === 'recipe')].filter((f) => fitsDiet(f, diet) && !foodAllergens(f, avoid).length);
+    return similarFoods(food, pool);
+  }, [db, food, diet, avoid]);
   const isFav = favs.includes(food.id);
   const before = day.totals.protein - (entry ? nutrientsFor(entry.food.per100, entry.grams).protein : 0);
   const after = before + n.protein;
 
-  const bump = (d: number) => setGrams(String(Math.max(0, Math.round(g + d))));
+  const bump = (d: number) => setG(Math.max(0, g + (unit === 'oz' ? Math.sign(d) * 14.17 : d)));
 
   async function onPhoto(file?: File) {
     if (!file) return;
@@ -102,11 +127,22 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
     setPhotoId(undefined);
   }
 
+  /** Add without counting it yet ("I'll have this later"). */
+  function planForLater() {
+    if (g <= 0) { inputRef.current?.focus(); return; }
+    savedRef.current = true;
+    addEntry({ date, meal, food, grams: round1(g), photoId, planned: true });
+    haptic(12);
+    toast('Planned — it counts once you mark it eaten');
+    onSaved?.();
+    onClose();
+  }
+
   function save() {
     if (g <= 0) { inputRef.current?.focus(); return; }
     savedRef.current = true;
     const crossesGoal = day.goal > 0 && before + (entry ? nutrientsFor(entry.food.per100, entry.grams).protein : 0) < day.goal && after >= day.goal;
-    if (entry) updateEntry(entry.id, { grams: round1(g), meal, photoId, ...(moveTo && moveTo !== entry.date ? { date: moveTo } : {}), ...(entry.note?.startsWith('Portion estimated') && round1(g) !== entry.grams ? { note: 'Weight set by you' } : {}) });
+    if (entry) updateEntry(entry.id, { grams: round1(g), meal, photoId, ...(entry.planned ? { planned: false } : {}), ...(moveTo && moveTo !== entry.date ? { date: moveTo } : {}), ...(entry.note?.startsWith('Portion estimated') && round1(g) !== entry.grams ? { note: 'Weight set by you' } : {}) });
     else {
       // Same food on the same day in the last 2 minutes: probably a double tap, so say so and offer undo.
       const dup = useStore.getState().entries.some((e) => e.date === date && e.foodId === food.id && Date.now() - e.loggedAt < 120_000);
@@ -169,30 +205,48 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
               onFocus={(e) => e.target.select()}
               placeholder="0"
               autoFocus={!entry}
-              aria-label="Weight in grams"
+              aria-label={`Amount in ${UNIT_NAME[unit]}`}
               className="num min-w-0 bg-transparent text-center text-[56px] font-extrabold leading-none outline-none"
               style={{ width: `${Math.max(2, grams.length) + 0.5}ch` }}
             />
-            <span className="text-2xl font-semibold text-silver">g</span>
+            <span className="text-2xl font-semibold text-silver">{unit}</span>
           </label>
           <button onClick={() => bump(5)} className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-raised" aria-label="Plus 5 grams"><Plus size={20} strokeWidth={2.6} /></button>
         </div>
-        <div className="-mx-5 mt-5 flex gap-2 overflow-x-auto px-5 no-scrollbar">
+        <div className="mt-3 flex items-center justify-center gap-2">
+          <Segmented<Unit> value={unit} onChange={(u) => { haptic(); setUnit(u); }} options={(liquid ? ['g', 'ml', 'oz'] as Unit[] : ['g', 'oz'] as Unit[]).map((u) => ({ value: u, label: u }))} />
+          {unit !== 'g' && g > 0 && <span className="num text-[13px] text-silver">= {fmt(g)} g{unit === 'ml' ? ' (1 ml ≈ 1 g)' : ''}</span>}
+        </div>
+        <div className="-mx-5 mt-4 flex gap-2 overflow-x-auto px-5 no-scrollbar">
           {!!preset?.aiEstimate && !entry && (
-            <button onClick={() => { haptic(); setGrams(String(preset.aiEstimate)); }} className="chip shrink-0 border border-dashed border-accent !bg-accent/10 !text-accent" title="A rough guess from your photo — weigh for accuracy">
+            <button onClick={() => { haptic(); setG(preset.aiEstimate!); }} className="chip shrink-0 border border-dashed border-accent !bg-accent/10 !text-accent" title="A rough guess from your photo — weigh for accuracy">
               AI estimate ~{preset.aiEstimate}g
             </button>
           )}
           {[50, 100, 150, 200].map((v) => (
-            <button key={v} onClick={() => setGrams(String(v))} className={cx('chip shrink-0', g === v && 'chip-on')}>{v}g</button>
+            <button key={v} onClick={() => setG(v)} className={cx('chip shrink-0', Math.round(g) === v && 'chip-on')}>{v}g</button>
           ))}
           {food.portions.map((p) => (
-            <button key={p.label} onClick={() => setGrams(String(p.grams))} className={cx('chip shrink-0', g === p.grams && 'chip-on')}>
+            <button key={p.label} onClick={() => setG(p.grams)} className={cx('chip shrink-0', Math.round(g) === Math.round(p.grams) && 'chip-on')}>
               {p.label} <span className="opacity-60">{fmt(p.grams)}g</span>
             </button>
           ))}
         </div>
       </div>
+
+      {similar.length > 0 && onSwitchFood && !entry && (
+        <div>
+          <p className="mb-2 px-1 text-[14px] font-medium text-silver">Don’t have it? Similar protein and calories:</p>
+          <div className="-mx-5 flex gap-2 overflow-x-auto px-5 no-scrollbar">
+            {similar.map((a) => (
+              <button key={a.id} onClick={() => { haptic(); onSwitchFood(a); }} className="chip shrink-0 !bg-surface !text-ink" style={{ boxShadow: 'var(--shadow)' }}>
+                <span className="max-w-[12rem] truncate">{splitName(a.name).title}</span>
+                <span className="num text-[12px] text-silver">{fmt(a.per100.protein, 0)} g P</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Switch raw/cooked */}
       {alt.length > 0 && onSwitchFood && !entry && (
@@ -316,6 +370,9 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
         )}
       </div>
 
+      {!entry && g > 0 && (
+        <button onClick={planForLater} className="w-full text-center text-[14px] font-semibold text-silver">Plan for later — don’t count it yet</button>
+      )}
       <div className="flex gap-2 pt-1">
         {entry && (
           <button onClick={() => { removeEntry(entry.id); onClose(); }} className="btn-ghost !px-5 text-danger" aria-label="Delete entry">
@@ -341,7 +398,7 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
           </button>
         )}
         <button onClick={save} disabled={g <= 0 || busy} className="btn-primary flex-1">
-          {entry ? 'Save changes' : g > 0 ? `Add to ${MEALS.find((m) => m.value === meal)?.label ?? 'log'}${n.kcal != null ? ` · ${fmt(n.kcal)} kcal` : ''}` : 'Enter the weight first'}
+          {entry ? (entry.planned ? 'Mark as eaten' : 'Save changes') : g > 0 ? `Add to ${MEALS.find((m) => m.value === meal)?.label ?? 'log'}${n.kcal != null ? ` · ${fmt(n.kcal)} kcal` : ''}` : 'Enter the weight first'}
         </button>
       </div>
     </div>

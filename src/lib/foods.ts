@@ -253,6 +253,29 @@ export function counterparts(food: Food, all: Food[]): Food[] {
     .slice(0, 6);
 }
 
+/**
+ * Swaps for a food you don't have: everyday foods (the quick picks and world dishes) with
+ * a similar amount of protein and calories per 100 g, in the same state (cooked/raw).
+ * The caller filters by diet and avoid list.
+ */
+export function similarFoods(food: Food, pool: Food[], max = 4): Food[] {
+  const p = food.per100.protein, k = food.per100.kcal;
+  if (k == null || k <= 0) return [];
+  const base = food.name.split(',')[0].split(' (')[0].toLowerCase();
+  const score = (f: Food) => {
+    const fk = f.per100.kcal ?? 0;
+    return Math.abs(f.per100.protein - p) / Math.max(p, 5) + Math.abs(fk - k) / k;
+  };
+  const seen = new Set<string>();
+  return pool
+    .filter((f) => f.id !== food.id && f.per100.kcal != null && (food.state === 'na' || f.state === food.state || f.state === 'na'))
+    .filter((f) => !f.name.toLowerCase().startsWith(base))
+    .filter((f) => Math.abs(f.per100.protein - p) <= Math.max(4, p * 0.35) && Math.abs((f.per100.kcal ?? 0) - k) <= Math.max(40, k * 0.35))
+    .sort((a, b) => score(a) - score(b))
+    .filter((f) => { const b = f.name.split(',')[0].split(' (')[0].toLowerCase(); if (seen.has(b)) return false; seen.add(b); return true; })
+    .slice(0, max);
+}
+
 export const STATE_LABEL: Record<PrepState, string> = {
   raw: 'Raw',
   cooked: 'Cooked',

@@ -36,6 +36,7 @@ export function sumEntries(entries: LogEntry[]): Totals {
   const t = { protein: 0, incomplete: {} } as Totals;
   for (const k of SUMMED) { t[k] = 0; t.incomplete[k] = false; }
   for (const e of entries) {
+    if (e.planned) continue; // planned for later: not eaten yet
     t.protein += scale(e.food.per100.protein, e.grams) ?? 0;
     for (const k of SUMMED) {
       const v = scale(e.food.per100[k] ?? null, e.grams);

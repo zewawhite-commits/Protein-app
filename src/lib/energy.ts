@@ -106,7 +106,7 @@ export function measuredBurn(
   const perDay = new Map<string, number>();
   for (const e of entries) {
     if (e.date < w[0].date || e.date > w[w.length - 1].date) continue;
-    perDay.set(e.date, (perDay.get(e.date) ?? 0) + ((e.food.per100.kcal ?? 0) * e.grams) / 100);
+    if (!(e as { planned?: boolean }).planned) perDay.set(e.date, (perDay.get(e.date) ?? 0) + ((e.food.per100.kcal ?? 0) * e.grams) / 100);
   }
   const full = [...perDay.values()].filter((v) => v >= 800);
   if (full.length < 10 || full.length < span * 0.6) return null;

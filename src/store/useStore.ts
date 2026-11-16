@@ -55,14 +55,17 @@ interface State {
   /** Free Pro time from the server (trial or invite rewards); the server stays the authority. */
   perks: { until: number; freePro: boolean; trialUsed: boolean; referrals: number; maxReferrals: number; referralDays: number } | null;
   setPerks: (p: State['perks']) => void;
+  /** Water drunk, in ml, by day (YYYY-MM-DD). */
+  water: Record<string, number>;
+  addWater: (date: string, ml: number) => void;
   /** What this person picked for a name the AI gave ("jollof rice" → food id), so the next scan puts it first. */
   picks: Record<string, string>;
   rememberPick: (key: string, foodId: string) => void;
 
   saveProfile: (p: Profile) => void;
   updateSettings: (s: Partial<Settings>) => void;
-  addEntry: (e: { date: string; meal: Meal; food: Food; grams: number; photoId?: string; note?: string }) => LogEntry;
-  updateEntry: (id: string, patch: Partial<Pick<LogEntry, 'grams' | 'meal' | 'photoId' | 'note' | 'date'>>) => void;
+  addEntry: (e: { date: string; meal: Meal; food: Food; grams: number; photoId?: string; note?: string; planned?: boolean }) => LogEntry;
+  updateEntry: (id: string, patch: Partial<Pick<LogEntry, 'grams' | 'meal' | 'photoId' | 'note' | 'date' | 'planned'>>) => void;
   removeEntry: (id: string) => void;
   toggleFavorite: (foodId: string) => void;
   rememberFood: (food: Food) => void;
@@ -93,6 +96,7 @@ export const useStore = create<State>()(
       premium: null,
       perks: null,
       picks: {},
+      water: {},
 
       addExercise: (e) => set((s) => ({ exercises: [...s.exercises, { ...e, id: crypto.randomUUID() }] })),
       removeExercise: (id) => set((s) => ({ exercises: s.exercises.filter((x) => x.id !== id) })),
@@ -137,6 +141,7 @@ export const useStore = create<State>()(
 
       setPremium: (premium) => set({ premium }),
       setPerks: (perks) => set({ perks }),
+      addWater: (date, ml) => set((s) => ({ water: { ...(s.water ?? {}), [date]: Math.max(0, Math.min(10000, (s.water?.[date] ?? 0) + ml)) } })),
       rememberPick: (key, foodId) => set((s) => {
         if (!key || s.picks?.[key] === foodId) return {};
         const next = { ...(s.picks ?? {}), [key]: foodId };
@@ -150,7 +155,7 @@ export const useStore = create<State>()(
 
       updateSettings: (patch) => set((s) => ({ settings: { ...s.settings, ...patch } })),
 
-      addEntry: ({ date, meal, food, grams, photoId, note }) => {
+      addEntry: ({ date, meal, food, grams, photoId, note, planned }) => {
         const entry: LogEntry = {
           id: crypto.randomUUID(),
           date,
@@ -169,6 +174,7 @@ export const useStore = create<State>()(
           grams,
           photoId,
           note,
+          ...(planned && { planned: true }),
         };
         set((s) => ({
           entries: [...s.entries, entry],
@@ -238,11 +244,12 @@ export const useStore = create<State>()(
           savedRecipes: d.savedRecipes ?? [],
           weights: d.weights ?? [],
           exercises: d.exercises ?? [],
+          water: (d as { water?: Record<string, number> }).water ?? {},
         });
       },
 
       resetAll: () =>
-        set({ profile: null, settings: defaultSettings, entries: [], customFoods: [], goalHistory: {}, recentFoodIds: [], favoriteFoodIds: [], remoteFoods: {}, savedMeals: [], savedPlans: [], workoutPlan: null, savedRecipes: [], weights: [], exercises: [], progressPhotos: [], premium: null, perks: null, picks: {} }),
+        set({ profile: null, settings: defaultSettings, entries: [], customFoods: [], goalHistory: {}, recentFoodIds: [], favoriteFoodIds: [], remoteFoods: {}, savedMeals: [], savedPlans: [], workoutPlan: null, savedRecipes: [], weights: [], exercises: [], progressPhotos: [], premium: null, perks: null, picks: {}, water: {} }),
     }),
     {
       name: 'protein-app',
@@ -262,7 +269,7 @@ useStore.subscribe((s, prev) => {
   const changed =
     s.entries !== prev.entries || s.profile !== prev.profile || s.customFoods !== prev.customFoods ||
     s.goalHistory !== prev.goalHistory || s.favoriteFoodIds !== prev.favoriteFoodIds ||
-    s.savedMeals !== prev.savedMeals || s.savedPlans !== prev.savedPlans || s.workoutPlan !== prev.workoutPlan || s.savedRecipes !== prev.savedRecipes || s.weights !== prev.weights || s.exercises !== prev.exercises;
+    s.savedMeals !== prev.savedMeals || s.savedPlans !== prev.savedPlans || s.workoutPlan !== prev.workoutPlan || s.savedRecipes !== prev.savedRecipes || s.weights !== prev.weights || s.exercises !== prev.exercises || s.water !== prev.water;
   if (changed && s.lastModified === prev.lastModified) useStore.setState({ lastModified: Date.now() });
 });
 
@@ -277,7 +284,7 @@ export function goalOn(date: string, goalHistory: Record<string, number>, profil
 
 export function exportData() {
   // Premium passes and personal API keys are never written to backup files.
-  const { profile, settings, entries, customFoods, goalHistory, recentFoodIds, favoriteFoodIds, remoteFoods, savedMeals, savedPlans, workoutPlan, savedRecipes, weights, exercises } = useStore.getState();
+  const { profile, settings, entries, customFoods, goalHistory, recentFoodIds, favoriteFoodIds, remoteFoods, savedMeals, savedPlans, workoutPlan, savedRecipes, weights, exercises, water } = useStore.getState();
   const safeSettings = settings;
-  return { app: 'protein-app', exportedAt: new Date().toISOString(), profile, settings: safeSettings, entries, customFoods, goalHistory, recentFoodIds, favoriteFoodIds, remoteFoods, savedMeals, savedPlans, workoutPlan, savedRecipes, weights, exercises };
+  return { app: 'protein-app', exportedAt: new Date().toISOString(), profile, settings: safeSettings, entries, customFoods, goalHistory, recentFoodIds, favoriteFoodIds, remoteFoods, savedMeals, savedPlans, workoutPlan, savedRecipes, weights, exercises, water };
 }

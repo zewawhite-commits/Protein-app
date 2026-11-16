@@ -30,8 +30,18 @@ export interface RecognizedItem {
   /** Likely range for the weight (grams). 0/0 when estimatedGrams is 0. */
   gramsLow: number;
   gramsHigh: number;
+  /** Extras the photo can't show (oil, butter, sugar, dressing, sauce), with grams for a little / usual / a lot. */
+  hidden: HiddenExtra[];
   /** For combined dishes: the likely ingredients, so the user can log them one by one. Empty for single foods. */
   ingredients: RecognizedIngredient[];
+}
+
+export interface HiddenExtra {
+  name: string;
+  searchQueries: string[];
+  little: number;
+  usual: number;
+  lot: number;
 }
 
 export interface RecognizedIngredient {
@@ -83,6 +93,21 @@ const SCHEMA = {
           size: { type: 'string', enum: ['small', 'medium', 'large'] },
           gramsLow: { type: 'number' },
           gramsHigh: { type: 'number' },
+          hidden: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                name: { type: 'string' },
+                searchQueries: { type: 'array', items: { type: 'string' } },
+                little: { type: 'number' },
+                usual: { type: 'number' },
+                lot: { type: 'number' },
+              },
+              required: ['name', 'searchQueries', 'little', 'usual', 'lot'],
+              additionalProperties: false,
+            },
+          },
           ingredients: {
             type: 'array',
             items: {
@@ -98,7 +123,7 @@ const SCHEMA = {
             },
           },
         },
-        required: ['name', 'localName', 'cuisine', 'searchQueries', 'state', 'estimatedGrams', 'confidence', 'method', 'size', 'gramsLow', 'gramsHigh', 'ingredients'],
+        required: ['name', 'localName', 'cuisine', 'searchQueries', 'state', 'estimatedGrams', 'confidence', 'method', 'size', 'gramsLow', 'gramsHigh', 'hidden', 'ingredients'],
         additionalProperties: false,
       },
     },
@@ -125,6 +150,7 @@ Portions — estimate carefully, step by step, before giving numbers:
 2. Judge how much of the plate or bowl each food covers, and its height or depth. A top-down photo hides depth: assume typical heaping for that food and widen the range.
 3. Convert the volume to weight using the food's typical density (cooked rice ~0.8–0.9 g/ml, stews and soups ~1 g/ml, leafy salad much lighter).
 "estimatedGrams": your best estimate of the edible weight shown (0 if you cannot judge). "gramsLow"/"gramsHigh": a realistic range around it — narrow when there's a clear scale reference, wider when there isn't. "size": small, medium or large compared with a typical adult serving of that food. The user can weigh the food; this is a starting point.
+"hidden": for every item, 0–3 extras that change calories a lot but a photo can't show reliably and that are NOT already counted in the item itself: cooking oil or palm oil (for fried, stewed, stir-fried or sautéed food), butter or ghee, sugar or syrup in drinks, coffee and tea, dressing on salads, mayonnaise or sauce in sandwiches and wraps. Give grams for a little / usual / a lot for this portion (e.g. oil for a plate of fried rice: 5 / 15 / 30). Use [] when nothing hidden is likely (plain fruit, water, grilled meat with no sauce, packaged products whose label covers it). Don't repeat something already listed as its own item.
 "photoQuality": good when the food is clear and a scale reference is visible; fair when estimates are rough (no reference, partial view); poor when it's too dark, blurred, cropped, or the angle hides the food — then say in "note" how to retake it (e.g. "Take it from a 45° angle with the whole plate in view").
 
 For a combined dish (soup, stew, curry, rice dish, salad, sandwich…), also list its likely main ingredients in "ingredients" (3–8 items), each with database-style "searchQueries" and its state as it is in the dish. Include ingredients that are usually present but hard to see, such as cooking oil, palm oil, stock fish, crayfish or ground melon seeds, and mark those "visible": false. For single foods, return "ingredients": [].
@@ -165,7 +191,7 @@ export async function recognizeWithClient(client: Anthropic, imageBase64: string
 }
 
 /** Defensive cleanup of the model output before it reaches the UI. */
-type RawItem = Omit<RecognizedItem, 'method' | 'size' | 'gramsLow' | 'gramsHigh'> & Partial<Pick<RecognizedItem, 'method' | 'size' | 'gramsLow' | 'gramsHigh'>>;
+type RawItem = Omit<RecognizedItem, 'method' | 'size' | 'gramsLow' | 'gramsHigh' | 'hidden'> & Partial<Pick<RecognizedItem, 'method' | 'size' | 'gramsLow' | 'gramsHigh' | 'hidden'>>;
 type RawResult = Omit<RecognitionResult, 'photoQuality' | 'items'> & { photoQuality?: string; items: RawItem[] };
 
 export function sanitize(raw: RawResult): RecognitionResult {
@@ -179,6 +205,11 @@ export function sanitize(raw: RawResult): RecognitionResult {
     method: i.method && (COOKING_METHODS as readonly string[]).includes(i.method) ? i.method : ('none' as CookingMethod),
     size: i.size && (['small', 'medium', 'large'] as const).includes(i.size) ? i.size : ('medium' as const),
     ...range(i),
+    hidden: (Array.isArray(i.hidden) ? i.hidden : []).slice(0, 3).map((h) => {
+      const g = (v: unknown) => (Number.isFinite(v) ? Math.max(0, Math.min(200, Math.round(v as number))) : 0);
+      const little = g(h?.little), usual = Math.max(little, g(h?.usual)), lot = Math.max(usual, g(h?.lot));
+      return { name: String(h?.name ?? '').slice(0, 40), searchQueries: (h?.searchQueries ?? []).map((q) => String(q).slice(0, 60)).filter(Boolean).slice(0, 3), little, usual, lot };
+    }).filter((h) => h.name && h.usual > 0),
     ingredients: (i.ingredients ?? []).slice(0, 10).map((g) => ({
       name: String(g.name ?? '').slice(0, 60),
       searchQueries: (g.searchQueries ?? []).map((q) => String(q).slice(0, 60)).filter(Boolean).slice(0, 3),

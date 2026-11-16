@@ -220,7 +220,7 @@ export function BeyondTheScale() {
     const month = entries.filter((e) => e.date > from30);
     const days = new Set(month.map((e) => e.date));
     const protein = new Map<string, number>();
-    for (const e of month) protein.set(e.date, (protein.get(e.date) ?? 0) + (e.food.per100.protein * e.grams) / 100);
+    for (const e of month) if (!e.planned) protein.set(e.date, (protein.get(e.date) ?? 0) + (e.food.per100.protein * e.grams) / 100);
     const goal = profile ? (Object.values(goalHistory).pop() ?? profile.goalGrams ?? 0) : 0;
     const proteinDays = goal > 0 ? [...protein.values()].filter((v) => v >= goal).length : 0;
     const week = exercises.filter((x) => x.date > from7);

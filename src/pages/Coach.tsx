@@ -83,7 +83,7 @@ export function useCoachContext(): CoachContext {
       targets: { kcal: t?.kcal, protein: goal || undefined, carbs: t?.carbs, fat: t?.fat, fiber: t?.fiber },
       today: { kcal: totals.kcal, protein: totals.protein, carbs: totals.carbs, fat: totals.fat, fiber: totals.fiber, sugar: totals.sugar, sodiumMg: totals.sodium },
       ...extra,
-      eatenToday: entries.map((e) => `${splitName(e.food.name).title} (${Math.round(e.grams)} g, ${e.meal})`),
+      eatenToday: entries.filter((e) => !e.planned).map((e) => `${splitName(e.food.name).title} (${Math.round(e.grams)} g, ${e.meal})`),
       localTime: new Date().toLocaleString(undefined, { weekday: 'long', hour: '2-digit', minute: '2-digit' }),
     };
   }, [profile, goal, totals, entries, extra]);

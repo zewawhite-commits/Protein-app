@@ -120,3 +120,14 @@ describe('cooking method and portion range', () => {
     expect(old.photoQuality).toBe('fair');
   });
 });
+
+describe('hidden extras', () => {
+  it('keeps a little ≤ usual ≤ a lot and drops empty ones', () => {
+    const r = sanitize({ isFood: true, note: '', items: [item({ name: 'Fried rice', estimatedGrams: 300, hidden: [
+      { name: 'Cooking oil', searchQueries: ['oil vegetable'], little: 20, usual: 10, lot: 5 },
+      { name: 'Nothing', searchQueries: [], little: 0, usual: 0, lot: 0 },
+    ] })] });
+    expect(r.items[0].hidden).toEqual([{ name: 'Cooking oil', searchQueries: ['oil vegetable'], little: 20, usual: 20, lot: 20 }]);
+    expect(sanitize({ isFood: true, note: '', items: [item({ name: 'Apple' })] }).items[0].hidden).toEqual([]);
+  });
+});

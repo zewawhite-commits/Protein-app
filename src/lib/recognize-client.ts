@@ -4,7 +4,7 @@ import type { LabelRead } from './label';
  * Browser side of photo recognition, plus matching AI suggestions to database records.
  * Nutrient values always come from the matched database record, never from the AI.
  */
-import { METHOD_WORDS, pickKey, type CookingMethod, type RecognitionResult, type RecognizedIngredient, type RecognizedItem } from './recognition';
+import { METHOD_WORDS, pickKey, type CookingMethod, type HiddenExtra, type RecognitionResult, type RecognizedIngredient, type RecognizedItem } from './recognition';
 import { foodById, searchFoods } from './foods';
 import type { CustomFood, Food } from './types';
 
@@ -84,6 +84,19 @@ export interface MatchedItem {
   /** The first candidate is what this person (or most people) chose for this name before. */
   learned?: 'mine' | 'popular';
   ingredients: MatchedIngredient[];
+  /** Extras the photo can't show, each matched to a database food (oil, butter, sugar…). */
+  hidden: { extra: HiddenExtra; food: Food }[];
+}
+
+/**
+ * How sure we are about the AMOUNT (separate from what the food is): from the photo quality
+ * and how wide the AI's weight range is.
+ */
+export function portionConfidence(item: RecognizedItem, quality: 'good' | 'fair' | 'poor'): 'good' | 'rough' | 'unsure' {
+  if (!item.estimatedGrams || quality === 'poor') return 'unsure';
+  const spread = item.gramsHigh > item.gramsLow ? (item.gramsHigh - item.gramsLow) / item.estimatedGrams : 0.6;
+  if (quality === 'good' && spread <= 0.45) return 'good';
+  return spread > 0.9 ? 'unsure' : 'rough';
 }
 
 function candidatesFor(queries: string[], state: RecognizedItem['state'], custom: CustomFood[], max: number): Food[] {
@@ -147,6 +160,10 @@ export function matchItem(item: RecognizedItem, custom: CustomFood[], learned: R
       ingredient,
       candidates: candidatesFor([...ingredient.searchQueries, ingredient.name].filter(Boolean), ingredient.state, custom, 3),
     })),
+    hidden: (item.hidden ?? []).flatMap((extra) => {
+      const food = candidatesFor([...extra.searchQueries, extra.name].filter(Boolean), 'na', custom, 1)[0];
+      return food ? [{ extra, food }] : [];
+    }),
   };
 }
 

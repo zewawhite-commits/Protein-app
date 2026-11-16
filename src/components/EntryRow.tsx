@@ -3,20 +3,21 @@ import { nutrientsFor } from '@/lib/nutrition';
 import { splitName } from '@/lib/foods';
 import { useFoodLookup } from '@/lib/hooks';
 import { FoodVisual } from './FoodIcon';
-import { StateBadge, fmt } from './ui';
+import { StateBadge, cx, fmt } from './ui';
 
 export function EntryRow({ entry, onClick }: { entry: LogEntry; onClick?: () => void }) {
   const lookup = useFoodLookup();
   const n = nutrientsFor(entry.food.per100, entry.grams);
   const { title } = splitName(entry.food.name);
   return (
-    <button onClick={onClick} className="flex w-full items-center gap-4 rounded-[22px] p-3.5 text-left transition active:scale-[.99] active:bg-raised/60">
+    <button onClick={onClick} className={cx('flex w-full items-center gap-4 rounded-[22px] p-3.5 text-left transition active:scale-[.99] active:bg-raised/60', entry.planned && 'opacity-60')}>
       <FoodVisual name={entry.food.name} category={lookup(entry.foodId)?.category} photoId={entry.photoId} fdcId={entry.food.fdcId} size={56} />
       <div className="min-w-0 flex-1">
         <p className="line-clamp-2 text-[16px] font-bold leading-snug">{title}</p>
         <p className="num mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm font-medium text-silver">
           <StateBadge state={entry.food.state} className="shrink-0" />
           <span className="whitespace-nowrap">{fmt(entry.grams)} g</span>
+          {entry.planned && <span className="whitespace-nowrap rounded-full bg-accent/10 px-1.5 text-[11px] font-semibold leading-4 text-accent" title="Not counted yet — tap to mark as eaten">planned · tap when eaten</span>}
           {entry.note?.startsWith('Portion estimated') && <span className="whitespace-nowrap rounded-full border border-dashed border-silver/60 px-1.5 text-[11px] font-semibold leading-4" title="The AI guessed this weight from the photo. Tap to set the real weight.">estimated</span>}
           <span className="whitespace-nowrap"><span className="text-accent">P {fmt(n.protein, n.protein < 10 ? 1 : 0)}</span>{n.carbs != null && <> · C {fmt(n.carbs)}</>}{n.fat != null && <> · F {fmt(n.fat)}</>}</span>
         </p>

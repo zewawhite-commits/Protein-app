@@ -39,7 +39,7 @@ export default function Insights() {
     const perFood = new Map<string, { name: string; protein: number; count: number }>();
     const perMeal: Record<Meal, number> = { breakfast: 0, lunch: 0, dinner: 0, snack: 0 };
     for (const e of inRange) {
-      const p = nutrientsFor(e.food.per100, e.grams)[metric] ?? 0;
+      const p = e.planned ? 0 : nutrientsFor(e.food.per100, e.grams)[metric] ?? 0;
       perDay.set(e.date, (perDay.get(e.date) ?? 0) + p);
       perMeal[e.meal] += p;
       const f = perFood.get(e.foodId) ?? { name: e.food.name, protein: 0, count: 0 };

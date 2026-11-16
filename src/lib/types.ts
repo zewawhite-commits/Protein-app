@@ -88,6 +88,8 @@ export interface LogEntry {
    */
   food: Pick<Food, 'name' | 'state' | 'per100' | 'source' | 'fdcId' | 'ref' | 'sourceNote'>;
   grams: number;
+  /** Planned for later: shown in the day but not counted until marked as eaten. */
+  planned?: boolean;
   photoId?: string;
   note?: string;
 }

@@ -1,3 +1,4 @@
+import { WaterCard } from '@/components/Water';
 import { Logo } from '@/components/Logo';
 import { useMemo, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
@@ -135,6 +136,7 @@ export default function Today() {
 
       <ExerciseList date={date} />
       {isToday && !quietAi && <div className="mt-2"><Suggestions remaining={Math.max(0, goal - totals.protein)} kcalLeft={targets ? targets.kcal - totals.kcal : undefined} /></div>}
+      <WaterCard date={date} />
 
       <FoodSheet food={editing ? entryAsFood(editing, lookup) : null} entry={editing ?? undefined} date={date} onClose={() => setEditing(null)} />
     </div>
@@ -257,7 +259,7 @@ export function useGoalStats(date = todayKey()) {
   const profile = useStore((s) => s.profile);
   return useMemo(() => {
     const totals = new Map<string, number>();
-    for (const e of entries) totals.set(e.date, (totals.get(e.date) ?? 0) + (e.food.per100.protein * e.grams) / 100);
+    for (const e of entries) if (!e.planned) totals.set(e.date, (totals.get(e.date) ?? 0) + (e.food.per100.protein * e.grams) / 100);
     const hit = (d: string) => {
       const g = goalOn(d, goalHistory, profile);
       return g > 0 && (totals.get(d) ?? 0) >= g;
@@ -330,7 +332,7 @@ function CopyYesterday() {
   const y = addDays(todayKey(), -1);
   const list = useMemo(() => entries.filter((e) => e.date === y), [entries, y]);
   if (!list.length) return null;
-  const kcal = list.reduce((s, e) => s + ((e.food.per100.kcal ?? 0) * e.grams) / 100, 0);
+  const kcal = list.reduce((s, e) => s + (e.planned ? 0 : ((e.food.per100.kcal ?? 0) * e.grams) / 100), 0);
   return (
     <button
       onClick={() => {

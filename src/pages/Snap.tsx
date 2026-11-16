@@ -4,7 +4,7 @@ import { ArrowLeft, Check, ChevronRight, ImagePlus, Loader2, Mic, ScanBarcode, S
 import { useStore } from '@/store/useStore';
 import { useFoodDb, usePhotoUrl } from '@/lib/hooks';
 import { deletePhoto, getPhoto, savePhoto } from '@/lib/photos';
-import { matchItem, matchItems, pickKey, sendFeedback, PremiumRequiredError, SignInRequiredError, readLabelPhoto, recognizePhoto, recognizeText, RecognitionUnavailableError, ScanLimitError, type MatchedItem } from '@/lib/recognize-client';
+import { matchItem, matchItems, pickKey, portionConfidence, sendFeedback, PremiumRequiredError, SignInRequiredError, readLabelPhoto, recognizePhoto, recognizeText, RecognitionUnavailableError, ScanLimitError, type MatchedItem } from '@/lib/recognize-client';
 import { refreshPremium } from '@/lib/premium';
 import { SOURCE_SHORT, searchFoods, splitName } from '@/lib/foods';
 import { mealForNow, todayKey } from '@/lib/dates';
@@ -62,13 +62,22 @@ export default function Snap() {
     if (id && !useStore.getState().entries.some((e) => e.photoId === id)) void deletePhoto(id);
   }, []);
 
-  async function analyse(file: Blob | null, text?: string) {
+  // What was last sent, so a failed scan can be retried without taking the photo again.
+  const lastTry = useRef<{ photoId?: string; text?: string } | null>(null);
+  const [retryable, setRetryable] = useState(false);
+
+  async function analyse(file: Blob | null, text?: string, savedId?: string) {
     let small: Blob | undefined;
-    if (file) {
-      const id = await savePhoto(file);
+    let id = savedId;
+    if (savedId) {
+      small = (await getPhoto(savedId)) ?? undefined;
+    } else if (file) {
+      id = await savePhoto(file);
       setPhotoId(id);
       small = (await getPhoto(id)) ?? file;
     }
+    lastTry.current = { photoId: id, text };
+    setRetryable(false);
     setPhase('analyzing');
     try {
       await refreshPremium();
@@ -104,7 +113,10 @@ export default function Snap() {
       else if (e instanceof ScanLimitError) { setError(e.message || 'Monthly photo scans used up.'); setPhase('limit'); }
       else if (e instanceof RecognitionUnavailableError) setPhase('unavailable');
       else {
-        setError((e as Error).message || 'Something went wrong.');
+        // Network or server trouble: the photo is kept on the phone, so it can be tried again.
+        const offline = typeof navigator !== 'undefined' && navigator.onLine === false;
+        setError(offline ? 'You’re offline. Your photo is saved — try again when you’re connected.' : (e as Error).message || 'Something went wrong.');
+        setRetryable(true);
         setPhase('error');
       }
     }
@@ -259,6 +271,7 @@ export default function Snap() {
               <ItemCard
                 key={i}
                 match={m}
+                quality={quality}
                 done={logged.has(i)}
                 onMethod={(method) => setMatches((ms) => ms.map((x, j) => (j === i ? matchItem({ ...x.item, method }, custom, useStore.getState().picks) : x)))}
                 onPick={(food) => {
@@ -369,7 +382,10 @@ export default function Snap() {
           <p className="font-semibold">Couldn’t identify this one</p>
           <p className="mt-1 text-sm text-silver">{error}</p>
           <div className="mt-4 grid gap-2">
-            <Link to={manualUrl()} className="btn-primary">Pick food manually</Link>
+            {retryable && lastTry.current && (
+              <button onClick={() => { haptic(); void analyse(null, lastTry.current?.text, lastTry.current?.photoId); }} className="btn-primary"><RotateCcw size={17} /> Try again</button>
+            )}
+            <Link to={manualUrl()} className={retryable ? 'btn-ghost' : 'btn-primary'}>Pick food manually</Link>
             <button onClick={retake} className="btn-ghost">Try another photo</button>
           </div>
         </div>
@@ -387,7 +403,7 @@ export default function Snap() {
   );
 }
 
-function ItemCard({ match, done, onPick, onMethod, manualUrl, onLogIngredients }: { match: MatchedItem; done: boolean; onPick: (f: Food) => void; onMethod: (m: CookingMethod) => void; manualUrl: string; onLogIngredients: (rows: { food: Food; grams: number }[]) => void }) {
+function ItemCard({ match, done, quality, onPick, onMethod, manualUrl, onLogIngredients }: { match: MatchedItem; done: boolean; quality: 'good' | 'fair' | 'poor'; onPick: (f: Food) => void; onMethod: (m: CookingMethod) => void; manualUrl: string; onLogIngredients: (rows: { food: Food; grams: number }[]) => void }) {
   const { item, candidates } = match;
   const [open, setOpen] = useState(false);
   const hasIngredients = match.ingredients.length > 0;
@@ -402,7 +418,7 @@ function ItemCard({ match, done, onPick, onMethod, manualUrl, onLogIngredients }
           {sub && <p className="mt-0.5 text-xs font-medium text-silver">{sub}</p>}
         </div>
         <div className="flex shrink-0 items-center gap-1.5">
-          {item.confidence !== 'high' && <span className={cx('rounded-full px-2.5 py-1 text-[12px] font-semibold', item.confidence === 'low' ? 'bg-warn/15 text-warn' : 'bg-raised text-silver')} title="How sure the AI is about what this food is">{item.confidence === 'low' ? 'Not sure — check' : 'Fairly sure'}</span>}
+          {item.confidence !== 'high' && <span className={cx('rounded-full px-2.5 py-1 text-[12px] font-semibold', item.confidence === 'low' ? 'bg-warn/15 text-warn' : 'bg-raised text-silver')} title="How sure the AI is about what this food is">{item.confidence === 'low' ? 'Food: not sure — check' : 'Food: fairly sure'}</span>}
           {item.estimatedGrams > 0 && <span className="rounded-full border border-dashed border-silver/50 px-2.5 py-1 text-[12px] font-medium text-silver" title="AI estimate from the photo — weigh it for the real number">~{item.estimatedGrams} g</span>}
           {done && <span className="grid h-7 w-7 place-items-center rounded-full bg-accent text-white"><Check size={15} strokeWidth={3} /></span>}
         </div>
@@ -418,6 +434,11 @@ function ItemCard({ match, done, onPick, onMethod, manualUrl, onLogIngredients }
         {item.estimatedGrams > 0 && item.gramsHigh > item.gramsLow && (
           <span title="Likely range from the photo">{item.size} portion · likely {item.gramsLow}–{item.gramsHigh} g</span>
         )}
+        {(() => { const pc = portionConfidence(item, quality); return (
+          <span className={cx('rounded-full px-2.5 py-0.5 font-semibold', pc === 'good' ? 'bg-accent/10 text-accent' : pc === 'rough' ? 'bg-raised text-silver' : 'bg-warn/15 text-warn')} title="How sure the estimate of the amount is (separate from what the food is)">
+            Amount: {pc === 'good' ? 'good estimate' : pc === 'rough' ? 'rough — weigh if you can' : 'unsure — please weigh'}
+          </span>
+        ); })()}
         {match.learned && <span className="rounded-full bg-accent/10 px-2.5 py-0.5 font-semibold text-accent">{match.learned === 'mine' ? 'Your usual pick' : 'Most people pick this'}</span>}
       </div>
 
@@ -616,10 +637,20 @@ function IngredientList({ match, onLog }: { match: MatchedItem; onLog: (rows: { 
  * The whole plate at a glance: every food found, with totals from the best database match
  * and the AI's portion estimate. Clearly an estimate until the person weighs each food.
  */
+type Amount = 'none' | 'little' | 'usual' | 'lot';
+const AMOUNT_LABEL: Record<Amount, string> = { none: 'None', little: 'A little', usual: 'Usual', lot: 'A lot' };
+
 type PlateRow = { food: Food; grams: number; index: number; confirmed: boolean; suggested: boolean };
 
 function PlateSummary({ matches, logged, date, onLogAll, onAddExtra }: { matches: MatchedItem[]; logged: Set<number>; date: string; onLogAll: (rows: PlateRow[]) => void; onAddExtra: (food: Food, grams: number) => void }) {
   const [extras, setExtras] = useState<string[]>([]);
+  const addEntry = useStore((s) => s.addEntry);
+  // Where the food was made sets the default for hidden extras: restaurants and street food usually use more oil.
+  const [where, setWhere] = useState<'home' | 'out'>('home');
+  const [amount, setAmount] = useState<Record<string, Amount>>({});
+  const hidden = matches.flatMap((m, i) => (logged.has(i) ? [] : m.hidden.map((h, k) => ({ key: `${i}:${k}`, index: i, dish: m.item.name, ...h }))));
+  const amountOf = (key: string): Amount => amount[key] ?? (where === 'out' ? 'lot' : 'usual');
+  const hiddenGrams = (h: (typeof hidden)[number], a: Amount = amountOf(h.key)) => (a === 'none' ? 0 : h.extra[a]);
   // Grams taken from the portion coach (not weighed, so still an estimate).
   const [suggested, setSuggested] = useState<Set<number>>(new Set());
   // Grams the person typed in, by food; anything not typed is still the AI's estimate.
@@ -634,6 +665,17 @@ function PlateSummary({ matches, logged, date, onLogAll, onAddExtra }: { matches
     const k = r.grams / 100;
     return { kcal: a.kcal + (r.food.per100.kcal ?? 0) * k, protein: a.protein + r.food.per100.protein * k, carbs: a.carbs + (r.food.per100.carbs ?? 0) * k, fat: a.fat + (r.food.per100.fat ?? 0) * k };
   }, { kcal: 0, protein: 0, carbs: 0, fat: 0 });
+  for (const h of hidden) {
+    const k = hiddenGrams(h) / 100;
+    t.kcal += (h.food.per100.kcal ?? 0) * k; t.protein += h.food.per100.protein * k; t.carbs += (h.food.per100.carbs ?? 0) * k; t.fat += (h.food.per100.fat ?? 0) * k;
+  }
+  // Likely range: weights you entered are exact; AI weights use their range; hidden extras go from a little to a lot.
+  const kcalAt = (side: 'low' | 'high') => usable.reduce((a, r) => {
+    const m = matches[r.index].item;
+    const g = r.confirmed || !m.gramsHigh ? r.grams : side === 'low' ? m.gramsLow : m.gramsHigh;
+    return a + ((r.food.per100.kcal ?? 0) * g) / 100;
+  }, 0) + hidden.reduce((a, h) => a + ((h.food.per100.kcal ?? 0) * (side === 'low' ? h.extra.little : h.extra.lot)) / 100, 0);
+  const lowK = Math.round(kcalAt('low')), highK = Math.round(kcalAt('high'));
   const todo = usable.filter((r) => !logged.has(r.index));
   const missing = rows.length - usable.length;
   if (!usable.length) return null;
@@ -651,6 +693,7 @@ function PlateSummary({ matches, logged, date, onLogAll, onAddExtra }: { matches
           </div>
         ))}
       </div>
+      {highK - lowK >= 40 && <p className="num mt-2 text-center text-[13px] text-silver">Likely between {fmt(lowK)} and {fmt(highK)} kcal — weigh the food or answer below to narrow it.</p>}
       <ul className="mt-3 space-y-1.5">
         {rows.map((r) => (
           <li key={r.index} className="flex items-center justify-between gap-2 text-[14px]">
@@ -685,7 +728,31 @@ function PlateSummary({ matches, logged, date, onLogAll, onAddExtra }: { matches
           }}
         />
       )}
-      <div className="mt-4 rounded-2xl bg-raised p-3.5">
+      {hidden.length > 0 && (
+        <div className="mt-4 rounded-2xl bg-raised p-3.5">
+          <p className="text-[14px] font-semibold">What the photo can’t see</p>
+          <p className="text-xs leading-relaxed text-silver">Oil, butter, sugar and sauces change calories a lot but don’t show in photos. Pick the closest — it’s counted in the total above.</p>
+          <div className="mt-2.5">
+            <Segmented<'home' | 'out'> full value={where} onChange={(v) => { haptic(); setWhere(v); setAmount({}); }} options={[{ value: 'home', label: 'Home-made' }, { value: 'out', label: 'Restaurant / street food' }]} />
+          </div>
+          <ul className="mt-3 space-y-3">
+            {hidden.map((h) => (
+              <li key={h.key}>
+                <p className="text-[14px] font-medium">{h.extra.name} <span className="text-silver">in {h.dish.toLowerCase()}</span></p>
+                <div className="mt-1.5 grid grid-cols-4 gap-1.5" role="radiogroup" aria-label={`How much ${h.extra.name}`}>
+                  {(['none', 'little', 'usual', 'lot'] as const).map((a) => (
+                    <button key={a} role="radio" aria-checked={amountOf(h.key) === a} onClick={() => { haptic(); setAmount((x) => ({ ...x, [h.key]: a })); }}
+                      className={cx('rounded-xl px-1 py-2 text-center text-[12px] font-semibold leading-tight transition', amountOf(h.key) === a ? 'bg-ink text-bg' : 'bg-surface text-ink')}>
+                      {AMOUNT_LABEL[a]}<span className="block font-normal opacity-75">{hiddenGrams(h, a)} g</span>
+                    </button>
+                  ))}
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {hidden.length === 0 && <div className="mt-4 rounded-2xl bg-raised p-3.5">
         <p className="text-[14px] font-semibold">Cooked with oil or butter?</p>
         <p className="text-xs text-silver">Photos can’t see it, and it’s the most common reason scans come out too low.</p>
         <div className="mt-2.5 flex flex-wrap gap-2">
@@ -698,9 +765,16 @@ function PlateSummary({ matches, logged, date, onLogAll, onAddExtra }: { matches
             );
           })}
         </div>
-      </div>
+      </div>}
       {todo.length > 0 && (
-        <button onClick={() => { haptic([10, 30, 10]); onLogAll(todo); }} className="btn-primary mt-4 w-full">Log whole plate · {fmt(todo.reduce((a, r) => a + ((r.food.per100.kcal ?? 0) * r.grams) / 100, 0))} kcal</button>
+        <button onClick={() => {
+          haptic([10, 30, 10]);
+          onLogAll(todo);
+          for (const h of hidden) {
+            const g = hiddenGrams(h);
+            if (g > 0) addEntry({ date, meal: mealForNow(), food: h.food, grams: g, note: `Hidden extra in ${h.dish} — your answer (${AMOUNT_LABEL[amountOf(h.key)].toLowerCase()})` });
+          }
+        }} className="btn-primary mt-4 w-full">Log whole plate · {fmt(t.kcal)} kcal</button>
       )}
     </div>
   );
