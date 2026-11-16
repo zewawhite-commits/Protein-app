@@ -16,6 +16,10 @@ import { FoodVisual } from '@/components/FoodIcon';
 import { Segmented, StateBadge, cx, fmt } from '@/components/ui';
 import { haptic, toast } from '@/components/fx';
 import { labelPer100 } from '@/lib/label';
+import { suggestPortions, type PortionRow } from '@/lib/portion';
+import { dailyTargets } from '@/lib/energy';
+import { useDay } from '@/lib/hooks';
+import { PortionCoach } from '@/components/PortionCoach';
 
 type Phase = 'camera' | 'describe' | 'signin' | 'analyzing' | 'results' | 'label' | 'unavailable' | 'premium' | 'limit' | 'error';
 
@@ -229,8 +233,9 @@ export default function Snap() {
             matches={matches}
             logged={logged}
             onAddExtra={(food, grams) => { addEntry({ date, meal: mealForNow(), food, grams, note: 'Cooking fat added to a scanned meal' }); toast(`Added ${grams} g ${splitName(food.name).title.toLowerCase()}`); }}
-            onLogAll={(rows: { food: Food; grams: number; index: number; confirmed: boolean }[]) => {
-              rows.forEach((r, k) => addEntry({ date, meal: mealForNow(), food: r.food, grams: r.grams, photoId: k === 0 ? photoId : undefined, note: r.confirmed ? 'Weight set by you' : 'Portion estimated by AI — edit to your real weight' }));
+            date={date}
+            onLogAll={(rows: PlateRow[]) => {
+              rows.forEach((r, k) => addEntry({ date, meal: mealForNow(), food: r.food, grams: r.grams, photoId: k === 0 ? photoId : undefined, note: r.confirmed ? 'Weight set by you' : r.suggested ? 'Portion estimated — suggested serving, edit to what you ate' : 'Portion estimated by AI — edit to your real weight' }));
               setLogged((s) => { const n = new Set(s); rows.forEach((r) => n.add(r.index)); return n; });
               toast(`Logged ${rows.length} food${rows.length > 1 ? 's' : ''} — tap any to set the real weight`);
             }}
@@ -582,12 +587,20 @@ function IngredientList({ match, onLog }: { match: MatchedItem; onLog: (rows: { 
  * The whole plate at a glance: every food found, with totals from the best database match
  * and the AI's portion estimate. Clearly an estimate until the person weighs each food.
  */
-function PlateSummary({ matches, logged, onLogAll, onAddExtra }: { matches: MatchedItem[]; logged: Set<number>; onLogAll: (rows: { food: Food; grams: number; index: number; confirmed: boolean }[]) => void; onAddExtra: (food: Food, grams: number) => void }) {
+type PlateRow = { food: Food; grams: number; index: number; confirmed: boolean; suggested: boolean };
+
+function PlateSummary({ matches, logged, date, onLogAll, onAddExtra }: { matches: MatchedItem[]; logged: Set<number>; date: string; onLogAll: (rows: PlateRow[]) => void; onAddExtra: (food: Food, grams: number) => void }) {
   const [extras, setExtras] = useState<string[]>([]);
+  // Grams taken from the portion coach (not weighed, so still an estimate).
+  const [suggested, setSuggested] = useState<Set<number>>(new Set());
   // Grams the person typed in, by food; anything not typed is still the AI's estimate.
   const [set, setSet] = useState<Record<number, number>>({});
-  const rows = matches.map((m, index) => ({ index, name: m.item.name, food: m.candidates[0], grams: set[index] ?? m.item.estimatedGrams, confirmed: set[index] != null }));
-  const usable = rows.filter((r) => r.food && r.grams > 0) as { index: number; name: string; food: Food; grams: number; confirmed: boolean }[];
+  const rows = matches.map((m, index) => ({ index, name: m.item.name, food: m.candidates[0], grams: set[index] ?? m.item.estimatedGrams, confirmed: set[index] != null && !suggested.has(index), suggested: suggested.has(index) }));
+  const usable = rows.filter((r) => r.food && r.grams > 0) as (PlateRow & { name: string })[];
+  const plan = usePortionPlan(usable.filter((r) => !suggested.has(r.index)).length === usable.length ? usable : null, date);
+  const [frozen, setFrozen] = useState<typeof plan>(null);
+  // Once anything is logged, the day's totals include this plate, so the advice would shift — hide it.
+  const shownPlan = logged.size ? null : suggested.size ? frozen ?? plan : plan;
   const t = usable.reduce((a, r) => {
     const k = r.grams / 100;
     return { kcal: a.kcal + (r.food.per100.kcal ?? 0) * k, protein: a.protein + r.food.per100.protein * k, carbs: a.carbs + (r.food.per100.carbs ?? 0) * k, fat: a.fat + (r.food.per100.fat ?? 0) * k };
@@ -617,7 +630,7 @@ function PlateSummary({ matches, logged, onLogAll, onAddExtra }: { matches: Matc
               <>
                 <label className={cx('flex shrink-0 items-center rounded-xl px-2 py-1', r.confirmed ? 'bg-accent/10 text-accent' : 'border border-dashed border-silver/50 text-silver')} title={r.confirmed ? 'Weight you entered' : 'AI estimate — tap to enter the real weight'}>
                   {!r.confirmed && <span className="mr-0.5">~</span>}
-                  <input inputMode="numeric" aria-label={`Grams of ${r.name}`} disabled={logged.has(r.index)} value={r.grams || ''} onChange={(e) => { const g = Number(e.target.value.replace(/\D/g, '').slice(0, 4)); setSet((s) => ({ ...s, [r.index]: g })); }} className="num w-11 bg-transparent text-right font-semibold outline-none" />
+                  <input inputMode="numeric" aria-label={`Grams of ${r.name}`} disabled={logged.has(r.index)} value={r.grams || ''} onChange={(e) => { const g = Number(e.target.value.replace(/\D/g, '').slice(0, 4)); setSet((s) => ({ ...s, [r.index]: g })); setSuggested((x) => { const n = new Set(x); n.delete(r.index); return n; }); }} className="num w-11 bg-transparent text-right font-semibold outline-none" />
                   <span className="ml-0.5">g</span>
                 </label>
                 <span className="num w-[70px] shrink-0 text-right text-silver">{fmt(((r.food.per100.kcal ?? 0) * r.grams) / 100)} kcal</span>
@@ -629,6 +642,20 @@ function PlateSummary({ matches, logged, onLogAll, onAddExtra }: { matches: Matc
       <p className="mt-3 text-xs leading-relaxed text-dim">
         Nutrition comes from the food database. Weights marked ~ are the AI’s guess from the photo — a photo can’t weigh food. Tap a weight to enter the real one.{missing > 0 ? ` ${missing} food${missing > 1 ? 's' : ''} need a match first.` : ''}
       </p>
+      {shownPlan && (
+        <PortionCoach
+          plan={shownPlan}
+          applied={suggested.size > 0}
+          onApply={(prs: PortionRow[]) => {
+            haptic();
+            setFrozen(shownPlan);
+            const ch = prs.filter((x) => x.to !== x.from && !logged.has(x.index));
+            setSet((s) => ({ ...s, ...Object.fromEntries(ch.map((x) => [x.index, x.to])) }));
+            setSuggested(new Set(ch.map((x) => x.index)));
+            toast('Suggested portions set — change any weight to what you actually eat');
+          }}
+        />
+      )}
       <div className="mt-4 rounded-2xl bg-raised p-3.5">
         <p className="text-[14px] font-semibold">Cooked with oil or butter?</p>
         <p className="text-xs text-silver">Photos can’t see it, and it’s the most common reason scans come out too low.</p>
@@ -648,4 +675,24 @@ function PlateSummary({ matches, logged, onLogAll, onAddExtra }: { matches: Matc
       )}
     </div>
   );
+}
+
+/** Portion suggestion for this plate against what's left of the day (null without targets). */
+function usePortionPlan(rows: (PlateRow & { name: string })[] | null, date: string) {
+  const profile = useStore((s) => s.profile);
+  const { totals, goal } = useDay(date);
+  const key = rows?.map((r) => `${r.index}:${r.food.id}:${r.grams}`).join('|') ?? '';
+  return useMemo(() => {
+    if (!rows?.length || !profile) return null;
+    const t = dailyTargets(profile, goal);
+    if (!t) return null;
+    const hour = date === todayKey() ? new Date().getHours() : 13;
+    return suggestPortions({
+      items: rows.map((r) => ({ index: r.index, name: r.name, grams: r.grams, per100: r.food.per100 })),
+      targets: { kcal: t.kcal, protein: t.protein },
+      eaten: { kcal: totals.kcal, protein: totals.protein },
+      hour, goals: profile.goals ?? (profile.goal ? [profile.goal] : []), pregnant: profile.pregnant,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key, profile, goal, date]);
 }
