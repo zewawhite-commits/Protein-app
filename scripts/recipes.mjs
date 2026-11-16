@@ -24,7 +24,7 @@ export const RECIPES = [
     portions: [['1 bowl', 300], ['1 ladle', 150]],
   },
   {
-    name: 'Jollof rice', aliases: ['jolof', 'party jollof'], cuisine: 'West African', yield: 1600,
+    name: 'Jollof rice', aliases: ['jolof', 'party jollof', 'nigerian jollof'], cuisine: 'West African', yield: 1600,
     ingredients: [
       ['Rice, white, long-grain, regular, enriched, cooked', 1000], ['Tomatoes, red, ripe, raw, year round average', 300],
       ["Tomato products, canned, paste, without salt added (Includes foods for USDA's Food Distribution Program)", 60],
@@ -413,5 +413,38 @@ RECIPES.push(
     name: 'Udon noodles', cuisine: 'Japanese', yield: 1000, aliases: ['udon'],
     ingredients: [['Wheat flour, white, all-purpose, enriched, unbleached', 300], ['Beverages, water, tap, drinking', 140], ['Salt, table', 10]],
     portions: [['1 portion (cooked)', 250]],
+  },
+);
+
+// Regional versions of the same dish: ingredients and oil differ, so the nutrition does too.
+RECIPES.push(
+  {
+    name: 'Jollof rice, Ghanaian style', cuisine: 'Ghanaian', yield: 1650, aliases: ['ghana jollof', 'ghanaian jollof', 'jollof ghana'],
+    ingredients: [
+      ['Rice, white, long-grain, regular, enriched, cooked', 1000], ['Tomatoes, red, ripe, raw, year round average', 200],
+      ["Tomato products, canned, paste, without salt added (Includes foods for USDA's Food Distribution Program)", 100],
+      ['Onions, raw', 150], ['Peppers, sweet, red, raw', 80], ['Peppers, hot chili, red, raw', 10], ['Carrots, raw', 60],
+      ['Peas, green, frozen, cooked, boiled, drained, without salt', 60], ['Oil, vegetable, soybean, refined', 60],
+      ['Soup, stock, chicken, home-prepared', 250], ['Salt, table', 6],
+    ],
+    portions: [['1 plate', 350], ['1 cup', 200]],
+  },
+  {
+    name: 'Fried rice, Nigerian style', cuisine: 'Nigerian', yield: 1650, aliases: ['naija fried rice', 'party fried rice', 'nigerian fried rice'],
+    ingredients: [
+      ['Rice, white, long-grain, parboiled, enriched, cooked', 1000], ['Carrots, raw', 100], ['Peas, green, frozen, cooked, boiled, drained, without salt', 100],
+      ['Peppers, sweet, green, raw', 80], ['Corn, sweet, yellow, frozen, kernels cut off cob, boiled, drained, without salt', 80], ['Onions, raw', 80],
+      ['Beef, variety meats and by-products, liver, cooked, braised', 100], ['Spices, curry powder', 6], ['Spices, thyme, dried', 2],
+      ['Oil, vegetable, soybean, refined', 80], ['Soup, stock, chicken, home-prepared', 150], ['Salt, table', 6],
+    ],
+    portions: [['1 plate', 350], ['1 cup', 200]],
+  },
+  {
+    name: 'Native jollof (palm oil rice)', cuisine: 'Nigerian', yield: 1550, aliases: ['concoction rice', 'palm oil jollof', 'iwuk edesi', 'palm oil rice'],
+    ingredients: [
+      ['Rice, white, long-grain, regular, enriched, cooked', 1000], ['Oil, palm', 80], ['Onions, raw', 100], ['Peppers, hot chili, red, raw', 10],
+      ['Shrimp, dried', 30], ['Spinach, cooked, boiled, drained, without salt', 150], ['Soup, stock, beef, home-prepared', 200], ['Salt, table', 6],
+    ],
+    portions: [['1 plate', 350], ['1 cup', 200]],
   },
 );

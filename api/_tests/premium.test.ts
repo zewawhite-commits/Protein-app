@@ -48,7 +48,8 @@ describe('Premium pass', () => {
     const [body, sig] = t.split('.');
     const forged = Buffer.from(JSON.stringify({ email: 'a@b.co', cid: 1, plan: 'PLN_month', tier: 'plus', exp: Date.now() + 999 * DAY })).toString('base64url');
     expect(readPass(`${forged}.${sig}`)).toBeNull();
-    expect(readPass(`${body}.x${sig.slice(1)}`)).toBeNull();
+    // Change the first character to a different one (replacing it with a fixed letter fails 1 time in 64).
+    expect(readPass(`${body}.${sig[0] === 'x' ? 'y' : 'x'}${sig.slice(1)}`)).toBeNull();
     expect(readPass('garbage')).toBeNull();
   });
 });

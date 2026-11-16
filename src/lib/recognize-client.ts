@@ -4,7 +4,7 @@ import type { LabelRead } from './label';
  * Browser side of photo recognition, plus matching AI suggestions to database records.
  * Nutrient values always come from the matched database record, never from the AI.
  */
-import { METHOD_WORDS, pickKey, type RecognitionResult, type RecognizedIngredient, type RecognizedItem } from './recognition';
+import { METHOD_WORDS, pickKey, type CookingMethod, type RecognitionResult, type RecognizedIngredient, type RecognizedItem } from './recognition';
 import { foodById, searchFoods } from './foods';
 import type { CustomFood, Food } from './types';
 
@@ -105,12 +105,32 @@ function candidatesFor(queries: string[], state: RecognizedItem['state'], custom
 /** Look each recognised item (and its ingredients) up in the local databases. Prefers records in the same raw/cooked state. */
 export { pickKey };
 
-/** Search queries for an item, with its cooking method added to the most specific one when missing. */
+/** Closest cooking methods to try when the database has no record for the exact one (e.g. no grilled plantain). */
+const METHOD_FALLBACK: Record<CookingMethod, string[]> = {
+  fried: ['cooked with oil', 'fat added'], 'deep-fried': ['fried', 'cooked with oil'], 'stir-fried': ['fried', 'cooked with oil'],
+  grilled: ['roasted', 'baked', 'broiled', 'no added fat'], roasted: ['baked', 'grilled', 'no added fat'], baked: ['roasted', 'no added fat'],
+  smoked: ['grilled', 'roasted', 'dried'], boiled: ['no added fat'], steamed: ['boiled', 'no added fat'], stewed: ['boiled', 'braised'],
+  raw: [], none: [],
+};
+const ANY_METHOD = /\b(fried|deep[- ]fried|stir[- ]fried|grilled|roasted|baked|boiled|steamed|stewed|smoked|braised|broiled)\b/gi;
+const hasMethod = (q: string) => new RegExp(ANY_METHOD.source, 'i').test(q);
+
+/**
+ * Search queries for an item. With a cooking method, the first query names the method,
+ * or the closest one the database actually has; queries for a different method are dropped
+ * so the wrong preparation (e.g. plantain chips for grilled plantain) doesn't come first.
+ */
 export function itemQueries(item: RecognizedItem): string[] {
-  const qs = [...item.searchQueries, item.localName, item.name].filter(Boolean);
+  const base = [...item.searchQueries, item.localName, item.name].filter(Boolean);
   const word = METHOD_WORDS[item.method] ?? '';
-  if (word && qs[0] && !qs[0].toLowerCase().includes(word)) qs.unshift(`${qs[0]} ${word}`);
-  return qs;
+  if (!word || item.method === 'raw') return base;
+  const head = (base[0] ?? '').toLowerCase().replace(ANY_METHOD, ' ').replace(/\s+/g, ' ').trim();
+  const rest = [...new Set([...base.filter((q) => !hasMethod(q)), head])].filter(Boolean);
+  for (const w of [word, ...METHOD_FALLBACK[item.method]]) {
+    const q = `${head} ${w}`;
+    if (searchFoods(q, { limit: 3 }).some((f) => f.name.toLowerCase().includes(w))) return [q, ...rest];
+  }
+  return rest;
 }
 
 /** Candidates for one item; a food people chose for this name before (learned) goes first. */
