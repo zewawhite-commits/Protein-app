@@ -1,11 +1,12 @@
+import { MenuFits } from '@/components/MenuFits';
 import { PHOTO_ONLY } from '@/lib/photoDiary';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Check, ChevronRight, ImagePlus, Loader2, Mic, ScanBarcode, ScanLine, ScanText, RotateCcw, Search, Sparkles, X, Zap } from 'lucide-react';
+import { ArrowLeft, BookOpen, Check, ChevronRight, ImagePlus, Loader2, Mic, ScanBarcode, ScanLine, ScanText, RotateCcw, Search, Sparkles, X, Zap } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 import { useFoodDb, usePhotoUrl } from '@/lib/hooks';
 import { deletePhoto, getPhoto, savePhoto } from '@/lib/photos';
-import { matchItem, matchItems, pickKey, portionConfidence, sendFeedback, PremiumRequiredError, SignInRequiredError, readLabelPhoto, recognizePhoto, recognizeText, RecognitionUnavailableError, ScanLimitError, type MatchedItem } from '@/lib/recognize-client';
+import { matchItem, matchItems, pickKey, portionConfidence, recognizeMenu, sendFeedback, PremiumRequiredError, SignInRequiredError, readLabelPhoto, recognizePhoto, recognizeText, RecognitionUnavailableError, ScanLimitError, type MatchedItem } from '@/lib/recognize-client';
 import { refreshPremium } from '@/lib/premium';
 import { SOURCE_SHORT, searchFoods, splitName } from '@/lib/foods';
 import { mealForNow, todayKey } from '@/lib/dates';
@@ -49,6 +50,9 @@ export default function Snap() {
   const [pick, setPick] = useState<{ food: Food; grams?: number; label: string; index: number } | null>(null);
   const [logged, setLogged] = useState<Set<number>>(new Set());
   const [labelMode, setLabelMode] = useState(params.get('mode') === 'label');
+  const [menuMode, setMenuMode] = useState(params.get('mode') === 'menu');
+  // The results came from a restaurant menu, not a plate.
+  const [isMenu, setIsMenu] = useState(false);
   const [label, setLabel] = useState<{ name: string; per100: Per100; servingGrams: number; unit: 'g' | 'ml'; note: string } | null>(null);
   const upsertCustomFood = useStore((s) => s.upsertCustomFood);
   const photoUrl = usePhotoUrl(photoId);
@@ -110,7 +114,8 @@ export default function Snap() {
         setPhase('label');
         return;
       }
-      const result = small ? await recognizePhoto(small, token) : await recognizeText(text ?? '', token);
+      const result = small ? (menuMode ? await recognizeMenu(small, token) : await recognizePhoto(small, token)) : await recognizeText(text ?? '', token);
+      setIsMenu(menuMode && !!small);
       await waitForDb();
       if (!result.isFood || !result.items.length) {
         setError(result.note || (file ? 'No food found in this photo.' : 'No food found in that description.'));
@@ -194,7 +199,7 @@ export default function Snap() {
       </div>
     );
   }
-  if (phase === 'camera') return <Camera onClose={back} onCapture={(b) => void (photoDiary && !labelMode ? saveToDiary(b) : analyse(b))} mode={labelMode ? 'label' : 'food'} onMode={(m) => { haptic(); setLabelMode(m === 'label'); }} onBarcode={() => nav(`/barcode${date !== todayKey() ? `?date=${date}` : ''}`)} />;
+  if (phase === 'camera') return <Camera onClose={back} onCapture={(b) => void (photoDiary && !labelMode && !menuMode ? saveToDiary(b) : analyse(b))} mode={labelMode ? 'label' : menuMode ? 'menu' : 'food'} onMode={(m) => { haptic(); setLabelMode(m === 'label'); setMenuMode(m === 'menu'); }} onBarcode={() => nav(`/barcode${date !== todayKey() ? `?date=${date}` : ''}`)} />;
   if (phase === 'describe') {
     return (
       <div className="mx-auto min-h-dvh max-w-lg animate-fade-up px-5 pb-12 md:max-w-2xl md:px-8">
@@ -244,7 +249,7 @@ export default function Snap() {
         )}
         {phase === 'results' && (
           <span className="absolute left-3 top-3 flex items-center gap-1.5 rounded-full bg-black/55 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur-md">
-            <Sparkles size={13} /> {matches.length} {matches.length === 1 ? 'food' : 'foods'} found
+            <Sparkles size={13} /> {matches.length} {isMenu ? (matches.length === 1 ? 'dish on this menu' : 'dishes on this menu') : matches.length === 1 ? 'food' : 'foods'} found
           </span>
         )}
       </div>
@@ -270,7 +275,8 @@ export default function Snap() {
               <span>Unlimited →</span>
             </Link>
           )}
-          <PlateSummary
+          {isMenu && <MenuFits matches={matches} date={date} onPick={(i) => { const m = matches[i]; if (m.candidates[0]) setPick({ food: m.candidates[0], grams: m.item.estimatedGrams || undefined, label: m.item.name, index: i }); }} />}
+          {!isMenu && <PlateSummary
             matches={matches}
             logged={logged}
             onAddExtra={(food, grams) => { addEntry({ date, meal: mealForNow(), food, grams, note: 'Cooking fat added to a scanned meal' }); toast(`Added ${grams} g ${splitName(food.name).title.toLowerCase()}`); }}
@@ -281,7 +287,7 @@ export default function Snap() {
               setLogged((s) => { const n = new Set(s); rows.forEach((r) => n.add(r.index)); return n; });
               toast(`Logged ${rows.length} food${rows.length > 1 ? 's' : ''} — tap any to set the real weight`);
             }}
-          />
+          />}
           <p className="mt-5 px-1 text-[15px] font-semibold">Check each food</p>
           <div className="mt-2 space-y-3">
             {matches.map((m, i) => (
@@ -528,7 +534,7 @@ function ItemCard({ match, done, quality, onPick, onMethod, manualUrl, onLogIngr
 }
 
 /** Full-screen camera with a live viewfinder. Falls back to the system camera/gallery picker. */
-function Camera({ onClose, onCapture, mode, onMode, onBarcode }: { onClose: () => void; onCapture: (b: Blob) => void; mode: 'food' | 'label'; onMode: (m: 'food' | 'label') => void; onBarcode: () => void }) {
+function Camera({ onClose, onCapture, mode, onMode, onBarcode }: { onClose: () => void; onCapture: (b: Blob) => void; mode: 'food' | 'label' | 'menu'; onMode: (m: 'food' | 'label' | 'menu') => void; onBarcode: () => void }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const captureRef = useRef<HTMLInputElement>(null);
@@ -581,7 +587,7 @@ function Camera({ onClose, onCapture, mode, onMode, onBarcode }: { onClose: () =
 
       <div className="absolute inset-x-0 top-0 flex items-center justify-between px-5" style={{ paddingTop: 'max(env(safe-area-inset-top), 1.25rem)' }}>
         <button onClick={onClose} className="grid h-11 w-11 place-items-center rounded-full bg-black/45 backdrop-blur-md" aria-label="Close camera"><X size={20} /></button>
-        <span className="flex items-center gap-1.5 rounded-full bg-black/45 px-3.5 py-2 text-xs font-semibold backdrop-blur-md"><Sparkles size={13} /> {mode === 'label' ? 'Fit the nutrition table in the frame' : 'Fit the whole plate in the frame'}</span>
+        <span className="flex items-center gap-1.5 rounded-full bg-black/45 px-3.5 py-2 text-xs font-semibold backdrop-blur-md"><Sparkles size={13} /> {mode === 'label' ? 'Fit the nutrition table in the frame' : mode === 'menu' ? 'Fit the menu page in the frame' : 'Fit the whole plate in the frame'}</span>
         <span className="w-11" />
       </div>
 
@@ -596,8 +602,8 @@ function Camera({ onClose, onCapture, mode, onMode, onBarcode }: { onClose: () =
       )}
 
       <div className="absolute inset-x-0 bottom-0" style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 2rem)' }}>
-      <div className="mx-auto mb-5 grid max-w-md grid-cols-4 gap-2 px-4">
-        {([['food', 'Scan food', ScanLine], ['barcode', 'Barcode', ScanBarcode], ['label', 'Food label', ScanText], ['library', 'Library', ImagePlus]] as const).map(([m, label, Icon]) => {
+      <div className="mx-auto mb-5 grid max-w-md grid-cols-5 gap-1.5 px-3">
+        {([['food', 'Food', ScanLine], ['barcode', 'Barcode', ScanBarcode], ['label', 'Label', ScanText], ['menu', 'Menu', BookOpen], ['library', 'Library', ImagePlus]] as const).map(([m, label, Icon]) => {
           const on = m === mode;
           return (
             <button

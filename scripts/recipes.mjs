@@ -448,3 +448,31 @@ RECIPES.push(
     portions: [['1 plate', 350], ['1 cup', 200]],
   },
 );
+
+// More regional dishes (East/Central Africa, Latin America, South Asia, Eastern Europe, Middle East).
+RECIPES.push(
+  { name: 'Nyama choma (grilled goat)', cuisine: 'Kenyan', yield: 900, aliases: ['nyama choma', 'grilled goat', 'roast goat'], ingredients: [[I.goat, 1000], [I.salt, 8], [I.lemon, 20]], portions: [['1 portion', 250]] },
+  {
+    name: 'Pondu (cassava leaf stew)', cuisine: 'Congolese', yield: 1000, aliases: ['saka saka', 'sombe', 'mpondu', 'cassava leaves'],
+    ingredients: [['Cassava, leaves, fresh, boiled* (without salt), drained', 600], [I.palm_oil, 60], [I.onion, 100], [I.garlic, 10], [I.green_pepper, 60], [I.dried_shrimp, 20], [I.salt, 5]],
+    portions: [['1 bowl', 300]],
+  },
+  { name: 'Kottu roti', cuisine: 'Sri Lankan', yield: 900, aliases: ['kottu', 'koththu', 'kothu roti'], ingredients: [['Bread, chapati or roti, plain, commercially prepared', 400], [I.egg_fried, 100], [I.chicken_thigh, 200], [I.cabbage, 100], [I.carrots, 60], [I.onion, 60], [I.oil, 40], [I.curry, 6]], portions: [['1 plate', 400]] },
+  { name: 'Gallo pinto', cuisine: 'Costa Rican', yield: 900, aliases: ['gallopinto', 'rice and beans costa rica', 'nicaraguan rice and beans'], ingredients: [[I.rice, 500], [I.black_beans, 350], [I.onion, 60], [I.red_pepper, 40], [I.oil, 25], [I.salt, 4]], portions: [['1 plate', 250], ['1 cup', 180]] },
+  {
+    name: 'Bandeja paisa', cuisine: 'Colombian', yield: 1000, aliases: ['bandeja', 'paisa platter'],
+    ingredients: [[I.rice, 250], [I.kidney, 200], [I.beef_mince, 120], ['Pork, belly joint, roasted, lean and fat', 100], [I.egg_fried, 60], [I.plantain_fried, 100], ['Avocados, raw, all commercial varieties', 70], [I.cornmeal, 40], [I.oil, 20]],
+    portions: [['1 platter', 800]],
+  },
+  {
+    name: 'Acarajé', cuisine: 'Brazilian (Bahian)', yield: 600, aliases: ['acaraje', 'akara bahia', 'black-eyed pea fritters'],
+    ingredients: [[I.cowpeas, 400], [I.onion, 60], [I.palm_oil, 80], [I.dried_shrimp, 40], [I.salt, 4]],
+    portions: [['1 fritter', 120]],
+  },
+  {
+    name: 'Pelmeni', cuisine: 'Russian', yield: 1150, aliases: ['pelmeny', 'russian dumplings'],
+    ingredients: [[I.flour, 350], [I.egg, 50], [I.water, 150], [I.beef_mince_raw, 250], [I.pork_mince, 150], [I.onion, 80], [I.salt, 6]],
+    portions: [['1 plate (about 20)', 300]],
+  },
+  { name: 'Dolma (stuffed vine leaves)', cuisine: 'Middle Eastern', yield: 900, aliases: ['dolmades', 'dolmeh', 'yaprak sarma', 'warak enab', 'stuffed grape leaves'], ingredients: [['Grape leaves, canned', 150], [I.rice, 450], [I.onion, 100], [I.olive_oil, 60], [I.lemon, 40], [I.tomato, 100], [I.parsley, 20], [I.salt, 5]], portions: [['1 piece', 30], ['6 pieces', 180]] },
+);

@@ -158,7 +158,7 @@ For a combined dish (soup, stew, curry, rice dish, salad, sandwich…), also lis
 Do not provide any nutrient values. If the photo contains no food (or only a menu, a person, etc.), set isFood to false and items to [] and explain briefly in "note".`;
 
 /** Run recognition with an Anthropic client (server-side key, or the user's own key in the browser). */
-export async function recognizeWithClient(client: Anthropic, imageBase64: string | null, mediaType: string, description?: string): Promise<RecognitionResult> {
+export async function recognizeWithClient(client: Anthropic, imageBase64: string | null, mediaType: string, description?: string, opts: { menu?: boolean } = {}): Promise<RecognitionResult> {
   const response = await client.beta.messages.create({
     model: RECOGNITION_MODEL,
     max_tokens: 16000,
@@ -177,7 +177,9 @@ export async function recognizeWithClient(client: Anthropic, imageBase64: string
         content: imageBase64
           ? [
               { type: 'image', source: { type: 'base64', media_type: mediaType as 'image/jpeg', data: imageBase64 } },
-              { type: 'text', text: 'Identify every food and drink in this photo — the whole plate, not just the main item.' },
+              { type: 'text', text: opts.menu
+                ? 'This is a photo of a restaurant, café or takeaway menu, not a plate. List up to 12 main dishes from it as items, as each would be served: use the dish name as written (English in "name", the menu’s own wording in "localName" if different), a typical restaurant portion in estimatedGrams with a range, the cooking method, ingredients for combined dishes, and hidden extras at restaurant levels (restaurants usually use more oil, butter and salt than home cooking). Skip drinks and sides unless the menu is only drinks. photoQuality = how readable the menu is. If it isn’t a menu or food, set isFood to false and explain in "note".'
+                : 'Identify every food and drink in this photo — the whole plate, not just the main item.' },
             ]
           : [{ type: 'text', text: `There is no photo. The person described what they ate: "${description ?? ''}". Identify each food from the description (treat it as if you had seen it). Use any amounts they give for estimatedGrams (convert cups, pieces, slices to grams); otherwise estimate a typical portion. Use photoQuality "fair" (there is no photo) and give a range.` }],
       },

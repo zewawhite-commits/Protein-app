@@ -51,7 +51,12 @@ export async function readLabelPhoto(photo: Blob): Promise<LabelRead> {
   return (await send({ image: await toBase64(photo), mediaType: photo.type || 'image/jpeg', label: true })) as unknown as LabelRead;
 }
 
-async function send(payload: { image?: string; mediaType?: string; text?: string; label?: boolean }, premiumToken?: string): Promise<RecognitionResult> {
+/** Read a restaurant menu: its dishes come back like recognised foods, with restaurant-size portions. */
+export async function recognizeMenu(photo: Blob, premiumToken?: string): Promise<RecognitionResult> {
+  return send({ image: await toBase64(photo), mediaType: photo.type || 'image/jpeg', menu: true }, premiumToken);
+}
+
+async function send(payload: { image?: string; mediaType?: string; text?: string; label?: boolean; menu?: boolean }, premiumToken?: string): Promise<RecognitionResult> {
   void premiumToken;
   let res: Response;
   try {

@@ -39,7 +39,7 @@ export function dataQuality(food: Pick<Food, 'source' | 'per100'>): { level: 'me
     case 'recipe': return { level: 'calculated', text: 'Calculated from a standard recipe — home versions vary, especially oil', missing };
     case 'off': return { level: 'label', text: 'From the pack label (Open Food Facts) — check it matches yours', missing };
     case 'custom': return { level: 'yours', text: 'Your own numbers', missing };
-    default: return { level: 'measured', text: 'Measured — official food composition table', missing };
+    default: return { level: 'measured', text: 'From an official food composition table', missing };
   }
 }
 

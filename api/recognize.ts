@@ -22,7 +22,7 @@ export async function POST(request: Request): Promise<Response> {
   const g = await gate(request, 'scan');
   if (!g.ok) return json(g.body, g.status);
   if (Number.isFinite(g.left)) scansLeft = g.left;
-  let body: { image?: string; mediaType?: string; text?: string; label?: boolean };
+  let body: { image?: string; mediaType?: string; text?: string; label?: boolean; menu?: boolean };
   try {
     body = await request.json();
   } catch {
@@ -41,7 +41,7 @@ export async function POST(request: Request): Promise<Response> {
       const label = await readLabelWithClient(new Anthropic(), image!, mediaType);
       return json(scansLeft != null ? { ...label, scansLeft, scanLimit: g.limit } : label, 200);
     }
-    const recognized = await recognizeWithClient(new Anthropic(), text ? null : image!, mediaType, text || undefined);
+    const recognized = await recognizeWithClient(new Anthropic(), text ? null : image!, mediaType, text || undefined, { menu: body.menu === true && !text });
     // What most people chose for these names before, so the right record can go first.
     const popular = await popularPicks(recognized.items.flatMap((i) => [i.name, i.localName]));
     const result = { ...recognized, popular };
