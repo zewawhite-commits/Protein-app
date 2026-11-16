@@ -45,7 +45,7 @@ const SCHEMA = {
   additionalProperties: false,
 } as const;
 
-const SYSTEM = `You plan one day of eating inside Provora, a nutrition-tracking app.
+const SYSTEM = `You plan one day of eating inside Nutivility, a nutrition-tracking app.
 
 Make a realistic, enjoyable day (breakfast, lunch, dinner and 1–2 snacks) for this person:
 - Aim for their calorie and protein targets and their goals; spread protein across meals.

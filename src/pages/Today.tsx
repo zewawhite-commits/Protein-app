@@ -201,7 +201,7 @@ function HeroCard({ totals, goal, targets, entries, burned = 0, addBurned }: { t
   const kcalPct = targets ? totals.kcal / targets.kcal : 0;
   const over = targets && kcalLeft < 0;
 
-  // Provora's signature: an evergreen "fuel gauge" for the day.
+  // Nutivility's signature: an evergreen "fuel gauge" for the day.
   const pct = Math.max(0, Math.min(1, kcalPct));
   return (
     <section className="mt-4 overflow-hidden rounded-[28px] px-5 pb-4 pt-4 text-white" style={{ background: 'linear-gradient(140deg, rgb(52 199 137) 0%, rgb(18 158 108) 60%, rgb(12 140 104) 100%)', boxShadow: '0 14px 30px -14px rgb(18 152 104 / 0.55)' }}>

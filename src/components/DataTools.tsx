@@ -18,7 +18,7 @@ export function weeklyReport(): string {
   const eaten = s.entries.filter((e) => !e.planned && days.includes(e.date));
   const logged = days.filter((d) => eaten.some((e) => e.date === d));
   const r = (n: number) => Math.round(n);
-  const lines = [`Provora report — ${p?.name ? `${p.name}, ` : ''}${days[0]} to ${today}`, ''];
+  const lines = [`Nutivility report — ${p?.name ? `${p.name}, ` : ''}${days[0]} to ${today}`, ''];
   if (p) {
     const goal = dailyGoal(p);
     const t = dailyTargets(p, goal);
@@ -52,7 +52,7 @@ export function ShareReportRow({ Row }: { Row: (p: { icon: React.ReactNode; labe
         haptic();
         const text = weeklyReport();
         try {
-          if (navigator.share) { await navigator.share({ title: 'My Provora week', text }); return; }
+          if (navigator.share) { await navigator.share({ title: 'My Nutivility week', text }); return; }
         } catch { return; /* closed the share sheet */ }
         try { await navigator.clipboard.writeText(text); toast('Report copied — paste it into an email or message'); } catch { toast('Couldn’t copy the report on this device'); }
       }}

@@ -302,7 +302,7 @@ export function SmartTarget() {
     return (
       <section className="card p-5">
         <h2 className="text-lg font-bold">Smart calorie target</h2>
-        <p className="mt-1 text-sm leading-relaxed text-silver">After about two weeks of logging and a few weigh-ins, Provora works out what your body really burns and fine-tunes your target, instead of relying on a formula.</p>
+        <p className="mt-1 text-sm leading-relaxed text-silver">After about two weeks of logging and a few weigh-ins, Nutivility works out what your body really burns and fine-tunes your target, instead of relying on a formula.</p>
         <div className="mt-3 grid grid-cols-2 gap-2 text-center">
           <div className="rounded-2xl bg-raised py-3"><p className="num text-[18px] font-extrabold">{Math.min(d, 10)}<span className="text-sm text-silver"> / 10</span></p><p className="text-xs text-silver">days logged</p></div>
           <div className="rounded-2xl bg-raised py-3"><p className="num text-[18px] font-extrabold">{Math.min(w, 4)}<span className="text-sm text-silver"> / 4</span></p><p className="text-xs text-silver">weigh-ins</p></div>

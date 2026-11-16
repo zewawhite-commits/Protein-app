@@ -403,7 +403,7 @@ function GroupView({ group, groups, avatar, onAvatar, onSwitch, onChanged, onEdi
         <button
           onClick={() => {
             const url = inviteUrl(group.invite_code);
-            if ('share' in navigator) void navigator.share({ title: 'Join my Provora group', text: `Join “${group.name}” on Provora`, url }).catch(() => undefined);
+            if ('share' in navigator) void navigator.share({ title: 'Join my Nutivility group', text: `Join “${group.name}” on Nutivility`, url }).catch(() => undefined);
             else { void (navigator as Navigator).clipboard?.writeText(url); toast('Invite link copied'); }
             haptic();
           }}
@@ -735,7 +735,7 @@ export function CommunityFeedPage() {
     <div className="animate-fade-up pb-6">
       <header className="pt-safe pb-4">
         <h1 className="text-[30px] font-extrabold tracking-tight">Feed</h1>
-        <p className="text-sm text-silver">Real journeys from the Provora community</p>
+        <p className="text-sm text-silver">Real journeys from the Nutivility community</p>
       </header>
       {!accountsEnabled ? <FeedPreview note="The feed will open once accounts are switched on for this app." />
         : session === undefined ? <Loading />

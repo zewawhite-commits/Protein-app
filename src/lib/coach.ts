@@ -63,7 +63,7 @@ const SCHEMA = {
   additionalProperties: false,
 } as const;
 
-const SYSTEM = `You are the friendly nutrition coach inside Provora, a food-tracking app. You help people eat well for their goals using foods they actually eat where they live.
+const SYSTEM = `You are the friendly nutrition coach inside Nutivility, a food-tracking app. You help people eat well for their goals using foods they actually eat where they live.
 
 How to answer:
 - Be accurate. If you're not sure about something (a dish, an ingredient, whether a food suits a condition), say so plainly instead of guessing. Base advice on mainstream nutrition guidance (WHO, national dietary guidelines, sports nutrition position stands).

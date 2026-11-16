@@ -47,7 +47,7 @@ export default function Help() {
         <p className="text-[17px] font-bold">Send us feedback</p>
         <p className="mt-1 text-[14px] text-silver">A bug, an idea, a missing food — it goes straight to the team.</p>
         <label className="sr-only" htmlFor="fb-text">Your message</label>
-        <textarea id="fb-text" value={text} onChange={(e) => setText(e.target.value.slice(0, 1000))} rows={4} className="field mt-3 !h-auto py-3" placeholder="What happened, or what would make Provora better?" />
+        <textarea id="fb-text" value={text} onChange={(e) => setText(e.target.value.slice(0, 1000))} rows={4} className="field mt-3 !h-auto py-3" placeholder="What happened, or what would make Nutivility better?" />
         <button
           disabled={busy || text.trim().length < 5}
           onClick={async () => {
