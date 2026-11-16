@@ -2,7 +2,7 @@ import { InstallBanner } from '@/components/InstallApp';
 import { PhotoDiary } from '@/components/PhotoDiary';
 import { WaterCard } from '@/components/Water';
 import { Logo } from '@/components/Logo';
-import { useMemo, useRef, useState } from 'react';
+import { useId, useMemo, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Check, ChevronRight, Copy, Droplet, Drumstick, Flame, Plus, Wheat } from 'lucide-react';
 import { useStore, goalOn } from '@/store/useStore';
@@ -151,6 +151,49 @@ export default function Today() {
   );
 }
 
+/**
+ * The day's calorie gauge, drawn with depth: a groove carved into the card, a glossy tube for
+ * what's eaten (lit from above, casting a soft shadow) and a pearl marking where you are.
+ * Without a calorie goal it shows a row of pearls instead of a fill.
+ */
+function Gauge3D({ pct, over, hasGoal }: { pct: number; over: boolean; hasGoal: boolean }) {
+  const id = useId().replace(/:/g, '');
+  const R = 84, C = Math.PI * R; // half-circle arc length
+  const r2 = R - 4, C2 = Math.PI * r2; // inner edge, for the shine
+  const arc = (r: number) => `M ${100 - r} 100 A ${r} ${r} 0 0 1 ${100 + r} 100`;
+  const at = (f: number) => { const a = Math.PI * (1 - f); return { x: 100 + R * Math.cos(a), y: 100 - R * Math.sin(a) }; };
+  const knob = at(pct);
+  const [top, bottom] = over ? ['#FFEAB0', '#EFB443'] : ['#FFFFFF', '#CFF3E2'];
+  const ease = { transition: 'stroke-dasharray .6s ease' };
+  return (
+    <svg viewBox="0 0 200 116" className="w-full overflow-visible" aria-hidden>
+      <defs>
+        <linearGradient id={`${id}t`} x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor={top} /><stop offset="1" stopColor={bottom} /></linearGradient>
+        <radialGradient id={`${id}k`} cx="0.35" cy="0.3" r="0.75"><stop offset="0" stopColor="#FFFFFF" /><stop offset="0.6" stopColor={top} /><stop offset="1" stopColor={bottom} /></radialGradient>
+        <radialGradient id={`${id}p`} cx="0.35" cy="0.3" r="0.8"><stop offset="0" stopColor="#FFFFFF" stopOpacity="0.95" /><stop offset="1" stopColor="#FFFFFF" stopOpacity="0.35" /></radialGradient>
+        <filter id={`${id}s`} x="-20%" y="-20%" width="140%" height="160%"><feDropShadow dx="0" dy="3" stdDeviation="2.4" floodColor="#03402B" floodOpacity="0.45" /></filter>
+      </defs>
+      {/* the groove: a lit lower lip under a darker channel */}
+      <path d={arc(R)} transform="translate(0 1.6)" fill="none" stroke="rgb(255 255 255 / 0.22)" strokeWidth="17" strokeLinecap="round" />
+      <path d={arc(R)} fill="none" stroke="rgb(0 58 38 / 0.32)" strokeWidth="17" strokeLinecap="round" />
+      {hasGoal ? (
+        pct > 0 && (
+          <g filter={`url(#${id}s)`}>
+            <path d={arc(R)} fill="none" stroke={`url(#${id}t)`} strokeWidth="14" strokeLinecap="round" strokeDasharray={`${C * pct} ${C}`} style={ease} />
+            <path d={arc(r2)} fill="none" stroke="rgb(255 255 255 / 0.85)" strokeWidth="2.6" strokeLinecap="round" strokeDasharray={`${Math.max(0, C2 * pct - 6)} ${C2}`} strokeDashoffset={-3} style={ease} />
+            <circle cx={knob.x} cy={knob.y} r="10" fill={`url(#${id}k)`} />
+            <circle cx={knob.x} cy={knob.y} r="3.4" fill={over ? '#C98A16' : 'rgb(var(--accent))'} />
+          </g>
+        )
+      ) : (
+        <g filter={`url(#${id}s)`}>
+          {Array.from({ length: 11 }, (_, i) => at(i / 10)).map((p, i) => <circle key={i} cx={p.x} cy={p.y} r="4.2" fill={`url(#${id}p)`} />)}
+        </g>
+      )}
+    </svg>
+  );
+}
+
 function HeroCard({ totals, goal, targets, entries, burned = 0, addBurned }: { totals: Totals; goal: number; targets: Targets | null; entries: LogEntry[]; burned?: number; addBurned?: boolean }) {
   const [allNutrients, setAllNutrients] = useState(false);
   void entries;
@@ -160,14 +203,10 @@ function HeroCard({ totals, goal, targets, entries, burned = 0, addBurned }: { t
 
   // Provora's signature: an evergreen "fuel gauge" for the day.
   const pct = Math.max(0, Math.min(1, kcalPct));
-  const R = 84, C = Math.PI * R; // half-circle arc length
   return (
     <section className="mt-4 overflow-hidden rounded-[28px] px-5 pb-4 pt-4 text-white" style={{ background: 'linear-gradient(140deg, rgb(52 199 137) 0%, rgb(18 158 108) 60%, rgb(12 140 104) 100%)', boxShadow: '0 14px 30px -14px rgb(18 152 104 / 0.55)' }}>
-      <div className="relative mx-auto w-[168px]">
-        <svg viewBox="0 0 200 112" className="w-full" aria-hidden>
-          <path d="M 16 100 A 84 84 0 0 1 184 100" fill="none" stroke="rgb(255 255 255 / 0.28)" strokeWidth="14" strokeLinecap="round" strokeDasharray={targets ? undefined : '2 14'} />
-          {targets && <path d="M 16 100 A 84 84 0 0 1 184 100" fill="none" stroke={over ? 'rgb(255 214 120)' : 'white'} strokeWidth="14" strokeLinecap="round" strokeDasharray={`${C * pct} ${C}`} style={{ transition: 'stroke-dasharray .6s ease' }} />}
-        </svg>
+      <div className="relative mx-auto w-[200px]">
+        <Gauge3D pct={pct} over={!!over} hasGoal={!!targets} />
         <div className="absolute inset-x-0 bottom-0 text-center">
           <CountUp value={targets ? Math.abs(Math.round(kcalLeft)) : Math.round(totals.kcal)} className={cx('num font-extrabold leading-none', Math.abs(kcalLeft) >= 10000 ? 'text-[30px]' : 'text-[36px]')} />
           <p className="mt-0.5 text-[12px] font-semibold opacity-90">{targets ? (over ? 'kcal over' : 'kcal left') : 'kcal eaten'}</p>
@@ -303,8 +342,8 @@ function MacroCards({ totals, goal, targets, simple }: { totals: Totals; goal: n
               <p className="flex-1 text-[15px] font-semibold">{m.label}</p>
               <p className="num text-[15px] font-bold">{m.target ? `${fmt(Math.abs(left))}g` : `${fmt(m.eaten)}g`}<span className="ml-1 text-[13px] font-medium text-silver">{m.target ? (left < 0 ? 'over' : 'left') : 'eaten'}</span></p>
             </div>
-            <div className="mt-2 h-2.5 overflow-hidden rounded-full bg-raised">
-              <div className="h-full rounded-full transition-all duration-500" style={{ width: `${Math.min(100, m.target ? (m.eaten / m.target) * 100 : 0)}%`, background: m.color }} />
+            <div className="track-3d mt-2 h-3 overflow-hidden rounded-full bg-raised">
+              <div className="bar-3d h-full rounded-full transition-all duration-500" style={{ width: `${Math.min(100, m.target ? (m.eaten / m.target) * 100 : 0)}%`, backgroundColor: m.color }} />
             </div>
           </div>
         );

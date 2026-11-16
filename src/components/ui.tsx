@@ -1,4 +1,4 @@
-import { useEffect, type ReactNode } from 'react';
+import { useEffect, useId, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import type { PrepState } from '@/lib/types';
@@ -28,12 +28,19 @@ export function Ring({
   children?: ReactNode;
   className?: string;
 }) {
+  const id = useId().replace(/:/g, '');
   const r = (size - stroke) / 2;
   const c = 2 * Math.PI * r;
   const v = Math.max(0, Math.min(1, value));
+  const progress = { cx: size / 2, cy: size / 2, r, fill: 'none', strokeWidth: stroke, strokeLinecap: 'round' as const, strokeDasharray: c, strokeDashoffset: c * (1 - v), style: { transition: 'stroke-dashoffset .7s cubic-bezier(.2,.8,.2,1)' } };
   return (
     <div className={cx('relative grid shrink-0 place-items-center', className)} style={{ width: size, height: size }}>
-      <svg width={size} height={size} className="-rotate-90" aria-hidden>
+      <svg width={size} height={size} className="-rotate-90 overflow-visible" aria-hidden>
+        <defs>
+          {/* Light from the top-left: a soft shine on the band and a shadow beneath it, so it looks raised. */}
+          <linearGradient id={`${id}g`} x1="0" y1="1" x2="1" y2="0"><stop offset="0" stopColor="#fff" stopOpacity="0.5" /><stop offset="0.45" stopColor="#fff" stopOpacity="0.06" /><stop offset="1" stopColor="#000" stopOpacity="0.18" /></linearGradient>
+          <filter id={`${id}s`} x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="1.2" dy="0" stdDeviation={Math.max(0.6, stroke / 4)} floodColor="#000" floodOpacity="0.22" /></filter>
+        </defs>
         <circle
           cx={size / 2}
           cy={size / 2}
@@ -44,18 +51,10 @@ export function Ring({
           strokeDasharray={dashed ? '2 4' : undefined}
         />
         {v > 0 && (
-          <circle
-            cx={size / 2}
-            cy={size / 2}
-            r={r}
-            fill="none"
-            stroke={`rgb(var(--${color}))`}
-            strokeWidth={stroke}
-            strokeLinecap="round"
-            strokeDasharray={c}
-            strokeDashoffset={c * (1 - v)}
-            style={{ transition: 'stroke-dashoffset .7s cubic-bezier(.2,.8,.2,1)' }}
-          />
+          <g filter={`url(#${id}s)`}>
+            <circle {...progress} stroke={`rgb(var(--${color}))`} />
+            {stroke >= 4 && <circle {...progress} stroke={`url(#${id}g)`} />}
+          </g>
         )}
       </svg>
       {children && <div className="absolute inset-0 grid place-items-center">{children}</div>}
