@@ -1,3 +1,4 @@
+import { PHOTO_ONLY } from '@/lib/photoDiary';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Check, ChevronRight, ImagePlus, Loader2, Mic, ScanBarcode, ScanLine, ScanText, RotateCcw, Search, Sparkles, X, Zap } from 'lucide-react';
@@ -15,7 +16,7 @@ import { accountsEnabled, useSession } from '@/lib/account';
 import { FoodVisual } from '@/components/FoodIcon';
 import { Segmented, StateBadge, cx, fmt } from '@/components/ui';
 import { haptic, toast } from '@/components/fx';
-import { labelPer100 } from '@/lib/label';
+import { labelHighlights, labelPer100 } from '@/lib/label';
 import { COOKING_METHODS, type CookingMethod } from '@/lib/recognition';
 import { suggestPortions, type PortionRow } from '@/lib/portion';
 import { dailyTargets } from '@/lib/energy';
@@ -23,7 +24,7 @@ import { useDay } from '@/lib/hooks';
 import { PortionCoach } from '@/components/PortionCoach';
 import { AllergyTag } from '@/components/Allergy';
 
-type Phase = 'camera' | 'describe' | 'signin' | 'analyzing' | 'results' | 'label' | 'unavailable' | 'premium' | 'limit' | 'error';
+type Phase = 'diary' | 'camera' | 'describe' | 'signin' | 'analyzing' | 'results' | 'label' | 'unavailable' | 'premium' | 'limit' | 'error';
 
 export default function Snap() {
   const session = useSession();
@@ -61,6 +62,21 @@ export default function Snap() {
     if (window.location.pathname.startsWith(`${import.meta.env.BASE_URL}add`)) return;
     if (id && !useStore.getState().entries.some((e) => e.photoId === id)) void deletePhoto(id);
   }, []);
+
+  // Photo-diary mode: keep the photo without numbers; it can still be analysed afterwards.
+  const photoDiary = useStore((s) => s.settings.tracking === 'photo');
+  async function saveToDiary(file: Blob) {
+    const id = await savePhoto(file);
+    setPhotoId(id);
+    addEntry({ date, meal: mealForNow(), food: PHOTO_ONLY, grams: 1, photoId: id, note: 'Photo diary' });
+    lastTry.current = { photoId: id };
+    setPhase('diary');
+  }
+  /** Once a diary photo is logged with real foods, its numberless placeholder goes away. */
+  const dropDiaryEntry = () => {
+    const st = useStore.getState();
+    for (const e of st.entries) if (e.foodId === PHOTO_ONLY.id && e.photoId && e.photoId === photoId) st.removeEntry(e.id);
+  };
 
   // What was last sent, so a failed scan can be retried without taking the photo again.
   const lastTry = useRef<{ photoId?: string; text?: string } | null>(null);
@@ -178,7 +194,7 @@ export default function Snap() {
       </div>
     );
   }
-  if (phase === 'camera') return <Camera onClose={back} onCapture={(b) => void analyse(b)} mode={labelMode ? 'label' : 'food'} onMode={(m) => { haptic(); setLabelMode(m === 'label'); }} onBarcode={() => nav(`/barcode${date !== todayKey() ? `?date=${date}` : ''}`)} />;
+  if (phase === 'camera') return <Camera onClose={back} onCapture={(b) => void (photoDiary && !labelMode ? saveToDiary(b) : analyse(b))} mode={labelMode ? 'label' : 'food'} onMode={(m) => { haptic(); setLabelMode(m === 'label'); }} onBarcode={() => nav(`/barcode${date !== todayKey() ? `?date=${date}` : ''}`)} />;
   if (phase === 'describe') {
     return (
       <div className="mx-auto min-h-dvh max-w-lg animate-fade-up px-5 pb-12 md:max-w-2xl md:px-8">
@@ -260,6 +276,7 @@ export default function Snap() {
             onAddExtra={(food, grams) => { addEntry({ date, meal: mealForNow(), food, grams, note: 'Cooking fat added to a scanned meal' }); toast(`Added ${grams} g ${splitName(food.name).title.toLowerCase()}`); }}
             date={date}
             onLogAll={(rows: PlateRow[]) => {
+              dropDiaryEntry();
               rows.forEach((r, k) => addEntry({ date, meal: mealForNow(), food: r.food, grams: r.grams, photoId: k === 0 ? photoId : undefined, note: r.confirmed ? 'Weight set by you' : r.suggested ? 'Portion estimated — suggested serving, edit to what you ate' : 'Portion estimated by AI — edit to your real weight' }));
               setLogged((s) => { const n = new Set(s); rows.forEach((r) => n.add(r.index)); return n; });
               toast(`Logged ${rows.length} food${rows.length > 1 ? 's' : ''} — tap any to set the real weight`);
@@ -318,6 +335,15 @@ export default function Snap() {
               ))}
             </div>
             <p className="mt-3 text-xs leading-relaxed text-dim">These are the manufacturer’s numbers as printed. Empty boxes weren’t on the label and stay unknown.</p>
+            {(() => { const hl = labelHighlights(label.per100 as never, label.unit); return hl.length > 0 && (
+              <div className="mt-3 rounded-2xl bg-raised p-3.5">
+                <p className="text-[14px] font-semibold">What this label means</p>
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {hl.map((h) => <span key={h.text} className={cx('rounded-full px-2.5 py-1 text-[13px] font-semibold', h.tone === 'good' ? 'bg-accent/10 text-accent' : h.tone === 'watch' ? 'bg-warn/15 text-warn' : 'bg-surface')}>{h.text}</span>)}
+                </div>
+                <p className="mt-2 text-[12px] text-dim">Per 100 {label.unit}, using the UK traffic-light thresholds. Fine in a balanced day — just good to know.</p>
+              </div>
+            ); })()}
             <button
               disabled={label.name.trim().length < 2}
               onClick={() => {
@@ -377,6 +403,17 @@ export default function Snap() {
         </div>
       )}
 
+      {phase === 'diary' && (
+        <div className="card mt-5 p-5">
+          <p className="font-semibold">Saved to your photo diary</p>
+          <p className="mt-1 text-sm text-silver">No numbers needed. If you’d like the nutrition for this meal, the AI can analyse it now.</p>
+          <div className="mt-4 grid gap-2">
+            <button onClick={back} className="btn-primary">Done</button>
+            <button onClick={() => { haptic(); void analyse(null, undefined, lastTry.current?.photoId); }} className="btn-ghost"><Sparkles size={17} /> Analyse it with AI</button>
+          </div>
+        </div>
+      )}
+
       {phase === 'error' && (
         <div className="card mt-5 p-5">
           <p className="font-semibold">Couldn’t identify this one</p>
@@ -396,7 +433,7 @@ export default function Snap() {
         date={date}
         preset={pick ? { photoId, aiEstimate: pick.grams } : undefined}
         onClose={() => setPick(null)}
-        onSaved={() => pick && setLogged((s) => new Set(s).add(pick.index))}
+        onSaved={() => { dropDiaryEntry(); if (pick) setLogged((s) => new Set(s).add(pick.index)); }}
         onSwitchFood={(f) => setPick((p) => (p ? { ...p, food: f } : p))}
       />
     </div>

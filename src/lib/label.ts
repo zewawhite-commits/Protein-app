@@ -81,6 +81,30 @@ export function sanitizeLabel(raw: Partial<LabelRead>): LabelRead {
  * printed serving size; without one they can't be converted, so this returns null.
  * A label must at least give energy or protein, and no value may exceed what 100 g can hold.
  */
+/**
+ * Plain-language highlights for a label, using the UK front-of-pack thresholds per 100 g
+ * (halved for drinks per 100 ml): high/low in sugar, fat, saturates and salt, plus
+ * protein and fibre claims (EU: protein ≥ 12% of energy; fibre ≥ 3 g / 6 g per 100 g).
+ */
+export function labelHighlights(p: { kcal: number | null; protein: number; sugar?: number | null; fat?: number | null; satFat?: number | null; sodium?: number | null; fiber?: number | null }, unit: 'g' | 'ml'): { tone: 'good' | 'watch' | 'neutral'; text: string }[] {
+  const d = unit === 'ml' ? 0.5 : 1;
+  const out: { tone: 'good' | 'watch' | 'neutral'; text: string }[] = [];
+  const rate = (v: number | null | undefined, low: number, high: number, what: string) => {
+    if (v == null) return;
+    if (v > high * d) out.push({ tone: 'watch', text: `High in ${what}` });
+    else if (v <= low * d) out.push({ tone: 'good', text: `Low in ${what}` });
+  };
+  rate(p.sugar, 5, 22.5, 'sugar');
+  rate(p.fat, 3, 17.5, 'fat');
+  rate(p.satFat, 1.5, 5, 'saturated fat');
+  rate(p.sodium != null ? (p.sodium * 2.5) / 1000 : null, 0.3, 1.5, 'salt');
+  if (p.kcal && p.kcal > 0 && (p.protein * 4) / p.kcal >= 0.2) out.push({ tone: 'good', text: 'High in protein' });
+  else if (p.kcal && p.kcal > 0 && (p.protein * 4) / p.kcal >= 0.12) out.push({ tone: 'good', text: 'Source of protein' });
+  if (p.fiber != null && p.fiber >= 6) out.push({ tone: 'good', text: 'High in fibre' });
+  else if (p.fiber != null && p.fiber >= 3) out.push({ tone: 'good', text: 'Source of fibre' });
+  return out;
+}
+
 export function labelPer100(l: LabelRead): Per100 | null {
   if (!l.isLabel || (l.kcal == null && l.protein == null)) return null;
   const k = l.basis === 'perServing' ? (l.servingGrams > 0 ? 100 / l.servingGrams : 0) : 1;

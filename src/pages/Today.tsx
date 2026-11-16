@@ -1,3 +1,4 @@
+import { PhotoDiary } from '@/components/PhotoDiary';
 import { WaterCard } from '@/components/Water';
 import { Logo } from '@/components/Logo';
 import { useMemo, useRef, useState } from 'react';
@@ -55,6 +56,7 @@ export default function Today() {
   const { streak } = useGoalStats(date);
   const gentle = useStore((s) => !!s.settings.gentle);
   const simple = useStore((s) => s.settings.tracking === 'simple');
+  const photoDiary = useStore((s) => s.settings.tracking === 'photo');
   const quietAi = useStore((s) => !!s.settings.quietAi);
 
   const isToday = date === today;
@@ -101,8 +103,12 @@ export default function Today() {
 
       <div className="lg:grid lg:grid-cols-[1.1fr_1fr] lg:items-start lg:gap-8">
       <div>
-      <HeroCard totals={totals} goal={goal} targets={targets} entries={entries} burned={burned} addBurned={addBurned} />
-      <MacroCards totals={totals} goal={goal} targets={targets} simple={simple} />
+      {photoDiary ? <PhotoDiary entries={entries} date={date} /> : (
+        <>
+          <HeroCard totals={totals} goal={goal} targets={targets} entries={entries} burned={burned} addBurned={addBurned} />
+          <MacroCards totals={totals} goal={goal} targets={targets} simple={simple} />
+        </>
+      )}
       </div>
 
       <section className="mt-8 lg:mt-5">

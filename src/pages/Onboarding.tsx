@@ -592,6 +592,7 @@ function Welcome({ signedIn, email, onStart }: { signedIn: boolean; email?: stri
           </button>
           <button onClick={onStart} className="mt-1 h-11 text-sm font-semibold text-silver">Skip — use without an account</button>
           <p className="text-center text-xs text-dim">An account saves your data so you can use it on any phone.</p>
+          <p className="mb-2 text-center text-[13px] text-silver">Free to start, no card. Plus $4.99/mo, Pro $7.99/mo, or save 60% yearly · <a href="/premium" className="font-semibold text-accent underline">See what’s included</a></p>
           <p className="text-center text-xs text-dim">By continuing you agree to our <a href="/terms" className="underline">Terms</a>, <a href="/privacy" className="underline">Privacy Policy</a> and <a href="/refunds" className="underline">Refund Policy</a>.</p>
         </div>
       )}

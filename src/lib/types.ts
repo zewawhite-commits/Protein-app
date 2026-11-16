@@ -171,7 +171,7 @@ export interface Settings {
   /** Gentle mode: no streaks and no over-target notices — for people who find them stressful. */
   gentle?: boolean;
   /** 'simple' shows calories and protein only; 'detailed' (default) shows every macro and nutrient. */
-  tracking?: 'simple' | 'detailed';
+  tracking?: 'simple' | 'detailed' | 'photo';
   /** Hide the "What to eat next" suggestions on Home (AI only speaks when asked). */
   quietAi?: boolean;
 }

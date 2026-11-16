@@ -31,6 +31,18 @@ const SOURCE_OF: Record<SourceCode, FoodSource> = { s: 'usda-sr', f: 'usda-fndds
 const ID_PREFIX: Record<SourceCode, string> = { s: 'usda', f: 'usda', w: 'wafct', u: 'cofid', a: 'afcd', r: 'recipe' };
 
 /** Human-readable source line and link for a record. */
+/** How trustworthy a food's numbers are, in plain words, plus how many nutrients the source doesn't list. */
+export function dataQuality(food: Pick<Food, 'source' | 'per100'>): { level: 'measured' | 'calculated' | 'label' | 'yours'; text: string; missing: number } {
+  const keys = ['kcal', 'carbs', 'fat', 'fiber', 'sugar', 'satFat', 'sodium', 'potassium', 'calcium', 'iron', 'magnesium', 'zinc', 'vitA', 'vitC', 'vitD', 'vitB12', 'folate'] as const;
+  const missing = keys.filter((k) => (food.per100 as unknown as Record<string, number | null | undefined>)[k] == null).length;
+  switch (food.source) {
+    case 'recipe': return { level: 'calculated', text: 'Calculated from a standard recipe — home versions vary, especially oil', missing };
+    case 'off': return { level: 'label', text: 'From the pack label (Open Food Facts) — check it matches yours', missing };
+    case 'custom': return { level: 'yours', text: 'Your own numbers', missing };
+    default: return { level: 'measured', text: 'Measured — official food composition table', missing };
+  }
+}
+
 export function sourceInfo(food: Pick<Food, 'source' | 'fdcId' | 'ref' | 'sourceNote'>): { label: string; url?: string } {
   switch (food.source) {
     case 'usda-sr': return { label: `USDA SR Legacy · FDC ${food.fdcId}`, url: fdcUrl(food.fdcId!) };

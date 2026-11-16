@@ -1,3 +1,4 @@
+import { backupToday } from './lib/backups';
 import { lazy, Suspense, useEffect } from 'react';
 import { refreshPremium } from './lib/premium';
 import { captureInvite, usePerksSync } from './lib/perks';
@@ -32,6 +33,8 @@ const Feed = lazy(() => import('./pages/Groups').then((m) => ({ default: m.Commu
 export default function App() {
   useThemeSync();
   useEffect(() => { void refreshPremium(); }, []);
+  // A daily copy of the data on this device, for restoring after a mistake.
+  useEffect(() => { const t = setTimeout(() => void backupToday(), 4000); return () => clearTimeout(t); }, []);
   useCloudSync();
   usePerksSync();
   useMealReminders();
@@ -39,6 +42,8 @@ export default function App() {
   // Legal pages open from the welcome screen too, before a profile exists.
   const path = typeof location !== 'undefined' ? location.pathname : '';
   if (!profile && (path === '/privacy' || path === '/terms' || path === '/refunds')) return <Suspense fallback={null}>{path === '/privacy' ? <Privacy /> : path === '/terms' ? <Terms /> : <Refunds />}</Suspense>;
+  // Prices are visible before sign-up, so nobody meets a surprise paywall.
+  if (!profile && path === '/premium') return <Suspense fallback={null}><Toaster /><Premium /></Suspense>;
   if (!profile) return <Onboarding />;
   return (
     <Suspense fallback={null}>

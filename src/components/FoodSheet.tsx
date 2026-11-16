@@ -1,10 +1,12 @@
+import { aiHeaders } from '@/lib/premium';
+import { Link } from 'react-router-dom';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Camera, ChevronDown, ExternalLink, Heart, ImagePlus, Minus, Plus, Trash2, Copy, ArrowLeftRight, Scale } from 'lucide-react';
 import type { Food, LogEntry, Meal } from '@/lib/types';
 import { nutrientsFor, round1, scale } from '@/lib/nutrition';
 import { EXTRA_KEYS } from '@/lib/nutrients';
 import { MACRO_COLOR, NutrientList } from './Nutrients';
-import { counterparts, similarFoods, sourceInfo, splitName } from '@/lib/foods';
+import { counterparts, dataQuality, similarFoods, sourceInfo, splitName } from '@/lib/foods';
 import { fitsDiet } from '@/lib/goals';
 import { foodAllergens } from '@/lib/allergens';
 import { useAvoid } from './Allergy';
@@ -328,6 +330,12 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
 
       {/* Source */}
       <div>
+        {(() => { const q = dataQuality(food); return (
+          <p className={cx('mb-1 flex items-center justify-center gap-1.5 text-center text-[12px] font-semibold', q.level === 'measured' ? 'text-accent' : 'text-silver')}>
+            <span className={cx('h-2 w-2 rounded-full', q.level === 'measured' ? 'bg-accent' : q.level === 'calculated' ? 'bg-[#E9B949]' : 'bg-silver')} />
+            {q.text}{q.missing > 0 ? ` · ${q.missing} nutrient${q.missing > 1 ? 's' : ''} not listed` : ''}
+          </p>
+        ); })()}
         <button onClick={() => setShowSource((s) => !s)} className="flex w-full items-center justify-center gap-1 py-1 text-xs font-semibold text-silver">
           {sourceInfo(food).label.split(' · ')[0]} · per 100g
           <ChevronDown size={14} className={cx('transition', showSource && 'rotate-180')} />
@@ -358,13 +366,16 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
                 onClick={() => {
                   const why = prompt('What looks wrong with this food? (e.g. calories too high, wrong serving size)');
                   if (!why?.trim()) return;
-                  void fetch('/api/feedback', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ items: [{ aiName: `REPORT: ${why.trim()}`.slice(0, 80), chosenFoodId: food.id, chosenName: food.name, rank: -1, kind: 'item' }] }) }).catch(() => undefined);
+                  void aiHeaders().then((headers) => fetch('/api/feedback', { method: 'POST', headers, body: JSON.stringify({ items: [{ aiName: `REPORT: ${why.trim()}`.slice(0, 80), chosenFoodId: food.id, chosenName: food.name, rank: -1, kind: 'item' }] }) })).catch(() => undefined);
                   setReported(true);
                 }}
                 className="mt-2 text-xs font-semibold text-silver underline"
               >
                 Something wrong with these numbers? Report it
               </button>
+            )}
+            {food.source === 'off' && (
+              <Link to="/snap?mode=label" onClick={onClose} className="mt-2 block text-xs font-semibold text-accent">Numbers don’t match your pack? Scan its nutrition label to save the right ones</Link>
             )}
           </div>
         )}

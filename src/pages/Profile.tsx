@@ -1,3 +1,4 @@
+import { AutoBackups, ShareReportRow } from '@/components/DataTools';
 import { TargetCheck } from '@/components/NutritionInsights';
 import { SignInButtons } from '@/components/SignIn';
 import { useRef, useState } from 'react';
@@ -146,9 +147,9 @@ export default function Profile({ mode = 'profile' }: { mode?: 'profile' | 'sett
           <Segmented value={settings.bodyUnit} onChange={(u) => updateSettings({ bodyUnit: u })} options={[{ value: 'kg', label: 'kg' }, { value: 'lb', label: 'lb' }]} />
         </Row>
         <Row icon={<SlidersHorizontal size={18} />} label="Tracking style">
-          <Segmented value={settings.tracking ?? 'detailed'} onChange={(t) => updateSettings({ tracking: t })} options={[{ value: 'simple', label: 'Simple' }, { value: 'detailed', label: 'Detailed' }]} />
+          <Segmented value={settings.tracking ?? 'detailed'} onChange={(t) => updateSettings({ tracking: t })} options={[{ value: 'photo', label: 'Photo diary' }, { value: 'simple', label: 'Simple' }, { value: 'detailed', label: 'Detailed' }]} />
         </Row>
-        <p className="px-4 pb-2 text-xs leading-relaxed text-dim">Simple shows just calories and protein on Home. Detailed adds carbs, fat and every nutrient. Nothing is lost either way.</p>
+        <p className="px-4 pb-2 text-xs leading-relaxed text-dim">Photo diary: snap your meals with no numbers — analyse any photo later if you want. Simple shows just calories and protein on Home. Detailed adds carbs, fat and every nutrient. Nothing is lost either way.</p>
         <Row icon={<Sparkles size={18} />} label="Suggestions on Home">
           <Toggle on={!settings.quietAi} onChange={(v) => updateSettings({ quietAi: !v })} label="Suggestions on Home" />
         </Row>
@@ -170,9 +171,11 @@ export default function Profile({ mode = 'profile' }: { mode?: 'profile' | 'sett
       <Group title="Your data">
         <p className="px-4 pb-1 pt-3 text-sm leading-relaxed text-silver">Your data is never sold and Provora has no ads. Photos and text you send to AI features are used only to answer you, not to train AI models.</p>
         <button onClick={() => { if (confirm('Answer the setup questions again? Your food log and history stay.')) useStore.setState({ profile: null }); }} className="w-full"><Row icon={<RotateCcw size={18} />} label="Redo setup questions" chevron /></button>
+        <ShareReportRow Row={Row} />
         <button onClick={downloadCsv} className="w-full"><Row icon={<Table size={18} />} label="Download food log (spreadsheet)" chevron /></button>
         <button onClick={download} className="w-full"><Row icon={<Download size={18} />} label="Export backup" chevron /></button>
         <button onClick={() => fileRef.current?.click()} className="w-full"><Row icon={<Upload size={18} />} label="Restore backup" chevron /></button>
+        <AutoBackups />
         <input ref={fileRef} type="file" accept="application/json,.json" hidden onChange={(e) => { void upload(e.target.files?.[0]); e.target.value = ''; }} />
         <button onClick={reset} className="w-full"><Row icon={<Trash2 size={18} />} label="Delete all data" danger /></button>
       </Group>

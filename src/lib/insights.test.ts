@@ -30,3 +30,13 @@ describe('nutrition insights', () => {
     expect(targetWarnings({ bodyWeightKg: 80, sex: 'male', age: 30, heightCm: 180, activity: 'active' } as never, 140, 2400)).toEqual([]);
   });
 });
+
+import { labelHighlights } from './label';
+describe('label highlights', () => {
+  it('uses UK thresholds per 100 g and halves them for drinks', () => {
+    const t = (x: { text: string }[]) => x.map((h) => h.text);
+    expect(t(labelHighlights({ kcal: 500, protein: 6, sugar: 30, fat: 25, satFat: 10, sodium: 400, fiber: 1 }, 'g'))).toEqual(['High in sugar', 'High in fat', 'High in saturated fat']);
+    expect(t(labelHighlights({ kcal: 60, protein: 10, sugar: 4, fat: 0.2, satFat: 0.1, sodium: 40, fiber: 0 }, 'g'))).toEqual(['Low in sugar', 'Low in fat', 'Low in saturated fat', 'Low in salt', 'High in protein']);
+    expect(t(labelHighlights({ kcal: 42, protein: 0, sugar: 12, fat: 0, satFat: 0, sodium: 10 }, 'ml'))).toContain('High in sugar');
+  });
+});
