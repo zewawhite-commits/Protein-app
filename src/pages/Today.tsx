@@ -338,7 +338,7 @@ function CopyYesterday() {
   const y = addDays(todayKey(), -1);
   const list = useMemo(() => entries.filter((e) => e.date === y), [entries, y]);
   if (!list.length) return null;
-  const kcal = list.reduce((s, e) => s + (e.planned ? 0 : ((e.food.per100.kcal ?? 0) * e.grams) / 100), 0);
+  const kcal = sumEntries(list).kcal;
   return (
     <button
       onClick={() => {

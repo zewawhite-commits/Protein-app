@@ -288,6 +288,35 @@ export function similarFoods(food: Food, pool: Food[], max = 4): Food[] {
     .slice(0, max);
 }
 
+/** The same food listed by several national tables ("Onions, raw" in USDA, UK and Australia). */
+export interface FoodGroup { food: Food; others: Food[]; conflict: boolean }
+
+const dupKey = (f: Food) => `${f.state}|${f.name.toLowerCase().replace(/\([^)]*\)/g, ' ').replace(/[*]/g, '').replace(/[^a-z0-9]+/g, ' ').trim()}`;
+
+/**
+ * Group search results that are the same food from different sources, keeping the
+ * best-ranked one in front. `conflict` = their calories per 100 g differ by more than 15%,
+ * which usually means different varieties or methods — worth a look before choosing.
+ */
+export function groupDuplicates(list: Food[]): FoodGroup[] {
+  const groups = new Map<string, FoodGroup>();
+  const out: FoodGroup[] = [];
+  for (const f of list) {
+    const k = f.source === 'custom' || f.source === 'off' ? f.id : dupKey(f);
+    const g = groups.get(k);
+    if (g) g.others.push(f);
+    else { const n = { food: f, others: [], conflict: false }; groups.set(k, n); out.push(n); }
+  }
+  for (const g of out) {
+    const kc = [g.food, ...g.others].map((x) => x.per100.kcal).filter((v): v is number => v != null && v > 0);
+    g.conflict = kc.length > 1 && Math.max(...kc) / Math.min(...kc) > 1.15;
+  }
+  return out;
+}
+
+/** Has the core numbers (calories, protein, carbs, fat, fibre). */
+export const hasCoreNutrition = (f: Food) => f.per100.kcal != null && f.per100.carbs != null && f.per100.fat != null && f.per100.fiber != null;
+
 export const STATE_LABEL: Record<PrepState, string> = {
   raw: 'Raw',
   cooked: 'Cooked',

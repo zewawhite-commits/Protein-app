@@ -40,3 +40,15 @@ describe('label highlights', () => {
     expect(t(labelHighlights({ kcal: 42, protein: 0, sugar: 12, fat: 0, satFat: 0, sodium: 10 }, 'ml'))).toContain('High in sugar');
   });
 });
+
+import { groupDuplicates } from './foods';
+describe('duplicate foods in search', () => {
+  const f = (id: string, name: string, kcal: number, source = 'usda-sr') => ({ id, name, state: 'raw', source, per100: { protein: 1, kcal } }) as never;
+  it('groups the same food from different tables and flags conflicting calories', () => {
+    const g = groupDuplicates([f('a', 'Onions, raw', 40), f('b', 'Onions, raw', 41, 'uk-cofid'), f('c', 'Garlic, raw', 149), f('d', 'Onions, raw*', 60, 'au-afcd')]);
+    expect(g.map((x) => x.food.id)).toEqual(['a', 'c']);
+    expect(g[0].others.map((x) => x.id)).toEqual(['b', 'd']);
+    expect(g[0].conflict).toBe(true);
+    expect(groupDuplicates([f('a', 'Onions, raw', 40), f('b', 'Onions, raw', 41)])[0].conflict).toBe(false);
+  });
+});

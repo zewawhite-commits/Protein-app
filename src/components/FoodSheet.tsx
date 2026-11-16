@@ -38,10 +38,11 @@ interface Props {
   preset?: { photoId?: string; aiEstimate?: number };
 }
 
-type Unit = 'g' | 'ml' | 'oz';
-const UNIT_G: Record<Unit, number> = { g: 1, ml: 1, oz: 28.3495 };
-const UNIT_NAME: Record<Unit, string> = { g: 'grams', ml: 'millilitres', oz: 'ounces' };
-const toUnit = (grams: number, u: Unit) => String(Math.round((grams / UNIT_G[u]) * (u === 'oz' ? 10 : 1)) / (u === 'oz' ? 10 : 1));
+type Unit = 'g' | 'kg' | 'ml' | 'oz' | 'lb';
+const UNIT_G: Record<Unit, number> = { g: 1, kg: 1000, ml: 1, oz: 28.3495, lb: 453.592 };
+const UNIT_NAME: Record<Unit, string> = { g: 'grams', kg: 'kilograms', ml: 'millilitres', oz: 'ounces', lb: 'pounds' };
+const UNIT_DP: Record<Unit, number> = { g: 1, kg: 1000, ml: 1, oz: 10, lb: 100 };
+const toUnit = (grams: number, u: Unit) => String(Math.round((grams / UNIT_G[u]) * UNIT_DP[u]) / UNIT_DP[u]);
 /** Drinks, soups and other foods people measure by volume. */
 export const isLiquid = (food: { name: string; category?: string }) =>
   /beverage|drink/i.test(food.category ?? '') || /\b(milk|juice|water|soda|cola|tea|coffee|latte|drink|smoothie|shake|beer|wine|kefir|broth|soup|yogh?urt drink|zobo|kunu)\b/i.test(food.name);
@@ -69,7 +70,7 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
   // The weight is always what the user enters; nothing is pre-filled for a new entry.
   // The amount typed, in the chosen unit; nutrition always uses grams.
   const liquid = isLiquid(food);
-  const [unit, setUnitState] = useState<Unit>(() => { try { const u = localStorage.getItem('provora-unit') as Unit | null; return u === 'oz' || (u === 'ml' && liquid) ? u : 'g'; } catch { return 'g'; } });
+  const [unit, setUnitState] = useState<Unit>(() => { try { const u = localStorage.getItem('provora-unit') as Unit | null; return u === 'oz' || ((u === 'kg' || u === 'lb') && !liquid) || (u === 'ml' && liquid) ? u : 'g'; } catch { return 'g'; } });
   const [grams, setGrams] = useState(entry ? toUnit(entry.grams, unit) : '');
   const [meal, setMeal] = useState<Meal>(entry?.meal ?? mealForNow());
   const [photoId, setPhotoId] = useState<string | undefined>(entry?.photoId ?? preset?.photoId);
@@ -109,7 +110,7 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
   const before = day.totals.protein - (entry ? nutrientsFor(entry.food.per100, entry.grams).protein : 0);
   const after = before + n.protein;
 
-  const bump = (d: number) => setG(Math.max(0, g + (unit === 'oz' ? Math.sign(d) * 14.17 : d)));
+  const bump = (d: number) => setG(Math.max(0, g + Math.sign(d) * ({ g: 5, ml: 5, oz: 14.17, kg: 50, lb: 45.36 } as const)[unit]));
 
   async function onPhoto(file?: File) {
     if (!file) return;
@@ -196,7 +197,7 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
           </div>
         )}
         <div className="flex items-center gap-3">
-          <button onClick={() => bump(-5)} className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-raised" aria-label="Minus 5 grams"><Minus size={20} strokeWidth={2.6} /></button>
+          <button onClick={() => bump(-5)} className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-raised" aria-label="Less"><Minus size={20} strokeWidth={2.6} /></button>
           <label className="flex flex-1 items-baseline justify-center">
             <input
               id="grams"
@@ -213,10 +214,10 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
             />
             <span className="text-2xl font-semibold text-silver">{unit}</span>
           </label>
-          <button onClick={() => bump(5)} className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-raised" aria-label="Plus 5 grams"><Plus size={20} strokeWidth={2.6} /></button>
+          <button onClick={() => bump(5)} className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-raised" aria-label="More"><Plus size={20} strokeWidth={2.6} /></button>
         </div>
         <div className="mt-3 flex items-center justify-center gap-2">
-          <Segmented<Unit> value={unit} onChange={(u) => { haptic(); setUnit(u); }} options={(liquid ? ['g', 'ml', 'oz'] as Unit[] : ['g', 'oz'] as Unit[]).map((u) => ({ value: u, label: u }))} />
+          <Segmented<Unit> value={unit} onChange={(u) => { haptic(); setUnit(u); }} options={(liquid ? ['g', 'ml', 'oz'] as Unit[] : ['g', 'kg', 'oz', 'lb'] as Unit[]).map((u) => ({ value: u, label: u }))} />
           {unit !== 'g' && g > 0 && <span className="num text-[13px] text-silver">= {fmt(g)} g{unit === 'ml' ? ' (1 ml ≈ 1 g)' : ''}</span>}
         </div>
         <div className="-mx-5 mt-4 flex gap-2 overflow-x-auto px-5 no-scrollbar">

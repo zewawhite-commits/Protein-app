@@ -29,7 +29,23 @@ function limited(request: Request): boolean {
 
 export async function POST(request: Request): Promise<Response> {
   if (limited(request)) return json({ error: 'Too many requests.' }, 429);
-  const body = (await request.json().catch(() => null)) as { items?: Item[]; type?: string; message?: unknown; stack?: unknown; path?: unknown } | null;
+  const body = (await request.json().catch(() => null)) as { items?: Item[]; type?: string; message?: unknown; stack?: unknown; path?: unknown; topic?: unknown; text?: unknown } | null;
+
+  // A message for the team (feedback or a missing-food request): logged, and stored when signed in.
+  if (body?.type === 'message') {
+    const b = body as { topic?: unknown; text?: unknown; path?: unknown };
+    const topic = b.topic === 'food-request' ? 'food-request' : 'feedback';
+    const text = clip(b.text, 1000)?.trim();
+    if (!text) return json({ error: 'Empty message.' }, 400);
+    console.log(`[${topic}]`, JSON.stringify({ text, path: clip(b.path, 100) }));
+    const user = await userFromToken(request.headers.get('x-user-token'));
+    const url = supabaseUrl(), key = supabaseServiceKey();
+    if (user && url && key) {
+      const db = createClient(url, key, { auth: { persistSession: false } });
+      await db.from('recognition_feedback').insert({ ai_name: topic.toUpperCase(), chosen_food_id: topic, chosen_name: text.slice(0, 1000), candidate_rank: -1, kind: 'item' });
+    }
+    return json({ ok: true });
+  }
 
   if (body?.type === 'error') {
     console.error('[app-error]', JSON.stringify({ message: clip(body.message, 300), path: clip(body.path, 100), stack: clip(body.stack, 1500) }));

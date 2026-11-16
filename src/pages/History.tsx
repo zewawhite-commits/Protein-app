@@ -79,7 +79,7 @@ function Days({ query }: { query: string }) {
                     <p className="mt-0.5 truncate text-xs font-medium text-silver">{names}</p>
                   </div>
                   <div className="text-right">
-                    <p className="num text-lg font-bold leading-none">{fmt(es.reduce((sum, e) => sum + (e.planned ? 0 : ((e.food.per100.kcal ?? 0) * e.grams) / 100), 0))}<span className="text-xs text-silver"> kcal</span></p>
+                    <p className="num text-lg font-bold leading-none">{fmt(sumEntries(es).kcal)}<span className="text-xs text-silver"> kcal</span></p>
                     <p className={cx('num mt-1 text-[12px] font-semibold', hit ? 'text-accent' : 'text-dim')}>{fmt(protein)}/{fmt(goal)} g protein</p>
                   </div>
                   <ChevronRight size={16} className="shrink-0 text-dim" />

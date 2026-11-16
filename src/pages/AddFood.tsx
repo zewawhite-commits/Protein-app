@@ -1,10 +1,11 @@
+import { sendMessage } from '@/lib/feedback';
 import { useDeferredValue, useEffect, useMemo, useState } from 'react';
 import { AllergyTag } from '@/components/Allergy';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Camera, ChevronRight, Globe2, Heart, Loader2, Search, X, ChefHat, Plus } from 'lucide-react';
 import { haptic, toast } from '@/components/fx';
 import { useFoodDb, useFoodLookup, usePhotoUrl } from '@/lib/hooks';
-import { SOURCE_SHORT, searchFoods, splitName } from '@/lib/foods';
+import { SOURCE_SHORT, searchFoods, splitName, groupDuplicates, hasCoreNutrition } from '@/lib/foods';
 import { searchProducts } from '@/lib/openFoodFacts';
 import { deletePhoto } from '@/lib/photos';
 import { fitsDiet } from '@/lib/goals';
@@ -63,7 +64,11 @@ export default function AddFood() {
     return state === 'all' ? list : list.filter((f) => f.state === state);
   }, [tab, db, custom, recentIds, favIds, lookup, state, diet]);
 
-  const list = searching ? results : browse;
+  // Optional: hide foods whose source doesn't list all the core numbers.
+  const [completeOnly, setCompleteOnly] = useState(() => { try { return localStorage.getItem('provora-complete-only') === '1'; } catch { return false; } });
+  const list = (searching ? results : browse).filter((f) => !completeOnly || hasCoreNutrition(f));
+  const groups = useMemo(() => (searching ? groupDuplicates(list) : list.map((food) => ({ food, others: [] as Food[], conflict: false }))), [list, searching]);
+  const [openGroup, setOpenGroup] = useState<string | null>(null);
   const back = () => nav(date === todayKey() ? '/' : `/?date=${date}`);
   const snapUrl = `/snap${date !== todayKey() ? `?date=${date}` : ''}`;
 
@@ -112,9 +117,11 @@ export default function AddFood() {
         </div>
         <div className="-mx-5 mt-3 flex gap-2 overflow-x-auto px-5 no-scrollbar">
           {searching
-            ? STATES.map((s) => (
+            ? [...STATES.map((s) => (
                 <button key={s.value} onClick={() => setState(s.value)} className={cx('chip', state === s.value && 'chip-on')}>{s.label}</button>
-              ))
+              )), (
+                <button key="complete" onClick={() => setCompleteOnly((v) => { try { localStorage.setItem('provora-complete-only', v ? '0' : '1'); } catch { /* ignore */ } return !v; })} className={cx('chip shrink-0', completeOnly && 'chip-on')} aria-pressed={completeOnly}>Complete nutrition only</button>
+              )]
             : TABS.map(([v, l]) => (
                 <button key={v} onClick={() => setTab(v)} className={cx('chip', tab === v && 'chip-on')}>{l}</button>
               ))}
@@ -156,7 +163,17 @@ export default function AddFood() {
       )}
       {db && list.length > 0 && !(tab === 'saved' && !searching) && (
         <div className="card mt-1 p-2">
-          {list.map((f) => <FoodRow key={f.id} food={f} onClick={() => setSelected(f)} />)}
+          {groups.map((g) => (
+            <div key={g.food.id}>
+              <FoodRow food={g.food} onClick={() => setSelected(g.food)} />
+              {g.others.length > 0 && (
+                <button onClick={() => setOpenGroup((o) => (o === g.food.id ? null : g.food.id))} className={cx('mb-1 ml-[86px] mr-3 block text-left text-[12px] font-semibold', g.conflict ? 'text-warn' : 'text-silver')}>
+                  {openGroup === g.food.id ? 'Hide' : 'Also in'} {g.others.length} other table{g.others.length > 1 ? 's' : ''}{g.conflict ? ` · calories differ (${Math.round(Math.min(...[g.food, ...g.others].map((x) => x.per100.kcal ?? 0)))}–${Math.round(Math.max(...[g.food, ...g.others].map((x) => x.per100.kcal ?? 0)))} per 100 g) — compare before choosing` : ' · values agree'}
+                </button>
+              )}
+              {openGroup === g.food.id && <div className="ml-6 border-l-2 border-line pl-1">{g.others.map((o) => <FoodRow key={o.id} food={o} onClick={() => setSelected(o)} />)}</div>}
+            </div>
+          ))}
         </div>
       )}
       {db && list.length === 0 && !searching && tab !== 'saved' && (
@@ -174,6 +191,7 @@ export default function AddFood() {
             <Link to={`/snap?mode=describe&q=${encodeURIComponent(dq)}`} className="btn-primary !h-12 text-sm">Describe it</Link>
             <Link to="/barcode" className="btn-ghost !h-12 text-sm">Scan barcode</Link>
           </div>
+          <RequestFood query={dq} />
         </div>
       )}
 
@@ -342,5 +360,20 @@ function Usuals({ date, onDone }: { date: string; onDone: () => void }) {
         ))}
       </div>
     </section>
+  );
+}
+
+/** Ask the team to add a food that isn't in the database. */
+function RequestFood({ query }: { query: string }) {
+  const [sent, setSent] = useState<string | null>(null);
+  if (!query.trim()) return null;
+  if (sent === query) return <p className="mt-3 text-center text-[13px] font-semibold text-accent">Thanks — we’ll look at adding “{query}”.</p>;
+  return (
+    <button
+      onClick={async () => { try { await sendMessage('food-request', query.trim()); setSent(query); haptic(); } catch (e) { toast((e as Error).message); } }}
+      className="mt-3 w-full text-center text-[14px] font-semibold text-silver underline"
+    >
+      Request “{query.trim().slice(0, 40)}” to be added
+    </button>
   );
 }

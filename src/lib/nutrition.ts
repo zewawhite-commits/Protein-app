@@ -41,7 +41,8 @@ export function sumEntries(entries: LogEntry[]): Totals {
     for (const k of SUMMED) {
       const v = scale(e.food.per100[k] ?? null, e.grams);
       if (v == null) t.incomplete[k] = true;
-      else t[k] += v;
+      // Calories are rounded per food, exactly as each row shows them, so the day total always equals the sum of the rows.
+      else t[k] += k === 'kcal' ? Math.round(v) : v;
     }
   }
   return t;

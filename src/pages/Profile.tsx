@@ -182,6 +182,7 @@ export default function Profile({ mode = 'profile' }: { mode?: 'profile' | 'sett
       {msg && <p className="mt-2 px-1 text-sm font-semibold text-silver">{msg}</p>}
 
       <Group title="Support & legal">
+        <Link to="/help" className="block"><Row icon={<LifeBuoy size={18} />} label="Help, FAQ & feedback" chevron /></Link>
         {SUPPORT_EMAIL && <a href={`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent('Provora support')}`} className="block"><Row icon={<LifeBuoy size={18} />} label="Contact support" chevron /></a>}
         <Link to="/privacy" className="block"><Row icon={<Lock size={18} />} label="Privacy policy" chevron /></Link>
         <Link to="/terms" className="block"><Row icon={<FileText size={18} />} label="Terms & Conditions" chevron /></Link>
@@ -366,6 +367,16 @@ function SubscriptionGroup() {
       <Row icon={<Sparkles size={18} />} label="Plan">
         <span className="text-sm font-semibold text-silver">{active ? `${premium!.tier === 'pro' ? 'Pro' : 'Plus'}${billing?.interval ? ` · ${billing.interval === 'annually' ? 'yearly' : billing.interval}` : ''}` : 'Free'}</span>
       </Row>
+      {active && billing?.status === 'attention' && (
+        <div role="alert" className="mx-4 my-2 rounded-2xl bg-warn/10 p-3.5 text-[14px] leading-relaxed">
+          <p className="font-semibold text-warn">Your last payment didn’t go through</p>
+          <p className="text-ink/80">Your plan stays on for a few days while you update your card. Nothing is lost if it lapses — you move to Free.</p>
+          <button onClick={() => void manageSubscription()} className="mt-2 font-semibold text-accent">Update card</button>
+        </div>
+      )}
+      {active && billing?.status === 'non-renewing' && (
+        <p className="mx-4 my-2 rounded-2xl bg-raised p-3.5 text-[14px] text-silver">Cancelled — you keep your plan until the date below, then move to Free. You won’t be charged again.</p>
+      )}
       {active ? (
         <>
           <Row icon={<Receipt size={18} />} label={billing?.status === 'non-renewing' ? 'Ends on' : 'Renews on'}>

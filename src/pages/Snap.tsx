@@ -1,3 +1,4 @@
+import { photoFingerprint, recall, remember } from '@/lib/scanMemory';
 import { MenuFits } from '@/components/MenuFits';
 import { PHOTO_ONLY } from '@/lib/photoDiary';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -114,7 +115,12 @@ export default function Snap() {
         setPhase('label');
         return;
       }
-      const result = small ? (menuMode ? await recognizeMenu(small, token) : await recognizePhoto(small, token)) : await recognizeText(text ?? '', token);
+      // Same photo, same answer (and no extra AI scan): reuse the earlier result for an identical photo.
+      const memMode = menuMode ? 'menu' : 'food';
+      const hash = small ? await photoFingerprint(small) : null;
+      const remembered = recall(hash, memMode);
+      const result = remembered ?? (small ? (menuMode ? await recognizeMenu(small, token) : await recognizePhoto(small, token)) : await recognizeText(text ?? '', token));
+      if (!remembered && small) remember(hash, memMode, result);
       setIsMenu(menuMode && !!small);
       await waitForDb();
       if (!result.isFood || !result.items.length) {
@@ -122,7 +128,7 @@ export default function Snap() {
         setPhase('error');
         return;
       }
-      setNote(result.note);
+      setNote(remembered ? `You scanned this exact photo before, so this is the same result as last time (no extra scan used).${result.note ? ` ${result.note}` : ''}` : result.note);
       setQuality(result.photoQuality ?? 'fair');
       const r = result as typeof result & { scansLeft?: number; scanLimit?: number };
       setLeft(r.scanLimit != null && r.scanLimit < 900 && r.scansLeft != null ? { left: r.scansLeft, limit: r.scanLimit } : null);
