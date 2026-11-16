@@ -5,16 +5,16 @@ import { ArrowLeft, Camera, Check, Loader2, Lock, MessageCircle, NotebookPen } f
 import { useStore } from '@/store/useStore';
 import { accountsEnabled, useSession } from '@/lib/account';
 import {
-  activate, chargedInOtherCurrency, displayPrice, fetchPlans, formatPrice, USD_PRICES, intervalLabel, isPremiumActive, manageSubscription, restoreForAccount, startCheckout,
+  activate, chargedInOtherCurrency, plannedPrice, displayPrice, fetchPlans, formatPrice, USD_PRICES, intervalLabel, isPremiumActive, manageSubscription, restoreForAccount, startCheckout,
   type PlanInfo, type Tier,
 } from '@/lib/premium';
 import { Segmented, cx } from '@/components/ui';
 
 /** Planned prices, shown until live plans load from the payment provider (which sets the real charge). */
 const PREVIEW = [
-  { name: 'Free', perks: ['Calories, macros & 18,000+ foods', 'Barcode, exercise, progress & feed', '3 AI scans + 5 coach messages a month'], month: '$0', year: 'forever' },
-  { name: 'Plus', perks: ['Unlimited AI photo scans & describe', 'Unlimited AI coach chat', 'AI workout guide for your week', 'AI recipes with full nutrition'], month: '$4.99/mo', year: 'or $23.95 a year · save 60% on $59.88', best: true },
-  { name: 'Pro', perks: ['Everything in Plus', 'AI eating plans built for you', 'AI meal ideas from your cuisines'], month: '$7.99/mo', year: 'or $38.35 a year · save 60% on $95.88' },
+  { tier: null, name: 'Free', perks: ['Calories, macros & 18,000+ foods', 'Barcode, exercise, progress & feed', '3 AI scans + 5 coach messages a month'], best: false },
+  { tier: 'plus' as Tier, name: 'Plus', perks: ['Unlimited AI photo scans & describe', 'Unlimited AI coach chat', 'AI workout guide for your week', 'AI recipes with full nutrition'], best: true },
+  { tier: 'pro' as Tier, name: 'Pro', perks: ['Everything in Plus', 'AI eating plans built for you', 'AI meal ideas from your cuisines'], best: false },
 ];
 
 const TIER_INFO: Record<'free' | Tier, { name: string; perks: string[] }> = {
@@ -32,7 +32,7 @@ export default function Premium() {
   const premium = useStore((s) => s.premium);
   const active = isPremiumActive(premium);
   const [catalog, setCatalog] = useState<{ plans: PlanInfo[]; accountRequired: boolean } | null | undefined>(undefined);
-  const [billing, setBilling] = useState<Billing>('yearly');
+  const [billing, setBilling] = useState<Billing>(() => (new URLSearchParams(location.search).get('billing') === 'yearly' ? 'yearly' : 'monthly'));
   const [tier, setTier] = useState<Tier>(() => (new URLSearchParams(location.search).get('tier') === 'pro' ? 'pro' : 'plus'));
   const [email, setEmail] = useState(premium?.email ?? '');
   const [busy, setBusy] = useState(false);
@@ -122,8 +122,11 @@ export default function Premium() {
         <p className="mt-8 flex items-center justify-center gap-2 text-sm text-silver"><Loader2 size={16} className="animate-spin" /> Loading plans…</p>
       ) : catalog === null ? (
         <div className="mt-6">
+          <div className="mb-4 flex justify-center">
+            <Segmented<Billing> value={billing} onChange={setBilling} options={[{ value: 'monthly', label: 'Monthly' }, { value: 'yearly', label: 'Yearly · save 60%' }]} />
+          </div>
           <div className="grid gap-2.5">
-            {PREVIEW.map((t) => (
+            {PREVIEW.map((t) => { const pr = t.tier ? plannedPrice(t.tier, billing) : { price: '$0', sub: 'forever', save: 0 }; return (
               <div key={t.name} className={cx('card p-5', t.best && 'ring-2 ring-ink')}>
                 <div className="flex items-start justify-between gap-3">
                   <div>
@@ -131,12 +134,13 @@ export default function Premium() {
                     <ul className="mt-2 space-y-1 text-sm text-silver">{t.perks.map((x) => <li key={x} className="flex items-center gap-2"><Check size={15} className="text-accent" strokeWidth={3} />{x}</li>)}</ul>
                   </div>
                   <div className="text-right">
-                    <p className="num text-[22px] font-extrabold">{t.month}</p>
-                    <p className="num text-sm text-silver">{t.year}</p>
+                    {pr.save > 0 && <span className="mb-1 inline-block rounded-full bg-accent/15 px-2 py-0.5 text-xs font-bold text-accent">Save {pr.save}%</span>}
+                    <p className="num text-[22px] font-extrabold">{pr.price}</p>
+                    <p className="num max-w-[130px] text-xs text-silver">{pr.sub}</p>
                   </div>
                 </div>
               </div>
-            ))}
+            ); })}
           </div>
           <p className="mt-4 rounded-2xl bg-raised p-4 text-center text-sm text-silver">Subscriptions open soon. Everything in Free works now.</p>
         </div>
@@ -144,7 +148,7 @@ export default function Premium() {
         <>
           {hasYearly && plans.some((p) => p.id.endsWith('monthly')) && (
             <div className="mt-6 flex justify-center">
-              <Segmented<Billing> value={billing} onChange={setBilling} options={[{ value: 'monthly', label: 'Monthly' }, { value: 'yearly', label: 'Yearly' }]} />
+              <Segmented<Billing> value={billing} onChange={setBilling} options={[{ value: 'monthly', label: 'Monthly' }, { value: 'yearly', label: 'Yearly · save 60%' }]} />
             </div>
           )}
 

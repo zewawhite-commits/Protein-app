@@ -89,6 +89,13 @@ export async function refreshPremium(force = false): Promise<void> {
 }
 
 /** Prices shown in the app (always US dollars), by plan id. */
+/** Text for a planned price: "$4.99" / "per month", or "$23.95" / "per year · $2.00 a month" with the saving. */
+export function plannedPrice(tier: Tier, billing: 'monthly' | 'yearly'): { price: string; sub: string; save: number } {
+  const m = USD_PRICES[`${tier}_monthly`], y = USD_PRICES[`${tier}_yearly`];
+  if (billing === 'monthly') return { price: `$${m.toFixed(2)}`, sub: 'per month', save: 0 };
+  return { price: `$${y.toFixed(2)}`, sub: `per year · just $${(y / 12).toFixed(2)} a month`, save: Math.round((1 - y / (m * 12)) * 100) };
+}
+
 export const USD_PRICES: Record<string, number> = { plus_monthly: 4.99, plus_yearly: 23.95, pro_monthly: 7.99, pro_yearly: 38.35 };
 
 /** Price as shown to people: the dollar price for known plans, otherwise the provider's own. */

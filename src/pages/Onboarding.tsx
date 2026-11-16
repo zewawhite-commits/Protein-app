@@ -15,6 +15,7 @@ import { dailyGoal, fromKg, round1, toKg } from '@/lib/nutrition';
 import { dailyTargets, weeksToGoal } from '@/lib/energy';
 import type { ActivityLevel, Diet, FitnessGoal } from '@/lib/types';
 import { Segmented, cx, fmt } from '@/components/ui';
+import { plannedPrice } from '@/lib/premium';
 import { haptic } from '@/components/fx';
 
 type Option<T> = { value: T; label: string; sub: string; icon: typeof Dumbbell };
@@ -42,9 +43,9 @@ const DIETS: Option<Diet>[] = [
 const OBSTACLES = ['Lack of consistency', 'Busy schedule', 'Unhealthy eating habits', 'No meal ideas', 'Lack of support', 'Cravings & snacking', 'Eating out a lot', 'Don’t know what to eat'];
 
 const PLAN_CHOICES = [
-  { tier: 'free' as const, name: 'Free', price: '$0', sub: 'forever', perks: ['Calories, macros & 18,000+ foods', 'Barcode, exercise, progress & feed', '3 AI scans + 5 coach messages a month'] },
-  { tier: 'plus' as const, name: 'Plus', price: '$4.99/mo', sub: 'or $23.95 a year · save 60% on $59.88', badge: 'Most popular', perks: ['Unlimited AI photo scans & coach', 'AI workout guide for your week', 'AI recipes with full nutrition'] },
-  { tier: 'pro' as const, name: 'Pro', price: '$7.99/mo', sub: 'or $38.35 a year · save 60% on $95.88', perks: ['Everything in Plus', 'AI eating plans built for you', 'AI meal ideas from your cuisines'] },
+  { tier: 'free' as const, name: 'Free', badge: '', perks: ['Calories, macros & 18,000+ foods', 'Barcode, exercise, progress & feed', '3 AI scans + 5 coach messages a month'] },
+  { tier: 'plus' as const, name: 'Plus', badge: 'Most popular', perks: ['Unlimited AI photo scans & coach', 'AI workout guide for your week', 'AI recipes with full nutrition'] },
+  { tier: 'pro' as const, name: 'Pro', badge: '', perks: ['Everything in Plus', 'AI eating plans built for you', 'AI meal ideas from your cuisines'] },
 ];
 
 export default function Onboarding() {
@@ -95,6 +96,7 @@ export default function Onboarding() {
   const [pace, setPace] = useState(0.5);
   const [training, setTraining] = useState<string[]>([]);
   const [planChoice, setPlanChoice] = useState<'free' | 'plus' | 'pro'>('plus');
+  const [billing, setBilling] = useState<'monthly' | 'yearly'>('monthly');
   const [obstacles, setObstacles] = useState<string[]>([]);
   const [hasCoach, setHasCoach] = useState<boolean>();
   const [kcalOverride, setKcalOverride] = useState<number>();
@@ -410,23 +412,26 @@ export default function Onboarding() {
         )}
         {at === 'choose' && (
           <Question title="Choose your plan" sub="Start free and upgrade any time. Cancel whenever you like.">
+            <div className="mb-3 flex justify-center">
+              <Segmented<'monthly' | 'yearly'> value={billing} onChange={(v) => { haptic(); setBilling(v); }} options={[{ value: 'monthly', label: 'Monthly' }, { value: 'yearly', label: 'Yearly · save 60%' }]} />
+            </div>
             <div className="space-y-3">
-              {PLAN_CHOICES.map((p) => (
+              {PLAN_CHOICES.map((p) => { const pr = p.tier === 'free' ? { price: '$0', sub: 'forever', save: 0 } : plannedPrice(p.tier, billing); return (
                 <button key={p.tier} onClick={() => { haptic(); setPlanChoice(p.tier); }} className={cx('card w-full p-5 text-left transition active:scale-[.99]', planChoice === p.tier && 'ring-2 ring-ink')}>
                   <div className="flex items-center justify-between gap-3">
                     <p className="flex items-center gap-2 text-[19px] font-extrabold">{p.name}{p.badge && <span className="whitespace-nowrap rounded-full bg-primary px-2.5 py-0.5 text-xs font-bold text-on-primary">{p.badge}</span>}</p>
-                    <p className="text-right"><span className="text-[19px] font-extrabold">{p.price}</span><span className="block text-xs text-silver">{p.sub}</span></p>
+                    <p className="text-right"><span className="text-[19px] font-extrabold">{pr.price}</span><span className="block max-w-[140px] text-xs text-silver">{pr.sub}</span>{pr.save > 0 && <span className="mt-1 inline-block rounded-full bg-accent/15 px-2 py-0.5 text-xs font-bold text-accent">Save {pr.save}%</span>}</p>
                   </div>
                   <ul className="mt-3 space-y-1.5">{p.perks.map((x) => <li key={x} className="flex items-start gap-2 text-[14px] text-silver"><Check size={16} strokeWidth={3} className="mt-0.5 shrink-0 text-accent" />{x}</li>)}</ul>
                 </button>
-              ))}
+              ); })}
             </div>
             <div className="flex-1" />
             <button
               onClick={() => {
                 haptic([10, 40, 10]);
                 // Paid choice: open checkout for that plan as soon as the app opens.
-                if (planChoice !== 'free') navigate(`/premium?tier=${planChoice}`, { replace: true });
+                if (planChoice !== 'free') navigate(`/premium?tier=${planChoice}&billing=${billing}`, { replace: true });
                 finish();
               }}
               className="btn-primary mt-6 w-full"
