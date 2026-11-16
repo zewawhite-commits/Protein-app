@@ -13,8 +13,8 @@ import { Segmented, cx } from '@/components/ui';
 /** Planned prices, shown until live plans load from the payment provider (which sets the real charge). */
 const PREVIEW = [
   { name: 'Free', perks: ['Calories, macros & 18,000+ foods', 'Barcode, exercise, progress & feed', '3 AI scans + 5 coach messages a month'], month: '$0', year: 'forever' },
-  { name: 'Plus', perks: ['Unlimited AI photo scans & describe', 'Unlimited AI coach chat', 'AI workout guide for your week', 'AI recipes with full nutrition'], month: '$4.99/mo', year: 'or $41.99 a year · save 30%', best: true },
-  { name: 'Pro', perks: ['Everything in Plus', 'AI eating plans built for you', 'AI meal ideas from your cuisines'], month: '$7.99/mo', year: 'or $76.99 a year · save 20%' },
+  { name: 'Plus', perks: ['Unlimited AI photo scans & describe', 'Unlimited AI coach chat', 'AI workout guide for your week', 'AI recipes with full nutrition'], month: '$4.99/mo', year: 'or $23.95 a year · save 60% on $59.88', best: true },
+  { name: 'Pro', perks: ['Everything in Plus', 'AI eating plans built for you', 'AI meal ideas from your cuisines'], month: '$7.99/mo', year: 'or $38.35 a year · save 60% on $95.88' },
 ];
 
 const TIER_INFO: Record<'free' | Tier, { name: string; perks: string[] }> = {

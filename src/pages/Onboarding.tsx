@@ -43,8 +43,8 @@ const OBSTACLES = ['Lack of consistency', 'Busy schedule', 'Unhealthy eating hab
 
 const PLAN_CHOICES = [
   { tier: 'free' as const, name: 'Free', price: '$0', sub: 'forever', perks: ['Calories, macros & 18,000+ foods', 'Barcode, exercise, progress & feed', '3 AI scans + 5 coach messages a month'] },
-  { tier: 'plus' as const, name: 'Plus', price: '$4.99/mo', sub: 'or $41.99 a year · save 30%', badge: 'Most popular', perks: ['Unlimited AI photo scans & coach', 'AI workout guide for your week', 'AI recipes with full nutrition'] },
-  { tier: 'pro' as const, name: 'Pro', price: '$7.99/mo', sub: 'or $76.99 a year · save 20%', perks: ['Everything in Plus', 'AI eating plans built for you', 'AI meal ideas from your cuisines'] },
+  { tier: 'plus' as const, name: 'Plus', price: '$4.99/mo', sub: 'or $23.95 a year · save 60% on $59.88', badge: 'Most popular', perks: ['Unlimited AI photo scans & coach', 'AI workout guide for your week', 'AI recipes with full nutrition'] },
+  { tier: 'pro' as const, name: 'Pro', price: '$7.99/mo', sub: 'or $38.35 a year · save 60% on $95.88', perks: ['Everything in Plus', 'AI eating plans built for you', 'AI meal ideas from your cuisines'] },
 ];
 
 export default function Onboarding() {
