@@ -1,4 +1,5 @@
 import { useDeferredValue, useEffect, useMemo, useState } from 'react';
+import { AllergyTag } from '@/components/Allergy';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Camera, ChevronRight, Globe2, Heart, Loader2, Search, X, ChefHat, Plus } from 'lucide-react';
 import { haptic, toast } from '@/components/fx';
@@ -244,6 +245,7 @@ function FoodRow({ food, onClick }: { food: Food; onClick: () => void }) {
         <p className="line-clamp-2 text-[16px] font-bold leading-snug">{title}</p>
         <div className="mt-1.5 flex min-w-0 items-center gap-1.5">
           <StateBadge state={food.state} className="shrink-0" />
+          <AllergyTag food={food} />
           {food.source !== 'usda-sr' && <span className="shrink-0 rounded-full bg-raised px-2 text-[12px] font-semibold uppercase leading-5 tracking-wide text-silver">{SOURCE_SHORT[food.source]}</span>}
           {detail && <span className="truncate text-xs text-silver">{detail}</span>}
         </div>

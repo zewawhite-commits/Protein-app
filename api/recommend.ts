@@ -6,6 +6,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { ideasWithClient, type IdeaRequest } from '../src/lib/recommendation.js';
 import { json } from './_lib/premium.js';
 import { gate } from './_lib/quota.js';
+import { allergensIn, avoidSet } from '../src/lib/allergens.js';
 
 export async function POST(request: Request): Promise<Response> {
   if (!process.env.ANTHROPIC_API_KEY) return json({ error: 'Suggestions are not configured on this server.' }, 501);
@@ -29,7 +30,10 @@ export async function POST(request: Request): Promise<Response> {
     eatenToday: Array.isArray(body.eatenToday) ? body.eatenToday.map((s) => String(s).slice(0, 60)).slice(0, 15) : [],
   };
   try {
-    return json({ ideas: await ideasWithClient(new Anthropic(), req) });
+    // The prompt asks the AI to respect the avoid list; this checks it did.
+    const avoid = avoidSet({ avoid: req.avoid });
+    const ideas = (await ideasWithClient(new Anthropic(), req)).filter((i) => !allergensIn(`${i.name} ${i.localName}`, avoid).length);
+    return json({ ideas });
   } catch (e) {
     if (e instanceof Anthropic.RateLimitError) return json({ error: 'Busy — try again in a moment.' }, 429);
     if (e instanceof Anthropic.APIError) return json({ error: `Suggestion service error (${e.status ?? 'network'}).` }, 502);

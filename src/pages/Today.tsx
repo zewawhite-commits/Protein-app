@@ -172,6 +172,9 @@ function HeroCard({ totals, goal, targets, entries, burned = 0, addBurned }: { t
       ) : (
         <Link to="/profile?edit=1" className="mt-3 block text-center text-sm font-semibold underline">Add height & age for a calorie goal</Link>
       )}
+      {totals.incomplete.kcal && (
+        <p className="mt-2 text-center text-[12px] leading-snug opacity-90">* Some food you logged has no calorie value in its source data, so this total may be low. Tap the food to check or add values.</p>
+      )}
       <div className="mt-3 flex items-center justify-between gap-3">
         {totals.protein >= goal && goal > 0 ? (
           <span className="inline-flex h-7 items-center gap-1.5 rounded-full bg-white/20 px-2.5 text-xs font-semibold text-white"><Check size={13} strokeWidth={3} /> Protein goal hit</span>
@@ -187,6 +190,7 @@ function HeroCard({ totals, goal, targets, entries, burned = 0, addBurned }: { t
           <MacroBar label="Fibre" value={totals.fiber} target={targets?.fiber} color="fiber" incomplete={totals.incomplete.fiber} />
         </div>
         <div className="mt-4"><NutrientList values={totals} incomplete={totals.incomplete} /></div>
+        {Object.values(totals.incomplete).some(Boolean) && <p className="mt-3 text-[12px] leading-snug text-silver">* Some foods you logged have no value for this nutrient in their source data, so the total may be lower than what you really ate.</p>}
         <p className="mt-3 text-[12px] leading-snug text-dim">{DV_NOTE}</p>
       </Sheet>
     </section>

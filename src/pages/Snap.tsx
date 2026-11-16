@@ -4,7 +4,7 @@ import { ArrowLeft, Check, ChevronRight, ImagePlus, Loader2, Mic, ScanBarcode, S
 import { useStore } from '@/store/useStore';
 import { useFoodDb, usePhotoUrl } from '@/lib/hooks';
 import { deletePhoto, getPhoto, savePhoto } from '@/lib/photos';
-import { matchItems, sendFeedback, PremiumRequiredError, SignInRequiredError, readLabelPhoto, recognizePhoto, recognizeText, RecognitionUnavailableError, ScanLimitError, type MatchedItem } from '@/lib/recognize-client';
+import { matchItem, matchItems, pickKey, sendFeedback, PremiumRequiredError, SignInRequiredError, readLabelPhoto, recognizePhoto, recognizeText, RecognitionUnavailableError, ScanLimitError, type MatchedItem } from '@/lib/recognize-client';
 import { refreshPremium } from '@/lib/premium';
 import { SOURCE_SHORT, searchFoods, splitName } from '@/lib/foods';
 import { mealForNow, todayKey } from '@/lib/dates';
@@ -16,10 +16,12 @@ import { FoodVisual } from '@/components/FoodIcon';
 import { Segmented, StateBadge, cx, fmt } from '@/components/ui';
 import { haptic, toast } from '@/components/fx';
 import { labelPer100 } from '@/lib/label';
+import { COOKING_METHODS, type CookingMethod } from '@/lib/recognition';
 import { suggestPortions, type PortionRow } from '@/lib/portion';
 import { dailyTargets } from '@/lib/energy';
 import { useDay } from '@/lib/hooks';
 import { PortionCoach } from '@/components/PortionCoach';
+import { AllergyTag } from '@/components/Allergy';
 
 type Phase = 'camera' | 'describe' | 'signin' | 'analyzing' | 'results' | 'label' | 'unavailable' | 'premium' | 'limit' | 'error';
 
@@ -41,6 +43,7 @@ export default function Snap() {
   const [error, setError] = useState('');
   const [left, setLeft] = useState<{ left: number; limit: number } | null>(null);
   const [note, setNote] = useState('');
+  const [quality, setQuality] = useState<'good' | 'fair' | 'poor'>('good');
   const [matches, setMatches] = useState<MatchedItem[]>([]);
   const [pick, setPick] = useState<{ food: Food; grams?: number; label: string; index: number } | null>(null);
   const [logged, setLogged] = useState<Set<number>>(new Set());
@@ -90,9 +93,10 @@ export default function Snap() {
         return;
       }
       setNote(result.note);
+      setQuality(result.photoQuality ?? 'fair');
       const r = result as typeof result & { scansLeft?: number; scanLimit?: number };
       setLeft(r.scanLimit != null && r.scanLimit < 900 && r.scansLeft != null ? { left: r.scansLeft, limit: r.scanLimit } : null);
-      setMatches(matchItems(result, custom));
+      setMatches(matchItems(result, custom, useStore.getState().picks));
       setPhase('results');
     } catch (e) {
       if (e instanceof SignInRequiredError) setPhase('signin');
@@ -219,9 +223,18 @@ export default function Snap() {
 
       {phase === 'results' && (
         <>
+          {quality === 'poor' ? (
+            <div role="alert" className="mt-4 rounded-[20px] bg-warn/10 p-4 text-warn">
+              <p className="text-[15px] font-bold">This photo is hard to estimate from</p>
+              <p className="mt-1 text-[14px] leading-relaxed">{note || 'It’s too dark, blurred or cropped to judge portions.'} The foods below may be right, but weigh them or retake the photo for better numbers.</p>
+              <button onClick={retake} className="mt-3 flex h-10 items-center gap-2 rounded-full bg-surface px-4 text-sm font-semibold text-ink"><RotateCcw size={15} /> Retake photo</button>
+            </div>
+          ) : quality === 'fair' ? (
+            <p className="mt-4 rounded-2xl bg-raised px-4 py-3 text-[14px] leading-relaxed text-silver">Weights are rough: there’s no clear size reference (plate, cutlery, hand) in the photo. Weigh the food, or include the whole plate next time.</p>
+          ) : null}
           <p className="mt-4 px-1 text-[14px] font-medium leading-relaxed text-silver">
             Tap the closest match, then weigh. AI identifies the food — calories and nutrients always come from the database record.
-            {note && <span className="mt-1 block text-ink/80">{note}</span>}
+            {note && quality !== 'poor' && <span className="mt-1 block text-ink/80">{note}</span>}
           </p>
           {left && (
             <Link to="/premium" className="mt-3 flex items-center justify-between rounded-2xl bg-accent/10 px-4 py-3 text-[14px] font-semibold text-accent">
@@ -247,7 +260,9 @@ export default function Snap() {
                 key={i}
                 match={m}
                 done={logged.has(i)}
+                onMethod={(method) => setMatches((ms) => ms.map((x, j) => (j === i ? matchItem({ ...x.item, method }, custom, useStore.getState().picks) : x)))}
                 onPick={(food) => {
+                  useStore.getState().rememberPick(pickKey(m.item.name), food.id);
                   sendFeedback([{ aiName: m.item.name, localName: m.item.localName, cuisine: m.item.cuisine, chosenFoodId: food.id, chosenName: food.name, rank: m.candidates.findIndex((c) => c.id === food.id), kind: 'item' }]);
                   setPick({ food, grams: m.item.estimatedGrams || undefined, label: m.item.name, index: i });
                 }}
@@ -372,7 +387,7 @@ export default function Snap() {
   );
 }
 
-function ItemCard({ match, done, onPick, manualUrl, onLogIngredients }: { match: MatchedItem; done: boolean; onPick: (f: Food) => void; manualUrl: string; onLogIngredients: (rows: { food: Food; grams: number }[]) => void }) {
+function ItemCard({ match, done, onPick, onMethod, manualUrl, onLogIngredients }: { match: MatchedItem; done: boolean; onPick: (f: Food) => void; onMethod: (m: CookingMethod) => void; manualUrl: string; onLogIngredients: (rows: { food: Food; grams: number }[]) => void }) {
   const { item, candidates } = match;
   const [open, setOpen] = useState(false);
   const hasIngredients = match.ingredients.length > 0;
@@ -388,9 +403,22 @@ function ItemCard({ match, done, onPick, manualUrl, onLogIngredients }: { match:
         </div>
         <div className="flex shrink-0 items-center gap-1.5">
           {item.confidence !== 'high' && <span className={cx('rounded-full px-2.5 py-1 text-[12px] font-semibold', item.confidence === 'low' ? 'bg-warn/15 text-warn' : 'bg-raised text-silver')} title="How sure the AI is about what this food is">{item.confidence === 'low' ? 'Not sure — check' : 'Fairly sure'}</span>}
-          {item.estimatedGrams > 0 && <span className="rounded-full border border-dashed border-silver/50 px-2.5 py-1 text-[12px] font-medium text-silver" title="Rough AI estimate from the photo">est. ~{item.estimatedGrams} g</span>}
+          {item.estimatedGrams > 0 && <span className="rounded-full border border-dashed border-silver/50 px-2.5 py-1 text-[12px] font-medium text-silver" title="AI estimate from the photo — weigh it for the real number">~{item.estimatedGrams} g</span>}
           {done && <span className="grid h-7 w-7 place-items-center rounded-full bg-accent text-white"><Check size={15} strokeWidth={3} /></span>}
         </div>
+      </div>
+
+      <div className="mt-2.5 flex flex-wrap items-center gap-2 text-[13px] text-silver">
+        <label className="flex items-center gap-1.5 rounded-full bg-raised py-1 pl-3 pr-1.5">
+          <span className="font-medium">Cooked:</span>
+          <select aria-label={`How ${item.name} was cooked`} value={item.method} onChange={(e) => { haptic(); onMethod(e.target.value as CookingMethod); }} className="bg-transparent font-semibold text-ink outline-none">
+            {COOKING_METHODS.map((m) => <option key={m} value={m}>{m === 'none' ? 'not cooked / n/a' : m}</option>)}
+          </select>
+        </label>
+        {item.estimatedGrams > 0 && item.gramsHigh > item.gramsLow && (
+          <span title="Likely range from the photo">{item.size} portion · likely {item.gramsLow}–{item.gramsHigh} g</span>
+        )}
+        {match.learned && <span className="rounded-full bg-accent/10 px-2.5 py-0.5 font-semibold text-accent">{match.learned === 'mine' ? 'Your usual pick' : 'Most people pick this'}</span>}
       </div>
 
       {hasIngredients && (
@@ -412,6 +440,7 @@ function ItemCard({ match, done, onPick, manualUrl, onLogIngredients }: { match:
                   <p className="line-clamp-2 text-sm font-semibold leading-snug">{title}</p>
                   <p className="mt-0.5 flex items-center gap-1.5 truncate text-[12px] font-medium text-silver">
                     <StateBadge state={f.state} />
+                    <AllergyTag food={f} />
                     <span>{SOURCE_SHORT[f.source]}</span>
                     {detail && <span className="truncate">· {detail}</span>}
                   </p>
@@ -625,7 +654,7 @@ function PlateSummary({ matches, logged, date, onLogAll, onAddExtra }: { matches
       <ul className="mt-3 space-y-1.5">
         {rows.map((r) => (
           <li key={r.index} className="flex items-center justify-between gap-2 text-[14px]">
-            <span className="min-w-0 flex-1 truncate font-medium">{logged.has(r.index) && <Check size={14} strokeWidth={3} className="mr-1 inline text-accent" />}{r.name}</span>
+            <span className="flex min-w-0 flex-1 items-center gap-1.5"><span className="truncate font-medium">{logged.has(r.index) && <Check size={14} strokeWidth={3} className="mr-1 inline text-accent" />}{r.name}</span>{r.food && <AllergyTag food={r.food} />}</span>
             {r.food ? (
               <>
                 <label className={cx('flex shrink-0 items-center rounded-xl px-2 py-1', r.confirmed ? 'bg-accent/10 text-accent' : 'border border-dashed border-silver/50 text-silver')} title={r.confirmed ? 'Weight you entered' : 'AI estimate — tap to enter the real weight'}>
@@ -640,7 +669,7 @@ function PlateSummary({ matches, logged, date, onLogAll, onAddExtra }: { matches
         ))}
       </ul>
       <p className="mt-3 text-xs leading-relaxed text-dim">
-        Nutrition comes from the food database. Weights marked ~ are the AI’s guess from the photo — a photo can’t weigh food. Tap a weight to enter the real one.{missing > 0 ? ` ${missing} food${missing > 1 ? 's' : ''} need a match first.` : ''}
+        Nutrition comes from the food database. Weights marked ~ are the AI’s guess from the photo — a photo can’t weigh food. Tap a weight to enter the real one.{missing > 0 ? ` ${missing} food${missing > 1 ? 's' : ''} need a match first.` : ''}{usable.some((r) => r.food.per100.kcal == null) ? ' Some matches have no calorie value in their source, so the total may be low.' : ''}
       </p>
       {shownPlan && (
         <PortionCoach

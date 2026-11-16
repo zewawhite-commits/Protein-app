@@ -4,8 +4,8 @@ import type { LabelRead } from './label';
  * Browser side of photo recognition, plus matching AI suggestions to database records.
  * Nutrient values always come from the matched database record, never from the AI.
  */
-import type { RecognitionResult, RecognizedIngredient, RecognizedItem } from './recognition';
-import { searchFoods } from './foods';
+import { METHOD_WORDS, pickKey, type RecognitionResult, type RecognizedIngredient, type RecognizedItem } from './recognition';
+import { foodById, searchFoods } from './foods';
 import type { CustomFood, Food } from './types';
 
 /** Server recognition requires Premium and the user has no personal key. */
@@ -81,6 +81,8 @@ export interface MatchedIngredient {
 export interface MatchedItem {
   item: RecognizedItem;
   candidates: Food[];
+  /** The first candidate is what this person (or most people) chose for this name before. */
+  learned?: 'mine' | 'popular';
   ingredients: MatchedIngredient[];
 }
 
@@ -101,15 +103,37 @@ function candidatesFor(queries: string[], state: RecognizedItem['state'], custom
 }
 
 /** Look each recognised item (and its ingredients) up in the local databases. Prefers records in the same raw/cooked state. */
-export function matchItems(result: RecognitionResult, custom: CustomFood[]): MatchedItem[] {
-  return result.items.map((item) => ({
+export { pickKey };
+
+/** Search queries for an item, with its cooking method added to the most specific one when missing. */
+export function itemQueries(item: RecognizedItem): string[] {
+  const qs = [...item.searchQueries, item.localName, item.name].filter(Boolean);
+  const word = METHOD_WORDS[item.method] ?? '';
+  if (word && qs[0] && !qs[0].toLowerCase().includes(word)) qs.unshift(`${qs[0]} ${word}`);
+  return qs;
+}
+
+/** Candidates for one item; a food people chose for this name before (learned) goes first. */
+export function matchItem(item: RecognizedItem, custom: CustomFood[], learned: Record<string, string> = {}, mine: Record<string, string> = learned): MatchedItem {
+  let candidates = candidatesFor(itemQueries(item), item.state, custom, 5);
+  const known = learned[pickKey(item.name)] ?? (item.localName ? learned[pickKey(item.localName)] : undefined);
+  const food = known ? (custom.find((c) => c.id === known) ?? foodById(known)) : undefined;
+  if (food) candidates = [food, ...candidates.filter((c) => c.id !== food.id)].slice(0, 5);
+  return {
     item,
-    candidates: candidatesFor([...item.searchQueries, item.localName, item.name].filter(Boolean), item.state, custom, 5),
+    candidates,
+    learned: food ? (mine[pickKey(item.name)] === food.id || (item.localName && mine[pickKey(item.localName)] === food.id) ? 'mine' : 'popular') : undefined,
     ingredients: (item.ingredients ?? []).map((ingredient) => ({
       ingredient,
       candidates: candidatesFor([...ingredient.searchQueries, ingredient.name].filter(Boolean), ingredient.state, custom, 3),
     })),
-  }));
+  };
+}
+
+export function matchItems(result: RecognitionResult & { popular?: Record<string, string> }, custom: CustomFood[], mine: Record<string, string> = {}): MatchedItem[] {
+  // Your own past choices win over what most people picked.
+  const learned = { ...(result.popular ?? {}), ...mine };
+  return result.items.map((item) => matchItem(item, custom, learned, mine));
 }
 
 /** Fire-and-forget: tell the server which record the person chose (anonymous, for review). */

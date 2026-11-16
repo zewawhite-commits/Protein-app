@@ -55,6 +55,9 @@ interface State {
   /** Free Pro time from the server (trial or invite rewards); the server stays the authority. */
   perks: { until: number; freePro: boolean; trialUsed: boolean; referrals: number; maxReferrals: number; referralDays: number } | null;
   setPerks: (p: State['perks']) => void;
+  /** What this person picked for a name the AI gave ("jollof rice" → food id), so the next scan puts it first. */
+  picks: Record<string, string>;
+  rememberPick: (key: string, foodId: string) => void;
 
   saveProfile: (p: Profile) => void;
   updateSettings: (s: Partial<Settings>) => void;
@@ -89,6 +92,7 @@ export const useStore = create<State>()(
       progressPhotos: [],
       premium: null,
       perks: null,
+      picks: {},
 
       addExercise: (e) => set((s) => ({ exercises: [...s.exercises, { ...e, id: crypto.randomUUID() }] })),
       removeExercise: (id) => set((s) => ({ exercises: s.exercises.filter((x) => x.id !== id) })),
@@ -133,6 +137,13 @@ export const useStore = create<State>()(
 
       setPremium: (premium) => set({ premium }),
       setPerks: (perks) => set({ perks }),
+      rememberPick: (key, foodId) => set((s) => {
+        if (!key || s.picks?.[key] === foodId) return {};
+        const next = { ...(s.picks ?? {}), [key]: foodId };
+        const keys = Object.keys(next);
+        if (keys.length > 300) delete next[keys[0]];
+        return { picks: next };
+      }),
 
       saveProfile: (p) =>
         set((s) => ({ profile: p, goalHistory: { ...s.goalHistory, [todayKey()]: dailyGoal(p) } })),
@@ -231,7 +242,7 @@ export const useStore = create<State>()(
       },
 
       resetAll: () =>
-        set({ profile: null, settings: defaultSettings, entries: [], customFoods: [], goalHistory: {}, recentFoodIds: [], favoriteFoodIds: [], remoteFoods: {}, savedMeals: [], savedPlans: [], workoutPlan: null, savedRecipes: [], weights: [], exercises: [], progressPhotos: [], premium: null, perks: null }),
+        set({ profile: null, settings: defaultSettings, entries: [], customFoods: [], goalHistory: {}, recentFoodIds: [], favoriteFoodIds: [], remoteFoods: {}, savedMeals: [], savedPlans: [], workoutPlan: null, savedRecipes: [], weights: [], exercises: [], progressPhotos: [], premium: null, perks: null, picks: {} }),
     }),
     {
       name: 'protein-app',

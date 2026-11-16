@@ -23,6 +23,13 @@ export interface RecognizedItem {
   /** Rough visual portion estimate in grams (0 = cannot tell). An AI guess — never used without the user confirming. */
   estimatedGrams: number;
   confidence: 'high' | 'medium' | 'low';
+  /** How it was cooked, as far as the photo shows ('none' = not applicable, e.g. fruit, bread, drinks). */
+  method: CookingMethod;
+  /** Portion size compared with a typical adult serving of this food. */
+  size: 'small' | 'medium' | 'large';
+  /** Likely range for the weight (grams). 0/0 when estimatedGrams is 0. */
+  gramsLow: number;
+  gramsHigh: number;
   /** For combined dishes: the likely ingredients, so the user can log them one by one. Empty for single foods. */
   ingredients: RecognizedIngredient[];
 }
@@ -35,8 +42,22 @@ export interface RecognizedIngredient {
   visible: boolean;
 }
 
+export const COOKING_METHODS = ['fried', 'deep-fried', 'grilled', 'roasted', 'baked', 'boiled', 'steamed', 'stewed', 'stir-fried', 'smoked', 'raw', 'none'] as const;
+export type CookingMethod = (typeof COOKING_METHODS)[number];
+
+/** Words to add to a database search for each method (the tables name methods this way). */
+export const METHOD_WORDS: Record<CookingMethod, string> = {
+  fried: 'fried', 'deep-fried': 'fried', grilled: 'grilled', roasted: 'roasted', baked: 'baked', boiled: 'boiled',
+  steamed: 'steamed', stewed: 'stewed', 'stir-fried': 'stir-fried', smoked: 'smoked', raw: 'raw', none: '',
+};
+
+/** Same key the app and server use for "what the AI called it". */
+export const pickKey = (aiName: string) => aiName.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+
 export interface RecognitionResult {
   isFood: boolean;
+  /** Whether the photo is good enough to estimate portions: poor = too dark, blurred, cropped, or at an angle that hides depth. */
+  photoQuality: 'good' | 'fair' | 'poor';
   items: RecognizedItem[];
   /** Short note for the user, e.g. "Sauce may hide extra oil". */
   note: string;
@@ -58,6 +79,10 @@ const SCHEMA = {
           state: { type: 'string', enum: ['raw', 'cooked', 'dry', 'na'] },
           estimatedGrams: { type: 'number' },
           confidence: { type: 'string', enum: ['high', 'medium', 'low'] },
+          method: { type: 'string', enum: [...COOKING_METHODS] },
+          size: { type: 'string', enum: ['small', 'medium', 'large'] },
+          gramsLow: { type: 'number' },
+          gramsHigh: { type: 'number' },
           ingredients: {
             type: 'array',
             items: {
@@ -73,13 +98,14 @@ const SCHEMA = {
             },
           },
         },
-        required: ['name', 'localName', 'cuisine', 'searchQueries', 'state', 'estimatedGrams', 'confidence', 'ingredients'],
+        required: ['name', 'localName', 'cuisine', 'searchQueries', 'state', 'estimatedGrams', 'confidence', 'method', 'size', 'gramsLow', 'gramsHigh', 'ingredients'],
         additionalProperties: false,
       },
     },
+    photoQuality: { type: 'string', enum: ['good', 'fair', 'poor'] },
     note: { type: 'string' },
   },
-  required: ['isFood', 'items', 'note'],
+  required: ['isFood', 'photoQuality', 'items', 'note'],
   additionalProperties: false,
 } as const;
 
@@ -92,7 +118,14 @@ Recognise dishes from any cuisine in the world — African, Asian, European, the
 "searchQueries" are used to look the food up in food-composition databases (USDA, FAO/INFOODS) and a packaged-product database. Give 2–4 short queries, most specific first, then more generic fallbacks that such databases are likely to contain, e.g. ["jollof rice", "rice tomato sauce", "rice white cooked"] or ["chicken thigh roasted", "chicken roasted"]. For a branded packaged product, include the brand and product name.
 
 "state": cooked if visibly cooked, raw if raw, dry for dry uncooked grains/pasta, na otherwise.
-"estimatedGrams": your best visual estimate of the edible weight shown, or 0 if you cannot judge. The user will weigh the food; this is only a starting point.
+"method": how it was cooked — fried (shallow/pan), deep-fried, grilled, roasted, baked, boiled, steamed, stewed (in sauce/soup), stir-fried, smoked, raw — or none when it doesn't apply (bread, fruit, drinks, packaged foods). Look for the visual cues: browning and oil sheen (fried), char lines (grilled), a dry browned surface (roasted/baked), a pale moist surface (boiled/steamed), sitting in sauce (stewed). Fried and grilled versions of the same food differ a lot in calories, so put the method in the most specific searchQuery too (e.g. "plantain fried", "chicken thigh grilled").
+
+Portions — estimate carefully, step by step, before giving numbers:
+1. Find a scale reference: a standard dinner plate is about 26 cm across, a side plate 20 cm, a cereal bowl 15–16 cm; also cutlery, hands, cups, cans and packaging.
+2. Judge how much of the plate or bowl each food covers, and its height or depth. A top-down photo hides depth: assume typical heaping for that food and widen the range.
+3. Convert the volume to weight using the food's typical density (cooked rice ~0.8–0.9 g/ml, stews and soups ~1 g/ml, leafy salad much lighter).
+"estimatedGrams": your best estimate of the edible weight shown (0 if you cannot judge). "gramsLow"/"gramsHigh": a realistic range around it — narrow when there's a clear scale reference, wider when there isn't. "size": small, medium or large compared with a typical adult serving of that food. The user can weigh the food; this is a starting point.
+"photoQuality": good when the food is clear and a scale reference is visible; fair when estimates are rough (no reference, partial view); poor when it's too dark, blurred, cropped, or the angle hides the food — then say in "note" how to retake it (e.g. "Take it from a 45° angle with the whole plate in view").
 
 For a combined dish (soup, stew, curry, rice dish, salad, sandwich…), also list its likely main ingredients in "ingredients" (3–8 items), each with database-style "searchQueries" and its state as it is in the dish. Include ingredients that are usually present but hard to see, such as cooking oil, palm oil, stock fish, crayfish or ground melon seeds, and mark those "visible": false. For single foods, return "ingredients": [].
 
@@ -120,7 +153,7 @@ export async function recognizeWithClient(client: Anthropic, imageBase64: string
               { type: 'image', source: { type: 'base64', media_type: mediaType as 'image/jpeg', data: imageBase64 } },
               { type: 'text', text: 'Identify every food and drink in this photo — the whole plate, not just the main item.' },
             ]
-          : [{ type: 'text', text: `There is no photo. The person described what they ate: "${description ?? ''}". Identify each food from the description (treat it as if you had seen it). Use any amounts they give for estimatedGrams (convert cups, pieces, slices to grams); otherwise estimate a typical portion.` }],
+          : [{ type: 'text', text: `There is no photo. The person described what they ate: "${description ?? ''}". Identify each food from the description (treat it as if you had seen it). Use any amounts they give for estimatedGrams (convert cups, pieces, slices to grams); otherwise estimate a typical portion. Use photoQuality "fair" (there is no photo) and give a range.` }],
       },
     ],
   });
@@ -128,11 +161,14 @@ export async function recognizeWithClient(client: Anthropic, imageBase64: string
   if (response.stop_reason === 'refusal') throw new Error('The photo could not be analysed. Try another photo or search manually.');
   const text = response.content.find((b) => b.type === 'text');
   if (!text || text.type !== 'text') throw new Error('No result from the recognition service.');
-  return sanitize(JSON.parse(text.text));
+  return sanitize(JSON.parse(text.text) as RawResult);
 }
 
 /** Defensive cleanup of the model output before it reaches the UI. */
-export function sanitize(raw: RecognitionResult): RecognitionResult {
+type RawItem = Omit<RecognizedItem, 'method' | 'size' | 'gramsLow' | 'gramsHigh'> & Partial<Pick<RecognizedItem, 'method' | 'size' | 'gramsLow' | 'gramsHigh'>>;
+type RawResult = Omit<RecognitionResult, 'photoQuality' | 'items'> & { photoQuality?: string; items: RawItem[] };
+
+export function sanitize(raw: RawResult): RecognitionResult {
   const items = (raw.items ?? []).slice(0, 14).map((i) => ({
     ...i,
     name: String(i.name ?? '').slice(0, 80),
@@ -140,6 +176,9 @@ export function sanitize(raw: RecognitionResult): RecognitionResult {
     cuisine: String(i.cuisine ?? '').slice(0, 40),
     searchQueries: (i.searchQueries ?? []).map((q) => String(q).slice(0, 60)).filter(Boolean).slice(0, 4),
     estimatedGrams: Number.isFinite(i.estimatedGrams) ? Math.max(0, Math.min(2000, Math.round(i.estimatedGrams))) : 0,
+    method: i.method && (COOKING_METHODS as readonly string[]).includes(i.method) ? i.method : ('none' as CookingMethod),
+    size: i.size && (['small', 'medium', 'large'] as const).includes(i.size) ? i.size : ('medium' as const),
+    ...range(i),
     ingredients: (i.ingredients ?? []).slice(0, 10).map((g) => ({
       name: String(g.name ?? '').slice(0, 60),
       searchQueries: (g.searchQueries ?? []).map((q) => String(q).slice(0, 60)).filter(Boolean).slice(0, 3),
@@ -147,5 +186,15 @@ export function sanitize(raw: RecognitionResult): RecognitionResult {
       visible: g.visible !== false,
     })).filter((g) => g.name),
   }));
-  return { isFood: !!raw.isFood, items, note: String(raw.note ?? '').slice(0, 200) };
+  const photoQuality: RecognitionResult['photoQuality'] = raw.photoQuality === 'good' || raw.photoQuality === 'poor' ? raw.photoQuality : 'fair';
+  return { isFood: !!raw.isFood, photoQuality, items, note: String(raw.note ?? '').slice(0, 200) };
+}
+
+/** A sane weight range around the estimate (low ≤ estimate ≤ high). */
+function range(i: Partial<RawItem>): { gramsLow: number; gramsHigh: number } {
+  const g = Number.isFinite(i.estimatedGrams) ? Math.max(0, Math.min(2000, Math.round(i.estimatedGrams!))) : 0;
+  if (!g) return { gramsLow: 0, gramsHigh: 0 };
+  const lo = Number.isFinite(i.gramsLow) ? Math.round(i.gramsLow!) : Math.round(g * 0.75);
+  const hi = Number.isFinite(i.gramsHigh) ? Math.round(i.gramsHigh!) : Math.round(g * 1.3);
+  return { gramsLow: Math.max(1, Math.min(lo, g)), gramsHigh: Math.min(3000, Math.max(hi, g)) };
 }

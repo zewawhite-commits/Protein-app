@@ -106,3 +106,17 @@ describe('confident matching for AI-suggested foods', () => {
     expect(confidentMatch(['egg whole hard-boiled'])?.name).toMatch(/egg/i);
   });
 });
+
+import { itemQueries } from './recognize-client';
+describe('cooking method and portion range', () => {
+  it('adds the cooking method to the most specific search and keeps a sane range', () => {
+    const r = sanitize({ isFood: true, note: '', photoQuality: 'poor', items: [item({ name: 'Plantain', searchQueries: ['plantain'], estimatedGrams: 120, method: 'fried', gramsLow: 300, gramsHigh: 50 })] });
+    expect(itemQueries(r.items[0])[0]).toBe('plantain fried');
+    expect(r.items[0].gramsLow).toBeLessThanOrEqual(120);
+    expect(r.items[0].gramsHigh).toBeGreaterThanOrEqual(120);
+    expect(r.photoQuality).toBe('poor');
+    const old = sanitize({ isFood: true, note: '', items: [item({ name: 'Rice', estimatedGrams: 200 })] });
+    expect(old.items[0].method).toBe('none');
+    expect(old.photoQuality).toBe('fair');
+  });
+});

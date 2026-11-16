@@ -45,3 +45,13 @@ describe('free Pro time', () => {
     }
   });
 });
+
+import { popularFrom } from '../_lib/popular.js';
+describe('learning from corrections', () => {
+  it('prefers a record only when enough people agree', () => {
+    const rows = (name: string, id: string, n: number) => Array.from({ length: n }, () => ({ ai_name: name, chosen_food_id: id }));
+    expect(popularFrom([...rows('Jollof Rice', 'recipe:r002', 4), ...rows('jollof rice', 'usda:1', 1)])).toEqual({ 'jollof rice': 'recipe:r002' });
+    expect(popularFrom(rows('Fried plantain', 'usda:2', 2))).toEqual({});
+    expect(popularFrom([...rows('Eba', 'a', 3), ...rows('Eba', 'b', 3)])).toEqual({});
+  });
+});

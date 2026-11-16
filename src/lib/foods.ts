@@ -67,6 +67,10 @@ const PROCESSED_CATEGORIES = new Set([
 const GROUP_WORDS = new Set(['fish', 'crustaceans', 'mollusks', 'cereals', 'beverages', 'nuts', 'seeds', 'game', 'spices', 'snacks']);
 const PROCESSED_WORDS = /\b(breaded|battered|tenders|nuggets|patties|roll|deli|luncheon|canned|frozen|sliced|nugget|salad|includes foods for usda)\b/;
 
+let loadedById: Map<string, Food> | undefined;
+/** A database food by id, once the database has loaded. */
+export const foodById = (id: string): Food | undefined => loadedById?.get(id);
+
 export function loadFoodDb(): Promise<FoodDb> {
   if (!dbPromise) {
     dbPromise = fetch(`${import.meta.env.BASE_URL}data/foods.json`)
@@ -94,6 +98,7 @@ export function loadFoodDb(): Promise<FoodDb> {
           };
         });
         const byId = new Map(foods.map((f) => [f.id, f]));
+        loadedById = byId;
         index = foods.map(toIndexed);
         quickPickIds = new Set(file.quickPicks.map((id) => `usda:${id}`));
         return {

@@ -1,3 +1,4 @@
+import { AllergyTextBanner } from './Allergy';
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Bookmark, BookmarkCheck, Check, ChefHat, Clock, Lightbulb, Loader2, Trash2, Users } from 'lucide-react';
@@ -129,6 +130,7 @@ function RecipeCard({ recipe, savedId, onSave, onDelete }: { recipe: Recipe; sav
 
   return (
     <section className="space-y-3">
+      <AllergyTextBanner what="recipe" texts={[recipe.title, ...recipe.ingredients.map((i) => `${i.name} ${i.localName}`)]} />
       <div className="card p-5">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">

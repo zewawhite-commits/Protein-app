@@ -1,3 +1,4 @@
+import { AllergyTextBanner } from './Allergy';
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Bookmark, BookmarkCheck, ChevronRight, Lightbulb, Loader2, Sparkles, Trash2 } from 'lucide-react';
@@ -129,6 +130,7 @@ function PlanCard({ plan, savedId, onSave, onDelete }: { plan: DayPlan; savedId:
 
   return (
     <section className="space-y-3">
+      <AllergyTextBanner what="plan" texts={plan.meals.flatMap((m) => [m.title, ...m.items.map((i) => `${i.name} ${i.localName}`)])} />
       <div className="card p-5">
         <div className="flex items-start justify-between gap-3">
           <p className="text-[19px] font-bold leading-snug">{plan.title}</p>

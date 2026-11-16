@@ -10,6 +10,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { recognizeWithClient } from '../src/lib/recognition.js';
 import { gate } from './_lib/quota.js';
+import { popularPicks } from './_lib/popular.js';
 import { readLabelWithClient } from '../src/lib/label.js';
 
 const MAX_BYTES = 5 * 1024 * 1024;
@@ -40,7 +41,10 @@ export async function POST(request: Request): Promise<Response> {
       const label = await readLabelWithClient(new Anthropic(), image!, mediaType);
       return json(scansLeft != null ? { ...label, scansLeft, scanLimit: g.limit } : label, 200);
     }
-    const result = await recognizeWithClient(new Anthropic(), text ? null : image!, mediaType, text || undefined);
+    const recognized = await recognizeWithClient(new Anthropic(), text ? null : image!, mediaType, text || undefined);
+    // What most people chose for these names before, so the right record can go first.
+    const popular = await popularPicks(recognized.items.flatMap((i) => [i.name, i.localName]));
+    const result = { ...recognized, popular };
     return json(scansLeft != null ? { ...result, scansLeft, scanLimit: g.limit } : result, 200);
   } catch (e) {
     if (e instanceof Anthropic.RateLimitError) return json({ error: 'Busy — try again in a moment.' }, 429);

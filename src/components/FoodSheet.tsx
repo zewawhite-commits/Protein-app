@@ -8,6 +8,7 @@ import { counterparts, sourceInfo, splitName } from '@/lib/foods';
 import { deletePhoto, savePhoto } from '@/lib/photos';
 import { useFoodDb, usePhotoUrl, useDay } from '@/lib/hooks';
 import { useStore } from '@/store/useStore';
+import { AllergyBanner } from './Allergy';
 import { mealForNow, todayKey } from '@/lib/dates';
 import { Ring, Segmented, Sheet, StateBadge, cx, fmt } from './ui';
 import { FoodVisual } from './FoodIcon';
@@ -207,6 +208,7 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
         </div>
       )}
 
+      <AllergyBanner food={food} className="mb-3" />
       {/* Result */}
       <div className="card p-5">
         <div className="flex items-center gap-4">
