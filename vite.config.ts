@@ -37,7 +37,15 @@ export default defineConfig({
       manifest: {
         name: 'Provora — nutrition, precisely',
         short_name: 'Provora',
-        description: 'Weigh or snap your food. Track calories, protein, carbs, vitamins and more. Nutrition data from USDA FoodData Central.',
+        description: 'Snap or weigh your food and track calories, protein and nutrients — foods from around the world, from official food composition tables.',
+        id: base,
+        categories: ['health', 'fitness', 'food'],
+        // Long-press the app icon for these.
+        shortcuts: [
+          { name: 'Snap a meal', short_name: 'Snap', url: `${base}snap`, icons: [{ src: 'icons/icon-192.png', sizes: '192x192' }] },
+          { name: 'Add food', short_name: 'Add food', url: `${base}add`, icons: [{ src: 'icons/icon-192.png', sizes: '192x192' }] },
+          { name: 'Scan a barcode', short_name: 'Barcode', url: `${base}barcode`, icons: [{ src: 'icons/icon-192.png', sizes: '192x192' }] },
+        ],
         theme_color: '#F9F7F2',
         background_color: '#F9F7F2',
         display: 'standalone',

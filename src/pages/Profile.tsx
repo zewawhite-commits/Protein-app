@@ -1,3 +1,4 @@
+import { InstallRow } from '@/components/InstallApp';
 import { AutoBackups, ShareReportRow } from '@/components/DataTools';
 import { TargetCheck } from '@/components/NutritionInsights';
 import { SignInButtons } from '@/components/SignIn';
@@ -182,6 +183,7 @@ export default function Profile({ mode = 'profile' }: { mode?: 'profile' | 'sett
       {msg && <p className="mt-2 px-1 text-sm font-semibold text-silver">{msg}</p>}
 
       <Group title="Support & legal">
+        <InstallRow />
         <Link to="/help" className="block"><Row icon={<LifeBuoy size={18} />} label="Help, FAQ & feedback" chevron /></Link>
         {SUPPORT_EMAIL && <a href={`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent('Provora support')}`} className="block"><Row icon={<LifeBuoy size={18} />} label="Contact support" chevron /></a>}
         <Link to="/privacy" className="block"><Row icon={<Lock size={18} />} label="Privacy policy" chevron /></Link>
@@ -207,7 +209,7 @@ export default function Profile({ mode = 'profile' }: { mode?: 'profile' | 'sett
             USDA FoodData Central — SR Legacy (2018) and FNDDS (2024). UK: McCance and Widdowson’s CoFID 2021 (Open Government Licence v3.0). Australia: FSANZ Australian Food Composition Database Release 3 (CC BY 4.0). FAO/INFOODS Food Composition Table for Western Africa (2019), © FAO, used with acknowledgement for non-commercial use. Packaged products: Open Food Facts (ODbL), label data contributed by its community. Values are per 100 g and are copied from these tables; world dishes not in any table are calculated from their listed ingredient records.
           </p>
           <p className="mt-4 flex items-center gap-2 font-semibold text-ink"><Smartphone size={16} className="text-accent" /> Install</p>
-          <p className="mt-1.5">On iPhone: Share → Add to Home Screen. On Android: menu → Install app. Works offline once installed.</p>
+          <p className="mt-1.5">Add Provora to your home screen from Support above. On iPhone: Share → Add to Home Screen. On Android: menu → Install app. Works offline once installed.</p>
         </div>
       </Group>
 

@@ -1,3 +1,4 @@
+import { captureInstallPrompt } from './lib/install';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
@@ -7,13 +8,14 @@ import { loadFoodDb } from './lib/foods';
 import { installErrorReporting } from './lib/errors';
 
 installErrorReporting();
+captureInstallPrompt();
 
 // Start fetching the food database immediately so search is instant.
 void loadFoodDb().catch(() => {});
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <BrowserRouter basename={import.meta.env.BASE_URL.replace(/\/$/, '') || '/'}>
+    <BrowserRouter basename={import.meta.env.BASE_URL.replace(/\/$/, '') || '/'} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <App />
     </BrowserRouter>
   </React.StrictMode>,

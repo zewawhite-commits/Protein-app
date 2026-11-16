@@ -545,42 +545,74 @@ function Camera({ onClose, onCapture, mode, onMode, onBarcode }: { onClose: () =
   const fileRef = useRef<HTMLInputElement>(null);
   const captureRef = useRef<HTMLInputElement>(null);
   const [live, setLive] = useState<'starting' | 'on' | 'off'>('starting');
+  // Why the live camera isn't available, so we can say how to fix it.
+  const [why, setWhy] = useState<'blocked' | 'none' | 'unsupported' | null>(null);
+  const [torch, setTorch] = useState<{ supported: boolean; on: boolean }>({ supported: false, on: false });
+  const streamRef = useRef<MediaStream | null>(null);
 
   useEffect(() => {
-    let stream: MediaStream | undefined;
     let cancelled = false;
-    if (!navigator.mediaDevices?.getUserMedia) { setLive('off'); return; }
-    navigator.mediaDevices
-      .getUserMedia({ video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1440 } }, audio: false })
-      .then((s) => {
+    const stop = () => { streamRef.current?.getTracks().forEach((t) => t.stop()); streamRef.current = null; };
+    const start = async () => {
+      if (!navigator.mediaDevices?.getUserMedia || !window.isSecureContext) { setWhy('unsupported'); setLive('off'); return; }
+      try {
+        const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1440 } }, audio: false });
         if (cancelled) { s.getTracks().forEach((t) => t.stop()); return; }
-        stream = s;
-        if (videoRef.current) {
-          videoRef.current.srcObject = s;
-          void videoRef.current.play();
+        stop();
+        streamRef.current = s;
+        const v = videoRef.current;
+        if (v) {
+          v.srcObject = s;
+          await v.play().catch(() => undefined);
         }
+        const track = s.getVideoTracks()[0];
+        const caps = (track?.getCapabilities?.() ?? {}) as { torch?: boolean };
+        setTorch({ supported: !!caps.torch, on: false });
+        setWhy(null);
         setLive('on');
-      })
-      .catch(() => setLive('off'));
+      } catch (e) {
+        const name = (e as DOMException)?.name;
+        setWhy(name === 'NotAllowedError' || name === 'SecurityError' ? 'blocked' : name === 'NotFoundError' || name === 'OverconstrainedError' ? 'none' : 'unsupported');
+        setLive('off');
+      }
+    };
+    void start();
+    // Phones stop the camera when the app goes to the background (the feed turns black on return): restart it.
+    const onVis = () => {
+      if (document.visibilityState === 'hidden') stop();
+      else if (!cancelled && !streamRef.current?.active) { setLive('starting'); void start(); }
+    };
+    document.addEventListener('visibilitychange', onVis);
     return () => {
       cancelled = true;
-      stream?.getTracks().forEach((t) => t.stop());
+      document.removeEventListener('visibilitychange', onVis);
+      stop();
     };
   }, []);
 
+  async function toggleTorch() {
+    const track = streamRef.current?.getVideoTracks()[0];
+    if (!track) return;
+    try {
+      await track.applyConstraints({ advanced: [{ torch: !torch.on } as MediaTrackConstraintSet] });
+      setTorch((t) => ({ ...t, on: !t.on }));
+    } catch { setTorch({ supported: false, on: false }); }
+  }
+
   function shoot() {
     const v = videoRef.current;
-    if (!v || !v.videoWidth) return;
+    // Not ready yet (or the feed stopped): use the phone's own camera instead of doing nothing.
+    if (!v || !v.videoWidth) { captureRef.current?.click(); return; }
     const c = document.createElement('canvas');
     c.width = v.videoWidth;
     c.height = v.videoHeight;
     c.getContext('2d')!.drawImage(v, 0, 0);
-    c.toBlob((b) => b && onCapture(b), 'image/jpeg', 0.9);
+    c.toBlob((b) => (b ? onCapture(b) : captureRef.current?.click()), 'image/jpeg', 0.9);
   }
 
   return (
     <div className="fixed inset-0 z-50 bg-black text-white">
-      <video ref={videoRef} playsInline muted className={cx('absolute inset-0 h-full w-full object-cover transition-opacity', live === 'on' ? 'opacity-100' : 'opacity-0')} />
+      <video ref={videoRef} playsInline muted autoPlay className={cx('absolute inset-0 h-full w-full object-cover transition-opacity', live === 'on' ? 'opacity-100' : 'opacity-0')} />
 
       {/* Framing guide */}
       {live === 'on' && (
@@ -594,15 +626,23 @@ function Camera({ onClose, onCapture, mode, onMode, onBarcode }: { onClose: () =
       <div className="absolute inset-x-0 top-0 flex items-center justify-between px-5" style={{ paddingTop: 'max(env(safe-area-inset-top), 1.25rem)' }}>
         <button onClick={onClose} className="grid h-11 w-11 place-items-center rounded-full bg-black/45 backdrop-blur-md" aria-label="Close camera"><X size={20} /></button>
         <span className="flex items-center gap-1.5 rounded-full bg-black/45 px-3.5 py-2 text-xs font-semibold backdrop-blur-md"><Sparkles size={13} /> {mode === 'label' ? 'Fit the nutrition table in the frame' : mode === 'menu' ? 'Fit the menu page in the frame' : 'Fit the whole plate in the frame'}</span>
-        <span className="w-11" />
+        {torch.supported ? (
+          <button onClick={() => void toggleTorch()} className={cx('grid h-11 w-11 place-items-center rounded-full backdrop-blur-md', torch.on ? 'bg-white text-black' : 'bg-black/45')} aria-label={torch.on ? 'Turn flash off' : 'Turn flash on'} aria-pressed={torch.on}><Zap size={19} /></button>
+        ) : <span className="w-11" />}
       </div>
 
       {live === 'off' && (
         <div className="absolute inset-0 grid place-items-center px-8 text-center">
           <div>
-            <p className="text-lg font-semibold">Take a photo of your food</p>
-            <p className="mt-2 text-sm text-white/70">Use your camera or choose a photo you already have.</p>
+            <p className="text-lg font-semibold">{why === 'blocked' ? 'Camera access is off' : 'Take a photo of your food'}</p>
+            <p className="mt-2 text-sm leading-relaxed text-white/75">
+              {why === 'blocked'
+                ? 'You can still use your phone’s camera below. To use the live camera here: on iPhone, Settings → Safari → Camera → Allow (or tap “aA” in the address bar → Website Settings); on Android, tap the lock icon by the address → Permissions → Camera → Allow. Then reopen this screen.'
+                : why === 'none' ? 'No camera was found. Choose a photo you already have instead.'
+                : 'Use your camera or choose a photo you already have.'}
+            </p>
             <button onClick={() => captureRef.current?.click()} className="mt-6 h-14 w-full rounded-full bg-white font-semibold text-black">Open camera</button>
+            <button onClick={() => fileRef.current?.click()} className="mt-2 h-12 w-full rounded-full bg-white/15 font-semibold text-white">Choose from library</button>
           </div>
         </div>
       )}

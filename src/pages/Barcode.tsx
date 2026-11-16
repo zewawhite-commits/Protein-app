@@ -39,23 +39,36 @@ export default function Barcode() {
     }
   }
 
+  // The latest found food, read inside the scanner callback (which keeps its first closure).
+  const foodRef = useRef(food);
+  foodRef.current = food;
+  const [blocked, setBlocked] = useState(false);
+
   useEffect(() => {
     let stop: (() => void) | undefined;
     let cancelled = false;
-    (async () => {
+    const start = async () => {
       try {
+        if (!navigator.mediaDevices?.getUserMedia || !window.isSecureContext) throw new Error('unsupported');
         const { BrowserMultiFormatReader } = await import('@zxing/browser');
         const reader = new BrowserMultiFormatReader();
         const controls = await reader.decodeFromConstraints({ video: { facingMode: 'environment' } }, videoRef.current!, (result) => {
-          if (result && !food) void lookup(result.getText());
+          if (result && !foodRef.current) void lookup(result.getText());
         });
         if (cancelled) controls.stop();
-        else { stop = () => controls.stop(); setCamera('on'); }
-      } catch {
-        if (!cancelled) setCamera('off');
+        else { stop = () => controls.stop(); setBlocked(false); setCamera('on'); }
+      } catch (e) {
+        if (!cancelled) { setBlocked((e as DOMException)?.name === 'NotAllowedError'); setCamera('off'); }
       }
-    })();
-    return () => { cancelled = true; stop?.(); };
+    };
+    void start();
+    // Phones stop the camera in the background; restart it when the app comes back.
+    const onVis = () => {
+      if (document.visibilityState === 'hidden') { stop?.(); stop = undefined; }
+      else if (!cancelled && !stop) { setCamera('starting'); void start(); }
+    };
+    document.addEventListener('visibilitychange', onVis);
+    return () => { cancelled = true; document.removeEventListener('visibilitychange', onVis); stop?.(); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -72,7 +85,7 @@ export default function Barcode() {
         <div className="pointer-events-none absolute inset-x-10 top-1/2 h-24 -translate-y-1/2 rounded-2xl border-[3px] border-white/90" />
         {camera !== 'on' && (
           <div className="absolute inset-0 grid place-items-center text-center text-on-primary">
-            {camera === 'starting' ? <Loader2 className="animate-spin" /> : <p className="px-6 text-sm"><ScanBarcode className="mx-auto mb-2" />Camera not available — type the number below.</p>}
+            {camera === 'starting' ? <Loader2 className="animate-spin" /> : <p className="px-6 text-sm leading-relaxed"><ScanBarcode className="mx-auto mb-2" />{blocked ? 'Camera access is off. Allow it in your browser’s site settings (iPhone: Settings → Safari → Camera; Android: lock icon → Permissions), or type the number below.' : 'Camera not available — type the number below.'}</p>}
           </div>
         )}
         {state.busy && <div className="absolute inset-0 grid place-items-center bg-black/40 text-white"><Loader2 className="animate-spin" /></div>}

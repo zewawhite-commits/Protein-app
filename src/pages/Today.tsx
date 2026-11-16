@@ -1,3 +1,4 @@
+import { InstallBanner } from '@/components/InstallApp';
 import { PhotoDiary } from '@/components/PhotoDiary';
 import { WaterCard } from '@/components/Water';
 import { Logo } from '@/components/Logo';
@@ -100,6 +101,7 @@ export default function Today() {
       )}
       {isToday && <Restored />}
       {isToday && <WelcomeBack />}
+      {isToday && <InstallBanner className="mt-4" />}
 
       <div className="lg:grid lg:grid-cols-[1.1fr_1fr] lg:items-start lg:gap-8">
       <div>
