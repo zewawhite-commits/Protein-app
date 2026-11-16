@@ -6,6 +6,7 @@ import { cropSquare, savePhoto, deletePhoto } from '@/lib/photos';
 import { dailyGoal, fromKg } from '@/lib/nutrition';
 import { dailyTargets } from '@/lib/energy';
 import { isPremiumActive } from '@/lib/premium';
+import { useFreePro } from '@/lib/perks';
 import { accountsEnabled, useSession } from '@/lib/account';
 import { myProfile, uploadAvatar, type MyProfile } from '@/lib/social';
 import { useLogStreak } from './ProgressTop';
@@ -33,7 +34,8 @@ export function ProfileHero({ onEdit }: { onEdit: () => void }) {
   const targets = dailyTargets(profile, goal);
   const current = weights.length ? weights[weights.length - 1].kg : profile.bodyWeightKg;
   const days = new Set(entries.map((e) => e.date)).size;
-  const plan = isPremiumActive(premium) ? (premium?.tier === 'pro' ? 'Pro' : 'Plus') : 'Free';
+  const freePro = useFreePro();
+  const plan = isPremiumActive(premium) ? (premium?.tier === 'pro' ? 'Pro' : 'Plus') : freePro.on ? 'Pro (free)' : 'Free';
 
   async function pick(f?: File) {
     if (!f) return;

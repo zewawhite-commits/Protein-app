@@ -35,6 +35,7 @@ export function Privacy() {
         <li><b>Community:</b> posts, comments, reactions, group messages, your username and profile photo — visible to other members.</li>
         <li><b>Payments:</b> handled by Paystack. We receive your plan, payment status and the card brand and last four digits — never your full card number.</li>
         <li><b>Usage counts:</b> how many AI features you used this month, to apply plan limits.</li>
+        <li><b>Invites:</b> if you join with a friend’s invite link, we record who invited you so we can give you both free Pro time. Your friend sees only how many people joined, not who.</li>
       </ul>
 
       <H>How we use it</H>
@@ -86,6 +87,7 @@ export function Terms() {
         <li>Prices are shown in US dollars; your bank may charge in another currency at its exchange rate.</li>
         <li>Cancel any time from Profile → Subscription. You keep access until the end of the period you paid for.</li>
         <li>“Unlimited” features have a fair-use limit to stop abuse; normal use will never reach it.</li>
+        <li>Free Pro time — the 7-day trial (one per person) and invite rewards — needs no card and ends on its own. It has generous monthly limits. Invite rewards are for real friends: we may remove rewards earned with fake or duplicate accounts.</li>
         <li>If you’re a consumer in the UK or EU, you have a 14-day right to cancel a new subscription; contact us for a refund of an unused period.</li>
       </ul>
 

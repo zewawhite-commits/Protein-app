@@ -1,5 +1,8 @@
 import { lazy, Suspense, useEffect } from 'react';
 import { refreshPremium } from './lib/premium';
+import { captureInvite, usePerksSync } from './lib/perks';
+
+captureInvite();
 import { useCloudSync } from './lib/account';
 import { Confetti, Toaster } from './components/fx';
 import { useMealReminders } from './components/Notifications';
@@ -29,6 +32,7 @@ export default function App() {
   useThemeSync();
   useEffect(() => { void refreshPremium(); }, []);
   useCloudSync();
+  usePerksSync();
   useMealReminders();
   const profile = useStore((s) => s.profile);
   // Legal pages open from the welcome screen too, before a profile exists.

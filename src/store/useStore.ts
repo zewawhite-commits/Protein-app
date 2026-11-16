@@ -52,6 +52,9 @@ interface State {
   /** Account whose data is on this device (so one person's log never syncs into another's account). */
   ownerId?: string;
   setPremium: (p: State['premium']) => void;
+  /** Free Pro time from the server (trial or invite rewards); the server stays the authority. */
+  perks: { until: number; freePro: boolean; trialUsed: boolean; referrals: number; maxReferrals: number; referralDays: number } | null;
+  setPerks: (p: State['perks']) => void;
 
   saveProfile: (p: Profile) => void;
   updateSettings: (s: Partial<Settings>) => void;
@@ -85,6 +88,7 @@ export const useStore = create<State>()(
       exercises: [],
       progressPhotos: [],
       premium: null,
+      perks: null,
 
       addExercise: (e) => set((s) => ({ exercises: [...s.exercises, { ...e, id: crypto.randomUUID() }] })),
       removeExercise: (id) => set((s) => ({ exercises: s.exercises.filter((x) => x.id !== id) })),
@@ -128,6 +132,7 @@ export const useStore = create<State>()(
       removeRecipe: (id) => set((s) => ({ savedRecipes: s.savedRecipes.filter((r) => r.id !== id) })),
 
       setPremium: (premium) => set({ premium }),
+      setPerks: (perks) => set({ perks }),
 
       saveProfile: (p) =>
         set((s) => ({ profile: p, goalHistory: { ...s.goalHistory, [todayKey()]: dailyGoal(p) } })),
@@ -226,7 +231,7 @@ export const useStore = create<State>()(
       },
 
       resetAll: () =>
-        set({ profile: null, settings: defaultSettings, entries: [], customFoods: [], goalHistory: {}, recentFoodIds: [], favoriteFoodIds: [], remoteFoods: {}, savedMeals: [], savedPlans: [], workoutPlan: null, savedRecipes: [], weights: [], exercises: [], progressPhotos: [], premium: null }),
+        set({ profile: null, settings: defaultSettings, entries: [], customFoods: [], goalHistory: {}, recentFoodIds: [], favoriteFoodIds: [], remoteFoods: {}, savedMeals: [], savedPlans: [], workoutPlan: null, savedRecipes: [], weights: [], exercises: [], progressPhotos: [], premium: null, perks: null }),
     }),
     {
       name: 'protein-app',

@@ -1,4 +1,5 @@
 import { SignInButtons } from '@/components/SignIn';
+import { TrialCard } from '@/components/FreePro';
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Camera, Check, Loader2, Lock, MessageCircle, NotebookPen } from 'lucide-react';
@@ -122,6 +123,14 @@ export default function Premium() {
         <p className="mt-8 flex items-center justify-center gap-2 text-sm text-silver"><Loader2 size={16} className="animate-spin" /> Loading plans…</p>
       ) : catalog === null ? (
         <div className="mt-6">
+          <TrialCard className="mb-4" />
+          {accountsEnabled && !session && (
+            <div className="card mb-4 p-5">
+              <p className="text-[16px] font-bold">Try Pro free for 7 days</p>
+              <p className="mb-3 mt-1 text-sm text-silver">Create a free account to start — no card needed.</p>
+              <SignInButtons />
+            </div>
+          )}
           <div className="mb-4 flex justify-center">
             <Segmented<Billing> value={billing} onChange={setBilling} options={[{ value: 'monthly', label: 'Monthly' }, { value: 'yearly', label: 'Yearly · save 60%' }]} />
           </div>
@@ -146,6 +155,7 @@ export default function Premium() {
         </div>
       ) : (
         <>
+          <TrialCard className="mt-6" />
           {hasYearly && plans.some((p) => p.id.endsWith('monthly')) && (
             <div className="mt-6 flex justify-center">
               <Segmented<Billing> value={billing} onChange={setBilling} options={[{ value: 'monthly', label: 'Monthly' }, { value: 'yearly', label: 'Yearly · save 60%' }]} />

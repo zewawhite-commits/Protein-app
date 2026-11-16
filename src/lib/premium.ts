@@ -126,7 +126,7 @@ export async function aiHeaders(): Promise<Record<string, string>> {
   return { 'content-type': 'application/json', ...(token && { authorization: `Bearer ${token}` }), ...(user && { 'x-user-token': user }) };
 }
 
-export interface Usage { tier: 'free' | 'plus' | 'pro'; admin: boolean; features: Record<'scan' | 'coach' | 'workout' | 'recipe' | 'plan' | 'ideas', { used: number; limit: number | null }> }
+export interface Usage { tier: 'free' | 'plus' | 'pro'; admin: boolean; perks?: { proUntil: number; freePro: boolean; trialUsed: boolean; referrals: number; maxReferrals: number; referralDays: number; code: string }; features: Record<'scan' | 'coach' | 'workout' | 'recipe' | 'plan' | 'ideas', { used: number; limit: number | null }> }
 
 /** This month's AI usage for the signed-in user, or null. */
 export async function fetchUsage(): Promise<Usage | null> {

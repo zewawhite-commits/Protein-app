@@ -1,13 +1,10 @@
 import { Link } from 'react-router-dom';
 import { Lock } from 'lucide-react';
-import { useStore } from '@/store/useStore';
-import { isPremiumActive } from '@/lib/premium';
+import { useHasTier } from '@/lib/perks';
 
 /** Says up front which plan a feature needs, so nobody finds out only after tapping. Hidden once they have it. */
 export function PlanBadge({ needs, what }: { needs: 'plus' | 'pro'; what: string }) {
-  const premium = useStore((s) => s.premium);
-  const active = isPremiumActive(premium);
-  const has = needs === 'plus' ? active : active && premium?.tier === 'pro';
+  const has = useHasTier(needs);
   if (has) return null;
   const name = needs === 'pro' ? 'Pro' : 'Plus';
   return (

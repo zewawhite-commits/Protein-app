@@ -13,7 +13,7 @@ export function UsageCard() {
     if (session) fetchUsage().then(setU);
   }, [session]);
   if (!u) return null;
-  const name = u.tier === 'pro' ? 'Pro' : u.tier === 'plus' ? 'Plus' : 'Free';
+  const name = u.perks?.freePro ? 'Free Pro' : u.tier === 'pro' ? 'Pro' : u.tier === 'plus' ? 'Plus' : 'Free';
   return (
     <div className="card mt-5 p-5">
       <div className="flex items-center justify-between">

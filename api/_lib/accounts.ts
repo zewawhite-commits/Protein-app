@@ -5,6 +5,7 @@
  * Used to identify signed-in users and to count photo scans per month.
  */
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { perksFrom, type Perks } from './perks.js';
 
 /** Env lookup tolerant of the custom prefix Vercel's Supabase integration can add (e.g. STORAGE_SUPABASE_URL). */
 function envBySuffix(...suffixes: string[]): string | undefined {
@@ -35,14 +36,14 @@ export const accountsConfigured = () => !!(supabaseUrl() && supabaseServiceKey()
  * The signed-in user behind a Supabase access token, or null. `email` is the sign-in
  * email, or for phone sign-ins the billing email saved at their first checkout ('' if none yet).
  */
-export async function userFromToken(token: string | null | undefined): Promise<{ id: string; email: string } | null> {
+export async function userFromToken(token: string | null | undefined): Promise<{ id: string; email: string; createdAt: number; perks: Perks } | null> {
   const db = admin();
   if (!db || !token) return null;
   const { data, error } = await db.auth.getUser(token);
   if (error || !data.user) return null;
   const billing = data.user.app_metadata?.billing_email;
   const email = data.user.email || (typeof billing === 'string' ? billing : '');
-  return { id: data.user.id, email: email.toLowerCase() };
+  return { id: data.user.id, email: email.toLowerCase(), createdAt: Date.parse(data.user.created_at) || Date.now(), perks: perksFrom(data.user.app_metadata) };
 }
 
 /** Phone-only users: remember the receipt email they paid with (app_metadata — users can't edit it). */

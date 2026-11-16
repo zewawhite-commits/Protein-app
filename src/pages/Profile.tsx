@@ -13,6 +13,7 @@ import type { Theme } from '@/lib/types';
 import { ProfileForm } from '@/components/ProfileForm';
 import { ProfileHero } from '@/components/ProfileHero';
 import { UsageCard } from '@/components/UsageCard';
+import { InviteCard, TrialCard } from '@/components/FreePro';
 import { PageHeader, Segmented, Sheet, cx, fmt } from '@/components/ui';
 import { ReminderSettings } from '@/components/Notifications';
 import { OwnerStats } from '@/components/OwnerStats';
@@ -96,6 +97,8 @@ export default function Profile({ mode = 'profile' }: { mode?: 'profile' | 'sett
         <>
           <ProfileHero onEdit={() => setEditing(true)} />
           <UsageCard />
+          <TrialCard className="mt-5" />
+          <InviteCard className="mt-5" />
           <PreferencesCard onEdit={() => setEditing(true)} />
           <PremiumCard />
           <SubscriptionGroup />
