@@ -2,7 +2,7 @@
  * POST /api/premium/checkout { email, plan }  (Authorization: Bearer <Supabase access token> when accounts are on)
  * → { url } of Paystack's hosted checkout. Paystack redirects back to /premium?reference=…
  */
-import { bearer, config, fail, json, paystack, type PlanId } from '../_lib/premium.js';
+import { bearer, config, fail, json, paystack, type PlanId, activeSubscription, customerIdByEmail } from '../_lib/premium.js';
 import { accountsConfigured, saveBillingEmail, userFromToken } from '../_lib/accounts.js';
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -30,6 +30,12 @@ export async function POST(request: Request): Promise<Response> {
   }
   if (!email || !EMAIL.test(email) || email.length > 200) return json({ error: 'Enter a valid email address.' }, 400);
 
+  // Never start a second subscription for someone who already pays (e.g. subscribed on another phone).
+  try {
+    const cid = await customerIdByEmail(email);
+    const sub = cid ? await activeSubscription(cid) : null;
+    if (sub) return json({ error: 'You already have an active subscription with this email. Tap “Already subscribed? Restore” to use it on this phone — you won’t be charged again.', alreadySubscribed: true }, 409);
+  } catch { /* if Paystack can't be checked, carry on: Paystack itself still shows the plan before payment */ }
   // Return to this same deployment, never to a URL supplied by the client.
   const origin = new URL(request.url).origin;
   try {

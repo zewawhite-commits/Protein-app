@@ -88,6 +88,8 @@ export interface LogEntry {
    */
   food: Pick<Food, 'name' | 'state' | 'per100' | 'source' | 'fdcId' | 'ref' | 'sourceNote'>;
   grams: number;
+  /** When the entry was last edited (epoch ms), so the newest edit wins when two devices sync. */
+  updatedAt?: number;
   /** Planned for later: shown in the day but not counted until marked as eaten. */
   planned?: boolean;
   photoId?: string;

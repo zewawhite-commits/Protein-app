@@ -386,7 +386,18 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
       )}
       <div className="flex gap-2 pt-1">
         {entry && (
-          <button onClick={() => { removeEntry(entry.id); onClose(); }} className="btn-ghost !px-5 text-danger" aria-label="Delete entry">
+          <button
+            onClick={() => {
+              const gone = entry;
+              removeEntry(entry.id, { keepPhoto: true });
+              toast(`Deleted ${splitName(entry.food.name).title.toLowerCase()}`, { action: { label: 'Undo', run: () => useStore.getState().restoreEntry(gone) }, ms: 6000 });
+              // The photo is only removed once undo is no longer possible and nothing else uses it.
+              if (gone.photoId) setTimeout(() => { if (!useStore.getState().entries.some((x) => x.photoId === gone.photoId)) void deletePhoto(gone.photoId!); }, 8000);
+              onClose();
+            }}
+            className="btn-ghost !px-5 text-danger"
+            aria-label="Delete entry"
+          >
             <Trash2 size={20} />
           </button>
         )}

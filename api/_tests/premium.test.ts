@@ -8,7 +8,7 @@ const DAY = 86_400_000;
 const iso = (ms: number) => new Date(ms).toISOString();
 
 /** Minimal fake of the Paystack API used by the handlers. */
-function fakePaystack(state: { tx?: Record<string, unknown>; subs?: unknown[] }) {
+function fakePaystack(state: { tx?: Record<string, unknown>; subs?: unknown[]; customer?: { id: number } }) {
   const calls: string[] = [];
   vi.stubGlobal('fetch', async (url: string, init?: RequestInit) => {
     const path = url.replace('https://api.paystack.co', '');
@@ -16,6 +16,7 @@ function fakePaystack(state: { tx?: Record<string, unknown>; subs?: unknown[] })
     const ok = (data: unknown) => new Response(JSON.stringify({ status: true, message: 'ok', data }), { status: 200 });
     if (path.startsWith('/transaction/verify/')) return state.tx ? ok(state.tx) : new Response(JSON.stringify({ status: false, message: 'Transaction reference not found' }), { status: 400 });
     if (path.startsWith('/subscription?')) return ok(state.subs ?? []);
+    if (path.startsWith('/customer/')) return state.customer ? ok(state.customer) : new Response(JSON.stringify({ status: false, message: 'Customer not found' }), { status: 404 });
     if (path === '/transaction/initialize') return ok({ authorization_url: 'https://checkout.paystack.com/abc', reference: 'ref123' });
     return new Response('{}', { status: 404 });
   });
@@ -123,6 +124,14 @@ describe('checkout', () => {
     const res = await checkout(post('https://protein.example/api/premium/checkout', { email: 'a@b.co', plan: 'pro_yearly' }));
     expect(res.status).toBe(200);
     expect(sent).toMatchObject({ email: 'a@b.co', plan: 'PLN_year', callback_url: 'https://protein.example/premium' });
+  });
+
+  it('refuses to start a second subscription for someone who already pays', async () => {
+    const calls = fakePaystack({ subs: [sub('active', 20 * DAY)], customer: { id: 42 } });
+    const res = await checkout(post('https://x/api', { email: 'ada@example.com', plan: 'plus_monthly' }));
+    expect(res.status).toBe(409);
+    expect(await res.json()).toMatchObject({ alreadySubscribed: true });
+    expect(calls.some((c) => c.includes('/transaction/initialize'))).toBe(false);
   });
 
   it('validates input', async () => {

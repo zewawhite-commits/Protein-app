@@ -58,6 +58,10 @@ interface State {
   /** Water drunk, in ml, by day (YYYY-MM-DD). */
   water: Record<string, number>;
   addWater: (date: string, ml: number) => void;
+  /** Deleted items (id, or "w:<date>" for weigh-ins) → when, so a sync never brings them back. */
+  deleted: Record<string, number>;
+  /** Put back an entry that was just deleted (undo). */
+  restoreEntry: (e: LogEntry) => void;
   /** What this person picked for a name the AI gave ("jollof rice" → food id), so the next scan puts it first. */
   picks: Record<string, string>;
   rememberPick: (key: string, foodId: string) => void;
@@ -66,7 +70,7 @@ interface State {
   updateSettings: (s: Partial<Settings>) => void;
   addEntry: (e: { date: string; meal: Meal; food: Food; grams: number; photoId?: string; note?: string; planned?: boolean }) => LogEntry;
   updateEntry: (id: string, patch: Partial<Pick<LogEntry, 'grams' | 'meal' | 'photoId' | 'note' | 'date' | 'planned'>>) => void;
-  removeEntry: (id: string) => void;
+  removeEntry: (id: string, opts?: { keepPhoto?: boolean }) => void;
   toggleFavorite: (foodId: string) => void;
   rememberFood: (food: Food) => void;
   upsertCustomFood: (f: Omit<CustomFood, 'id' | 'createdAt' | 'updatedAt' | 'source'> & { id?: string }) => CustomFood;
@@ -97,9 +101,10 @@ export const useStore = create<State>()(
       perks: null,
       picks: {},
       water: {},
+      deleted: {},
 
       addExercise: (e) => set((s) => ({ exercises: [...s.exercises, { ...e, id: crypto.randomUUID() }] })),
-      removeExercise: (id) => set((s) => ({ exercises: s.exercises.filter((x) => x.id !== id) })),
+      removeExercise: (id) => set((s) => ({ exercises: s.exercises.filter((x) => x.id !== id), deleted: { ...s.deleted, [id]: Date.now() } })),
 
       logWeight: (kg, date = todayKey()) =>
         set((s) => {
@@ -109,7 +114,7 @@ export const useStore = create<State>()(
           const profile = s.profile && latest ? { ...s.profile, bodyWeightKg: latest.kg } : s.profile;
           return { weights, profile, goalHistory: profile ? { ...s.goalHistory, [todayKey()]: dailyGoal(profile) } : s.goalHistory };
         }),
-      removeWeight: (date) => set((s) => ({ weights: s.weights.filter((w) => w.date !== date) })),
+      removeWeight: (date) => set((s) => ({ weights: s.weights.filter((w) => w.date !== date), deleted: { ...s.deleted, [`w:${date}`]: Date.now() } })),
       addProgressPhoto: (p) => set((s) => ({ progressPhotos: [...s.progressPhotos, { ...p, id: crypto.randomUUID() }].sort((a, b) => a.date.localeCompare(b.date)) })),
       removeProgressPhoto: (id) => set((s) => {
         const ph = s.progressPhotos.find((x) => x.id === id);
@@ -122,13 +127,13 @@ export const useStore = create<State>()(
         set((s) => ({ savedMeals: [meal, ...s.savedMeals].slice(0, 100) }));
         return meal;
       },
-      removeSavedMeal: (id) => set((s) => ({ savedMeals: s.savedMeals.filter((m) => m.id !== id) })),
+      removeSavedMeal: (id) => set((s) => ({ savedMeals: s.savedMeals.filter((m) => m.id !== id), deleted: { ...s.deleted, [id]: Date.now() } })),
       savePlan: (p) => {
         const plan: SavedPlan = { ...p, id: crypto.randomUUID(), createdAt: Date.now() };
         set((s) => ({ savedPlans: [plan, ...s.savedPlans].slice(0, 30) }));
         return plan;
       },
-      removeSavedPlan: (id) => set((s) => ({ savedPlans: s.savedPlans.filter((m) => m.id !== id) })),
+      removeSavedPlan: (id) => set((s) => ({ savedPlans: s.savedPlans.filter((m) => m.id !== id), deleted: { ...s.deleted, [id]: Date.now() } })),
       workoutPlan: null,
       setWorkoutPlan: (plan) => set({ workoutPlan: plan ? { plan, createdAt: Date.now() } : null }),
       savedRecipes: [],
@@ -137,10 +142,15 @@ export const useStore = create<State>()(
         set((s) => ({ savedRecipes: [{ id, recipe, createdAt: Date.now() }, ...s.savedRecipes].slice(0, 60) }));
         return id;
       },
-      removeRecipe: (id) => set((s) => ({ savedRecipes: s.savedRecipes.filter((r) => r.id !== id) })),
+      removeRecipe: (id) => set((s) => ({ savedRecipes: s.savedRecipes.filter((r) => r.id !== id), deleted: { ...s.deleted, [id]: Date.now() } })),
 
       setPremium: (premium) => set({ premium }),
       setPerks: (perks) => set({ perks }),
+      restoreEntry: (e) => set((s) => {
+        const { [e.id]: _gone, ...deleted } = s.deleted ?? {};
+        void _gone;
+        return { entries: [...s.entries.filter((x) => x.id !== e.id), { ...e, updatedAt: Date.now() }], deleted };
+      }),
       addWater: (date, ml) => set((s) => ({ water: { ...(s.water ?? {}), [date]: Math.max(0, Math.min(10000, (s.water?.[date] ?? 0) + ml)) } })),
       rememberPick: (key, foodId) => set((s) => {
         if (!key || s.picks?.[key] === foodId) return {};
@@ -188,14 +198,14 @@ export const useStore = create<State>()(
         set((s) => {
           const old = s.entries.find((e) => e.id === id);
           if (old?.photoId && 'photoId' in patch && patch.photoId !== old.photoId) void deletePhoto(old.photoId);
-          return { entries: s.entries.map((e) => (e.id === id ? { ...e, ...patch } : e)) };
+          return { entries: s.entries.map((e) => (e.id === id ? { ...e, ...patch, updatedAt: Date.now() } : e)) };
         }),
 
-      removeEntry: (id) =>
+      removeEntry: (id, opts) =>
         set((s) => {
           const e = s.entries.find((x) => x.id === id);
-          if (e?.photoId) void deletePhoto(e.photoId);
-          return { entries: s.entries.filter((x) => x.id !== id) };
+          if (e?.photoId && !opts?.keepPhoto) void deletePhoto(e.photoId);
+          return { entries: s.entries.filter((x) => x.id !== id), deleted: { ...s.deleted, [id]: Date.now() } };
         }),
 
       rememberFood: (food) => set((s) => (food.source === 'off' ? { remoteFoods: { ...s.remoteFoods, [food.id]: food } } : {})),
@@ -245,11 +255,12 @@ export const useStore = create<State>()(
           weights: d.weights ?? [],
           exercises: d.exercises ?? [],
           water: (d as { water?: Record<string, number> }).water ?? {},
+          deleted: (d as { deleted?: Record<string, number> }).deleted ?? {},
         });
       },
 
       resetAll: () =>
-        set({ profile: null, settings: defaultSettings, entries: [], customFoods: [], goalHistory: {}, recentFoodIds: [], favoriteFoodIds: [], remoteFoods: {}, savedMeals: [], savedPlans: [], workoutPlan: null, savedRecipes: [], weights: [], exercises: [], progressPhotos: [], premium: null, perks: null, picks: {}, water: {} }),
+        set({ profile: null, settings: defaultSettings, entries: [], customFoods: [], goalHistory: {}, recentFoodIds: [], favoriteFoodIds: [], remoteFoods: {}, savedMeals: [], savedPlans: [], workoutPlan: null, savedRecipes: [], weights: [], exercises: [], progressPhotos: [], premium: null, perks: null, picks: {}, water: {}, deleted: {} }),
     }),
     {
       name: 'protein-app',
@@ -269,7 +280,7 @@ useStore.subscribe((s, prev) => {
   const changed =
     s.entries !== prev.entries || s.profile !== prev.profile || s.customFoods !== prev.customFoods ||
     s.goalHistory !== prev.goalHistory || s.favoriteFoodIds !== prev.favoriteFoodIds ||
-    s.savedMeals !== prev.savedMeals || s.savedPlans !== prev.savedPlans || s.workoutPlan !== prev.workoutPlan || s.savedRecipes !== prev.savedRecipes || s.weights !== prev.weights || s.exercises !== prev.exercises || s.water !== prev.water;
+    s.savedMeals !== prev.savedMeals || s.savedPlans !== prev.savedPlans || s.workoutPlan !== prev.workoutPlan || s.savedRecipes !== prev.savedRecipes || s.weights !== prev.weights || s.exercises !== prev.exercises || s.water !== prev.water || s.deleted !== prev.deleted;
   if (changed && s.lastModified === prev.lastModified) useStore.setState({ lastModified: Date.now() });
 });
 
@@ -284,7 +295,7 @@ export function goalOn(date: string, goalHistory: Record<string, number>, profil
 
 export function exportData() {
   // Premium passes and personal API keys are never written to backup files.
-  const { profile, settings, entries, customFoods, goalHistory, recentFoodIds, favoriteFoodIds, remoteFoods, savedMeals, savedPlans, workoutPlan, savedRecipes, weights, exercises, water } = useStore.getState();
+  const { profile, settings, entries, customFoods, goalHistory, recentFoodIds, favoriteFoodIds, remoteFoods, savedMeals, savedPlans, workoutPlan, savedRecipes, weights, exercises, water, deleted } = useStore.getState();
   const safeSettings = settings;
-  return { app: 'protein-app', exportedAt: new Date().toISOString(), profile, settings: safeSettings, entries, customFoods, goalHistory, recentFoodIds, favoriteFoodIds, remoteFoods, savedMeals, savedPlans, workoutPlan, savedRecipes, weights, exercises, water };
+  return { app: 'protein-app', exportedAt: new Date().toISOString(), profile, settings: safeSettings, entries, customFoods, goalHistory, recentFoodIds, favoriteFoodIds, remoteFoods, savedMeals, savedPlans, workoutPlan, savedRecipes, weights, exercises, water, deleted };
 }

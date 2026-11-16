@@ -9,6 +9,7 @@
 import { createClient, type Session, type SupabaseClient } from '@supabase/supabase-js';
 import { useEffect, useState } from 'react';
 import { exportData, useStore } from '@/store/useStore';
+import { fingerprint, mergeSnapshots, type SyncSnapshot } from './sync';
 export { toE164 } from './dialCodes';
 
 const url = import.meta.env.VITE_SUPABASE_URL as string | undefined;
@@ -65,7 +66,7 @@ export async function signOut() {
   const { data } = await supabase.auth.getSession();
   const userId = data.session?.user.id;
   if (userId && useStore.getState().ownerId === userId) {
-    try { await push(userId, true); } catch { /* still sign out */ }
+    try { await syncNow(userId); } catch { /* still sign out */ }
   }
   await supabase.auth.signOut();
   if (userId) {
@@ -92,12 +93,23 @@ export async function accessToken(): Promise<string | undefined> {
 
 // ---------- cloud sync ----------
 
-type Snapshot = ReturnType<typeof exportData>;
 let lastPushed = '';
 let timer: ReturnType<typeof setTimeout> | undefined;
+let running: Promise<void> | null = null;
 
-/** After sign-in: bring down the cloud copy if it is newer, otherwise upload this device's data. */
-export async function syncOnSignIn(userId: string) {
+/**
+ * Sync this device with the cloud copy, without losing anything:
+ *  1. read the cloud copy,
+ *  2. merge it with this device (item by item — see sync.ts),
+ *  3. save the merged copy here and, only if the cloud copy hasn't changed meanwhile, there.
+ * If another device saved in between, start again (up to 3 times).
+ */
+export function syncNow(userId: string): Promise<void> {
+  if (!running) running = doSync(userId).finally(() => { running = null; });
+  return running;
+}
+
+async function doSync(userId: string, attempt = 0): Promise<void> {
   if (!supabase) return;
   const { data, error } = await supabase.from('user_data').select('data, updated_at').eq('user_id', userId).maybeSingle();
   if (error) throw error;
@@ -109,69 +121,76 @@ export async function syncOnSignIn(userId: string) {
     lastPushed = '';
     local = useStore.getState();
   }
-  // Used the app as a guest, then signed in to an account that already has data:
-  // keep the account's profile and history and add what was logged as a guest. Nothing is lost.
-  if (data && !local.ownerId && (local.entries.length || local.weights.length || local.exercises.length)) {
-    const remote = data.data as Snapshot;
-    const byId = <T extends { id: string }>(a: T[] = [], b: T[] = []) => [...a, ...b.filter((x) => !a.some((y) => y.id === x.id))];
-    const merged = {
-      ...remote,
-      entries: byId(remote.entries, local.entries),
-      exercises: byId(remote.exercises, local.exercises),
-      savedMeals: byId(remote.savedMeals, local.savedMeals),
-      customFoods: byId(remote.customFoods, local.customFoods),
-      weights: [...(remote.weights ?? []), ...local.weights.filter((w) => !(remote.weights ?? []).some((r) => r.date === w.date))].sort((a, b) => a.date.localeCompare(b.date)),
-      profile: remote.profile ?? local.profile,
-    } as Snapshot;
-    useStore.getState().importData(merged);
-    useStore.setState({ lastModified: Date.now(), premium: local.premium, ownerId: userId });
-    await push(userId, true);
+  const localSnap = exportData() as SyncSnapshot;
+  const localTime = local.lastModified ?? 0;
+  if (!data) {
+    // First sync for this account: upload this device's data.
+    useStore.setState({ ownerId: userId });
+    const { error: e } = await supabase.from('user_data').insert({ user_id: userId, data: exportData(), updated_at: new Date().toISOString() });
+    if (e && attempt < 3 && /duplicate|conflict/i.test(e.message)) return doSync(userId, attempt + 1);
+    if (e) throw e;
+    lastPushed = fingerprint(exportData() as SyncSnapshot);
     return;
   }
-  const localUpdated = local.lastModified ?? 0;
-  const remoteUpdated = data ? new Date(data.updated_at as string).getTime() : 0;
-  // A guest who only did the sign-up questions, then signed in to an existing account: the account wins.
-  if (data && (remoteUpdated > localUpdated || !local.ownerId || (!local.profile && !local.entries.length))) {
-    const snap = data.data as Snapshot;
-    // Signing in on a new phone skips the setup questions — say why, once.
-    if (!local.profile && snap.profile) { try { sessionStorage.setItem('provora-restored', '1'); } catch { /* ignore */ } }
-    useStore.getState().importData(snap);
-    useStore.setState({ lastModified: remoteUpdated, premium: local.premium, ownerId: userId });
-    lastPushed = JSON.stringify(snap);
-  } else {
-    useStore.setState({ ownerId: userId });
-    await push(userId);
+  const remote = data.data as SyncSnapshot;
+  const remoteTime = new Date(data.updated_at as string).getTime();
+  // A guest who only answered the setup questions, then signed in to an existing account: the account's profile wins.
+  const guestOnly = !local.ownerId && !(local.entries.length || local.weights.length || local.exercises.length);
+  const merged = guestOnly ? { ...remote, deleted: remote.deleted ?? {} } : mergeSnapshots(localSnap, remote, local.ownerId ? localTime : 0, remoteTime);
+  if (!local.profile && remote.profile) { try { sessionStorage.setItem('provora-restored', '1'); } catch { /* ignore */ } }
+
+  // Bring the merged copy onto this device if it differs.
+  if (fingerprint(merged) !== fingerprint(localSnap)) {
+    useStore.getState().importData({ ...merged, app: 'protein-app' });
   }
+  useStore.setState({ ownerId: userId, lastModified: Math.max(localTime, remoteTime) });
+
+  // Upload only if the cloud copy is missing something, and only if nobody else saved since we read it.
+  const after = exportData() as SyncSnapshot;
+  if (fingerprint(after) === fingerprint(remote)) { lastPushed = fingerprint(after); return; }
+  const { data: written, error: e } = await supabase.from('user_data')
+    .update({ data: after, updated_at: new Date().toISOString() })
+    .eq('user_id', userId).eq('updated_at', data.updated_at as string)
+    .select('user_id');
+  if (e) throw e;
+  if (!written?.length) {
+    // Another device saved in between: merge again with its copy.
+    if (attempt < 3) return doSync(userId, attempt + 1);
+    return;
+  }
+  lastPushed = fingerprint(after);
 }
 
-async function push(userId: string, force = false) {
-  if (!supabase) return;
-  // Never upload a log that belongs to someone else.
-  if (useStore.getState().ownerId !== userId) return;
-  if (force) lastPushed = '';
-  const snap = exportData();
-  const body = JSON.stringify({ ...snap, exportedAt: undefined });
-  if (body === lastPushed) return;
-  const { error } = await supabase.from('user_data').upsert({ user_id: userId, data: snap, updated_at: new Date(useStore.getState().lastModified ?? Date.now()).toISOString() });
-  if (!error) lastPushed = body;
-}
+/** @deprecated name kept for callers: same as syncNow. */
+export const syncOnSignIn = syncNow;
 
-/** Keep the cloud copy up to date while signed in (debounced). */
+/** Keep this device and the cloud in step while signed in. */
 export function useCloudSync() {
   const session = useSession();
   const userId = session?.user.id;
   useEffect(() => {
     if (!userId) return;
     let cancelled = false;
-    syncOnSignIn(userId).catch((e) => console.warn('Sync failed', e));
+    const run = () => { if (!cancelled) void syncNow(userId).catch((e) => console.warn('Sync failed', e)); };
+    run();
+    // Local changes: sync shortly after (debounced).
     const unsub = useStore.subscribe((s, prev) => {
       if (cancelled || s.lastModified === prev.lastModified) return;
+      if (fingerprint(exportData() as SyncSnapshot) === lastPushed) return;
       clearTimeout(timer);
-      timer = setTimeout(() => void push(userId).catch((e) => console.warn('Sync failed', e)), 1500);
+      timer = setTimeout(run, 1500);
     });
+    // Changes from other devices: check when the app comes back into view, and every 2 minutes while open.
+    const onVisible = () => { if (document.visibilityState === 'visible') run(); };
+    document.addEventListener('visibilitychange', onVisible);
+    window.addEventListener('online', run);
+    const every = setInterval(() => { if (document.visibilityState === 'visible') run(); }, 120_000);
     return () => {
       cancelled = true;
       unsub();
+      document.removeEventListener('visibilitychange', onVisible);
+      window.removeEventListener('online', run);
+      clearInterval(every);
     };
   }, [userId]);
   return session;
