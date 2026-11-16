@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { cx } from './ui';
 
-export const APP_NAME = 'Nutivility';
+export const APP_NAME = 'Nutivili';
 
 /** A tiny vibration on devices that support it (Android). iOS Safari ignores it. */
 export function haptic(pattern: number | number[] = 10) {

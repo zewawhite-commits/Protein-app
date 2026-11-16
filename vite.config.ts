@@ -35,8 +35,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['icons/icon.svg', 'icons/apple-touch-icon.png'],
       manifest: {
-        name: 'Nutivility — nutrition, precisely',
-        short_name: 'Nutivility',
+        name: 'Nutivili — nutrition, precisely',
+        short_name: 'Nutivili',
         description: 'Snap or weigh your food and track calories, protein and nutrients — foods from around the world, from official food composition tables.',
         id: base,
         categories: ['health', 'fitness', 'food'],

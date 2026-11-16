@@ -1,6 +1,6 @@
 import { useId } from 'react';
 
-/** Nutivility's mark: an N drawn in one stroke. */
+/** Nutivili's mark: an N drawn in one stroke. */
 export function Logo({ size = 28, className }: { size?: number; className?: string }) {
   // Each logo needs its own gradient id: if two shared one and the first sat in a hidden header,
   // browsers would paint the visible logo's background transparent.

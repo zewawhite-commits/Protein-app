@@ -1,4 +1,4 @@
-/** Messages to the Nutivility team: general feedback and requests for missing foods. */
+/** Messages to the Nutivili team: general feedback and requests for missing foods. */
 import { aiHeaders } from './premium';
 
 export async function sendMessage(topic: 'feedback' | 'food-request', text: string): Promise<void> {

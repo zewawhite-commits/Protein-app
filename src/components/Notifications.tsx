@@ -91,7 +91,7 @@ export function ReminderSettings() {
   async function toggle() {
     haptic();
     if (reminders.enabled) return set({ enabled: false });
-    if (!supported) return toast('This browser can’t show notifications. Install Nutivility to your home screen and try again.');
+    if (!supported) return toast('This browser can’t show notifications. Install Nutivili to your home screen and try again.');
     const perm = Notification.permission === 'granted' ? 'granted' : await Notification.requestPermission();
     if (perm !== 'granted') return toast('Notifications are blocked — allow them in your browser settings.');
     set({ enabled: true });
@@ -138,7 +138,7 @@ export function ReminderSettings() {
           <Switch on={!!reminders[onKey]} onClick={() => void toggleExtra(onKey)} label={title} />
         </div>
       ))}
-      <p className="mt-3 text-xs text-dim">Reminders arrive while Nutivility is open or running in the background on your phone. They can’t reach you yet when the app is fully closed.</p>
+      <p className="mt-3 text-xs text-dim">Reminders arrive while Nutivili is open or running in the background on your phone. They can’t reach you yet when the app is fully closed.</p>
     </section>
   );
 }

@@ -170,7 +170,7 @@ export default function Profile({ mode = 'profile' }: { mode?: 'profile' | 'sett
       </section>
 
       <Group title="Your data">
-        <p className="px-4 pb-1 pt-3 text-sm leading-relaxed text-silver">Your data is never sold and Nutivility has no ads. Photos and text you send to AI features are used only to answer you, not to train AI models.</p>
+        <p className="px-4 pb-1 pt-3 text-sm leading-relaxed text-silver">Your data is never sold and Nutivili has no ads. Photos and text you send to AI features are used only to answer you, not to train AI models.</p>
         <button onClick={() => { if (confirm('Answer the setup questions again? Your food log and history stay.')) useStore.setState({ profile: null }); }} className="w-full"><Row icon={<RotateCcw size={18} />} label="Redo setup questions" chevron /></button>
         <ShareReportRow Row={Row} />
         <button onClick={downloadCsv} className="w-full"><Row icon={<Table size={18} />} label="Download food log (spreadsheet)" chevron /></button>
@@ -185,7 +185,7 @@ export default function Profile({ mode = 'profile' }: { mode?: 'profile' | 'sett
       <Group title="Support & legal">
         <InstallRow />
         <Link to="/help" className="block"><Row icon={<LifeBuoy size={18} />} label="Help, FAQ & feedback" chevron /></Link>
-        {SUPPORT_EMAIL && <a href={`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent('Nutivility support')}`} className="block"><Row icon={<LifeBuoy size={18} />} label="Contact support" chevron /></a>}
+        {SUPPORT_EMAIL && <a href={`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent('Nutivili support')}`} className="block"><Row icon={<LifeBuoy size={18} />} label="Contact support" chevron /></a>}
         <Link to="/privacy" className="block"><Row icon={<Lock size={18} />} label="Privacy policy" chevron /></Link>
         <Link to="/terms" className="block"><Row icon={<FileText size={18} />} label="Terms & Conditions" chevron /></Link>
             <Link to="/refunds" className="block"><Row icon={<FileText size={18} />} label="Cancellation & refunds" chevron /></Link>
@@ -209,12 +209,12 @@ export default function Profile({ mode = 'profile' }: { mode?: 'profile' | 'sett
             USDA FoodData Central — SR Legacy (2018) and FNDDS (2024). UK: McCance and Widdowson’s CoFID 2021 (Open Government Licence v3.0). Australia: FSANZ Australian Food Composition Database Release 3 (CC BY 4.0). FAO/INFOODS Food Composition Table for Western Africa (2019), © FAO, used with acknowledgement for non-commercial use. Packaged products: Open Food Facts (ODbL), label data contributed by its community. Values are per 100 g and are copied from these tables; world dishes not in any table are calculated from their listed ingredient records.
           </p>
           <p className="mt-4 flex items-center gap-2 font-semibold text-ink"><Smartphone size={16} className="text-accent" /> Install</p>
-          <p className="mt-1.5">Add Nutivility to your home screen from Support above. On iPhone: Share → Add to Home Screen. On Android: menu → Install app. Works offline once installed.</p>
+          <p className="mt-1.5">Add Nutivili to your home screen from Support above. On iPhone: Share → Add to Home Screen. On Android: menu → Install app. Works offline once installed.</p>
         </div>
       </Group>
 
       {/* Tap the version 7 times to show admin tools (hidden from normal users). */}
-      <button onClick={() => setAdminTaps((n) => n + 1)} className="mt-8 w-full pb-4 text-center text-xs font-medium text-dim">Nutivility {__APP_VERSION__}</button>
+      <button onClick={() => setAdminTaps((n) => n + 1)} className="mt-8 w-full pb-4 text-center text-xs font-medium text-dim">Nutivili {__APP_VERSION__}</button>
         </>
       )}
 

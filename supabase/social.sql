@@ -1,4 +1,4 @@
--- Nutivility — social features (groups, meal posts, reactions, comments).
+-- Nutivili — social features (groups, meal posts, reactions, comments).
 -- Run once in Supabase → SQL Editor, after schema.sql. Safe to run again.
 -- Privacy: people only see groups they belong to, and only those groups' posts.
 

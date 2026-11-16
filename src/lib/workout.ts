@@ -43,7 +43,7 @@ const SCHEMA = {
   additionalProperties: false,
 } as const;
 
-const SYSTEM = `You are a qualified personal trainer writing a weekly workout guide inside Nutivility, a nutrition and fitness app.
+const SYSTEM = `You are a qualified personal trainer writing a weekly workout guide inside Nutivili, a nutrition and fitness app.
 
 Write a safe, effective plan for this person:
 - Match their goals (fat loss, muscle, performance, health), level, days per week, minutes per session, and where they train (gym equipment, home with little or no kit, or outdoors).

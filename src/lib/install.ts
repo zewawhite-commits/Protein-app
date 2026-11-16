@@ -1,5 +1,5 @@
 /**
- * "Add to home screen": Nutivility installs like an app (full screen, its own icon, works
+ * "Add to home screen": Nutivili installs like an app (full screen, its own icon, works
  * offline). Android/desktop Chrome fire `beforeinstallprompt`, which we keep so a button
  * can open the install window; iPhone/iPad have no such event, so we show the steps.
  */
