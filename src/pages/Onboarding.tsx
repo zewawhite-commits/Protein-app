@@ -16,7 +16,7 @@ import { dailyTargets, weeksToGoal } from '@/lib/energy';
 import type { ActivityLevel, Diet, FitnessGoal } from '@/lib/types';
 import { Segmented, cx, fmt } from '@/components/ui';
 import { plannedPrice } from '@/lib/premium';
-import { haptic } from '@/components/fx';
+import { BrandName, haptic } from '@/components/fx';
 
 type Option<T> = { value: T; label: string; sub: string; icon: typeof Dumbbell };
 
@@ -513,7 +513,7 @@ function Welcome({ signedIn, email, onStart }: { signedIn: boolean; email?: stri
     <div className="relative mx-auto flex min-h-dvh max-w-lg flex-col px-5 md:max-w-xl pb-8">
       <div className="pt-safe mt-10 flex items-center gap-3 animate-fade-up">
         <Logo size={44} />
-        <span className="text-lg font-semibold tracking-tight">Nutivili</span>
+        <BrandName className="text-lg" />
       </div>
       <h1 className="mt-12 animate-fade-up text-[44px] font-extrabold leading-[1.02] tracking-tight">
         Weigh it.<br />Snap it.<br /><span className="text-accent">Hit your number.</span>

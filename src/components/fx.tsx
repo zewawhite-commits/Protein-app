@@ -6,7 +6,16 @@ import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { cx } from './ui';
 
-export const APP_NAME = 'Nutivili';
+export const APP_NAME = 'Nutivili AI';
+
+/** The app name as a heading: "Nutivili" with "AI" beside it in the brand green. */
+export function BrandName({ className }: { className?: string }) {
+  return (
+    <span className={cx('font-bold tracking-tight', className)}>
+      Nutivili <span className="text-accent">AI</span>
+    </span>
+  );
+}
 
 /** A tiny vibration on devices that support it (Android). iOS Safari ignores it. */
 export function haptic(pattern: number | number[] = 10) {

@@ -53,9 +53,9 @@ export function InviteCard({ className }: { className?: string }) {
   const left = Math.max(0, perks.maxReferrals - perks.referrals);
   const share = async () => {
     haptic();
-    const text = `I track my food with Nutivili — snap a meal and it works out the nutrition. Join with my link and get 14 days of Pro free:`;
+    const text = `I track my food with Nutivili AI — snap a meal and it works out the nutrition. Join with my link and get 14 days of Pro free:`;
     try {
-      if (navigator.share) { await navigator.share({ title: 'Nutivili', text, url: link }); return; }
+      if (navigator.share) { await navigator.share({ title: 'Nutivili AI', text, url: link }); return; }
     } catch { return; /* closed the share sheet */ }
     try { await navigator.clipboard.writeText(`${text} ${link}`); toast('Invite link copied'); } catch { toast(link); }
   };

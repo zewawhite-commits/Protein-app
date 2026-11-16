@@ -13,7 +13,7 @@ import { dailyTargets, type Targets } from '@/lib/energy';
 import { DV_NOTE, MacroBar, NutrientList } from '@/components/Nutrients';
 import type { Food, LogEntry } from '@/lib/types';
 import { Pill, Ring, Sheet, cx, fmt } from '@/components/ui';
-import { APP_NAME, CountUp, haptic, toast } from '@/components/fx';
+import { BrandName, CountUp, haptic, toast } from '@/components/fx';
 import { EntryRow } from '@/components/EntryRow';
 import { Suggestions } from '@/components/Suggestions';
 import { FoodSheet } from '@/components/FoodSheet';
@@ -68,7 +68,7 @@ export default function Today() {
         <div className="flex items-center justify-between">
           <span className="flex items-center gap-2 lg:invisible">
             <Logo size={30} />
-            <span className="text-[22px] font-bold tracking-tight">{APP_NAME}</span>
+            <BrandName className="text-[22px]" />
           </span>
           <span className="flex items-center gap-2">
             {!gentle && (
@@ -201,7 +201,7 @@ function HeroCard({ totals, goal, targets, entries, burned = 0, addBurned }: { t
   const kcalPct = targets ? totals.kcal / targets.kcal : 0;
   const over = targets && kcalLeft < 0;
 
-  // Nutivili's signature: an evergreen "fuel gauge" for the day.
+  // Nutivili AI's signature: an evergreen "fuel gauge" for the day.
   const pct = Math.max(0, Math.min(1, kcalPct));
   return (
     <section className="mt-4 overflow-hidden rounded-[28px] px-5 pb-4 pt-4 text-white" style={{ background: 'linear-gradient(140deg, rgb(52 199 137) 0%, rgb(18 158 108) 60%, rgb(12 140 104) 100%)', boxShadow: '0 14px 30px -14px rgb(18 152 104 / 0.55)' }}>

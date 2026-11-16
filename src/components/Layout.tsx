@@ -4,7 +4,7 @@ import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { LogMenu } from './LogMenu';
 import { BarChart3, Camera, House, Plus, Sparkles, UserRound, Users } from 'lucide-react';
 import { cx } from './ui';
-import { APP_NAME } from './fx';
+import { BrandName } from './fx';
 
 const tabs = [
   { to: '/', label: 'Home', icon: House },
@@ -30,7 +30,7 @@ export function Layout() {
       <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-line/60 bg-surface px-4 py-6 lg:flex">
         <div className="flex items-center gap-2.5 px-3">
           <Logo size={30} />
-          <span className="text-xl font-bold tracking-tight">{APP_NAME}</span>
+          <BrandName className="text-xl" />
         </div>
         <button onClick={() => nav(`/add${q}`)} className="btn-primary mt-8 w-full !h-12"><Plus size={18} /> Log food</button>
         <button onClick={() => nav(`/snap${q}`)} className="btn-ghost mt-2 w-full !h-12"><Camera size={18} /> Snap a meal</button>
