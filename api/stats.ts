@@ -1,10 +1,10 @@
 /**
  * GET /api/stats (x-user-token) → usage totals for the app owner (emails in ADMIN_EMAILS only).
  */
-import { json } from './_lib/premium';
-import { admin, userFromToken } from './_lib/accounts';
-import { isAdmin } from './_lib/quota';
-import { summarize, type Row } from './_lib/stats';
+import { json } from './_lib/premium.js';
+import { admin, userFromToken } from './_lib/accounts.js';
+import { isAdmin } from './_lib/quota.js';
+import { summarize, type Row } from './_lib/stats.js';
 
 export async function GET(request: Request): Promise<Response> {
   const db = admin();

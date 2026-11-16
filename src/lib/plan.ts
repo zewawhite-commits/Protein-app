@@ -5,8 +5,8 @@
  * automatically.
  */
 import type Anthropic from '@anthropic-ai/sdk';
-import { RECOGNITION_MODEL } from './recognition';
-import type { CoachContext } from './coach';
+import { RECOGNITION_MODEL } from './recognition.js';
+import type { CoachContext } from './coach.js';
 
 export interface PlanItem { name: string; localName: string; searchQueries: string[]; grams: number }
 export interface PlanMeal { meal: 'breakfast' | 'lunch' | 'dinner' | 'snack'; title: string; items: PlanItem[] }

@@ -1,5 +1,5 @@
 /** POST /api/premium/manage (Authorization: Bearer <pass>) → { url } Paystack page to update card or cancel. */
-import { activeSubscription, bearer, fail, json, paymentsEnabled, paystack, readPass } from '../_lib/premium';
+import { activeSubscription, bearer, fail, json, paymentsEnabled, paystack, readPass } from '../_lib/premium.js';
 
 export async function POST(request: Request): Promise<Response> {
   if (!paymentsEnabled()) return json({ error: 'Payments are not set up yet.' }, 501);

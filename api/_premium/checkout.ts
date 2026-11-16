@@ -2,8 +2,8 @@
  * POST /api/premium/checkout { email, plan }  (Authorization: Bearer <Supabase access token> when accounts are on)
  * → { url } of Paystack's hosted checkout. Paystack redirects back to /premium?reference=…
  */
-import { bearer, config, fail, json, paystack, type PlanId } from '../_lib/premium';
-import { accountsConfigured, saveBillingEmail, userFromToken } from '../_lib/accounts';
+import { bearer, config, fail, json, paystack, type PlanId } from '../_lib/premium.js';
+import { accountsConfigured, saveBillingEmail, userFromToken } from '../_lib/accounts.js';
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 

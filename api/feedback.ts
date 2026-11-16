@@ -5,8 +5,8 @@
  * Needs SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY; otherwise accepted and dropped.
  */
 import { createClient } from '@supabase/supabase-js';
-import { json } from './_lib/premium';
-import { supabaseServiceKey, supabaseUrl } from './_lib/accounts';
+import { json } from './_lib/premium.js';
+import { supabaseServiceKey, supabaseUrl } from './_lib/accounts.js';
 
 interface Item { aiName: string; localName?: string; cuisine?: string; chosenFoodId: string; chosenName: string; rank: number; kind: 'item' | 'ingredient' }
 

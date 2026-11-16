@@ -6,8 +6,8 @@
  *   { account: true }             restore for the signed-in account (Authorization: Bearer <Supabase token>)
  * → { token, exp, email, plan } or 402 when there is no paid subscription.
  */
-import { bearer, customerIdByEmail, fail, issuePass, json, paymentsEnabled, readPass, verifiedPlanPayment } from '../_lib/premium';
-import { userFromToken } from '../_lib/accounts';
+import { bearer, customerIdByEmail, fail, issuePass, json, paymentsEnabled, readPass, verifiedPlanPayment } from '../_lib/premium.js';
+import { userFromToken } from '../_lib/accounts.js';
 
 export async function POST(request: Request): Promise<Response> {
   if (!paymentsEnabled()) return json({ error: 'Payments are not set up yet.' }, 501);

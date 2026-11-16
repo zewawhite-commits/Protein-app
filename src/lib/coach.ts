@@ -4,7 +4,7 @@
  * suggested food to a database record and calculates the numbers itself.
  */
 import type Anthropic from '@anthropic-ai/sdk';
-import { RECOGNITION_MODEL } from './recognition';
+import { RECOGNITION_MODEL } from './recognition.js';
 
 export interface ChatTurn { role: 'user' | 'assistant'; content: string }
 export interface ChatImage { data: string; mediaType: 'image/jpeg' | 'image/png' | 'image/webp' }

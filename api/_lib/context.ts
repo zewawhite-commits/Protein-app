@@ -1,5 +1,5 @@
 /** Validates the profile/day context the app sends to the AI endpoints. */
-import type { CoachContext } from '../../src/lib/coach';
+import type { CoachContext } from '../../src/lib/coach.js';
 
 const str = (v: unknown, n: number) => (typeof v === 'string' ? v.slice(0, n) : undefined);
 const num = (v: unknown, max: number) => (typeof v === 'number' && Number.isFinite(v) && v >= 0 && v <= max ? v : undefined);

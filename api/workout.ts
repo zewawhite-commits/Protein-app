@@ -3,11 +3,11 @@
  * AI workout guide for the week. Plus and Pro.
  */
 import Anthropic from '@anthropic-ai/sdk';
-import { contextText } from '../src/lib/coach';
-import { cleanWorkoutRequest, workoutWithClient } from '../src/lib/workout';
-import { json } from './_lib/premium';
-import { gate } from './_lib/quota';
-import { cleanContext } from './_lib/context';
+import { contextText } from '../src/lib/coach.js';
+import { cleanWorkoutRequest, workoutWithClient } from '../src/lib/workout.js';
+import { json } from './_lib/premium.js';
+import { gate } from './_lib/quota.js';
+import { cleanContext } from './_lib/context.js';
 
 export async function POST(request: Request): Promise<Response> {
   if (!process.env.ANTHROPIC_API_KEY) return json({ error: 'Workout guides aren’t switched on yet.' }, 501);

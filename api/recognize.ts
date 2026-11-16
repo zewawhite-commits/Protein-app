@@ -8,9 +8,9 @@
  *   → { isFood, items: [...], note }
  */
 import Anthropic from '@anthropic-ai/sdk';
-import { recognizeWithClient } from '../src/lib/recognition';
-import { gate } from './_lib/quota';
-import { readLabelWithClient } from '../src/lib/label';
+import { recognizeWithClient } from '../src/lib/recognition.js';
+import { gate } from './_lib/quota.js';
+import { readLabelWithClient } from '../src/lib/label.js';
 
 const MAX_BYTES = 5 * 1024 * 1024;
 const TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);

@@ -3,7 +3,7 @@
  * → { status, plan, amount, currency, nextPayment, card: { brand, last4, expMonth, expYear } | null }
  * Subscription and payment-method details for the Profile page, straight from Paystack.
  */
-import { activeSubscription, bearer, fail, json, paymentsEnabled, paystack, readPass } from '../_lib/premium';
+import { activeSubscription, bearer, fail, json, paymentsEnabled, paystack, readPass } from '../_lib/premium.js';
 
 interface SubscriptionDetail {
   status: string;

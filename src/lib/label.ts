@@ -4,8 +4,8 @@
  * and the person checks them against the label before saving.
  */
 import type Anthropic from '@anthropic-ai/sdk';
-import { RECOGNITION_MODEL } from './recognition';
-import type { Per100 } from './types';
+import { RECOGNITION_MODEL } from './recognition.js';
+import type { Per100 } from './types.js';
 
 export interface LabelRead {
   isLabel: boolean;

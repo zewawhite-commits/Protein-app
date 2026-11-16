@@ -13,8 +13,8 @@
  *  - Emails in ADMIN_EMAILS (comma-separated) are unlimited, for testing.
  *  - Override any limit with env, e.g. LIMIT_FREE_SCAN=5, LIMIT_PRO_COACH=1000.
  */
-import { bearer, readPass } from './premium';
-import { accountsConfigured, useScan, userFromToken } from './accounts';
+import { bearer, readPass } from './premium.js';
+import { accountsConfigured, useScan, userFromToken } from './accounts.js';
 
 export type Feature = 'scan' | 'coach' | 'workout' | 'recipe' | 'plan' | 'ideas';
 export type PlanTier = 'free' | 'plus' | 'pro';
@@ -93,7 +93,7 @@ export async function usage(request: Request) {
   if (!user) return null;
   const features: Feature[] = ['scan', 'coach', 'workout', 'recipe', 'plan', 'ideas'];
   const month = new Date().toISOString().slice(0, 7);
-  const { admin } = await import('./accounts');
+  const { admin } = await import('./accounts.js');
   const db = admin();
   const used: Record<string, number> = {};
   if (db) {

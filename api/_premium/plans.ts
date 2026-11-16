@@ -1,6 +1,6 @@
 /** GET /api/premium/plans → prices straight from the Paystack plans, so the app never shows a stale price. */
-import { config, fail, json, paystack, scanLimit, type PlanId, type Tier } from '../_lib/premium';
-import { accountsConfigured } from '../_lib/accounts';
+import { config, fail, json, paystack, scanLimit, type PlanId, type Tier } from '../_lib/premium.js';
+import { accountsConfigured } from '../_lib/accounts.js';
 
 interface Plan { name: string; amount: number; currency: string; interval: string }
 

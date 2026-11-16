@@ -3,8 +3,8 @@
  * Permanently deletes the signed-in account: the sign-in itself and everything linked
  * to it (log, posts, comments, groups they own, profile, usage counts).
  */
-import { json } from './_lib/premium';
-import { admin, userFromToken } from './_lib/accounts';
+import { json } from './_lib/premium.js';
+import { admin, userFromToken } from './_lib/accounts.js';
 
 export async function DELETE(request: Request): Promise<Response> {
   const db = admin();

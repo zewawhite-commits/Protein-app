@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { activeSubscription, readPass, signPass } from '../_lib/premium';
-import { POST as activate } from '../_premium/activate';
-import { POST as checkout } from '../_premium/checkout';
-import { POST as recognize } from '../recognize';
+import { activeSubscription, readPass, signPass } from '../_lib/premium.js';
+import { POST as activate } from '../_premium/activate.js';
+import { POST as checkout } from '../_premium/checkout.js';
+import { POST as recognize } from '../recognize.js';
 
 const DAY = 86_400_000;
 const iso = (ms: number) => new Date(ms).toISOString();
@@ -213,7 +213,7 @@ describe('plan limits (quota)', () => {
   });
 
   it('keeps plans and ideas for paid tiers, and uses the pass tier limits', async () => {
-    const { gate, limitFor } = await import('../_lib/quota');
+    const { gate, limitFor } = await import('../_lib/quota.js');
     fakeSupabase({});
     const free = await gate(call({}, 'jwt'), 'plan');
     expect(free.ok).toBe(false);
@@ -227,7 +227,7 @@ describe('plan limits (quota)', () => {
   });
 
   it('gives Plus the workout guide and recipes, but keeps eating plans for Pro', async () => {
-    const { gate } = await import('../_lib/quota');
+    const { gate } = await import('../_lib/quota.js');
     fakeSupabase({});
     expect((await gate(call({}, 'jwt'), 'workout')).ok).toBe(false); // free
     const plus = signPass({ email: 'me@example.com', cid: 1, plan: 'PLN_month', tier: 'plus', exp: Date.now() + 86400e3 });
@@ -239,7 +239,7 @@ describe('plan limits (quota)', () => {
   });
 
   it('lets admins test without limits', async () => {
-    const { gate } = await import('../_lib/quota');
+    const { gate } = await import('../_lib/quota.js');
     fakeSupabase({ [`scan:${U}`]: 999 }, 'boss@example.com');
     process.env.ADMIN_EMAILS = 'boss@example.com';
     expect(await gate(call({}, 'jwt'), 'scan')).toMatchObject({ ok: true, left: Infinity });
@@ -248,7 +248,7 @@ describe('plan limits (quota)', () => {
 
 describe('owner stats', () => {
   it('summarises sign-up, return and week-2 retention from stored logs', async () => {
-    const { summarize } = await import('../_lib/stats');
+    const { summarize } = await import('../_lib/stats.js');
     const now = Date.parse('2026-11-30T12:00:00Z');
     const day = (n: number) => new Date(now - n * 864e5).toISOString().slice(0, 10);
     const rows = [
@@ -279,8 +279,28 @@ describe('deployment limits', () => {
     expect(count('api')).toBeLessThanOrEqual(12);
   });
 
+  it('uses .js on every relative import the server loads (Vercel runs it as ES modules)', async () => {
+    const { readFileSync, existsSync, readdirSync, statSync } = await import('node:fs');
+    const { dirname, join, normalize } = await import('node:path');
+    const files = (dir: string): string[] => readdirSync(dir).flatMap((f) => { const p = join(dir, f); return statSync(p).isDirectory() ? files(p) : p.endsWith('.ts') && !p.includes('.test.') ? [p] : []; });
+    const seen = new Set<string>(); const todo = files('api'); const bad: string[] = [];
+    while (todo.length) {
+      const f = todo.pop()!;
+      if (seen.has(f)) continue;
+      seen.add(f);
+      for (const m of readFileSync(f, 'utf8').matchAll(/(?:from\s+|import\s*\(\s*)['"](\.{1,2}\/[^'"]+)['"]/g)) {
+        const spec = m[1];
+        if (!spec.endsWith('.js') && !spec.endsWith('.json')) bad.push(`${f}: ${spec}`);
+        const target = normalize(join(dirname(f), spec.replace(/\.js$/, '.ts')));
+        if (existsSync(target)) todo.push(target);
+      }
+      if (/from\s+['"]@\//.test(readFileSync(f, 'utf8'))) bad.push(`${f}: uses an @/ alias the server can't resolve`);
+    }
+    expect(bad).toEqual([]);
+  });
+
   it('routes every premium action through the single function', async () => {
-    const { GET, POST } = await import('../premium/[action]');
+    const { GET, POST } = await import('../premium/[action].js');
     delete process.env.PAYSTACK_SECRET_KEY;
     const plans = await GET(new Request('https://x/api/premium/plans'));
     expect(plans.status).toBe(200);

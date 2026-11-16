@@ -4,8 +4,8 @@
  * not medical advice; the app shows that line with it.
  */
 import type Anthropic from '@anthropic-ai/sdk';
-import { RECOGNITION_MODEL } from './recognition';
-import type { CoachContext } from './coach';
+import { RECOGNITION_MODEL } from './recognition.js';
+import type { CoachContext } from './coach.js';
 
 export interface WorkoutExercise { name: string; sets: number; reps: string; restSeconds: number; how: string }
 export interface WorkoutDay { name: string; focus: string; minutes: number; warmup: string; exercises: WorkoutExercise[] }

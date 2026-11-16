@@ -5,7 +5,7 @@
  * and calculates protein and grams itself.
  */
 import type Anthropic from '@anthropic-ai/sdk';
-import { RECOGNITION_MODEL } from './recognition';
+import { RECOGNITION_MODEL } from './recognition.js';
 
 export interface IdeaRequest {
   country?: string;

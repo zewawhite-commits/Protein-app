@@ -4,12 +4,12 @@
  *   POST /api/premium/manage     POST /api/premium/billing
  * Each handler lives in api/_premium/ (underscore folders aren't deployed as functions).
  */
-import { json } from '../_lib/premium';
-import { GET as plans } from '../_premium/plans';
-import { POST as checkout } from '../_premium/checkout';
-import { POST as activate } from '../_premium/activate';
-import { POST as manage } from '../_premium/manage';
-import { POST as billing } from '../_premium/billing';
+import { json } from '../_lib/premium.js';
+import { GET as plans } from '../_premium/plans.js';
+import { POST as checkout } from '../_premium/checkout.js';
+import { POST as activate } from '../_premium/activate.js';
+import { POST as manage } from '../_premium/manage.js';
+import { POST as billing } from '../_premium/billing.js';
 
 const action = (request: Request) => new URL(request.url).pathname.replace(/\/+$/, '').split('/').pop() ?? '';
 

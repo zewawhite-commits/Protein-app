@@ -4,8 +4,8 @@
  * database record and calculates calories, macros and micronutrients itself.
  */
 import type Anthropic from '@anthropic-ai/sdk';
-import { RECOGNITION_MODEL } from './recognition';
-import type { CoachContext } from './coach';
+import { RECOGNITION_MODEL } from './recognition.js';
+import type { CoachContext } from './coach.js';
 
 export interface RecipeIngredient { name: string; localName: string; searchQueries: string[]; grams: number; note: string }
 export interface Recipe { title: string; cuisine: string; servings: number; minutes: number; ingredients: RecipeIngredient[]; steps: string[]; tip: string }

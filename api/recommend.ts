@@ -3,9 +3,9 @@
  * AI meal ideas (food names only). Requires a Premium pass when payments are configured.
  */
 import Anthropic from '@anthropic-ai/sdk';
-import { ideasWithClient, type IdeaRequest } from '../src/lib/recommendation';
-import { json } from './_lib/premium';
-import { gate } from './_lib/quota';
+import { ideasWithClient, type IdeaRequest } from '../src/lib/recommendation.js';
+import { json } from './_lib/premium.js';
+import { gate } from './_lib/quota.js';
 
 export async function POST(request: Request): Promise<Response> {
   if (!process.env.ANTHROPIC_API_KEY) return json({ error: 'Suggestions are not configured on this server.' }, 501);

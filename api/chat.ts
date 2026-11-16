@@ -3,10 +3,10 @@
  * AI nutrition coach. Requires a Premium pass when payments are configured.
  */
 import Anthropic from '@anthropic-ai/sdk';
-import { cleanTurns, coachWithClient, type ChatImage } from '../src/lib/coach';
-import { json } from './_lib/premium';
-import { gate } from './_lib/quota';
-import { cleanContext } from './_lib/context';
+import { cleanTurns, coachWithClient, type ChatImage } from '../src/lib/coach.js';
+import { json } from './_lib/premium.js';
+import { gate } from './_lib/quota.js';
+import { cleanContext } from './_lib/context.js';
 
 const IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;

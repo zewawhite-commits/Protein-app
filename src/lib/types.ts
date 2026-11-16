@@ -187,7 +187,7 @@ export interface SavedPlan {
   id: string;
   title: string;
   createdAt: number;
-  plan: import('./plan').DayPlan;
+  plan: import('./plan.js').DayPlan;
 }
 
 /** A body-weight log entry (kg), one per day. */
