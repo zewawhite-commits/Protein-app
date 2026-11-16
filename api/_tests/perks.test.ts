@@ -55,3 +55,13 @@ describe('learning from corrections', () => {
     expect(popularFrom([...rows('Eba', 'a', 3), ...rows('Eba', 'b', 3)])).toEqual({});
   });
 });
+
+import { GET as health } from '../_premium/health.js';
+describe('AI health check', () => {
+  it('says plainly when the key is missing', async () => {
+    const saved = process.env.ANTHROPIC_API_KEY;
+    delete process.env.ANTHROPIC_API_KEY;
+    expect(await (await health()).json()).toMatchObject({ ai: 'missing-key' });
+    if (saved) process.env.ANTHROPIC_API_KEY = saved;
+  });
+});
