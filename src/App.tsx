@@ -26,6 +26,7 @@ const Groups = lazy(() => import('./pages/Groups'));
 const RecipeBuilder = lazy(() => import('./pages/RecipeBuilder'));
 const Privacy = lazy(() => import('./pages/Legal').then((m) => ({ default: m.Privacy })));
 const Terms = lazy(() => import('./pages/Legal').then((m) => ({ default: m.Terms })));
+const Refunds = lazy(() => import('./pages/Legal').then((m) => ({ default: m.Refunds })));
 const Feed = lazy(() => import('./pages/Groups').then((m) => ({ default: m.CommunityFeedPage })));
 
 export default function App() {
@@ -37,7 +38,7 @@ export default function App() {
   const profile = useStore((s) => s.profile);
   // Legal pages open from the welcome screen too, before a profile exists.
   const path = typeof location !== 'undefined' ? location.pathname : '';
-  if (!profile && (path === '/privacy' || path === '/terms')) return <Suspense fallback={null}>{path === '/privacy' ? <Privacy /> : <Terms />}</Suspense>;
+  if (!profile && (path === '/privacy' || path === '/terms' || path === '/refunds')) return <Suspense fallback={null}>{path === '/privacy' ? <Privacy /> : path === '/terms' ? <Terms /> : <Refunds />}</Suspense>;
   if (!profile) return <Onboarding />;
   return (
     <Suspense fallback={null}>
@@ -61,6 +62,7 @@ export default function App() {
         <Route path="recipe" element={<RecipeBuilder />} />
         <Route path="privacy" element={<Privacy />} />
         <Route path="terms" element={<Terms />} />
+        <Route path="refunds" element={<Refunds />} />
         <Route path="add" element={<div className="mx-auto max-w-lg px-5 pb-16 md:max-w-2xl md:px-8 lg:max-w-3xl"><AddFood /></div>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

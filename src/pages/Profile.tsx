@@ -110,7 +110,8 @@ export default function Profile({ mode = 'profile' }: { mode?: 'profile' | 'sett
           <Group title="More">
             <Link to="/settings" className="block"><Row icon={<SettingsIcon size={18} />} label="Settings & account" chevron /></Link>
             <Link to="/privacy" className="block"><Row icon={<Lock size={18} />} label="Privacy policy" chevron /></Link>
-            <Link to="/terms" className="block"><Row icon={<FileText size={18} />} label="Terms of use" chevron /></Link>
+            <Link to="/terms" className="block"><Row icon={<FileText size={18} />} label="Terms & Conditions" chevron /></Link>
+            <Link to="/refunds" className="block"><Row icon={<FileText size={18} />} label="Cancellation & refunds" chevron /></Link>
           </Group>
         </>
       )}
@@ -178,7 +179,8 @@ export default function Profile({ mode = 'profile' }: { mode?: 'profile' | 'sett
       <Group title="Support & legal">
         {SUPPORT_EMAIL && <a href={`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent('Provora support')}`} className="block"><Row icon={<LifeBuoy size={18} />} label="Contact support" chevron /></a>}
         <Link to="/privacy" className="block"><Row icon={<Lock size={18} />} label="Privacy policy" chevron /></Link>
-        <Link to="/terms" className="block"><Row icon={<FileText size={18} />} label="Terms of use" chevron /></Link>
+        <Link to="/terms" className="block"><Row icon={<FileText size={18} />} label="Terms & Conditions" chevron /></Link>
+            <Link to="/refunds" className="block"><Row icon={<FileText size={18} />} label="Cancellation & refunds" chevron /></Link>
       </Group>
 
       {(settings.adminMode || adminTaps >= 7) && (
