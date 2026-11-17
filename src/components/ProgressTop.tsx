@@ -147,21 +147,15 @@ export function WeightChart() {
             </div>
           )}
           <svg viewBox={`0 0 ${W} ${H}`} className="w-full" onMouseLeave={() => setActive(null)}>
-            <defs>
-              <linearGradient id="wg" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stopColor="rgb(var(--accent))" stopOpacity="0.3" /><stop offset="1" stopColor="rgb(var(--accent))" stopOpacity="0" /></linearGradient>
-              {/* The line floats above the chart with a soft shadow; points are little lit pearls. */}
-              <filter id="wshadow" x="-5%" y="-20%" width="110%" height="160%"><feDropShadow dx="0" dy="3.5" stdDeviation="2.5" floodColor="rgb(var(--accent))" floodOpacity="0.35" /></filter>
-              <radialGradient id="wpearl" cx="0.35" cy="0.3" r="0.8"><stop offset="0" stopColor="#fff" /><stop offset="1" stopColor="rgb(var(--raised))" /></radialGradient>
-            </defs>
+            <defs><linearGradient id="wg" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stopColor="rgb(var(--accent))" stopOpacity="0.2" /><stop offset="1" stopColor="rgb(var(--accent))" stopOpacity="0" /></linearGradient></defs>
             {[0.25, 0.5, 0.75].map((f) => <line key={f} x1={P} x2={W - P} y1={P + f * (H - 2 * P)} y2={P + f * (H - 2 * P)} stroke="rgb(var(--line))" strokeDasharray="3 4" />)}
             {goal != null && <line x1={P} x2={W - P} y1={y(goal)} y2={y(goal)} stroke="rgb(var(--silver))" strokeDasharray="5 5" />}
             {pts.length > 1 && <path d={`${line} L${x(pts[pts.length - 1].date)},${H - P} L${x(pts[0].date)},${H - P} Z`} fill="url(#wg)" />}
-            <path d={line} fill="none" stroke="rgb(var(--accent))" strokeWidth="3.5" strokeLinejoin="round" strokeLinecap="round" filter="url(#wshadow)" />
-            <path d={line} transform="translate(0 -0.8)" fill="none" stroke="#fff" strokeOpacity="0.45" strokeWidth="1" strokeLinejoin="round" strokeLinecap="round" />
+            <path d={line} fill="none" stroke="rgb(var(--accent))" strokeWidth="2.75" strokeLinejoin="round" strokeLinecap="round" />
             {pts.map((p, i) => (
               <g key={p.date} onClick={() => { haptic(); setActive(i); }} onMouseEnter={() => setActive(i)} className="cursor-pointer">
                 <circle cx={x(p.date)} cy={y(vals[i])} r={14} fill="transparent" />
-                <circle cx={x(p.date)} cy={y(vals[i])} r={active === i ? 6 : 4} fill="url(#wpearl)" stroke="rgb(var(--accent))" strokeWidth="2.2" filter="url(#wshadow)" />
+                <circle cx={x(p.date)} cy={y(vals[i])} r={active === i ? 5.5 : 3.5} fill="rgb(var(--surface))" stroke="rgb(var(--accent))" strokeWidth="2.2" />
               </g>
             ))}
           </svg>

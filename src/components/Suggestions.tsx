@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronRight, Clock, Loader2, RefreshCw, SlidersHorizontal, Sparkles } from 'lucide-react';
+import { ChevronRight, Clock, Lightbulb, Loader2, RefreshCw, SlidersHorizontal } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 import { useFoodDb } from '@/lib/hooks';
 import { confidentMatch, splitName } from '@/lib/foods';
@@ -120,7 +120,7 @@ export function Suggestions({ remaining, kcalLeft }: { remaining: number; kcalLe
         <div className="flex shrink-0 gap-1.5">
           <button onClick={() => { haptic(); setOpts((o) => ({ ...o, open: !o.open })); }} className={cx('chip !h-9 !px-3', opts.open && '!bg-ink !text-bg')} aria-label="Options for AI ideas" aria-expanded={opts.open}><SlidersHorizontal size={14} /></button>
           <button onClick={getIdeas} disabled={ai.state === 'loading'} className="chip !h-9 !bg-accent/10 !text-accent">
-            {ai.state === 'loading' ? <Loader2 size={14} className="animate-spin" /> : ai.state === 'done' ? <RefreshCw size={14} /> : <Sparkles size={14} />} {ai.state === 'done' ? 'More ideas' : 'AI ideas'}
+            {ai.state === 'loading' ? <Loader2 size={14} className="animate-spin" /> : ai.state === 'done' ? <RefreshCw size={14} /> : <Lightbulb size={14} />} {ai.state === 'done' ? 'More ideas' : 'AI ideas'}
           </button>
         </div>
       </div>

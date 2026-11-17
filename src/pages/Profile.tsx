@@ -5,7 +5,7 @@ import { SignInButtons } from '@/components/SignIn';
 import { useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useEffect } from 'react';
-import { ArrowLeft, Flame, HeartHandshake, SlidersHorizontal, Table, UserRound, KeyRound, LogOut, Mail, Scale, Settings as SettingsIcon, ChevronRight, Cloud, CreditCard, Database, Download, FileText, LifeBuoy, Lock, Moon, Receipt, RotateCcw, ShieldCheck, Smartphone, Sparkles, Sun, Trash2, Upload, XCircle } from 'lucide-react';
+import { ArrowLeft, ChevronRight, Cloud, CreditCard, Crown, Database, Download, FileText, Flame, HeartHandshake, KeyRound, LifeBuoy, Lightbulb, Lock, LogOut, Mail, Moon, Receipt, RotateCcw, Scale, Settings as SettingsIcon, ShieldCheck, SlidersHorizontal, Smartphone, Sun, Table, Trash2, Upload, UserRound, XCircle } from 'lucide-react';
 import { useStore, exportData } from '@/store/useStore';
 import { fetchBilling, isPremiumActive, manageSubscription, type Billing } from '@/lib/premium';
 import { SUPPORT_EMAIL } from '@/pages/Legal';
@@ -151,7 +151,7 @@ export default function Profile({ mode = 'profile' }: { mode?: 'profile' | 'sett
           <Segmented value={settings.tracking ?? 'detailed'} onChange={(t) => updateSettings({ tracking: t })} options={[{ value: 'photo', label: 'Photo diary' }, { value: 'simple', label: 'Simple' }, { value: 'detailed', label: 'Detailed' }]} />
         </Row>
         <p className="px-4 pb-2 text-xs leading-relaxed text-dim">Photo diary: snap your meals with no numbers — analyse any photo later if you want. Simple shows just calories and protein on Home. Detailed adds carbs, fat and every nutrient. Nothing is lost either way.</p>
-        <Row icon={<Sparkles size={18} />} label="Suggestions on Home">
+        <Row icon={<Lightbulb size={18} />} label="Suggestions on Home">
           <Toggle on={!settings.quietAi} onChange={(v) => updateSettings({ quietAi: !v })} label="Suggestions on Home" />
         </Row>
         <p className="px-4 pb-2 text-xs leading-relaxed text-dim">Turn off to hide “What to eat next”. The coach only ever speaks when you ask it.</p>
@@ -262,7 +262,7 @@ function PremiumCard() {
   return (
     <Link to="/premium" className="mt-6 block overflow-hidden rounded-[28px] bg-primary p-5 text-on-primary transition active:scale-[.99]">
       <div className="flex items-center gap-4">
-        <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-on-primary/10"><Sparkles size={22} className="text-accent" /></span>
+        <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-on-primary/10"><Crown size={22} className="text-accent" /></span>
         <div className="min-w-0 flex-1">
           <p className="font-semibold">{active ? `${premium!.tier === 'pro' ? 'Pro' : 'Plus'} is active` : 'Upgrade to Plus or Pro'}</p>
           <p className="truncate text-[14px] opacity-70">
@@ -366,7 +366,7 @@ function SubscriptionGroup() {
 
   return (
     <Group title="Subscription">
-      <Row icon={<Sparkles size={18} />} label="Plan">
+      <Row icon={<Crown size={18} />} label="Plan">
         <span className="text-sm font-semibold text-silver">{active ? `${premium!.tier === 'pro' ? 'Pro' : 'Plus'}${billing?.interval ? ` · ${billing.interval === 'annually' ? 'yearly' : billing.interval}` : ''}` : 'Free'}</span>
       </Row>
       {active && billing?.status === 'attention' && (

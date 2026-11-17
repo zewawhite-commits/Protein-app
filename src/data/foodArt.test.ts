@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { existsSync } from 'node:fs';
 import { artFor, hasIcon } from './foodArt';
 
 describe('food illustrations', () => {
@@ -14,12 +15,15 @@ describe('food illustrations', () => {
       ['Plantain, cooked', undefined, 'banana'],
       ['Pineapple, raw', undefined, 'pineapple'],
       ['Egusi soup', undefined, 'pot_of_food'],
+      ['Vegetable oil, NFS', undefined, 'olive'],
+      ['Yogurt, Greek, plain', undefined, 'bowl_with_spoon'],
       ['Something unusual', undefined, 'fork_and_knife_with_plate'],
     ];
     for (const [name, cat, want] of cases) {
       const got = artFor(name, cat);
       expect(got, name).toBe(want);
       expect(hasIcon(got)).toBe(true);
+      expect(existsSync(`public/food/${got}.svg`), `public/food/${got}.svg`).toBe(true);
     }
   });
 });

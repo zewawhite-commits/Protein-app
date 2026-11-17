@@ -13,10 +13,9 @@ import { addDays, mealForNow, relativeDay, todayKey } from '@/lib/dates';
 import { useStore } from '@/store/useStore';
 import type { CustomFood, Food, PrepState } from '@/lib/types';
 import { FoodSheet } from '@/components/FoodSheet';
-import { FoodVisual } from '@/components/FoodIcon';
+import { FoodArt, FoodVisual } from '@/components/FoodIcon';
 import { WorldFoods } from '@/components/WorldFoods';
 import { SavedMealsList } from '@/components/SavedMeals';
-import { iconFor } from '@/data/foodArt';
 import { StateBadge, cx, fmt } from '@/components/ui';
 
 const STATES: { value: PrepState | 'all'; label: string }[] = [
@@ -261,16 +260,18 @@ function FoodRow({ food, onClick }: { food: Food; onClick: () => void }) {
       <FoodVisual name={food.name} category={food.category} fdcId={food.fdcId} size={54} />
       <div className="min-w-0 flex-1">
         <p className="line-clamp-2 text-[16px] font-bold leading-snug">{title}</p>
-        <div className="mt-1.5 flex min-w-0 items-center gap-1.5">
+        {detail && <p className="mt-0.5 truncate text-[13px] text-silver">{detail}</p>}
+        {/* Labels wrap onto a second line rather than spill into the calorie column. */}
+        <div className="mt-1.5 flex min-w-0 flex-wrap items-center gap-1.5">
           <StateBadge state={food.state} className="shrink-0" />
           <AllergyTag food={food} />
           {food.source !== 'usda-sr' && <span className="shrink-0 rounded-full bg-raised px-2 text-[12px] font-semibold uppercase leading-5 tracking-wide text-silver">{SOURCE_SHORT[food.source]}</span>}
-          {detail && <span className="truncate text-xs text-silver">{detail}</span>}
         </div>
       </div>
       <div className="shrink-0 text-right">
         <p className="num text-lg font-bold leading-none">{food.per100.kcal != null ? fmt(food.per100.kcal) : '–'}<span className="text-xs font-medium text-silver"> kcal</span></p>
-        <p className="num mt-1 text-[12px] font-medium text-dim">{fmt(food.per100.protein, 1)}g protein · 100g</p>
+        <p className="num mt-1 text-[13px] font-semibold text-accent">{fmt(food.per100.protein, food.per100.protein < 10 ? 1 : 0)} g protein</p>
+        <p className="text-[11px] font-medium text-dim">per 100 g</p>
       </div>
     </button>
       {'recipe' in food && (food as CustomFood).recipe && <Link to={`/recipe?id=${encodeURIComponent(food.id)}`} className="grid h-10 shrink-0 place-items-center rounded-full bg-raised px-3 text-xs font-bold text-accent">Edit</Link>}
@@ -293,11 +294,10 @@ function PhotoCards({ foods, onPick }: { foods: Food[]; onPick: (f: Food) => voi
     <div className="-mx-5 mb-5 flex snap-x gap-3 overflow-x-auto px-5 pb-1 no-scrollbar">
       {foods.slice(0, 10).map((f) => {
         const { title } = splitName(f.name);
-        const Icon = iconFor(f.name, f.category);
         return (
           <button key={f.id} onClick={() => { haptic(); onPick(f); }} className="flex h-48 w-40 shrink-0 snap-start flex-col justify-between rounded-[26px] bg-surface p-4 text-left transition active:scale-[.97]" style={{ boxShadow: 'var(--shadow)' }}>
             <div className="flex items-start justify-between">
-              <span className="grid h-14 w-14 place-items-center rounded-2xl bg-raised"><Icon size={26} strokeWidth={1.8} /></span>
+              <span className="grid h-14 w-14 place-items-center rounded-2xl bg-raised"><FoodArt name={f.name} category={f.category} size={34} /></span>
               {f.state !== 'na' && <StateBadge state={f.state} />}
             </div>
             <div>

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowLeft, Check, ChevronDown, Copy, Crown, Droplet, Drumstick, Dumbbell, Flame, Globe2, Heart, ImagePlus, Link2, Loader2, Lock, LogOut, MessageCircle, Plus, RefreshCw, Reply, Send, Share2, SmilePlus, Sparkles, ThumbsUp, Trash2, UserRound, Users, Utensils, Wheat, X } from 'lucide-react';
+import { ArrowLeft, Check, ChevronDown, Copy, Crown, Droplet, Drumstick, Dumbbell, Flame, Globe2, Heart, ImagePlus, Link2, Loader2, Lock, LogOut, MessageCircle, Plus, RefreshCw, Reply, Send, Share2, Smile, SmilePlus, ThumbsUp, Trash2, UserRound, Users, Utensils, Wheat, X } from 'lucide-react';
 import { AVATAR_COLORS, Avatar } from '@/components/Avatar';
 import { GroupChat } from '@/components/GroupChat';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
@@ -23,7 +23,7 @@ import { haptic, toast } from '@/components/fx';
 import { useStreak } from './Today';
 
 const GROUP_KEY = 'provora-group';
-const REACTION_ICON: Record<Reaction, typeof Flame> = { '🔥': Flame, '💪': Dumbbell, '👏': ThumbsUp, '😋': Sparkles, '❤️': Heart };
+const REACTION_ICON: Record<Reaction, typeof Flame> = { '🔥': Flame, '💪': Dumbbell, '👏': ThumbsUp, '😋': Smile, '❤️': Heart };
 const REACTION_LABEL: Record<Reaction, string> = { '🔥': 'Fire', '💪': 'Strong', '👏': 'Nice', '😋': 'Tasty', '❤️': 'Love' };
 const MEAL_LABEL: Record<Meal, string> = { breakfast: 'Breakfast', lunch: 'Lunch', dinner: 'Dinner', snack: 'Snack' };
 

@@ -1,7 +1,7 @@
 import { AllergyTextBanner } from './Allergy';
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Bookmark, BookmarkCheck, ChevronRight, Lightbulb, Loader2, Sparkles, Trash2 } from 'lucide-react';
+import { Bookmark, BookmarkCheck, CalendarDays, ChevronRight, Lightbulb, Loader2, Trash2 } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 import { useDay, useFoodDb } from '@/lib/hooks';
 import { confidentMatch, splitName } from '@/lib/foods';
@@ -61,7 +61,7 @@ export function PlanView() {
     <div className="space-y-4 pb-6">
       <PlanBadge needs="pro" what="AI eating plans" />
       <section className="card p-5">
-        <p className="flex items-center gap-2 text-[17px] font-semibold"><Sparkles size={17} className="text-accent" /> Your eating plan</p>
+        <p className="flex items-center gap-2 text-[17px] font-semibold"><CalendarDays size={17} className="text-accent" /> Your eating plan</p>
         <p className="mt-1 text-sm text-silver">A full day of meals built around your goals, targets, the cuisines you enjoy and anything you avoid.</p>
         <div className="mt-3 flex flex-wrap gap-2">
           {IDEAS.map((i) => <button key={i} onClick={() => setAsk((a) => (a === i ? '' : i))} className={cx('chip !h-9', ask === i && 'chip-on')}>{i}</button>)}

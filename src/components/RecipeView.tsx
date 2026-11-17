@@ -1,7 +1,7 @@
 import { AllergyTextBanner } from './Allergy';
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Bookmark, BookmarkCheck, Check, ChefHat, Clock, Lightbulb, Loader2, Trash2, Users } from 'lucide-react';
+import { Bookmark, BookmarkCheck, Check, Clock, Lightbulb, Loader2, Search, Trash2, Users } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 import { useFoodDb } from '@/lib/hooks';
 import { confidentMatch, splitName } from '@/lib/foods';
@@ -12,7 +12,7 @@ import type { Recipe } from '@/lib/recipe';
 import { useCoachContext } from '@/pages/Coach';
 import { SignInButtons } from './SignIn';
 import { PlanBadge } from './PlanBadge';
-import { MacroBar } from './Nutrients';
+import { FoodArt } from './FoodIcon';
 import { cx, fmt } from './ui';
 import { haptic, toast } from './fx';
 
@@ -31,7 +31,15 @@ export function RecipeView() {
   const ideas = useMemo(() => {
     const c = profile?.cuisines?.[0];
     const g = profile?.goals?.includes('muscle') ? 'High-protein' : profile?.goals?.includes('fatloss') ? 'Light' : 'Healthy';
-    return [`${g} dinner in 30 minutes`, c ? `${c} dish, lighter` : 'Chicken stir-fry', 'Meal-prep lunches for 4', 'Breakfast with eggs', 'Vegetarian curry', 'Something with chicken'];
+    // Each idea has a matching illustration (the label is what's sent to the AI).
+    return [
+      { label: `${g} dinner in 30 minutes`, art: 'salad' },
+      c ? { label: `${c} dish, lighter`, art: 'stew' } : { label: 'Chicken stir-fry', art: 'chicken' },
+      { label: 'Meal-prep lunches for 4', art: 'bento' },
+      { label: 'Breakfast with eggs', art: 'egg' },
+      { label: 'Vegetarian curry', art: 'curry' },
+      { label: 'Something with fish', art: 'fish' },
+    ];
   }, [profile]);
 
   async function make(text = ask) {
@@ -57,11 +65,18 @@ export function RecipeView() {
     <div className="space-y-4 pb-6">
       <PlanBadge needs="plus" what="AI recipes with full nutrition" />
       <section className="card p-5">
-        <p className="flex items-center gap-2 text-[17px] font-bold"><ChefHat size={18} className="text-accent" /> Recipes</p>
-        <p className="mt-1 text-sm text-silver">Any dish from anywhere — with calories, protein and more worked out from the food database.</p>
-        <input value={ask} onChange={(e) => setAsk(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && ask.trim() && make()} maxLength={300} placeholder="What do you want to cook?" className="field mt-4" />
-        <div className="mt-3 flex flex-wrap gap-2">
-          {ideas.map((i) => <button key={i} onClick={() => { setAsk(i); void make(i); }} disabled={state.busy} className="chip !h-9 text-[14px]">{i}</button>)}
+        <p className="text-[19px] font-bold tracking-tight">What are you cooking?</p>
+        <p className="mt-0.5 text-sm text-silver">Any dish, any cuisine. Nutrition comes from real food data.</p>
+        <label className="relative mt-4 block">
+          <Search size={18} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-silver" />
+          <input value={ask} onChange={(e) => setAsk(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && ask.trim() && make()} maxLength={300} placeholder="e.g. chicken jollof rice" className="field !pl-11" aria-label="What do you want to cook?" />
+        </label>
+        <div className="-mx-5 mt-3 flex gap-2 overflow-x-auto px-5 pb-0.5 no-scrollbar">
+          {ideas.map((i) => (
+            <button key={i.label} onClick={() => { setAsk(i.label); void make(i.label); }} disabled={state.busy} className="chip !h-10 shrink-0 !pl-2 text-[14px]">
+              <span className="grid h-7 w-7 place-items-center rounded-full bg-surface"><FoodArt name={i.art} size={18} /></span>{i.label}
+            </button>
+          ))}
         </div>
         <button onClick={() => make()} disabled={state.busy} className="btn-primary mt-4 w-full">
           {state.busy ? <><Loader2 size={18} className="animate-spin" /> Writing your recipe…</> : ask.trim() ? 'Get recipe' : 'Surprise me'}
@@ -131,22 +146,26 @@ function RecipeCard({ recipe, savedId, onSave, onDelete }: { recipe: Recipe; sav
   return (
     <section className="space-y-3">
       <AllergyTextBanner what="recipe" texts={[recipe.title, ...recipe.ingredients.map((i) => `${i.name} ${i.localName}`)]} />
-      <div className="card p-5">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <p className="text-[21px] font-extrabold leading-tight">{recipe.title}</p>
-            <p className="mt-1 flex flex-wrap items-center gap-3 text-sm text-silver">
-              {recipe.cuisine && <span>{recipe.cuisine}</span>}
-              <span className="flex items-center gap-1"><Clock size={14} /> {recipe.minutes} min</span>
-              <span className="flex items-center gap-1"><Users size={14} /> Serves {recipe.servings}</span>
-            </p>
+      <div className="card overflow-hidden">
+        <div className="relative bg-accent/[0.07] px-5 pb-5 pt-5">
+          <div className="absolute right-4 top-4">
+            {savedId ? (
+              <button onClick={onDelete} className="grid h-10 w-10 place-items-center rounded-full bg-surface text-silver" style={{ boxShadow: 'var(--shadow)' }} aria-label="Remove saved recipe"><Trash2 size={17} /></button>
+            ) : (
+              <button onClick={onSave} className="grid h-10 w-10 place-items-center rounded-full bg-surface text-accent" style={{ boxShadow: 'var(--shadow)' }} aria-label="Save recipe"><Bookmark size={17} /></button>
+            )}
           </div>
-          {savedId ? (
-            <button onClick={onDelete} className="chip !h-9 shrink-0" aria-label="Remove saved recipe"><Trash2 size={15} /></button>
-          ) : (
-            <button onClick={onSave} className="chip !h-9 shrink-0 !bg-accent/10 !text-accent"><Bookmark size={15} /> Save</button>
-          )}
+          <span className="grid h-20 w-20 place-items-center rounded-[26px] bg-surface" style={{ boxShadow: 'var(--shadow)' }}>
+            <FoodArt name={`${recipe.title} ${recipe.ingredients[0]?.name ?? ''}`} size={52} />
+          </span>
+          <p className="mt-4 pr-12 text-[24px] font-extrabold leading-tight tracking-tight">{recipe.title}</p>
+          <div className="mt-2.5 flex flex-wrap gap-1.5 text-[13px] font-semibold text-ink/75">
+            {recipe.cuisine && <span className="rounded-full bg-surface px-3 py-1">{recipe.cuisine}</span>}
+            <span className="flex items-center gap-1 rounded-full bg-surface px-3 py-1"><Clock size={13} /> {recipe.minutes} min</span>
+            <span className="flex items-center gap-1 rounded-full bg-surface px-3 py-1"><Users size={13} /> Serves {recipe.servings}</span>
+          </div>
         </div>
+        <div className="p-5 pt-4">
         <div className="mt-4 grid grid-cols-4 gap-2 text-center">
           {([['kcal', per.kcal, 'Calories'], ['g', per.protein, 'Protein'], ['g', per.carbs, 'Carbs'], ['g', per.fat, 'Fat']] as const).map(([u, v, l]) => (
             <div key={l} className="rounded-2xl bg-raised py-3">
@@ -155,19 +174,20 @@ function RecipeCard({ recipe, savedId, onSave, onDelete }: { recipe: Recipe; sav
             </div>
           ))}
         </div>
-        <p className="mt-2 text-xs text-dim">Per serving · calculated from the food database{per.missing ? ` · ${per.missing} ingredient${per.missing > 1 ? 's' : ''} not found, not counted` : ''}</p>
-        <div className="mt-3"><MacroBar label="Fibre" value={per.fiber} color="protein" /></div>
+        <p className="mt-2 text-xs text-dim">Per serving · fibre {fmt(per.fiber)} g · calculated from the food database{per.missing ? ` · ${per.missing} ingredient${per.missing > 1 ? 's' : ''} not found, not counted` : ''}</p>
         <button onClick={logServing} disabled={logged || !rows.some((r) => r.food)} className="btn-primary mt-4 w-full">
           {logged ? <><Check size={18} /> Logged</> : 'Log 1 serving'}
         </button>
+        </div>
       </div>
 
       <div className="card p-5">
         <p className="text-[17px] font-bold">Ingredients</p>
         <ul className="mt-3 space-y-2.5">
           {rows.map(({ it, food }, i) => (
-            <li key={i} className="flex items-start justify-between gap-3 text-[15px]">
-              <div className="min-w-0">
+            <li key={i} className="flex items-center gap-3 text-[15px]">
+              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-raised"><FoodArt name={it.name} category={food?.category} size={24} /></span>
+              <div className="min-w-0 flex-1">
                 <p className="font-medium">{it.localName && it.localName !== it.name ? `${it.localName} (${it.name})` : it.name}{it.note && <span className="text-silver">, {it.note}</span>}</p>
                 <p className="truncate text-xs text-dim">{food ? `Matched: ${splitName(food.name).title}` : 'Not in our database — not counted'}</p>
               </div>

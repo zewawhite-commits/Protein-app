@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowUp, ChevronRight, ImagePlus, Loader2, RotateCcw, Sparkles, X } from 'lucide-react';
+import { ArrowUp, ChevronRight, ImagePlus, Loader2, MessageCircle, RotateCcw, X } from 'lucide-react';
 import { blobToBase64, resizeImage } from '@/lib/photos';
 import { aiHeaders } from '@/lib/premium';
 import { WorkoutView } from '@/components/WorkoutView';
@@ -99,7 +99,7 @@ export default function Coach() {
     <div className="animate-fade-up">
       <header className="pt-safe flex items-center justify-between gap-3 pb-3">
         <div className="flex items-center gap-3">
-          <span className="grid h-11 w-11 place-items-center rounded-full bg-accent/10 text-accent"><Sparkles size={20} /></span>
+          <span className="grid h-11 w-11 place-items-center rounded-full bg-accent/10 text-accent"><MessageCircle size={20} /></span>
           <div>
             <h1 className="text-[22px] font-bold leading-tight tracking-tight">Coach</h1>
             <p className="text-xs text-silver">Knows your goals, tastes and today’s food</p>
@@ -218,7 +218,9 @@ function Chat() {
       )}
       <form
         onSubmit={(e) => { e.preventDefault(); void send(text); }}
-        className="sticky bottom-[calc(env(safe-area-inset-bottom)+6.5rem)] z-20 flex items-end gap-2 lg:bottom-6"
+        className="sticky bottom-[calc(env(safe-area-inset-bottom)+6.5rem)] z-20 flex items-end gap-2 pt-6 lg:bottom-6"
+        // Messages scroll behind the box: fade them out so the box always sits on a clean background.
+        style={{ background: 'linear-gradient(to top, rgb(var(--bg)) 0%, rgb(var(--bg)) 72%, rgb(var(--bg) / 0) 100%)' }}
       >
         <button type="button" onClick={() => fileRef.current?.click()} disabled={busy} className="grid h-[52px] w-[52px] shrink-0 place-items-center rounded-full bg-surface transition active:scale-95" style={{ boxShadow: 'var(--shadow)' }} aria-label="Add a photo">
           <ImagePlus size={21} />
@@ -239,7 +241,7 @@ function Chat() {
           rows={1}
           maxLength={2000}
           placeholder={pending ? 'Ask about this photo…' : 'Ask your coach…'}
-          className="field max-h-32 min-h-[52px] flex-1 resize-none !rounded-[26px] !py-3.5"
+          className="field max-h-32 min-h-[52px] flex-1 resize-none !rounded-[26px] !bg-surface !py-3.5"
           style={{ boxShadow: 'var(--shadow)' }}
           aria-label="Message"
         />

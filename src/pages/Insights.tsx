@@ -201,7 +201,7 @@ function BarChart({ series, unit, highlight }: { series: { date: string; protein
                 aria-label={`${s.date}: ${Math.round(s.protein)} ${unit}`}
               >
                 <div
-                  className={cx('w-full transition-all', s.protein > 0 && 'col-3d', hit ? 'bg-accent' : 'bg-ink', active != null && active !== i && 'opacity-30')}
+                  className={cx('w-full transition-all', hit ? 'bg-accent' : 'bg-ink', active != null && active !== i && 'opacity-30')}
                   style={{ height: `${Math.max(s.protein > 0 ? 2 : 0, (s.protein / max) * 100)}%`, borderRadius: n > 30 ? 3 : n > 7 ? 6 : 12 }}
                 />
               </button>

@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useStore } from '@/store/useStore';
-import { iconFor } from '@/data/foodArt';
+import { FoodArt } from './FoodIcon';
 import { haptic } from './fx';
 
 /** Dishes from many cuisines (each one exists in the database; tapping searches for it). */
@@ -57,11 +57,10 @@ export function WorldFoods({ onSearch }: { onSearch: (q: string) => void }) {
       <p className="mb-2.5 px-1 text-[15px] font-semibold">Popular around the world</p>
       <div className="-mx-5 flex gap-3 overflow-x-auto px-5 pb-1 no-scrollbar">
         {items.map((w) => {
-          const Icon = iconFor(w.label);
           return (
             <button key={w.label} onClick={() => { haptic(); onSearch(w.q); }} className="w-24 shrink-0 text-left transition active:scale-95">
               <div className="grid h-24 w-24 place-items-center overflow-hidden rounded-[22px] bg-surface" style={{ boxShadow: 'var(--shadow)' }}>
-                <Icon size={34} strokeWidth={1.7} />
+                <FoodArt name={w.label} size={52} />
               </div>
               <p className="mt-1.5 truncate text-sm font-semibold">{w.label}</p>
               <p className="truncate text-xs text-silver">{w.cuisine}</p>

@@ -2,7 +2,7 @@ import { Logo } from './Logo';
 import { useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { LogMenu } from './LogMenu';
-import { BarChart3, Camera, House, Plus, Sparkles, UserRound, Users } from 'lucide-react';
+import { BarChart3, Camera, House, MessageCircle, Plus, UserRound, Users } from 'lucide-react';
 import { cx } from './ui';
 import { BrandName } from './fx';
 
@@ -10,7 +10,7 @@ const tabs = [
   { to: '/', label: 'Home', icon: House },
   { to: '/insights', label: 'Progress', icon: BarChart3 },
   { to: '/feed', label: 'Feed', icon: Users },
-  { to: '/coach', label: 'Coach', icon: Sparkles },
+  { to: '/coach', label: 'Coach', icon: MessageCircle },
   { to: '/profile', label: 'Profile', icon: UserRound },
 ] as const;
 

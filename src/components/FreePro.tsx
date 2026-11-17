@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Copy, Gift, Loader2, Share2, Sparkles } from 'lucide-react';
+import { BadgeCheck, Copy, Gift, Loader2, Share2 } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 import { isPremiumActive } from '@/lib/premium';
 import { useSession } from '@/lib/account';
@@ -20,7 +20,7 @@ export function TrialCard({ className }: { className?: string }) {
   if (free.on) {
     return (
       <div className={cx('flex items-center gap-3 rounded-[22px] bg-accent/10 px-4 py-3.5 text-accent', className)}>
-        <Sparkles size={18} className="shrink-0" />
+        <BadgeCheck size={18} className="shrink-0" />
         <p className="text-[14px] font-semibold">You have Pro free for {free.days} more day{free.days === 1 ? '' : 's'}. No card, nothing to cancel.</p>
       </div>
     );
@@ -40,7 +40,7 @@ export function TrialCard({ className }: { className?: string }) {
         }}
         className="btn-primary mt-4 w-full"
       >
-        {busy ? <Loader2 size={18} className="animate-spin" /> : <Sparkles size={18} />} Start my free week
+        {busy ? <Loader2 size={18} className="animate-spin" /> : <Gift size={18} />} Start my free week
       </button>
     </div>
   );

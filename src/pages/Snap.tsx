@@ -3,7 +3,7 @@ import { MenuFits } from '@/components/MenuFits';
 import { PHOTO_ONLY } from '@/lib/photoDiary';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, BookOpen, Check, ChevronRight, ImagePlus, Loader2, Mic, ScanBarcode, ScanLine, ScanText, RotateCcw, Search, Sparkles, X, Zap } from 'lucide-react';
+import { ArrowLeft, BookOpen, Check, ChevronRight, CircleCheck, Crown, Focus, ImagePlus, Loader2, Mic, RotateCcw, ScanBarcode, ScanLine, ScanSearch, ScanText, Search, X, Zap } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 import { useFoodDb, usePhotoUrl } from '@/lib/hooks';
 import { deletePhoto, getPhoto, savePhoto } from '@/lib/photos';
@@ -255,7 +255,7 @@ export default function Snap() {
         )}
         {phase === 'results' && (
           <span className="absolute left-3 top-3 flex items-center gap-1.5 rounded-full bg-black/55 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur-md">
-            <Sparkles size={13} /> {matches.length} {isMenu ? (matches.length === 1 ? 'dish on this menu' : 'dishes on this menu') : matches.length === 1 ? 'food' : 'foods'} found
+            <CircleCheck size={13} /> {matches.length} {isMenu ? (matches.length === 1 ? 'dish on this menu' : 'dishes on this menu') : matches.length === 1 ? 'food' : 'foods'} found
           </span>
         )}
       </div>
@@ -395,10 +395,10 @@ export default function Snap() {
 
       {phase === 'premium' && (
         <div className="card mt-5 p-5">
-          <p className="flex items-center gap-2 text-[17px] font-bold"><Sparkles size={18} className="text-accent" /> You’re out of AI scans</p>
+          <p className="flex items-center gap-2 text-[17px] font-bold"><ScanLine size={18} className="text-accent" /> You’re out of AI scans</p>
           <p className="mt-2 text-sm leading-relaxed text-silver">{error || 'AI scans come with Plus and Pro.'} Picking the food yourself is always free.</p>
           <div className="mt-4 grid gap-2">
-            <Link to="/premium" className="btn-primary"><Sparkles size={17} /> Upgrade to Plus — $4.99/month</Link>
+            <Link to="/premium" className="btn-primary"><Crown size={17} /> Upgrade to Plus — $4.99/month</Link>
             <Link to={manualUrl()} className="btn-ghost">Pick food manually</Link>
           </div>
         </div>
@@ -421,7 +421,7 @@ export default function Snap() {
           <p className="mt-1 text-sm text-silver">No numbers needed. If you’d like the nutrition for this meal, the AI can analyse it now.</p>
           <div className="mt-4 grid gap-2">
             <button onClick={back} className="btn-primary">Done</button>
-            <button onClick={() => { haptic(); void analyse(null, undefined, lastTry.current?.photoId); }} className="btn-ghost"><Sparkles size={17} /> Analyse it with AI</button>
+            <button onClick={() => { haptic(); void analyse(null, undefined, lastTry.current?.photoId); }} className="btn-ghost"><ScanSearch size={17} /> Analyse it with AI</button>
           </div>
         </div>
       )}
@@ -625,7 +625,7 @@ function Camera({ onClose, onCapture, mode, onMode, onBarcode }: { onClose: () =
 
       <div className="absolute inset-x-0 top-0 flex items-center justify-between px-5" style={{ paddingTop: 'max(env(safe-area-inset-top), 1.25rem)' }}>
         <button onClick={onClose} className="grid h-11 w-11 place-items-center rounded-full bg-black/45 backdrop-blur-md" aria-label="Close camera"><X size={20} /></button>
-        <span className="flex items-center gap-1.5 rounded-full bg-black/45 px-3.5 py-2 text-xs font-semibold backdrop-blur-md"><Sparkles size={13} /> {mode === 'label' ? 'Fit the nutrition table in the frame' : mode === 'menu' ? 'Fit the menu page in the frame' : 'Fit the whole plate in the frame'}</span>
+        <span className="flex items-center gap-1.5 rounded-full bg-black/45 px-3.5 py-2 text-xs font-semibold backdrop-blur-md"><Focus size={13} /> {mode === 'label' ? 'Fit the nutrition table in the frame' : mode === 'menu' ? 'Fit the menu page in the frame' : 'Fit the whole plate in the frame'}</span>
         {torch.supported ? (
           <button onClick={() => void toggleTorch()} className={cx('grid h-11 w-11 place-items-center rounded-full backdrop-blur-md', torch.on ? 'bg-white text-black' : 'bg-black/45')} aria-label={torch.on ? 'Turn flash off' : 'Turn flash on'} aria-pressed={torch.on}><Zap size={19} /></button>
         ) : <span className="w-11" />}
