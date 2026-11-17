@@ -1,10 +1,10 @@
 import { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { CalendarDays, ChevronRight, Images, Search } from 'lucide-react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { CalendarDays, ChevronLeft, ChevronRight, Images, Search } from 'lucide-react';
 import { useStore, goalOn } from '@/store/useStore';
 import { useFoodLookup, usePhotoUrl } from '@/lib/hooks';
 import { sumEntries, nutrientsFor } from '@/lib/nutrition';
-import { formatDay, relativeDay, todayKey } from '@/lib/dates';
+import { addDays, formatDay, fromKey, relativeDay, toKey, todayKey } from '@/lib/dates';
 import { splitName } from '@/lib/foods';
 import type { LogEntry } from '@/lib/types';
 import { Empty, PageHeader, Ring, Segmented, cx, fmt } from '@/components/ui';
@@ -12,11 +12,12 @@ import { FoodSheet } from '@/components/FoodSheet';
 import { entryAsFood } from './Today';
 
 export default function History() {
-  const [view, setView] = useState<'days' | 'photos'>('days');
+  const [params] = useSearchParams();
+  const [view, setView] = useState<'calendar' | 'days' | 'photos'>(params.get('view') === 'days' ? 'days' : params.get('view') === 'photos' ? 'photos' : 'calendar');
   const [q, setQ] = useState('');
   return (
     <div className="animate-fade-up">
-      <PageHeader title="History" right={<Segmented value={view} onChange={setView} options={[{ value: 'days', label: 'Days' }, { value: 'photos', label: 'Photos' }]} />} />
+      <PageHeader title="History" right={<Segmented value={view} onChange={setView} options={[{ value: 'calendar', label: 'Calendar' }, { value: 'days', label: 'Days' }, { value: 'photos', label: 'Photos' }]} />} />
       {view === 'days' && (
         <div className="relative mb-5">
           <Search size={18} strokeWidth={2.4} className="absolute left-5 top-1/2 -translate-y-1/2" />
@@ -29,8 +30,65 @@ export default function History() {
           />
         </div>
       )}
-      {view === 'days' ? <Days query={q} /> : <Photos />}
+      {view === 'calendar' ? <MonthCalendar /> : view === 'days' ? <Days query={q} /> : <Photos />}
     </div>
+  );
+}
+
+/**
+ * The whole month at a glance: each day shows how close protein came to the goal; days ahead
+ * show a dot when meals are planned. Tap any day (up to four weeks ahead) to open it.
+ */
+function MonthCalendar() {
+  const entries = useStore((s) => s.entries);
+  const goalHistory = useStore((s) => s.goalHistory);
+  const profile = useStore((s) => s.profile);
+  const nav = useNavigate();
+  const today = todayKey();
+  const limit = addDays(today, 28);
+  const [month, setMonth] = useState(() => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), 1); });
+  const byDay = useMemo(() => {
+    const m = new Map<string, LogEntry[]>();
+    for (const e of entries) m.set(e.date, [...(m.get(e.date) ?? []), e]);
+    return m;
+  }, [entries]);
+  const first = toKey(month);
+  const lead = (month.getDay() + 6) % 7; // Monday first
+  const daysIn = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
+  const cells: (string | null)[] = [...Array(lead).fill(null), ...Array.from({ length: daysIn }, (_, i) => addDays(first, i))];
+  const shift = (n: number) => setMonth((m) => new Date(m.getFullYear(), m.getMonth() + n, 1));
+  const canNext = toKey(new Date(month.getFullYear(), month.getMonth() + 1, 1)) <= limit;
+  return (
+    <section className="card p-4">
+      <div className="mb-3 flex items-center justify-between">
+        <button onClick={() => shift(-1)} className="grid h-10 w-10 place-items-center rounded-full bg-raised" aria-label="Previous month"><ChevronLeft size={18} /></button>
+        <p className="text-[17px] font-bold">{month.toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}</p>
+        <button onClick={() => canNext && shift(1)} disabled={!canNext} className="grid h-10 w-10 place-items-center rounded-full bg-raised disabled:opacity-30" aria-label="Next month"><ChevronRight size={18} /></button>
+      </div>
+      <div className="grid grid-cols-7 gap-y-2 text-center">
+        {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((d, i) => <span key={i} className="text-[12px] font-semibold text-dim">{d}</span>)}
+        {cells.map((d, i) => {
+          if (!d) return <span key={`x${i}`} />;
+          const list = byDay.get(d) ?? [];
+          const eaten = list.filter((e) => !e.planned);
+          const g = goalOn(d, goalHistory, profile);
+          const v = g ? sumEntries(eaten).protein / g : 0;
+          const future = d > today;
+          const planned = list.some((e) => e.planned);
+          const isToday = d === today;
+          const tooFar = d > limit;
+          return (
+            <button key={d} disabled={tooFar} onClick={() => nav(d === today ? '/' : `/?date=${d}`)} className="relative mx-auto grid place-items-center disabled:opacity-30" aria-label={`${formatDay(d, { weekday: 'long', day: 'numeric', month: 'long' })}${isToday ? ' (today)' : ''}`}>
+              <Ring value={future ? 0 : v} size={40} stroke={3} dashed={future || !eaten.length} color={v >= 1 ? 'accent' : 'ink'} track="line">
+                <span className={cx('num grid h-[30px] w-[30px] place-items-center rounded-full text-[14px] font-bold', isToday ? 'bg-primary text-on-primary' : future ? 'text-silver' : 'text-ink')}>{fromKey(d).getDate()}</span>
+              </Ring>
+              {planned && <span className="absolute -bottom-1 h-1.5 w-1.5 rounded-full bg-accent" aria-hidden />}
+            </button>
+          );
+        })}
+      </div>
+      <p className="mt-4 text-center text-[13px] text-silver">Tap a day to see it. Days ahead let you plan meals; a dot means meals are planned.</p>
+    </section>
   );
 }
 

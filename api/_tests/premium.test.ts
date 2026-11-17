@@ -236,16 +236,15 @@ describe('plan limits (quota)', () => {
     if (!back.ok) expect(back.body).toMatchObject({ renew: true, tier: 'free' });
   });
 
-  it('gives Plus the workout guide and recipes, but keeps eating plans for Pro', async () => {
+  it('gives Plus the workout guide, recipes and meal plans (capped), with unlimited plans on Pro', async () => {
     const { gate } = await import('../_lib/quota.js');
     fakeSupabase({});
     expect((await gate(call({}, 'jwt'), 'workout')).ok).toBe(false); // free
     const plus = signPass({ email: 'me@example.com', cid: 1, plan: 'PLN_month', tier: 'plus', exp: Date.now() + 86400e3 });
     expect(await gate(call({}, 'jwt', plus), 'workout')).toMatchObject({ ok: true, tier: 'plus' });
     expect(await gate(call({}, 'jwt', plus), 'recipe')).toMatchObject({ ok: true, tier: 'plus' });
-    const plan = await gate(call({}, 'jwt', plus), 'plan');
-    expect(plan.ok).toBe(false);
-    if (!plan.ok) expect(plan.body.error).toMatch(/Pro/);
+    expect(await gate(call({}, 'jwt', plus), 'plan')).toMatchObject({ ok: true, tier: 'plus', limit: 30 });
+    expect(await gate(call({}, 'jwt', plus), 'ideas')).toMatchObject({ ok: true, tier: 'plus' });
   });
 
   it('lets admins test without limits', async () => {

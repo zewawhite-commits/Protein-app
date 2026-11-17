@@ -10,7 +10,7 @@ export function PlanBadge({ needs, what }: { needs: 'plus' | 'pro'; what: string
   return (
     <Link to={`/premium?tier=${needs}`} className="flex items-center gap-3 rounded-[22px] bg-accent/10 px-4 py-3 text-accent transition active:scale-[.99]">
       <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-accent/15"><Lock size={16} /></span>
-      <span className="min-w-0 flex-1 text-[14px] font-semibold leading-snug">{what} {needs === 'pro' ? 'come' : 'comes'} with {name}</span>
+      <span className="min-w-0 flex-1 text-[14px] font-semibold leading-snug">{what}<span className="block text-xs font-medium opacity-80">Included with {name}</span></span>
       <span className="shrink-0 rounded-full bg-accent px-3 py-1.5 text-xs font-bold text-white">Get {name}</span>
     </Link>
   );

@@ -14,14 +14,14 @@ import { Segmented, cx } from '@/components/ui';
 /** Planned prices, shown until live plans load from the payment provider (which sets the real charge). */
 const PREVIEW = [
   { tier: null, name: 'Free', perks: ['Calories, macros & 18,000+ foods', 'Barcode, exercise, progress & feed', '3 AI scans + 5 coach messages a month'], best: false },
-  { tier: 'plus' as Tier, name: 'Plus', perks: ['Unlimited AI photo scans & describe', 'Unlimited AI coach chat', 'AI workout guide for your week', 'AI recipes with full nutrition'], best: true },
-  { tier: 'pro' as Tier, name: 'Pro', perks: ['Everything in Plus', 'AI eating plans built for you', 'AI meal ideas from your cuisines'], best: false },
+  { tier: 'plus' as Tier, name: 'Plus', perks: ['Unlimited AI food scans', 'AI nutrition coach', 'Personalized meal plans', 'Daily meal suggestions', 'AI recipes with full nutrition', 'AI workout guides', 'Adjusts to your cuisine & diet'], best: true },
+  { tier: 'pro' as Tier, name: 'Pro', perks: ['Everything in Plus', 'Advanced weekly & monthly meal planning', 'Plans adjust automatically to your progress', 'Advanced micronutrient analysis', 'Detailed nutrition reports', 'Advanced recommendations', 'Smarter, more personal AI coach'], best: false },
 ];
 
 const TIER_INFO: Record<'free' | Tier, { name: string; perks: string[] }> = {
   free: { name: 'Free', perks: ['18,000+ foods, barcode, exercise & progress', 'Feed and groups', '3 AI scans + 5 coach messages a month'] },
-  plus: { name: 'Plus', perks: ['Unlimited AI photo scans & describe', 'Unlimited AI coach chat', 'AI workout guide for your week', 'AI recipes with full nutrition'] },
-  pro: { name: 'Pro', perks: ['Everything in Plus', 'AI eating plans built for you', 'AI meal ideas from your cuisines'] },
+  plus: { name: 'Plus', perks: ['Unlimited AI food scans', 'AI nutrition coach', 'Personalized meal plans', 'Daily meal suggestions', 'AI recipes with full nutrition', 'AI workout guides', 'Adjusts to your cuisine & diet'] },
+  pro: { name: 'Pro', perks: ['Everything in Plus', 'Advanced weekly & monthly meal planning', 'Plans adjust automatically to your progress', 'Advanced micronutrient analysis', 'Detailed nutrition reports', 'Advanced recommendations', 'Smarter, more personal AI coach'] },
 };
 
 type Billing = 'monthly' | 'yearly';
@@ -38,6 +38,8 @@ export default function Premium() {
   const [email, setEmail] = useState(premium?.email ?? '');
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ tone: 'ok' | 'err'; text: string } | null>(null);
+  // After paying: a welcome page (also reachable again at /premium?welcome=1 while subscribed).
+  const [welcome, setWelcome] = useState<Tier | null>(() => (new URLSearchParams(location.search).has('welcome') && active ? (premium!.tier === 'pro' ? 'pro' : 'plus') : null));
   const [restoring, setRestoring] = useState(() => new URLSearchParams(location.search).get('restore') === '1');
   const [ref, setRef] = useState('');
   const handled = useRef(false);
@@ -56,7 +58,7 @@ export default function Premium() {
     handled.current = true;
     setBusy(true);
     activate({ reference })
-      .then((p) => setMsg({ tone: 'ok', text: `Welcome to ${p.tier === 'pro' ? 'Pro' : 'Plus'}! Photo recognition is now on.` }))
+      .then((p) => setWelcome(p.tier === 'pro' ? 'pro' : 'plus'))
       .catch((e: Error) => setMsg({ tone: 'err', text: e.message }))
       .finally(() => {
         setBusy(false);
@@ -85,6 +87,8 @@ export default function Premium() {
   const needsAccount = !!catalog?.accountRequired && !session;
   const validEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
 
+  if (welcome) return <Welcome tier={welcome} onDone={() => { setWelcome(null); nav('/'); }} />;
+
   return (
     <div className="mx-auto min-h-dvh max-w-lg animate-fade-up px-5 md:max-w-2xl md:px-8 pb-12">
       <header className="pt-safe pb-4">
@@ -103,8 +107,6 @@ export default function Premium() {
         <p className="mx-auto mt-2 max-w-sm text-[15px] text-silver">Snap any meal, chat with your AI coach, and get workout guides, recipes and eating plans built for you. Nutrition numbers always come from real food records.</p>
       </div>
 
-      <p className="mt-4 rounded-2xl bg-accent/10 px-4 py-3 text-center text-sm font-semibold text-accent">Our promise: what’s free today stays free. No ads, ever.</p>
-
       {msg && <p className={cx('mt-4 rounded-2xl px-4 py-3 text-sm font-medium', msg.tone === 'ok' ? 'bg-accent/10 text-accent' : 'bg-danger/10 text-danger')}>{msg.text}</p>}
 
       {active ? (
@@ -112,7 +114,7 @@ export default function Premium() {
           <p className="flex items-center gap-2 font-semibold"><Check size={18} className="text-accent" strokeWidth={3} /> You’re on {premium!.tier === 'pro' ? 'Pro' : 'Plus'}</p>
           <p className="mt-1 text-sm text-silver">
             {premium!.email} · renews or ends around {new Date(premium!.exp).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}
-            {' · '}Unlimited AI scans, coach, workouts & recipes{premium!.tier === 'pro' && ', eating plans & meal ideas'}
+            {' · '}AI scans, coach, meal plans, recipes & workouts{premium!.tier === 'pro' && ', plus advanced planning, reports & a smarter coach'}
           </p>
           <div className="mt-4 grid gap-2">
             <Link to="/snap" className="btn-primary"><Camera size={18} /> Snap a meal</Link>
@@ -251,5 +253,38 @@ function TierCard({ tier, selected, onClick, price, sub, badge, scans }: { tier:
         ))}
       </ul>
     </button>
+  );
+}
+
+/** Shown right after subscribing: what's unlocked, then how to share it on the feed. */
+function Welcome({ tier, onDone }: { tier: Tier; onDone: () => void }) {
+  const nav = useNavigate();
+  const name = tier === 'pro' ? 'Pro' : 'Plus';
+  const perks = TIER_INFO[tier].perks.filter((p) => !p.startsWith('Everything'));
+  return (
+    <div className="animate-fade-up pb-10 pt-8">
+      <div className="text-center">
+        <span className="mx-auto grid h-20 w-20 place-items-center rounded-full bg-accent text-white"><Check size={40} strokeWidth={3} /></span>
+        <h1 className="mt-5 text-[30px] font-extrabold leading-tight tracking-tight">Welcome to {name}!</h1>
+        <p className="mx-auto mt-2 max-w-sm text-[15px] text-silver">Everything below is switched on for your account, on every device you sign in to.</p>
+      </div>
+      <div className="card mt-6 space-y-3 p-5">
+        {tier === 'pro' && <p className="flex items-center gap-3 text-[15px] font-semibold"><Check size={18} className="shrink-0 text-accent" strokeWidth={3} /> Everything in Plus</p>}
+        {perks.map((p) => <p key={p} className="flex items-center gap-3 text-[15px] font-semibold"><Check size={18} className="shrink-0 text-accent" strokeWidth={3} /> {p}</p>)}
+      </div>
+      <div className="card mt-4 p-5">
+        <p className="text-[17px] font-bold">Share it on the feed</p>
+        <ol className="mt-3 space-y-2.5 text-[15px] text-silver">
+          <li><b className="text-ink">1.</b> Tap <b className="text-ink">Share on the feed</b> below — we’ve written a post for you.</li>
+          <li><b className="text-ink">2.</b> Change the title or words if you like, and add a photo or today’s meal.</li>
+          <li><b className="text-ink">3.</b> Tap <b className="text-ink">Post</b>. Friends can react, comment and cheer you on.</li>
+        </ol>
+        <button onClick={() => nav(`/feed?post=${encodeURIComponent(`Just joined Nutivili AI ${name}`)}&text=${encodeURIComponent('Starting my goal today — wish me luck! 💪')}`)} className="btn-primary mt-4 w-full">Share on the feed</button>
+      </div>
+      <div className="mt-4 grid gap-2">
+        <Link to="/snap" className="btn-ghost"><Camera size={18} /> Snap your first meal</Link>
+        <button onClick={onDone} className="h-11 text-sm font-semibold text-silver">Go to home</button>
+      </div>
+    </div>
   );
 }

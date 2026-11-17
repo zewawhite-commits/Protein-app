@@ -17,7 +17,8 @@ import { dailyTargets, weeksToGoal } from '@/lib/energy';
 import type { ActivityLevel, Diet, FitnessGoal } from '@/lib/types';
 import { Segmented, cx, fmt } from '@/components/ui';
 import { plannedPrice } from '@/lib/premium';
-import { BrandName, haptic } from '@/components/fx';
+import { BrandName, haptic, toast } from '@/components/fx';
+import { DEFAULT_REMINDERS } from '@/components/Notifications';
 
 type Option<T> = { value: T; label: string; sub: string; icon: typeof Dumbbell };
 
@@ -45,8 +46,8 @@ const OBSTACLES = ['Lack of consistency', 'Busy schedule', 'Unhealthy eating hab
 
 const PLAN_CHOICES = [
   { tier: 'free' as const, name: 'Free', badge: '', perks: ['Calories, macros & 18,000+ foods', 'Barcode, exercise, progress & feed', '3 AI scans + 5 coach messages a month'] },
-  { tier: 'plus' as const, name: 'Plus', badge: 'Most popular', perks: ['Unlimited AI photo scans & coach', 'AI workout guide for your week', 'AI recipes with full nutrition'] },
-  { tier: 'pro' as const, name: 'Pro', badge: '', perks: ['Everything in Plus', 'AI eating plans built for you', 'AI meal ideas from your cuisines'] },
+  { tier: 'plus' as const, name: 'Plus', badge: 'Most popular', perks: ['Unlimited AI food scans', 'AI nutrition coach', 'Personalized meal plans', 'Daily meal suggestions', 'AI recipes with full nutrition', 'AI workout guides', 'Adjusts to your cuisine & diet'] },
+  { tier: 'pro' as const, name: 'Pro', badge: '', perks: ['Everything in Plus', 'Advanced weekly & monthly meal planning', 'Plans adjust automatically to your progress', 'Advanced micronutrient analysis', 'Detailed nutrition reports', 'Advanced recommendations', 'Smarter, more personal AI coach'] },
 ];
 
 export default function Onboarding() {
@@ -102,8 +103,10 @@ export default function Onboarding() {
   const [hasCoach, setHasCoach] = useState<boolean>();
   const [kcalOverride, setKcalOverride] = useState<number>();
   const [proteinOverride, setProteinOverride] = useState<number>();
-  const wantsChange = goals.includes('fatloss') || goals.includes('muscle');
-  const flow = ['welcome', 'goals', 'activity', 'training', 'diet', 'cuisines', 'about', ...(wantsChange ? ['goalweight'] : []), 'obstacles', 'coach', 'notify', 'plan', 'choose'];
+  // Lose, gain or stay: asked after height and weight so we can show their healthy range.
+  const [direction, setDirection] = useState<'lose' | 'gain' | 'maintain'>();
+  const wantsChange = direction ? direction !== 'maintain' : goals.includes('fatloss') || goals.includes('muscle');
+  const flow = ['welcome', 'goals', 'activity', 'training', 'diet', 'cuisines', 'about', 'direction', ...(wantsChange ? ['goalweight'] : []), 'obstacles', 'coach', 'notify', 'plan', 'choose'];
   const at = flow[step];
   const STEPS = flow.length;
   const next = () => setStep((s) => Math.min(STEPS - 1, s + 1));
@@ -113,6 +116,8 @@ export default function Onboarding() {
   // Don't set a target below a healthy weight for their height (BMI 18.5).
   const minHealthyKg = heightOk && heightNum ? 18.5 * (heightNum / 100) ** 2 : undefined;
   const goalTooLow = !!(goalWeightRaw && minHealthyKg && goalWeightRaw < minHealthyKg - 0.05);
+  const healthy: [number, number] | undefined = minHealthyKg ? [minHealthyKg, 24.9 * (heightNum / 100) ** 2] : undefined;
+  const bmi = weightKg && heightOk ? weightKg / (heightNum / 100) ** 2 : undefined;
   const goalWeightKg = goalTooLow ? undefined : goalWeightRaw;
   const losing = goalWeightKg != null && weightKg != null && goalWeightKg < weightKg;
 
@@ -310,10 +315,30 @@ export default function Onboarding() {
             <button onClick={() => { setGPerKg(suggestGramsPerKg(primaryGoal(goals.length ? goals : ['health'], activity ?? 'active'), activity ?? 'active', person)); next(); }} disabled={!weightKg || !age || !ageOk || !heightOk} className="btn-primary mt-6 w-full">{!weightKg || !age || !heightOk ? 'Add age, height and weight' : 'Continue'}</button>
           </Question>
         )}
+        {at === 'direction' && (
+          <Question title="Do you want to lose or gain weight?" sub="Here’s the healthy weight range for your height.">
+            {healthy && weightKg && (
+              <div className="card mb-1 p-5">
+                <p className="text-sm font-semibold text-silver">Healthy weight for {unit === 'kg' ? `${Math.round(heightNum)} cm` : `${Math.floor(heightNum / 2.54 / 12)} ft ${Math.round((heightNum / 2.54) % 12)} in`}</p>
+                <p className="num mt-1 text-[26px] font-extrabold tracking-tight">{fmt(fromKg(healthy[0], unit), 0)}–{fmt(fromKg(healthy[1], unit), 0)} <span className="text-lg text-silver">{unit}</span></p>
+                <p className="mt-2 text-sm leading-relaxed text-silver">
+                  You weigh <b className="text-ink">{fmt(fromKg(weightKg, unit), 1)} {unit}</b> (BMI {fmt(bmi!, 1)}).{' '}
+                  {weightKg < healthy[0] ? 'That’s below the healthy range, so gaining a little is a good idea.' : weightKg > healthy[1] ? `Getting to about ${fmt(fromKg(healthy[1], unit), 0)} ${unit} would put you in the healthy range.` : 'That’s within the healthy range.'}
+                </p>
+                <p className="mt-2 text-xs text-dim">Based on BMI 18.5–24.9. It doesn’t account for muscle, so athletes can be healthy above it.</p>
+              </div>
+            )}
+            {([
+              { value: 'lose' as const, label: 'Lose weight', sub: 'A steady calorie deficit', icon: Flame },
+              { value: 'gain' as const, label: 'Gain weight', sub: 'A small surplus, ideally muscle', icon: Dumbbell },
+              { value: 'maintain' as const, label: 'Stay where I am', sub: 'Eat to maintain', icon: Scale },
+            ]).map((o) => <Choice key={o.value} option={o} selected={direction === o.value} onClick={() => { setDirection(o.value); if (o.value === 'maintain') setGoalWeight(''); next(); }} />)}
+          </Question>
+        )}
         {at === 'goalweight' && (
           <Question title="What’s your goal weight?" sub="We’ll pace your calories so you get there steadily.">
             <div className="relative">
-              <input id="ob-goalweight" className="field !h-20 pr-16 text-center text-[34px] font-extrabold" inputMode="decimal" maxLength={5} value={goalWeight} onChange={(e) => setGoalWeight(e.target.value.replace(/[^\d.,]/g, ''))} placeholder={weightKg ? String(round1(fromKg(weightKg * (goals.includes('fatloss') ? 0.92 : 1.05), unit))) : unit === 'kg' ? '70' : '155'} />
+              <input id="ob-goalweight" className="field !h-20 pr-16 text-center text-[34px] font-extrabold" inputMode="decimal" maxLength={5} value={goalWeight} onChange={(e) => setGoalWeight(e.target.value.replace(/[^\d.,]/g, ''))} placeholder={weightKg ? String(round1(fromKg(weightKg * ((direction ? direction === 'lose' : goals.includes('fatloss')) ? 0.92 : 1.05), unit))) : unit === 'kg' ? '70' : '155'} />
               <span className="pointer-events-none absolute right-6 top-1/2 -translate-y-1/2 text-xl font-semibold text-silver">{unit}</span>
             </div>
             {goalTooLow && minHealthyKg && (
@@ -442,7 +467,7 @@ export default function Onboarding() {
             {planChoice !== 'free' && (
               <button onClick={() => { haptic(); finish(); }} className="mt-2 h-11 w-full text-sm font-semibold text-silver">Not now — start free</button>
             )}
-            <p className="mt-1 text-center text-xs text-dim">No card needed for Free. What’s free today stays free — upgrade only if you want more AI.</p>
+            <p className="mt-1 text-center text-xs text-dim">No card needed for Free. Upgrade any time for more AI.</p>
           </Question>
         )}
       </div>
@@ -584,15 +609,18 @@ function Welcome({ signedIn, email, onStart }: { signedIn: boolean; email?: stri
 }
 
 
-/** Turn on meal reminders from onboarding (asks the browser for permission). */
+/**
+ * Turn on meal reminders from onboarding. The reminders are switched on in the app either
+ * way (they show in the bell); the phone asks once for permission to send them as alerts.
+ */
 async function enableReminders() {
+  const st = useStore.getState();
+  const current = st.settings.reminders ?? DEFAULT_REMINDERS;
+  st.updateSettings({ reminders: { ...current, enabled: true } });
   try {
-    if (!('Notification' in window)) return;
+    if (!('Notification' in window)) { toast('Reminders on. For phone alerts, add Nutivili AI to your home screen.'); return; }
     const perm = Notification.permission === 'granted' ? 'granted' : await Notification.requestPermission();
-    if (perm === 'granted') {
-      const st = useStore.getState();
-      st.updateSettings({ reminders: { enabled: true, breakfast: '09:30', lunch: '14:00', dinner: '20:00' } });
-    }
+    toast(perm === 'granted' ? 'Meal reminders on' : 'Reminders on in the app. To get phone alerts, allow notifications in your settings.');
   } catch { /* not supported */ }
 }
 

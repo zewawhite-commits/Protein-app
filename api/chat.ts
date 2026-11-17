@@ -31,7 +31,7 @@ export async function POST(request: Request): Promise<Response> {
     if (!scan.ok) return json({ ...scan.body, error: `${scan.body.error} You can still chat without photos.` }, scan.status);
   }
   try {
-    return json({ ...(await coachWithClient(new Anthropic(), turns, cleanContext(body?.context), image)), quota: { left: coach.left, limit: coach.limit, tier: coach.tier } });
+    return json({ ...(await coachWithClient(new Anthropic(), turns, cleanContext(body?.context), image, { pro: coach.tier === 'pro' || coach.tier === 'trial' })), quota: { left: coach.left, limit: coach.limit, tier: coach.tier } });
   } catch (e) {
     if (e instanceof Anthropic.RateLimitError) return json({ error: 'Busy — try again in a moment.' }, 429);
     if (e instanceof Anthropic.APIError) console.error('[ai]', e.status, e.message);

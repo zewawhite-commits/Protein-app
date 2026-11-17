@@ -14,7 +14,7 @@ import { deletePhoto, savePhoto } from '@/lib/photos';
 import { useFoodDb, usePhotoUrl, useDay } from '@/lib/hooks';
 import { useStore } from '@/store/useStore';
 import { AllergyBanner } from './Allergy';
-import { mealForNow, todayKey } from '@/lib/dates';
+import { fromKey, mealForNow, todayKey } from '@/lib/dates';
 import { Ring, Segmented, Sheet, StateBadge, cx, fmt } from './ui';
 import { FoodVisual } from './FoodIcon';
 import { CountUp, haptic, toast } from './fx';
@@ -66,6 +66,8 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
   const rememberFood = useStore((s) => s.rememberFood);
   const { db } = useFoodDb();
   const day = useDay(date);
+  // A day still to come: food is planned, not logged (it counts once marked eaten).
+  const isFuture = date > todayKey();
 
   // The weight is always what the user enters; nothing is pre-filled for a new entry.
   // The amount typed, in the chosen unit; nutrition always uses grams.
@@ -136,16 +138,17 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
     savedRef.current = true;
     addEntry({ date, meal, food, grams: round1(g), photoId, planned: true });
     haptic(12);
-    toast('Planned — it counts once you mark it eaten');
+    toast(isFuture ? `Planned for ${fromKey(date).toLocaleDateString(undefined, { weekday: 'long' })} — mark it eaten on the day` : 'Planned — it counts once you mark it eaten');
     onSaved?.();
     onClose();
   }
 
   function save() {
     if (g <= 0) { inputRef.current?.focus(); return; }
+    if (!entry && isFuture) { planForLater(); return; }
     savedRef.current = true;
     const crossesGoal = day.goal > 0 && before + (entry ? nutrientsFor(entry.food.per100, entry.grams).protein : 0) < day.goal && after >= day.goal;
-    if (entry) updateEntry(entry.id, { grams: round1(g), meal, photoId, ...(entry.planned ? { planned: false } : {}), ...(moveTo && moveTo !== entry.date ? { date: moveTo } : {}), ...(entry.note?.startsWith('Portion estimated') && round1(g) !== entry.grams ? { note: 'Weight set by you' } : {}) });
+    if (entry) updateEntry(entry.id, { grams: round1(g), meal, photoId, ...(entry.planned && !isFuture ? { planned: false } : {}), ...(moveTo && moveTo !== entry.date ? { date: moveTo } : {}), ...(entry.note?.startsWith('Portion estimated') && round1(g) !== entry.grams ? { note: 'Weight set by you' } : {}) });
     else {
       // Same food on the same day in the last 2 minutes: probably a double tap, so say so and offer undo.
       const dup = useStore.getState().entries.some((e) => e.date === date && e.foodId === food.id && Date.now() - e.loggedAt < 120_000);
@@ -382,7 +385,7 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
         )}
       </div>
 
-      {!entry && g > 0 && (
+      {!entry && g > 0 && !isFuture && (
         <button onClick={planForLater} className="w-full text-center text-[14px] font-semibold text-silver">Plan for later — don’t count it yet</button>
       )}
       <div className="flex gap-2 pt-1">
@@ -421,7 +424,7 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
           </button>
         )}
         <button onClick={save} disabled={g <= 0 || busy} className="btn-primary flex-1">
-          {entry ? (entry.planned ? 'Mark as eaten' : 'Save changes') : g > 0 ? `Add to ${MEALS.find((m) => m.value === meal)?.label ?? 'log'}${n.kcal != null ? ` · ${fmt(n.kcal)} kcal` : ''}` : 'Enter the weight first'}
+          {entry ? (entry.planned ? (isFuture ? 'Save plan' : 'Mark as eaten') : 'Save changes') : isFuture ? (g > 0 ? `Plan for ${fromKey(date).toLocaleDateString(undefined, { weekday: 'long' })}` : 'Enter the weight first') : g > 0 ? `Add to ${MEALS.find((m) => m.value === meal)?.label ?? 'log'}${n.kcal != null ? ` · ${fmt(n.kcal)} kcal` : ''}` : 'Enter the weight first'}
         </button>
       </div>
     </div>

@@ -1,3 +1,4 @@
+import { ProOnly } from '@/components/ProOnly';
 import { EatingPatterns, NutrientGaps, TargetCheck } from '@/components/NutritionInsights';
 import { useMemo, useState } from 'react';
 import { BarChart3 } from 'lucide-react';
@@ -78,11 +79,11 @@ export default function Insights() {
       <div className="mb-6 space-y-4">
         <WeightAndStreak />
         <WeightChart />
-        <SmartTarget />
+        <ProOnly what="Targets that adjust automatically to your progress"><SmartTarget /></ProOnly>
         <BeyondTheScale />
         <TargetCheck />
-        <NutrientGaps />
-        <EatingPatterns />
+        <ProOnly what="Advanced micronutrient analysis"><NutrientGaps /></ProOnly>
+        <ProOnly what="Detailed eating-pattern reports"><EatingPatterns /></ProOnly>
         <ProgressPhotos />
         <AverageCalories />
       </div>

@@ -7,7 +7,7 @@ import { inviteLink, startTrial, useFreePro } from '@/lib/perks';
 import { haptic, toast } from './fx';
 import { cx } from './ui';
 
-/** "Try Pro free for 7 days" — once per account, no card. Hidden when it doesn't apply. */
+/** "Try Pro free for 3 days" — once per account, no card. Hidden when it doesn't apply. */
 export function TrialCard({ className }: { className?: string }) {
   const session = useSession();
   const perks = useStore((s) => s.perks);
@@ -28,8 +28,8 @@ export function TrialCard({ className }: { className?: string }) {
   if (!session || !perks || perks.trialUsed) return null;
   return (
     <div className={cx('card p-5', className)}>
-      <p className="text-[17px] font-bold">Try Pro free for 7 days</p>
-      <p className="mt-1 text-[14px] leading-relaxed text-silver">Every Pro feature — AI scans, coach, workouts, recipes, eating plans and meal ideas. No card needed, and it simply ends after 7 days; nothing renews.</p>
+      <p className="text-[17px] font-bold">Try Pro free for 3 days</p>
+      <p className="mt-1 text-[14px] leading-relaxed text-silver">Every Pro feature — AI scans, coach, workouts, recipes, eating plans and meal ideas. No card needed, and it simply ends after 3 days; nothing renews.</p>
       <button
         disabled={busy}
         onClick={async () => {

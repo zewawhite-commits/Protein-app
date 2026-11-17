@@ -17,7 +17,7 @@ describe('free Pro time', () => {
   it('trial is 7 days, once; invited friends get 14', () => {
     const fresh = perksFrom({});
     const t = planTrial(fresh, now);
-    expect(t.ok && t.proUntil).toBe(now + 7 * DAY);
+    expect(t.ok && t.proUntil).toBe(now + 3 * DAY);
     expect(planTrial({ ...fresh, trialUsed: true }, now).ok).toBe(false);
     const inv = planTrial({ ...fresh, referredBy: 'x' }, now);
     expect(inv.ok && inv.days).toBe(14);

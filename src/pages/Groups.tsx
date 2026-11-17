@@ -504,17 +504,25 @@ function PostCard({ post, me, onReact, onOpen, onDelete, onAuthor }: { post: Pos
   );
 }
 
-function ShareSheet({ open, groupId, onClose, onShared }: { open: boolean; groupId: string; onClose: () => void; onShared: () => void }) {
+function ShareSheet({ open, groupId, onClose, onShared, initialTitle = '', initialText = '' }: { open: boolean; groupId: string; onClose: () => void; onShared: () => void; initialTitle?: string; initialText?: string }) {
   const { entries } = useDay(todayKey());
   const meals = (['breakfast', 'lunch', 'dinner', 'snack'] as Meal[]).filter((m) => entries.some((e) => e.meal === m));
   const [meal, setMeal] = useState<Meal | 'none'>('none');
   const [text, setText] = useState('');
+  const [title, setTitle] = useState('');
+  const [needTitle, setNeedTitle] = useState(false);
   const [photo, setPhoto] = useState<{ blob: Blob; url: string } | null>(null);
   const [busy, setBusy] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const titleRef = useRef<HTMLInputElement>(null);
+  // A ready-made post (e.g. "Just joined Pro"), still editable before posting.
+  useEffect(() => {
+    if (!open) return;
+    if (initialTitle) setTitle((t) => t || initialTitle);
+    if (initialText) setText((t) => t || initialText);
+  }, [open, initialTitle, initialText]);
   const items = meal === 'none' ? [] : entries.filter((e) => e.meal === meal);
   const t = sumEntries(items);
-  const mealTitle = items.map((e) => splitName(e.food.name).title).slice(0, 3).join(', ') + (items.length > 3 ? ` + ${items.length - 3} more` : '');
 
   async function pick(f?: File) {
     if (!f) return;
@@ -523,6 +531,9 @@ function ShareSheet({ open, groupId, onClose, onShared }: { open: boolean; group
   }
 
   async function share() {
+    const heading = title.trim();
+    // Every post needs a title, so the feed is easy to scan.
+    if (!heading) { setNeedTitle(true); haptic(); titleRef.current?.focus(); return; }
     setBusy(true);
     try {
       let img = photo?.blob;
@@ -531,13 +542,11 @@ function ShareSheet({ open, groupId, onClose, onShared }: { open: boolean; group
         const b = id ? await getPhoto(id) : undefined;
         if (b) img = await resizeImage(b, 1080);
       }
-      const words = text.trim();
-      const title = items.length ? mealTitle : words.split('\n')[0].slice(0, 120);
-      const caption = items.length ? words : words.slice(title.length).trim();
-      await sharePost({ groupId, title, caption, meal: items.length ? (meal as Meal) : undefined, ...(items.length ? { kcal: t.kcal, protein: t.protein, carbs: t.carbs, fat: t.fat } : {}), photo: img });
+      const caption = text.trim();
+      await sharePost({ groupId, title: heading.slice(0, 120), caption, meal: items.length ? (meal as Meal) : undefined, ...(items.length ? { kcal: t.kcal, protein: t.protein, carbs: t.carbs, fat: t.fat } : {}), photo: img });
       haptic([10, 30, 10]);
       toast('Posted');
-      setText(''); setMeal('none'); setPhoto(null);
+      setText(''); setTitle(''); setNeedTitle(false); setMeal('none'); setPhoto(null);
       onShared();
     } catch (e) {
       toast((e as Error).message);
@@ -546,10 +555,12 @@ function ShareSheet({ open, groupId, onClose, onShared }: { open: boolean; group
     }
   }
 
-  const canPost = !!text.trim() || items.length > 0 || !!photo;
+  const canPost = !!title.trim() || !!text.trim() || items.length > 0 || !!photo;
   return (
     <Sheet open={open} onClose={onClose} title="New post">
-      <textarea value={text} onChange={(e) => setText(e.target.value)} maxLength={600} rows={3} placeholder="What’s on your plate? Share a win, a meal or a tip…" className="field !h-auto resize-none py-3 text-[16px]" />
+      <input ref={titleRef} value={title} onChange={(e) => { setTitle(e.target.value); if (e.target.value.trim()) setNeedTitle(false); }} maxLength={120} aria-label="Title" placeholder="Title (e.g. Post-gym dinner)" className={cx('field text-[16px] font-semibold', needTitle && '!ring-2 !ring-danger')} />
+      {needTitle && <p className="mt-1.5 px-1 text-sm font-semibold text-danger" role="alert">Add a title before posting.</p>}
+      <textarea value={text} onChange={(e) => setText(e.target.value)} maxLength={600} rows={3} placeholder="What’s on your plate? Share a win, a meal or a tip…" className="field mt-3 !h-auto resize-none py-3 text-[16px]" />
       {photo ? (
         <div className="relative mt-3 overflow-hidden rounded-[22px]">
           <img src={photo.url} alt="" className="aspect-[4/3] w-full object-cover" />
@@ -562,7 +573,7 @@ function ShareSheet({ open, groupId, onClose, onShared }: { open: boolean; group
       <p className="label mt-5">Attach a meal from today</p>
       <div className="flex flex-wrap gap-2">
         {(['none', ...meals] as (Meal | 'none')[]).map((m) => (
-          <button key={m} onClick={() => setMeal(m)} className={cx('chip !h-10', meal === m && 'chip-on')}>{m === 'none' ? 'No meal' : MEAL_LABEL[m]}</button>
+          <button key={m} onClick={() => { setMeal(m); if (m !== 'none' && !title.trim()) { const list = entries.filter((e) => e.meal === m).map((e) => splitName(e.food.name).title); setTitle(list.slice(0, 3).join(', ') + (list.length > 3 ? ` + ${list.length - 3} more` : '')); setNeedTitle(false); } }} className={cx('chip !h-10', meal === m && 'chip-on')}>{m === 'none' ? 'No meal' : MEAL_LABEL[m]}</button>
         ))}
       </div>
       {items.length > 0 && (
@@ -769,6 +780,14 @@ function CommunityFeed() {
   const [posts, setPosts] = useState<Post[] | null>(null);
   const [me, setMe] = useState<string>();
   const [sharing, setSharing] = useState(false);
+  const [params, setParams] = useSearchParams();
+  // /feed?post=Title&text=… opens a new post with that filled in (used after subscribing).
+  const [draft] = useState(() => ({ title: params.get('post') ?? '', text: params.get('text') ?? '' }));
+  useEffect(() => {
+    if (!draft.title || !mine?.username) return;
+    setSharing(true);
+    setParams({}, { replace: true });
+  }, [draft.title, mine?.username, setParams]);
   const [openPost, setOpenPost] = useState<Post | null>(null);
   const [person, setPerson] = useState<{ id: string; profile: PublicProfile } | null>(null);
   const [error, setError] = useState('');
@@ -821,7 +840,7 @@ function CommunityFeed() {
           {posts.map((p) => <PostCard key={p.id} post={p} me={me} onAuthor={() => setPerson({ id: p.user_id, profile: p.author! })} onReact={(e) => react(p, e)} onOpen={() => setOpenPost(p)} onDelete={async () => { await deletePost(p); toast('Post deleted'); void load(); }} />)}
         </div>
       )}
-      <ShareSheet open={sharing} groupId={COMMUNITY_ID} onClose={() => setSharing(false)} onShared={() => { setSharing(false); void load(); }} />
+      <ShareSheet open={sharing} groupId={COMMUNITY_ID} initialTitle={draft.title} initialText={draft.text} onClose={() => setSharing(false)} onShared={() => { setSharing(false); void load(); }} />
       <CommentsSheet post={openPost} onClose={() => { setOpenPost(null); void load(); }} />
       <PersonSheet groupId={COMMUNITY_ID} person={person} me={me} onClose={() => setPerson(null)} onEdit={() => { setPerson(null); setEditing(true); }} />
     </>

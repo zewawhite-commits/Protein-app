@@ -3,8 +3,8 @@
  *
  *            scan  coach  workout  recipe  plan  ideas   (per calendar month, UTC)
  *   free       3      5      0        0      0     0
- *   plus      ∞      ∞      ∞        ∞      0     0     ∞ = unlimited (with a hidden fair-use cap against abuse)
- *   pro       ∞      ∞      ∞        ∞      ∞     ∞     Pro adds AI eating plans and AI meal ideas
+ *   plus      ∞      ∞      ∞        ∞     30     ∞     ∞ = unlimited (with a hidden fair-use cap against abuse)
+ *   pro       ∞      ∞      ∞        ∞      ∞     ∞     Pro: unlimited plans, smarter coach, advanced analysis & reports
  *   trial    60    100      4       15      3    30     free Pro time (trial, invite rewards): every Pro feature, capped
  *
  * Rules:
@@ -24,8 +24,8 @@ const FAIR_USE = 900;
 
 const DEFAULTS: Record<PlanTier, Record<Feature, number>> = {
   free: { scan: 3, coach: 5, workout: 0, recipe: 0, plan: 0, ideas: 0 },
-  plus: { scan: FAIR_USE, coach: FAIR_USE * 3, workout: FAIR_USE, recipe: FAIR_USE, plan: 0, ideas: 0 },
-  pro: { scan: FAIR_USE, coach: FAIR_USE * 3, workout: FAIR_USE, recipe: FAIR_USE, plan: 90, ideas: FAIR_USE },
+  plus: { scan: FAIR_USE, coach: FAIR_USE * 3, workout: FAIR_USE, recipe: FAIR_USE, plan: 30, ideas: FAIR_USE },
+  pro: { scan: FAIR_USE, coach: FAIR_USE * 3, workout: FAIR_USE, recipe: FAIR_USE, plan: FAIR_USE, ideas: FAIR_USE },
   trial: { scan: 60, coach: 100, workout: 4, recipe: 15, plan: 3, ideas: 30 },
 };
 
@@ -72,7 +72,7 @@ export async function gate(request: Request, feature: Feature, count = 1): Promi
 
   const limit = limitFor(tier, feature);
   if (limit <= 0) {
-    return { ok: false, status: 402, body: { error: `${NAMES[feature][0].toUpperCase()}${NAMES[feature].slice(1)} ${feature === 'plan' || feature === 'ideas' ? 'come with Pro.' : 'come with Plus and Pro.'}`, premium: true, feature, tier, renew: expired } };
+    return { ok: false, status: 402, body: { error: `${NAMES[feature][0].toUpperCase()}${NAMES[feature].slice(1)} come with Plus and Pro.`, premium: true, feature, tier, renew: expired } };
   }
   try {
     let left = 0;
@@ -82,7 +82,7 @@ export async function gate(request: Request, feature: Feature, count = 1): Promi
     }
     if (left < 0) {
       if (limit >= UNLIMITED) return { ok: false, status: 429, body: { error: 'You’ve hit the fair-use limit for this month. It resets on the 1st — contact support if you need more.', limitReached: true, feature, tier } };
-      return { ok: false, status: 402, body: { error: `You’ve used your ${limit} free ${NAMES[feature]} this month. Upgrade to Plus for unlimited.`, premium: true, limitReached: true, feature, tier } };
+      return { ok: false, status: 402, body: { error: tier === 'plus' ? `You’ve used your ${limit} ${NAMES[feature]} this month. Pro has unlimited.` : `You’ve used your ${limit} free ${NAMES[feature]} this month. Upgrade to Plus for unlimited.`, premium: true, limitReached: true, feature, tier } };
     }
     return { ok: true, tier, left, limit };
   } catch (e) {

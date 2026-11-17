@@ -130,7 +130,7 @@ export function Terms() {
 
       <H>Free trial and invites</H>
       <ul className="list-disc space-y-2 pl-5">
-        <li>Each person can have one free 7-day Pro trial. No card is needed and it ends on its own; nothing is charged when it ends.</li>
+        <li>Each person can have one free 3-day Pro trial. No card is needed and it ends on its own; nothing is charged when it ends.</li>
         <li>Friends who join with your invite link get 14 days of Pro free, and you get 7 days of Pro for each friend who joins, up to 10 friends. Invites are for real people; we may remove free time earned with fake or duplicate accounts.</li>
         <li>Free Pro time includes every Pro feature with monthly limits, has no cash value and can’t be exchanged or transferred.</li>
       </ul>
@@ -173,7 +173,7 @@ export function Refunds() {
       </ul>
 
       <H>Free trial and free Pro time</H>
-      <p>The 7-day Pro trial and Pro time from invites are free and need no card. They end automatically, so there’s nothing to cancel and nothing to refund.</p>
+      <p>The 3-day Pro trial and Pro time from invites are free and need no card. They end automatically, so there’s nothing to cancel and nothing to refund.</p>
 
       <H>Refunds</H>
       <ul className="list-disc space-y-2 pl-5">

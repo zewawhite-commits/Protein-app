@@ -102,17 +102,25 @@ export function contextText(c: CoachContext): string {
   ].join('\n');
 }
 
-export async function coachWithClient(client: Anthropic, turns: ChatTurn[], context: CoachContext, image?: ChatImage): Promise<CoachReply> {
+/** Model for the coach chat: quick replies matter more here than in photo recognition. */
+export const CHAT_MODEL = 'claude-sonnet-5-5';
+
+/** Pro members get the strongest model with more thinking: deeper, more personal coaching. */
+export const PRO_CHAT_MODEL = RECOGNITION_MODEL;
+const PRO_NOTE = 'This person is on Pro: give deeper, more personalised coaching — connect advice to their logged foods, trends and goal, and explain the why in a sentence.';
+
+export async function coachWithClient(client: Anthropic, turns: ChatTurn[], context: CoachContext, image?: ChatImage, opts: { pro?: boolean } = {}): Promise<CoachReply> {
   const response = await client.beta.messages.create({
-    model: RECOGNITION_MODEL,
-    max_tokens: 8000,
+    // Chat favours speed: a fast model and low effort keep replies to a few seconds. Pro gets a stronger model.
+    model: opts.pro ? PRO_CHAT_MODEL : CHAT_MODEL,
+    max_tokens: 3000,
     betas: ['server-side-fallback-2026-07-01'],
     fallbacks: 'default',
-    output_config: { effort: 'high', format: { type: 'json_schema', schema: SCHEMA as unknown as Record<string, unknown> } },
+    output_config: { effort: opts.pro ? 'medium' : 'low', format: { type: 'json_schema', schema: SCHEMA as unknown as Record<string, unknown> } },
     // Stable instructions first (cacheable), then this person's context.
     system: [
       { type: 'text', text: SYSTEM, cache_control: { type: 'ephemeral' } },
-      { type: 'text', text: contextText(context) },
+      { type: 'text', text: opts.pro ? `${contextText(context)}\n${PRO_NOTE}` : contextText(context) },
     ],
     // A photo goes with the latest user message only (earlier photos are not re-sent).
     messages: turns.map((t, i) =>

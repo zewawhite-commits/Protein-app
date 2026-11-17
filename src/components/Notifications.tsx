@@ -13,7 +13,7 @@ import { useGoalStats } from '@/pages/Today';
 
 const READ_KEY = 'provora-read';
 const readSet = (): string[] => { try { return JSON.parse(localStorage.getItem(READ_KEY) ?? '[]'); } catch { return []; } };
-const DEFAULT_REMINDERS: Reminders = { enabled: false, ...MEAL_TIMES };
+export const DEFAULT_REMINDERS: Reminders = { enabled: false, ...MEAL_TIMES };
 
 function useNudges(): Nudge[] {
   const date = todayKey();

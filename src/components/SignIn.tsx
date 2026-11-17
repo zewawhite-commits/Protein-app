@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
-import { resendSignupCode, signInWithEmail, signInWithGoogle, signInWithPassword, signUpWithPassword, verifyEmailCode, verifySignupCode } from '@/lib/account';
+import { cleanPhone, validPhone, resendSignupCode, signInWithEmail, signInWithGoogle, signInWithPassword, signUpWithPassword, verifyEmailCode, verifySignupCode } from '@/lib/account';
 import { GoogleIcon } from './BrandIcons';
 import { cx } from './ui';
 
@@ -18,6 +18,9 @@ export function EmailAuth({ start = 'signup', onBack }: { start?: 'signup' | 'lo
   const [step, setStep] = useState<Step>(start);
   const [email, setEmail] = useState('');
   const [pw, setPw] = useState('');
+  const [phone, setPhone] = useState('');
+  const tel = cleanPhone(phone);
+  const phoneOk = !phone.trim() || validPhone(tel);
   const [show, setShow] = useState(false);
   const [code, setCode] = useState('');
   const [busy, setBusy] = useState(false);
@@ -66,8 +69,8 @@ export function EmailAuth({ start = 'signup', onBack }: { start?: 'signup' | 'lo
   return (
     <form className="grid gap-2.5" onSubmit={(e) => {
       e.preventDefault();
-      if (busy || !validEmail(addr) || !pwOk) return;
-      if (signup) void run(() => signUpWithPassword(addr, pw), (r) => { if (r === 'confirm') go('confirm'); });
+      if (busy || !validEmail(addr) || !pwOk || (signup && !phoneOk)) return;
+      if (signup) void run(() => signUpWithPassword(addr, pw, phone.trim() ? tel : undefined), (r) => { if (r === 'confirm') go('confirm'); });
       else void run(() => signInWithPassword(addr, pw));
     }}>
       <p className="text-[19px] font-bold tracking-tight">{signup ? 'Create your account' : 'Welcome back'}</p>
@@ -79,8 +82,15 @@ export function EmailAuth({ start = 'signup', onBack }: { start?: 'signup' | 'lo
         </button>
       </div>
       {signup && pw.length > 0 && pw.length < MIN_PW && <p className="px-1 text-[13px] text-silver">{MIN_PW - pw.length} more character{MIN_PW - pw.length === 1 ? '' : 's'} to go</p>}
+      {signup && (
+        <>
+          <input type="tel" inputMode="tel" autoComplete="tel" aria-label="Phone number (optional)" className={cx('field', !phoneOk && '!ring-2 !ring-danger')} placeholder="Phone (optional), e.g. +234 801 234 5678" value={phone} onChange={(e) => setPhone(e.target.value)} />
+          {!phoneOk && <p className="px-1 text-[13px] text-danger">Start with + and your country code, e.g. +234 801 234 5678.</p>}
+          <p className="px-1 text-[13px] text-silver">We’ll email you a code to confirm your email.</p>
+        </>
+      )}
       {messages}
-      <button type="submit" disabled={busy || !validEmail(addr) || !pwOk} className="btn-primary">{Spinner} {signup ? 'Create account' : 'Log in'}</button>
+      <button type="submit" disabled={busy || !validEmail(addr) || !pwOk || (signup && !phoneOk)} className="btn-primary">{Spinner} {signup ? 'Create account' : 'Log in'}</button>
       {!signup && (
         <button type="button" disabled={busy} onClick={() => (validEmail(addr) ? run(() => signInWithEmail(addr), () => go('code')) : setErr('Type your email above first, then tap this again.'))} className="h-10 text-sm font-semibold text-accent">
           Forgot password? Email me a code

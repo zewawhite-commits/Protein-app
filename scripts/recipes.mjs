@@ -476,3 +476,51 @@ RECIPES.push(
   },
   { name: 'Dolma (stuffed vine leaves)', cuisine: 'Middle Eastern', yield: 900, aliases: ['dolmades', 'dolmeh', 'yaprak sarma', 'warak enab', 'stuffed grape leaves'], ingredients: [['Grape leaves, canned', 150], [I.rice, 450], [I.onion, 100], [I.olive_oil, 60], [I.lemon, 40], [I.tomato, 100], [I.parsley, 20], [I.salt, 5]], portions: [['1 piece', 30], ['6 pieces', 180]] },
 );
+
+// ---------------------------------------------------------------------------
+// Nigerian swallows and the soups eaten with them. Full record names (USDA / FAO West Africa).
+// Leaves with no official record of their own (oha, bitter leaf, okazi) use the closest
+// listed leaf, named in the ingredients so it's checkable.
+const n = (name, yieldG, ingredients, portions, aliases = []) => ({ name, cuisine: 'West African', yield: yieldG, aliases, portions, ingredients });
+const WATER = 'Beverages, water, tap, drinking', PALM = 'Oil, palm', STOCK = 'Soup, stock, beef, home-prepared', SALT = 'Salt, table';
+const BEEF = I.beef, CRAY = 'Shrimp, dried', STOCKFISH = 'Fish, cod, Atlantic, dried and salted', ONION = 'Onions, raw', CHILI = 'Peppers, hot chili, red, raw';
+const IRU = 'African locust bean, fermented (soumbala)', CATFISH = 'Catfish, fillet, boiled* (as part of a recipe)', COCOYAM = 'Cocoyam, tuber, white, boiled* (without salt), drained';
+const WRAP = [['1 wrap', 250], ['1 small wrap', 150]], SOUP = [['1 bowl', 300], ['1 ladle', 150]];
+
+RECIPES.push(
+  // Swallows: flour (or tuber) stirred into hot water; values per 100 g of the cooked swallow.
+  n('Amala', 900, [['Yam, tuber, flour, from white yam tuber', 300], [WATER, 650]], WRAP, ['amala isu', 'elubo', 'yam flour swallow', 'oka']),
+  n('Amala lafun', 900, [['Cassava, flour, from fermented white cassava (alibo/elubo/lafun)', 300], [WATER, 650]], WRAP, ['lafun', 'white amala', 'alubo', 'cassava amala']),
+  n('Fufu', 900, [['Cassava, fermented paste from white cassava flour (wet fufu)', 1000]], WRAP, ['akpu', 'cassava fufu', 'loi loi', 'santana', 'nigerian fufu']),
+  n('Semovita', 900, [['Semolina, enriched', 300], [WATER, 650]], WRAP, ['semo', 'semolina swallow', 'semolina fufu']),
+  n('Wheat swallow', 900, [['Wheat flour, wholemeal, unfortified', 300], [WATER, 650]], WRAP, ['wheat meal', 'wheat fufu', 'alkama']),
+  n('Tuwo shinkafa', 950, [['Rice, white, short-grain, enriched, cooked', 1000]], WRAP, ['tuwon shinkafa', 'rice swallow', 'tuwo rice']),
+  n('Tuwo masara', 900, [['Maize, white, refined flour (special), unfortified', 300], [WATER, 650]], WRAP, ['tuwon masara', 'corn swallow', 'maize swallow', 'tuwo']),
+  n('Tuwo dawa', 900, [['Sorghum, flour, degermed', 300], [WATER, 650]], WRAP, ['tuwon dawa', 'sorghum swallow', 'guinea corn swallow']),
+  n('Starch (Urhobo)', 930, [['Tapioca, pearl, dry', 250], [PALM, 30], [WATER, 700]], WRAP, ['usi', 'ukodo starch', 'owho starch', 'cassava starch swallow', 'starch and banga']),
+  n('Oat swallow', 750, [['Oats, rolled, raw', 200], [WATER, 600]], WRAP, ['oatmeal swallow', 'oats fufu']),
+  n('Plantain swallow', 900, [['Plantain, unripe, pale flesh, flour', 300], [WATER, 650]], WRAP, ['plantain amala', 'elubo ogede', 'plantain fufu', 'unripe plantain flour']),
+  n('Cocoyam fufu', 1000, [[COCOYAM, 1000]], WRAP, ['ede', 'pounded cocoyam', 'ji abana']),
+  n('Poundo yam', 900, [['Yam, tuber, flour, from white yam tuber', 300], [WATER, 650]], WRAP, ['poundo', 'pounded yam flour', 'iyan flour', 'instant pounded yam']),
+
+  // Soups
+  n('Ogbono soup', 1000, [['Dikanut, kernel, dried, raw', 100], [PALM, 60], [BEEF, 250], [STOCKFISH, 50], [CRAY, 20], ['Spinach, cooked, boiled, drained, without salt', 100], [ONION, 40], [CHILI, 10], [STOCK, 400], [SALT, 5]], SOUP, ['ogbono', 'draw soup', 'apon', 'oro soup']),
+  n('Banga soup', 1100, [['Oil palm, fruit, raw', 300], [WATER, 300], [BEEF, 200], [CATFISH, 200], [CRAY, 20], [ONION, 50], [CHILI, 10], [STOCK, 300], [SALT, 5]], SOUP, ['ofe akwu', 'palm nut soup', 'abak atama', 'banga stew']),
+  n('Afang soup', 1000, [['Waterleaf, leaves, fresh, boiled* (as part of a recipe)', 350], ['Amaranth leaves, cooked, boiled, drained, without salt', 150], [PALM, 80], [BEEF, 250], [STOCKFISH, 50], [CRAY, 25], [ONION, 40], [CHILI, 10], [STOCK, 200], [SALT, 5]], SOUP, ['afang', 'okazi soup', 'ukazi soup']),
+  n('Oha soup', 1000, [[COCOYAM, 100], [PALM, 60], [BEEF, 250], [STOCKFISH, 50], [CRAY, 20], ['Amaranth leaves, cooked, boiled, drained, without salt', 150], [IRU, 10], [CHILI, 10], [STOCK, 400], [SALT, 5]], SOUP, ['ofe oha', 'ora soup', 'ofe ora']),
+  n('Bitterleaf soup', 1000, [[COCOYAM, 100], [PALM, 60], [BEEF, 250], [STOCKFISH, 50], [CRAY, 20], ['Bitter melon, horseradish, jute, or radish leaves, cooked', 150], [CHILI, 10], [STOCK, 400], [SALT, 5]], SOUP, ['ofe onugbu', 'onugbu soup', 'bitter leaf soup']),
+  n('Ofe nsala', 1000, [[CATFISH, 400], ['Yam, cooked, boiled, drained, or baked, without salt', 100], [CRAY, 20], [ONION, 40], [CHILI, 15], [STOCK, 500], [SALT, 5]], SOUP, ['nsala', 'white soup', 'nsala soup', 'catfish pepper soup']),
+  n('Ewedu soup', 600, [['Jute mallow (bush-okra), leaves, fresh, boiled* (as part of a recipe)', 400], [IRU, 15], [CRAY, 10], [WATER, 200], [SALT, 3]], SOUP, ['ewedu', 'jute leaf soup', 'ewedu and gbegiri']),
+  n('Gbegiri', 750, [[I.cowpeas, 400], [PALM, 40], [CRAY, 15], [IRU, 10], [CHILI, 10], [STOCK, 300], [SALT, 4]], SOUP, ['gbegiri soup', 'bean soup', 'abula']),
+  n('Miyan kuka', 800, [['Baobab, leaves, dried', 50], [BEEF, 200], [CRAY, 15], [IRU, 10], [I.oil, 30], [ONION, 50], [CHILI, 10], [STOCK, 500], [SALT, 4]], SOUP, ['kuka soup', 'baobab leaf soup', 'miyan kuka soup']),
+  n('Miyan taushe', 1000, [['Pumpkin, cooked, boiled, drained, without salt', 300], ['Spinach, cooked, boiled, drained, without salt', 150], ['Groundnut flour, with fat', 50], [BEEF, 200], [PALM, 30], [ONION, 40], [CHILI, 10], [STOCK, 300], [SALT, 4]], SOUP, ['taushe', 'pumpkin soup']),
+  n('Ofe owerri', 1100, [[COCOYAM, 100], ['Waterleaf, leaves, fresh, boiled* (as part of a recipe)', 200], ['Pumpkin leaves, cooked, boiled, drained, without salt', 150], [PALM, 60], [BEEF, 250], [STOCKFISH, 60], ['Snail, cooked', 100], [CRAY, 20], [STOCK, 300], [SALT, 5]], SOUP, ['owerri soup', 'ofe owerri soup']),
+  n('Fisherman soup', 1000, [[CATFISH, 300], [I.shrimp, 150], ['Snail, cooked', 100], [PALM, 50], [ONION, 50], [CHILI, 15], ['Pumpkin leaves, cooked, boiled, drained, without salt', 100], [STOCK, 300], [SALT, 5]], SOUP, ['seafood okra', 'fishermans soup', 'rivers fisherman soup']),
+  n('Atama soup', 1050, [['Oil palm, fruit, raw', 250], [WATER, 250], [BEEF, 200], [STOCKFISH, 50], [CRAY, 20], ['Waterleaf, leaves, fresh, boiled* (as part of a recipe)', 150], [CHILI, 10], [STOCK, 300], [SALT, 5]], SOUP, ['abak atama', 'atama']),
+
+  // Other Nigerian favourites
+  n('Nigerian fried rice', 1500, [[I.rice, 1000], [I.carrots, 120], [I.peas, 100], [I.green_pepper, 60], [ONION, 60], ['Chicken, liver, all classes, cooked, simmered', 80], [I.oil, 70], [I.curry, 6], [I.thyme, 2], [STOCK, 150], [SALT, 6]], [['1 plate', 350], ['1 cup', 200]], ['party fried rice', 'naija fried rice']),
+  n('Abacha (African salad)', 700, [['Cassava, tuber, white flesh, dried', 250], [PALM, 60], [IRU, 30], [CRAY, 20], [ONION, 50], [CHILI, 10], [WATER, 250], [SALT, 4]], [['1 plate', 250]], ['abacha', 'african salad', 'abacha ncha']),
+  n('Masa', 600, [['Rice, white, short-grain, enriched, cooked', 400], [I.sugar, 40], [I.oil, 40], [WATER, 150]], [['1 piece', 40], ['5 pieces', 200]], ['waina', 'rice cake', 'masa rice cakes']),
+  n('Boli (roasted plantain)', 1000, [['Plantain, ripe, ivory flesh, raw', 1050]], [['1 plantain', 180]], ['bole', 'roasted plantain', 'boli and fish']),
+);

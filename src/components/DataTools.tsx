@@ -1,3 +1,5 @@
+import { useNavigate } from 'react-router-dom';
+import { useHasTier } from '@/lib/perks';
 import { useEffect, useState } from 'react';
 import { History, Share2 } from 'lucide-react';
 import { useStore } from '@/store/useStore';
@@ -45,6 +47,9 @@ export function weeklyReport(): string {
 }
 
 export function ShareReportRow({ Row }: { Row: (p: { icon: React.ReactNode; label: string; chevron?: boolean }) => React.ReactElement }) {
+  const pro = useHasTier('pro');
+  const nav = useNavigate();
+  if (!pro) return <button className="w-full" onClick={() => nav('/premium?tier=pro')}><Row icon={<Share2 size={18} />} label="Detailed weekly nutrition report · Pro" chevron /></button>;
   return (
     <button
       className="w-full"

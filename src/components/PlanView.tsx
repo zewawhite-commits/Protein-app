@@ -59,7 +59,7 @@ export function PlanView() {
 
   return (
     <div className="space-y-4 pb-6">
-      <PlanBadge needs="pro" what="AI eating plans" />
+      <PlanBadge needs="plus" what="AI meal plans" />
       <section className="card p-5">
         <p className="flex items-center gap-2 text-[17px] font-semibold"><CalendarDays size={17} className="text-accent" /> Your eating plan</p>
         <p className="mt-1 text-sm text-silver">A full day of meals built around your goals, targets, the cuisines you enjoy and anything you avoid.</p>

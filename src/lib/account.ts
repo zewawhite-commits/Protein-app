@@ -248,9 +248,9 @@ export async function signInWithPassword(email: string, password: string) {
  * people in straight away, or 'confirm' when Supabase first emails a confirmation
  * (6-digit code if the "Confirm signup" template has {{ .Token }}, plus a link).
  */
-export async function signUpWithPassword(email: string, password: string): Promise<'signed-in' | 'confirm'> {
+export async function signUpWithPassword(email: string, password: string, phone?: string): Promise<'signed-in' | 'confirm'> {
   if (!supabase) return 'signed-in';
-  const { data, error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: returnUrl() } });
+  const { data, error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: returnUrl(), ...(phone ? { data: { phone_number: phone } } : {}) } });
   if (error) throw new Error(friendly(error.message));
   // Supabase hides whether an email is taken by returning a user with no identities.
   if (data.user && (data.user.identities?.length ?? 0) === 0) throw new Error(friendly('already registered'));
@@ -267,5 +267,17 @@ export async function verifySignupCode(email: string, token: string) {
 export async function resendSignupCode(email: string) {
   if (!supabase) return;
   const { error } = await supabase.auth.resend({ type: 'signup', email, options: { emailRedirectTo: returnUrl() } });
+  if (error) throw new Error(friendly(error.message));
+}
+
+/** A rough check for an international phone number: +, then 7–15 digits. */
+export const validPhone = (p: string) => /^\+[1-9]\d{6,14}$/.test(p);
+/** Tidies what people type ("+234 801-234 5678") into +2348012345678. */
+export const cleanPhone = (p: string) => (p.trim().startsWith('+') ? '+' : '') + p.replace(/\D/g, '');
+
+/** Saves (or clears) the contact phone number on the account. Sign-in stays by email or Google. */
+export async function setPhoneNumber(phone: string) {
+  if (!supabase) return;
+  const { error } = await supabase.auth.updateUser({ data: { phone_number: phone || null } });
   if (error) throw new Error(friendly(error.message));
 }

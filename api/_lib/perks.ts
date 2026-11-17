@@ -1,8 +1,8 @@
 /**
- * Free Pro time: a one-off 7-day trial, and invite rewards. Kept in the user's Supabase
+ * Free Pro time: a one-off 3-day trial, and invite rewards. Kept in the user's Supabase
  * app_metadata (only the server can write it), so no extra table is needed.
  *
- *  - Trial: once per account, 7 days of Pro, no card. Invited friends get 14 days.
+ *  - Trial: once per account, 3 days of Pro, no card. Invited friends get 14 days.
  *  - Invites: when a new account (under 14 days old) joins with someone's link, the
  *    inviter gets 7 more days of Pro, up to 10 friends (70 days). Not your own link.
  *  - Free Pro time uses the "trial" limits in quota.ts — generous, but capped, so
@@ -10,7 +10,7 @@
  */
 import { admin } from './accounts.js';
 
-export const TRIAL_DAYS = 7;
+export const TRIAL_DAYS = 3;
 export const INVITED_TRIAL_DAYS = 14;
 export const REFERRAL_DAYS = 7;
 export const MAX_REFERRALS = 10;

@@ -9,7 +9,8 @@ import { ArrowLeft, ChevronRight, Cloud, CreditCard, Crown, Database, Download, 
 import { useStore, exportData } from '@/store/useStore';
 import { fetchBilling, isPremiumActive, manageSubscription, type Billing } from '@/lib/premium';
 import { SUPPORT_EMAIL } from '@/pages/Legal';
-import { accountsEnabled, changeEmail, deleteAccount, setPassword, signOut, useSession } from '@/lib/account';
+import { accountsEnabled, changeEmail, cleanPhone, deleteAccount, setPassword, setPhoneNumber, signOut, useSession, validPhone } from '@/lib/account';
+import { toast } from '@/components/fx';
 
 import { allPhotoIds, deletePhoto } from '@/lib/photos';
 import type { Theme } from '@/lib/types';
@@ -308,8 +309,9 @@ function AccountCard() {
         <span className="max-w-[55%] truncate text-sm font-semibold text-silver">{session.user.email}</span>
       </Row>
       <Row icon={<ShieldCheck size={18} />} label="Sign-in method">
-        <span className="text-sm font-semibold text-silver">{viaGoogle ? 'Google' : 'Email code'}</span>
+        <span className="text-sm font-semibold text-silver">{viaGoogle ? 'Google' : 'Email'}</span>
       </Row>
+      <PhoneRow saved={(session.user.user_metadata?.phone_number as string | undefined) ?? ''} />
       {!viaGoogle && (
         <button onClick={() => setChanging((v) => !v)} className="w-full"><Row icon={<Mail size={18} />} label="Change email" chevron /></button>
       )}
@@ -410,13 +412,22 @@ const ACTIVITY_LABEL: Record<string, string> = { sedentary: '0 workouts a week',
 /** Everything they picked in onboarding, visible and editable. */
 function PreferencesCard({ onEdit }: { onEdit: () => void }) {
   const p = useStore((s) => s.profile);
+  const unit = useStore((s) => s.settings.bodyUnit);
+  const reminders = useStore((s) => s.settings.reminders);
   if (!p) return null;
+  const w = (kg: number) => `${fmt(unit === 'lb' ? kg * 2.20462 : kg, 1)} ${unit === 'lb' ? 'lb' : 'kg'}`;
+  const target = p.goalWeightKg && p.bodyWeightKg && Math.abs(p.goalWeightKg - p.bodyWeightKg) >= 0.5
+    ? [`${p.goalWeightKg < p.bodyWeightKg ? 'Lose' : 'Gain'} weight to ${w(p.goalWeightKg)}`, ...(p.paceKgPerWeek ? [`${w(p.paceKgPerWeek)} a week`] : [])]
+    : ['Maintain weight'];
   const rows: [string, string[], string?][] = [
     ['Goals', (p.goals ?? (p.goal ? [p.goal] : [])).map((g) => GOAL_LABEL[g] ?? g)],
+    ['Weight goal', target],
     ['Exercise', [...(p.activity ? [ACTIVITY_LABEL[p.activity]] : []), ...(p.training ?? [])]],
     ['How you eat', [...(p.diet ? [DIET_LABEL[p.diet]] : []), ...(p.dietPrefs ?? [])]],
     ['Cuisines', p.cuisines ?? []],
     ['Avoids', p.avoid ?? [], 'danger'],
+    ['Challenges', p.obstacles ?? []],
+    ['Reminders', [reminders?.enabled ? `Meals at ${reminders.breakfast} · ${reminders.lunch} · ${reminders.dinner}` : 'Off']],
   ];
   return (
     <section className="mt-6">
@@ -440,5 +451,34 @@ function PreferencesCard({ onEdit }: { onEdit: () => void }) {
         <p className="text-xs text-dim">Used for your food suggestions, AI coach, recipes, workouts and plans.</p>
       </div>
     </section>
+  );
+}
+
+/** Optional contact phone number on the account (sign-in stays by email or Google). */
+function PhoneRow({ saved }: { saved: string }) {
+  const [open, setOpen] = useState(false);
+  const [value, setValue] = useState(saved);
+  const [current, setCurrent] = useState(saved);
+  const [busy, setBusy] = useState(false);
+  const tel = cleanPhone(value);
+  const ok = !value.trim() || validPhone(tel);
+  return (
+    <>
+      <button onClick={() => setOpen((v) => !v)} className="w-full">
+        <Row icon={<Smartphone size={18} />} label="Phone number" chevron><span className="text-sm font-semibold text-silver">{current || 'Add'}</span></Row>
+      </button>
+      {open && (
+        <div className="px-3 pb-3">
+          <div className="flex gap-2">
+            <input type="tel" inputMode="tel" autoComplete="tel" aria-label="Phone number" className={cx('field flex-1', !ok && '!ring-2 !ring-danger')} placeholder="+234 801 234 5678" value={value} onChange={(e) => setValue(e.target.value)} />
+            <button disabled={busy || !ok} onClick={async () => {
+              setBusy(true);
+              try { const v = value.trim() ? tel : ''; await setPhoneNumber(v); setCurrent(v); setOpen(false); toast(v ? 'Phone number saved' : 'Phone number removed'); } catch (e) { toast((e as Error).message); } finally { setBusy(false); }
+            }} className="btn-primary !px-5">Save</button>
+          </div>
+          {!ok && <p className="mt-1.5 px-1 text-[13px] text-danger">Start with + and your country code.</p>}
+        </div>
+      )}
+    </>
   );
 }

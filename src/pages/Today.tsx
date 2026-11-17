@@ -16,6 +16,7 @@ import { Pill, Ring, Sheet, cx, fmt } from '@/components/ui';
 import { BrandName, CountUp, haptic, toast } from '@/components/fx';
 import { EntryRow } from '@/components/EntryRow';
 import { Suggestions } from '@/components/Suggestions';
+import { QuickActions } from '@/components/QuickActions';
 import { FoodSheet } from '@/components/FoodSheet';
 import { NotificationBell } from '@/components/Notifications';
 import { SaveMealButton } from '@/components/SavedMeals';
@@ -91,11 +92,15 @@ export default function Today() {
         </Link>
       )}
 
+      <div className="mb-2 flex items-center justify-between px-1">
+        <p className="text-[14px] font-semibold text-silver">{fromKey(date).toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}</p>
+        <Link to="/history" className="text-[14px] font-semibold text-accent">View all</Link>
+      </div>
       <WeekStrip date={date} onSelect={setDate} />
       {!isToday && (
         <div className="mt-4 flex items-center gap-3 rounded-[22px] bg-accent/10 px-4 py-3">
-          <span className="min-w-0 flex-1 text-[15px] font-semibold text-accent">Viewing {fromKey(date).toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })}</span>
-          <Link to={`/add?date=${date}`} className="shrink-0 rounded-full bg-accent px-3.5 py-1.5 text-sm font-bold text-white">+ Add food</Link>
+          <span className="min-w-0 flex-1 text-[15px] font-semibold text-accent">{date > today ? 'Planning' : 'Viewing'} {fromKey(date).toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })}</span>
+          <Link to={`/add?date=${date}`} className="shrink-0 rounded-full bg-accent px-3.5 py-1.5 text-sm font-bold text-white">{date > today ? '+ Plan food' : '+ Add food'}</Link>
           <button onClick={() => setDate(today)} className="shrink-0 text-sm font-semibold text-accent">Today</button>
         </div>
       )}
@@ -111,6 +116,7 @@ export default function Today() {
           <MacroCards totals={totals} goal={goal} targets={targets} simple={simple} />
         </>
       )}
+      {date <= today && <div className="mt-4"><QuickActions dateQuery={isToday ? '' : `?date=${date}`} /></div>}
       </div>
 
       <section className="mt-8 lg:mt-5">
@@ -229,8 +235,10 @@ function WeekStrip({ date, onSelect }: { date: string; onSelect: (d: string) => 
   const touch = useRef<number | null>(null);
 
   const go = (dir: 1 | -1) => {
+    // Up to four weeks ahead, for planning meals.
     const next = addDays(date, dir * 7);
-    onSelect(next > today ? today : next);
+    const limit = addDays(today, 28);
+    onSelect(next > limit ? limit : next);
   };
 
   return (
@@ -251,21 +259,24 @@ function WeekStrip({ date, onSelect }: { date: string; onSelect: (d: string) => 
         const hit = v >= 1;
         const sel = d === date;
         const future = d > today;
+        const isToday = d === today;
+        const planned = future && entries.some((e) => e.date === d && e.planned);
         return (
-          <button key={d} onClick={() => !future && onSelect(d)} disabled={future} className="flex flex-col items-center gap-2">
-            <span className={cx('text-[12px] font-semibold', sel ? 'text-ink' : 'text-dim')}>
-              {fromKey(d).toLocaleDateString(undefined, { weekday: 'short' })}
+          <button key={d} onClick={() => { haptic(); onSelect(d); }} aria-label={`${fromKey(d).toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })}${isToday ? ' (today)' : future ? ' (plan meals)' : ''}`} className="relative flex flex-col items-center gap-2">
+            <span className={cx('text-[12px] font-semibold', isToday ? 'text-accent' : sel ? 'text-ink' : 'text-dim')}>
+              {isToday ? 'Today' : fromKey(d).toLocaleDateString(undefined, { weekday: 'short' })}
             </span>
             <Ring value={future ? 0 : v} size={40} stroke={3} dashed={future || v === 0} color={hit ? 'accent' : 'ink'} track="line">
               <span
                 className={cx(
                   'num grid h-[30px] w-[30px] place-items-center rounded-full text-[14px] font-bold',
-                  sel ? 'bg-primary text-on-primary' : future ? 'text-dim' : 'text-ink',
+                  sel ? 'bg-primary text-on-primary' : isToday ? 'bg-accent/15 text-accent' : future ? 'text-dim' : 'text-ink',
                 )}
               >
                 {fromKey(d).getDate()}
               </span>
             </Ring>
+            {planned && <span className="absolute -bottom-1.5 h-1.5 w-1.5 rounded-full bg-accent" aria-hidden />}
           </button>
         );
       })}

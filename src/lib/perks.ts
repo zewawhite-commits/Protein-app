@@ -1,5 +1,5 @@
 /**
- * Free Pro time on the app side: the one-off 7-day trial and invite-a-friend rewards.
+ * Free Pro time on the app side: the one-off 3-day trial and invite-a-friend rewards.
  * The server decides (api/_lib/perks.ts); this just asks, remembers and shows.
  */
 import { useEffect } from 'react';

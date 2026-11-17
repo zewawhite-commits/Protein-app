@@ -15,7 +15,6 @@ import { nutrientsFor } from '@/lib/nutrition';
 import { todayKey, addDays } from '@/lib/dates';
 import type { CoachContext, CoachFood, CoachReply, ChatTurn } from '@/lib/coach';
 import type { Food } from '@/lib/types';
-import { FoodVisual } from '@/components/FoodIcon';
 import { FoodSheet } from '@/components/FoodSheet';
 import { Segmented, cx, fmt } from '@/components/ui';
 import { PlanView } from '@/components/PlanView';
@@ -271,8 +270,7 @@ function FoodCards({ foods, onOpen, estimate }: { foods: CoachFood[]; onOpen: (f
         const n = match ? nutrientsFor(match.per100, g) : null;
         const title = f.localName && f.localName !== f.name ? f.localName : f.name;
         return match ? (
-          <button key={i} onClick={() => { haptic(); onOpen(match, f.portionGrams || undefined); }} className="flex w-full items-center gap-3 rounded-[18px] p-2 text-left transition active:bg-raised/60">
-            <FoodVisual name={`${f.localName} ${f.name}`} category={match.category} size={48} />
+          <button key={i} onClick={() => { haptic(); onOpen(match, f.portionGrams || undefined); }} className="flex w-full items-center gap-3 rounded-[18px] px-3 py-2.5 text-left transition active:bg-raised/60">
             <div className="min-w-0 flex-1">
               <p className="truncate text-[15px] font-semibold">{title}{title !== f.name && <span className="font-normal text-silver"> · {f.name}</span>}</p>
               <p className="num text-xs text-silver">
@@ -284,7 +282,6 @@ function FoodCards({ foods, onOpen, estimate }: { foods: CoachFood[]; onOpen: (f
           </button>
         ) : (
           <Link key={i} to={`/add?q=${encodeURIComponent(f.searchQueries[0] ?? f.name)}`} className="flex items-center gap-3 rounded-[18px] p-2">
-            <FoodVisual name={`${f.localName} ${f.name}`} size={44} />
             <div className="min-w-0 flex-1">
               <p className="truncate text-[15px] font-semibold">{title}</p>
               <p className="text-xs text-dim">Not in our database yet — tap to search</p>

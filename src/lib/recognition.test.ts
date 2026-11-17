@@ -99,8 +99,9 @@ import { confidentMatch } from './foods';
 describe('confident matching for AI-suggested foods', () => {
   it('never matches word fragments, but finds real records', async () => {
     await loadFoodDb();
-    expect(confidentMatch(['ogbono soup'])?.name ?? null).toBeNull(); // no record — never a lookalike
-    expect(confidentMatch(['ogbono soup', 'cowpeas boiled'])?.name).toMatch(/cowpea/i);
+    expect(confidentMatch(['ogbono soup'])?.name).toBe('Ogbono soup'); // standard recipe now
+    expect(confidentMatch(['kpekere chips'])?.name ?? null).toBeNull(); // no record — never a lookalike
+    expect(confidentMatch(['kpekere chips', 'cowpeas boiled'])?.name).toMatch(/cowpea/i);
     expect(confidentMatch(['moi moi'])?.name).toBe('Moi moi'); // standard recipe
     expect(confidentMatch(['chicken breast roasted'])?.name).toMatch(/chicken.*breast/i);
     expect(confidentMatch(['egg whole hard-boiled'])?.name).toMatch(/egg/i);
