@@ -12,9 +12,11 @@ export function TrialCard({ className }: { className?: string }) {
   const session = useSession();
   const perks = useStore((s) => s.perks);
   const paid = useStore((s) => isPremiumActive(s.premium));
+  const serverTier = useStore((s) => s.serverTier);
   const free = useFreePro();
   const [busy, setBusy] = useState(false);
-  if (paid) return null;
+  // A paid plan (this phone or the account) never needs the trial offer.
+  if (paid || (!free.on && (serverTier === 'plus' || serverTier === 'pro'))) return null;
   if (free.on) {
     return (
       <div className={cx('flex items-center gap-3 rounded-[22px] bg-accent/10 px-4 py-3.5 text-accent', className)}>

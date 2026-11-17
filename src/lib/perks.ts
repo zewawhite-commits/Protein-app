@@ -41,8 +41,10 @@ export function useFreePro(): { on: boolean; days: number } {
 export function useHasTier(needs: 'plus' | 'pro'): boolean {
   const premium = useStore((s) => s.premium);
   const free = useFreePro().on;
+  const server = useStore((s) => s.serverTier);
   const paid = isPremiumActive(premium) && (needs === 'plus' || premium?.tier === 'pro');
-  return paid || free;
+  const onServer = server === 'pro' || (needs === 'plus' && server === 'plus');
+  return paid || free || onServer;
 }
 
 async function post(path: 'trial' | 'invite', body: unknown = {}) {
@@ -54,6 +56,7 @@ async function post(path: 'trial' | 'invite', body: unknown = {}) {
 
 export async function refreshPerks() {
   const u = await fetchUsage();
+  if (u) useStore.getState().setServerTier(u.tier);
   const p = u?.perks;
   useStore.getState().setPerks(p ? { until: p.proUntil, freePro: p.freePro, trialUsed: p.trialUsed, referrals: p.referrals, maxReferrals: p.maxReferrals, referralDays: p.referralDays } : null);
   return u;

@@ -55,6 +55,12 @@ interface State {
   /** Free Pro time from the server (trial or invite rewards); the server stays the authority. */
   perks: { until: number; freePro: boolean; trialUsed: boolean; referrals: number; maxReferrals: number; referralDays: number } | null;
   setPerks: (p: State['perks']) => void;
+  /**
+   * The plan the server says this account has (admins and free Pro time count as Pro). Lets a
+   * paid plan bought on another phone, or the owner's account, unlock features here too.
+   */
+  serverTier: 'free' | 'plus' | 'pro' | null;
+  setServerTier: (t: State['serverTier']) => void;
   /** Water drunk, in ml, by day (YYYY-MM-DD). */
   water: Record<string, number>;
   addWater: (date: string, ml: number) => void;
@@ -99,6 +105,7 @@ export const useStore = create<State>()(
       progressPhotos: [],
       premium: null,
       perks: null,
+      serverTier: null,
       picks: {},
       water: {},
       deleted: {},
@@ -146,6 +153,7 @@ export const useStore = create<State>()(
 
       setPremium: (premium) => set({ premium }),
       setPerks: (perks) => set({ perks }),
+      setServerTier: (serverTier) => set({ serverTier }),
       restoreEntry: (e) => set((s) => {
         const { [e.id]: _gone, ...deleted } = s.deleted ?? {};
         void _gone;
@@ -260,7 +268,7 @@ export const useStore = create<State>()(
       },
 
       resetAll: () =>
-        set({ profile: null, settings: defaultSettings, entries: [], customFoods: [], goalHistory: {}, recentFoodIds: [], favoriteFoodIds: [], remoteFoods: {}, savedMeals: [], savedPlans: [], workoutPlan: null, savedRecipes: [], weights: [], exercises: [], progressPhotos: [], premium: null, perks: null, picks: {}, water: {}, deleted: {} }),
+        set({ profile: null, settings: defaultSettings, entries: [], customFoods: [], goalHistory: {}, recentFoodIds: [], favoriteFoodIds: [], remoteFoods: {}, savedMeals: [], savedPlans: [], workoutPlan: null, savedRecipes: [], weights: [], exercises: [], progressPhotos: [], premium: null, perks: null, serverTier: null, picks: {}, water: {}, deleted: {} }),
     }),
     {
       name: 'protein-app',

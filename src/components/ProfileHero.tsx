@@ -35,7 +35,8 @@ export function ProfileHero({ onEdit }: { onEdit: () => void }) {
   const current = weights.length ? weights[weights.length - 1].kg : profile.bodyWeightKg;
   const days = new Set(entries.map((e) => e.date)).size;
   const freePro = useFreePro();
-  const plan = isPremiumActive(premium) ? (premium?.tier === 'pro' ? 'Pro' : 'Plus') : freePro.on ? 'Pro (free)' : 'Free';
+  const serverTier = useStore((s) => s.serverTier);
+  const plan = isPremiumActive(premium) ? (premium?.tier === 'pro' ? 'Pro' : 'Plus') : freePro.on ? 'Pro (free)' : serverTier === 'pro' ? 'Pro' : serverTier === 'plus' ? 'Plus' : 'Free';
 
   async function pick(f?: File) {
     if (!f) return;
