@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, Loader2, Mail } from 'lucide-react';
 import { cleanPhone, validPhone, resendSignupCode, signInWithEmail, signInWithGoogle, signInWithPassword, signUpWithPassword, verifyEmailCode, verifySignupCode } from '@/lib/account';
 import { GoogleIcon } from './BrandIcons';
 import { cx } from './ui';
@@ -23,6 +23,7 @@ export function EmailAuth({ start = 'signup', onBack }: { start?: 'signup' | 'lo
   const phoneOk = !phone.trim() || validPhone(tel);
   const [show, setShow] = useState(false);
   const [code, setCode] = useState('');
+  const [showCode, setShowCode] = useState(false);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
   const [note, setNote] = useState('');
@@ -32,7 +33,7 @@ export function EmailAuth({ start = 'signup', onBack }: { start?: 'signup' | 'lo
     // Run fn first: `after?.(await fn())` would skip fn entirely when there is no `after`.
     try { const r = await fn(); after?.(r); } catch (e) { setErr((e as Error).message); } finally { setBusy(false); }
   };
-  const go = (s: Step) => { setErr(''); setNote(''); setCode(''); setStep(s); };
+  const go = (s: Step) => { setErr(''); setNote(''); setCode(''); setShowCode(false); setStep(s); };
 
   const Spinner = busy ? <Loader2 size={18} className="animate-spin" /> : null;
   const messages = (
@@ -49,16 +50,26 @@ export function EmailAuth({ start = 'signup', onBack }: { start?: 'signup' | 'lo
     const confirming = step === 'confirm';
     return (
       <div className="grid gap-2.5">
-        <p className="text-[19px] font-bold tracking-tight">{confirming ? 'Confirm your email' : 'Check your email'}</p>
-        <p className="text-sm text-silver">Enter the 6-digit code we sent to <b className="text-ink">{addr}</b>{confirming ? ', or tap the link in that email.' : '.'}</p>
-        {codeInput}
+        <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-accent/10 text-accent"><Mail size={26} /></span>
+        <p className="text-center text-[19px] font-bold tracking-tight">Check your email</p>
+        <p className="text-center text-sm leading-relaxed text-silver">
+          We sent an email to <b className="text-ink">{addr}</b>. Open it and tap <b className="text-ink">{confirming ? 'Confirm your mail' : 'Log in'}</b> — you’ll be {confirming ? 'signed in and ready to go' : 'logged straight in'}.
+        </p>
+        <p className="text-center text-[13px] text-dim">Can’t find it? Check your spam or promotions folder.</p>
         {messages}
-        <button disabled={busy || code.length < 6} onClick={() => run(() => (confirming ? verifySignupCode(addr, code) : verifyEmailCode(addr, code)))} className="btn-primary">
-          {Spinner} {confirming ? 'Confirm and continue' : 'Log in'}
-        </button>
+        {!showCode ? (
+          <button onClick={() => setShowCode(true)} className="h-10 text-sm font-semibold text-accent">Got a code instead? Enter it</button>
+        ) : (
+          <>
+            {codeInput}
+            <button disabled={busy || code.length < 6} onClick={() => run(() => (confirming ? verifySignupCode(addr, code) : verifyEmailCode(addr, code)))} className="btn-primary">
+              {Spinner} {confirming ? 'Confirm and continue' : 'Log in'}
+            </button>
+          </>
+        )}
         <div className="flex justify-between text-sm font-semibold text-silver">
           <button onClick={() => go(confirming ? 'signup' : 'login')}>Back</button>
-          <button disabled={busy} onClick={() => run(() => (confirming ? resendSignupCode(addr) : signInWithEmail(addr)), () => setNote('A new code is on its way.'))}>Send a new code</button>
+          <button disabled={busy} onClick={() => run(() => (confirming ? resendSignupCode(addr) : signInWithEmail(addr)), () => setNote('A new email is on its way.'))}>Send the email again</button>
         </div>
       </div>
     );
@@ -93,7 +104,7 @@ export function EmailAuth({ start = 'signup', onBack }: { start?: 'signup' | 'lo
       <button type="submit" disabled={busy || !validEmail(addr) || !pwOk || (signup && !phoneOk)} className="btn-primary">{Spinner} {signup ? 'Create account' : 'Log in'}</button>
       {!signup && (
         <button type="button" disabled={busy} onClick={() => (validEmail(addr) ? run(() => signInWithEmail(addr), () => go('code')) : setErr('Type your email above first, then tap this again.'))} className="h-10 text-sm font-semibold text-accent">
-          Forgot password? Email me a code
+          Forgot password? Email me a login link
         </button>
       )}
       <p className={cx('text-center text-sm text-silver', signup && 'mt-1')}>
