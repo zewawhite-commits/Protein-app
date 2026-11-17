@@ -4,7 +4,8 @@ import { DIET_PREFS, TRAINING } from '@/lib/cuisines';
 import { useState, type ReactNode } from 'react';
 import { ArrowLeft, Check, Bike, Coffee, Droplet, Drumstick, Dumbbell, Flame, HeartPulse, Leaf, Loader2, Mail, Pencil, Phone, Rabbit, Scale, Sofa, Soup, ThumbsDown, ThumbsUp, Trophy, Turtle, Fish, Salad, Utensils, Wheat, Zap, Footprints } from 'lucide-react';
 import { useStore } from '@/store/useStore';
-import { accountsEnabled, sendPhoneCode, signInWithEmail, signInWithGoogle, toE164, useSession, verifyEmailCode, verifyPhoneCode } from '@/lib/account';
+import { accountsEnabled, sendPhoneCode, signInWithGoogle, toE164, useSession, verifyPhoneCode } from '@/lib/account';
+import { EmailAuth } from '@/components/SignIn';
 import { DIAL_CODES } from '@/lib/dialCodes';
 import { COUNTRY_DATA } from '@/lib/countries';
 import { GoogleIcon } from '@/components/BrandIcons';
@@ -482,7 +483,7 @@ function Choice<T>({ option, selected, onClick, multi }: { option: Option<T>; se
 }
 
 function Welcome({ signedIn, email, onStart }: { signedIn: boolean; email?: string; onStart: () => void }) {
-  const [mode, setMode] = useState<'choose' | 'email' | 'sent' | 'phone' | 'code'>('choose');
+  const [mode, setMode] = useState<'choose' | 'signup' | 'login' | 'phone' | 'code'>('choose');
   // Default to the phone's region (e.g. en-GB → United Kingdom), else the United Kingdom.
   const [dialLabel, setDialLabel] = useState(() => {
     const region = (navigator.language.split('-')[1] ?? '').toUpperCase();
@@ -493,7 +494,6 @@ function Welcome({ signedIn, email, onStart }: { signedIn: boolean; email?: stri
   const [phone, setPhone] = useState('');
   const [code, setCode] = useState('');
   const fullPhone = toE164(dial, phone);
-  const [addr, setAddr] = useState('');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
   const run = async (fn: () => Promise<void>, after?: () => void) => {
@@ -534,19 +534,8 @@ function Welcome({ signedIn, email, onStart }: { signedIn: boolean; email?: stri
           <button onClick={onStart} className="btn-primary w-full">Get started</button>
           <p className="mt-4 text-center text-xs text-silver">Your data stays on this device. Export a backup any time from Profile.</p>
         </>
-      ) : mode === 'sent' ? (
-        <div className="card p-5 text-center">
-          <p className="font-semibold">Check your email</p>
-          <p className="mt-1 text-sm text-silver">Enter the 6-digit code we sent to {addr.trim()}</p>
-          <input inputMode="numeric" autoComplete="one-time-code" maxLength={6} className="field mt-3 text-center text-2xl font-semibold tracking-[0.4em]" value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))} placeholder="••••••" />
-          <button disabled={busy || code.length < 6} onClick={() => run(() => verifyEmailCode(addr.trim(), code))} className="btn-primary mt-2 w-full">
-            {busy && <Loader2 size={18} className="animate-spin" />} Sign in
-          </button>
-          <div className="mt-3 flex justify-between text-sm font-semibold text-silver">
-            <button onClick={() => { setMode('choose'); setCode(''); }}>Use another way</button>
-            <button onClick={() => run(() => signInWithEmail(addr.trim()))}>Send a new code</button>
-          </div>
-        </div>
+      ) : mode === 'signup' || mode === 'login' ? (
+        <EmailAuth key={mode} start={mode} onBack={() => setMode('choose')} />
       ) : mode === 'phone' ? (
         <div className="grid gap-2">
           <div className="flex gap-2">
@@ -570,14 +559,6 @@ function Welcome({ signedIn, email, onStart }: { signedIn: boolean; email?: stri
           </button>
           <button onClick={() => run(() => sendPhoneCode(fullPhone))} className="text-sm font-semibold text-silver">Send a new code</button>
         </div>
-      ) : mode === 'email' ? (
-        <div className="grid gap-2">
-          <input type="email" inputMode="email" autoComplete="email" className="field" placeholder="you@example.com" value={addr} onChange={(e) => setAddr(e.target.value)} />
-          <button disabled={busy || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(addr)} onClick={() => run(() => signInWithEmail(addr.trim()), () => setMode('sent'))} className="btn-primary">
-            {busy && <Loader2 size={18} className="animate-spin" />} Email me a code
-          </button>
-          <button onClick={() => setMode('choose')} className="mt-1 text-sm font-semibold text-silver">Back</button>
-        </div>
       ) : (
         <div className="grid gap-2.5">
           <button disabled={busy} onClick={() => run(signInWithGoogle)} className="btn bg-surface text-ink" style={{ boxShadow: 'var(--shadow)' }}>
@@ -588,9 +569,10 @@ function Welcome({ signedIn, email, onStart }: { signedIn: boolean; email?: stri
               <Phone size={18} /> Continue with phone
             </button>
           )}
-          <button onClick={() => setMode('email')} className="btn bg-surface text-ink" style={{ boxShadow: 'var(--shadow)' }}>
-            <Mail size={18} /> Continue with email
+          <button onClick={() => setMode('signup')} className="btn-primary">
+            <Mail size={18} /> Create account with email
           </button>
+          <p className="text-center text-[15px] text-silver">Already have an account? <button onClick={() => setMode('login')} className="font-semibold text-accent">Log in</button></p>
           <button onClick={onStart} className="mt-1 h-11 text-sm font-semibold text-silver">Skip — use without an account</button>
           <p className="text-center text-xs text-dim">An account saves your data so you can use it on any phone.</p>
           <p className="mb-2 text-center text-[13px] text-silver">Free to start, no card. Plus $4.99/mo, Pro $7.99/mo, or save 60% yearly · <a href="/premium" className="font-semibold text-accent underline">See what’s included</a></p>

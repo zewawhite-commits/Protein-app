@@ -34,7 +34,7 @@ export async function signInWithGoogle() {
 export async function signInWithEmail(email: string) {
   if (!supabase) return;
   const { error } = await supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: returnUrl() } });
-  if (error) throw error;
+  if (error) throw new Error(friendly(error.message));
 }
 
 /** Sends a one-time code by SMS. `phone` in international format, e.g. +2348012345678. */
@@ -42,7 +42,7 @@ export async function signInWithEmail(email: string) {
 export async function verifyEmailCode(email: string, token: string) {
   if (!supabase) return;
   const { error } = await supabase.auth.verifyOtp({ email, token, type: 'email' });
-  if (error) throw error;
+  if (error) throw new Error(friendly(error.message));
 }
 
 export async function sendPhoneCode(phone: string) {
@@ -225,8 +225,47 @@ export async function setPassword(password: string) {
   if (error) throw error;
 }
 
+/** Plain-English versions of the auth errors people actually hit. */
+function friendly(message: string): string {
+  if (/rate limit|too many/i.test(message)) return 'Too many emails were sent in the last hour. Please try again a bit later, or continue with Google.';
+  if (/invalid login/i.test(message)) return 'Wrong email or password. Forgot it? Get a code by email instead.';
+  if (/email not confirmed/i.test(message)) return 'Please confirm your email first: enter the code (or tap the link) we emailed you.';
+  if (/already registered|already been registered|already exists/i.test(message)) return 'An account with this email already exists. Log in instead.';
+  if (/password should be|weak password|at least/i.test(message)) return 'Choose a stronger password: at least 8 characters.';
+  if (/expired|invalid.*(token|otp)|token.*invalid/i.test(message)) return 'That code has expired or is wrong. Ask for a new one.';
+  return message;
+}
+
+/** Logs in with email and password. No email is sent, so it never hits email limits. */
 export async function signInWithPassword(email: string, password: string) {
   if (!supabase) return;
   const { error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) throw new Error(/invalid login/i.test(error.message) ? 'Wrong email or password. You can also get a code by email instead.' : error.message);
+  if (error) throw new Error(friendly(error.message));
+}
+
+/**
+ * Creates an account with email and password. Returns 'signed-in' when the project lets
+ * people in straight away, or 'confirm' when Supabase first emails a confirmation
+ * (6-digit code if the "Confirm signup" template has {{ .Token }}, plus a link).
+ */
+export async function signUpWithPassword(email: string, password: string): Promise<'signed-in' | 'confirm'> {
+  if (!supabase) return 'signed-in';
+  const { data, error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: returnUrl() } });
+  if (error) throw new Error(friendly(error.message));
+  // Supabase hides whether an email is taken by returning a user with no identities.
+  if (data.user && (data.user.identities?.length ?? 0) === 0) throw new Error(friendly('already registered'));
+  return data.session ? 'signed-in' : 'confirm';
+}
+
+/** Confirms a new account with the 6-digit code from the sign-up email. */
+export async function verifySignupCode(email: string, token: string) {
+  if (!supabase) return;
+  const { error } = await supabase.auth.verifyOtp({ email, token, type: 'signup' });
+  if (error) throw new Error(friendly(error.message));
+}
+
+export async function resendSignupCode(email: string) {
+  if (!supabase) return;
+  const { error } = await supabase.auth.resend({ type: 'signup', email, options: { emailRedirectTo: returnUrl() } });
+  if (error) throw new Error(friendly(error.message));
 }
