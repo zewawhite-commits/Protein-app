@@ -524,3 +524,21 @@ RECIPES.push(
   n('Masa', 600, [['Rice, white, short-grain, enriched, cooked', 400], [I.sugar, 40], [I.oil, 40], [WATER, 150]], [['1 piece', 40], ['5 pieces', 200]], ['waina', 'rice cake', 'masa rice cakes']),
   n('Boli (roasted plantain)', 1000, [['Plantain, ripe, ivory flesh, raw', 1050]], [['1 plantain', 180]], ['bole', 'roasted plantain', 'boli and fish']),
 );
+
+// Nigerian drinks, snacks and street food.
+RECIPES.push(
+  n('Zobo drink', 1000, [['Beverages, tea, hibiscus, brewed', 900], ['Sugars, granulated', 80], ['Pineapple, raw, all varieties', 80], ['Ginger root, raw', 10]], [['1 glass', 250], ['1 bottle', 500]], ['zobo', 'sobolo', 'bissap', 'hibiscus drink', 'roselle drink']),
+  n('Kunu', 1000, [['Pearl millet, flour (bran removed)', 100], ['Sugars, granulated', 70], ['Ginger root, raw', 10], [WATER, 850]], [['1 glass', 250], ['1 bottle', 500]], ['kunu zaki', 'kunun gyada', 'millet drink', 'fura drink']),
+  n('Chapman', 1000, [['Beverages, carbonated, orange', 400], ['Beverages, carbonated, lemon-lime soda, no caffeine', 400], ['Sugars, granulated', 30], ['Cucumber, with peel, raw', 40], ['Lemon juice, raw', 30], [WATER, 100]], [['1 glass', 350]], ['chapman drink', 'nigerian chapman', 'chapman cocktail']),
+  n('Fura da nono', 1000, [['Millet dough (tchobal/fura), from decorticated millet only, cooked', 250], ['Milk, cow, whole, fermented', 650], ['Sugars, granulated', 40], [WATER, 60]], [['1 calabash', 400], ['1 cup', 250]], ['fura', 'nono', 'fura and nono', 'fermented milk with millet']),
+  n('Kuli kuli', 450, [['Groundnut flour, partially defatted', 420], [I.oil, 40], [CHILI, 5], [SALT, 3]], [['1 handful', 30], ['1 stick', 15]], ['kulikuli', 'groundnut cake', 'peanut snack']),
+  n('Agidi', 1000, [['Maize dough, fermented (tô), from decorticated white maize only, cooked', 1000]], [['1 wrap', 150]], ['eko', 'agidi white', 'akamu solid', 'maize pudding']),
+  n('Coconut rice', 1450, [[I.rice, 1000], [I.coconut_milk, 300], [I.red_pepper, 60], [ONION, 50], [CRAY, 15], [I.oil, 30], [SALT, 5]], [['1 plate', 350]], ['nigerian coconut rice', 'rice and coconut']),
+  n('Fried yam', 1000, [['Yam, tuber, deep fried in unfortified vegetable oil*', 1000]], [['5 pieces', 200], ['1 piece', 40]], ['yam chips', 'dundu', 'fried yam and pepper sauce']),
+  n('Peppered snail', 600, [['Snail, cooked', 500], [I.oil, 40], [I.red_pepper, 60], [CHILI, 15], [ONION, 40], [SALT, 3]], [['1 plate', 200], ['1 snail', 30]], ['snail pepper soup', 'peppered snails', 'igbin']),
+  n('Isi ewu', 900, [['Goat meat, lean, stewed* (as part of a recipe)', 700], [PALM, 70], [IRU, 20], [ONION, 40], [CHILI, 15], [SALT, 5]], [['1 bowl', 300]], ['goat head pepper', 'isi-ewu']),
+  n('Nkwobi', 900, [[I.tripe, 600], [PALM, 80], [IRU, 25], [ONION, 50], [CHILI, 15], [SALT, 5]], [['1 bowl', 300]], ['nkwobi cow foot', 'spicy cow foot']),
+  n('Dambu nama', 1000, [['Beef jerky', 1000]], [['1 handful', 40]], ['dambun nama', 'shredded beef', 'dambu']),
+  n('Okpa', 1000, [['Bambara groundnut, dry, raw', 400], [PALM, 70], [CHILI, 10], [SALT, 5], [WATER, 600]], [['1 wrap', 250]], ['okpa di oku', 'bambara nut pudding']),
+  n('Fish roll', 700, [[I.flour, 350], [I.butter, 80], [I.sugar, 30], ['Fish, mackerel, jack, canned, drained solids', 150], [ONION, 20], [CHILI, 5], [I.oil, 60], [SALT, 4], [WATER, 80]], [['1 roll', 70]], ['nigerian fish roll', 'small chops fish roll']),
+);

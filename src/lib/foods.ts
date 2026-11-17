@@ -155,11 +155,13 @@ const PHRASES: [RegExp, string][] = [
   [/\blechon\b/, 'pork roasted'], [/\blumpia\b/, 'spring roll'], [/\bdim sum\b/, 'dumpling'], [/\bfried noodles\b/, 'chow mein'],
   [/\b(dodo|alloco|maduros|platanos)\b/, 'plantain cooked with oil'], [/\basado\b/, 'beef flank'], [/\bofada rice\b/, 'rice brown'],
   [/\bchips\b(?! and)/, 'french fries'], [/\bcrisps\b/, 'potato chips'], [/\baubergine\b/, 'eggplant'], [/\bcoriander\b/, 'cilantro'],
+  [/\b(agbalumo|udara|alasa)\b/, 'african star apple'], [/\bgarden eggs?\b/, 'eggplant fruit raw'], [/\bkilishi\b/, 'beef jerky'],
+  [/\bsmall chops\b/, 'puff puff'], [/\bpawpaw\b/, 'papaya'], [/\bgroundnuts?\b(?! (soup|flour|oil))/, 'peanuts'], [/\bbambara nuts?\b/, 'bambara groundnut'],
   [/\bswede\b/, 'rutabaga'], [/\bgarbanzo\b/, 'chickpeas'], [/\brocket\b/, 'arugula'], [/\bspring onions?\b/, 'scallions'],
 ];
 
 /** One-word everyday names that mean a specific food. */
-const EXACT: Record<string, string> = { toast: 'bread white toasted', steak: 'beef steak lean', mash: 'potato mashed', chips: 'french fries', eggs: 'egg whole cooked', rice: 'rice white cooked', pasta: 'pasta cooked', chicken: 'chicken breast' };
+const EXACT: Record<string, string> = { dodo: 'plantain cooked with oil', 'garden egg': 'eggplant fruit raw', 'garden eggs': 'eggplant fruit raw', toast: 'bread white toasted', steak: 'beef steak lean', mash: 'potato mashed', chips: 'french fries', eggs: 'egg whole cooked', rice: 'rice white cooked', pasta: 'pasta cooked', chicken: 'chicken breast' };
 
 export function searchFoods(query: string, opts: SearchOptions = {}): Food[] {
   const exact = EXACT[query.trim().toLowerCase()];
@@ -172,7 +174,8 @@ export function searchFoods(query: string, opts: SearchOptions = {}): Food[] {
 }
 
 function searchWith(query: string, opts: SearchOptions): Food[] {
-  const terms = tokenize(query).map((t) => SYNONYMS[t] ?? t);
+  // "gooseberry" should find "Gooseberries": search the shared stem.
+  const terms = tokenize(query).map((t) => SYNONYMS[t] ?? (/berry$/.test(t) ? t.slice(0, -1) : t));
   if (!terms.length) return [];
   const found = searchTerms(terms, opts);
   if (found.length) return found;
@@ -377,7 +380,7 @@ export const fdcUrl = (fdcId: number) => `https://fdc.nal.usda.gov/food-details/
 const OTHER_FORM = new Set(['bran', 'germ', 'leafy', 'leaves', 'leaf', 'tips', 'shoots', 'sprouted', 'sprouts', 'flour', 'meal', 'roll', 'loaf', 'powder', 'dehydrated', 'dried', 'canned', 'frozen', 'breaded', 'babyfood', 'luncheon', 'sticks']);
 
 export function confidentMatch(queries: string[], opts: SearchOptions = {}): Food | undefined {
-  const same = (w: string, t: string) => w === t || w === `${t}s` || w === `${t}es` || t === `${w}s` || SYNONYMS[t] === w;
+  const same = (w: string, t: string) => w === t || w === `${t}s` || w === `${t}es` || t === `${w}s` || SYNONYMS[t] === w || (t.endsWith('y') && w === `${t.slice(0, -1)}ies`);
   for (const q of queries) {
     const terms = tokenize(q).filter((t) => t.length > 1);
     if (!terms.length) continue;
