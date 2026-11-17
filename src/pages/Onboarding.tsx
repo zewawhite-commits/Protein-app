@@ -519,7 +519,8 @@ function Welcome({ signedIn, email, onStart }: { signedIn: boolean; email?: stri
         Weigh it.<br />Snap it.<br /><span className="text-accent">Hit your number.</span>
       </h1>
       <p className="mt-4 max-w-sm text-[15px] text-silver">Calories, protein, carbs, vitamins — tracked by weight, with foods from around the world. Raw and cooked kept separate.</p>
-      <div className="flex-1" />
+      {/* Grows on tall screens; on short ones still keeps a clear gap above the sign-in buttons. */}
+      <div className="min-h-8 flex-1" />
 
       {err && <p className="mb-3 rounded-2xl bg-danger/10 px-4 py-3 text-sm text-danger">{err}</p>}
 
