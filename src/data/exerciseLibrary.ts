@@ -8,7 +8,7 @@
  * exercise (food_photos table, key "ex_<id>"). Otherwise the written guide is shown with a
  * clean placeholder — never an unrelated image or an empty video player.
  */
-import type { ExerciseKind } from '@/lib/liveWorkout';
+import type { ExerciseKind } from '../lib/liveWorkout.js';
 
 export type Category = 'chest' | 'back' | 'shoulders' | 'arms' | 'legs' | 'glutes' | 'core' | 'cardio' | 'mobility' | 'flexibility';
 export type Equip = 'none' | 'mat' | 'dumbbells' | 'barbell' | 'bench' | 'kettlebell' | 'cable' | 'machine' | 'band' | 'bar' | 'box' | 'bike' | 'rower' | 'rope' | 'pool' | 'shoes';
