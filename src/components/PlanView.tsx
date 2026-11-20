@@ -42,6 +42,7 @@ export function PlanView() {
         method: 'POST',
         headers: await aiHeaders(),
         body: JSON.stringify({ context, request: extra }),
+        signal: AbortSignal.timeout(90_000),
       });
       const isJson = res.headers.get('content-type')?.includes('application/json');
       if (!isJson || res.status === 404 || res.status === 501) throw new Error('Eating plans aren’t switched on yet. They will work once the AI key is added on the server.');
@@ -53,7 +54,8 @@ export function PlanView() {
       setSavedId(null);
       setState({ busy: false });
     } catch (e) {
-      setState({ busy: false, error: (e as Error).message });
+      const slow = (e as Error).name === 'TimeoutError' || (e as Error).name === 'AbortError';
+      setState({ busy: false, error: slow ? 'That took too long — tap to try again. Simpler requests are quicker.' : (e as Error).message });
     }
   }
 

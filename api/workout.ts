@@ -2,6 +2,7 @@
  * POST /api/workout { context, request } → WorkoutPlan
  * AI workout guide for the week. Pro.
  */
+export const maxDuration = 60;
 import Anthropic from '@anthropic-ai/sdk';
 import { contextText } from '../src/lib/coach.js';
 import { cleanWorkoutRequest, workoutWithClient } from '../src/lib/workout.js';

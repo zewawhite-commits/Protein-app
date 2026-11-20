@@ -46,7 +46,7 @@ export function RecipeView() {
     haptic();
     setState({ busy: true });
     try {
-      const res = await fetch('/api/recipe', { method: 'POST', headers: await aiHeaders(), body: JSON.stringify({ context, request: text }) });
+      const res = await fetch('/api/recipe', { method: 'POST', headers: await aiHeaders(), body: JSON.stringify({ context, request: text }), signal: AbortSignal.timeout(75_000) });
       const isJson = res.headers.get('content-type')?.includes('application/json');
       if (!isJson || res.status === 404 || res.status === 501) throw new Error('Recipes aren’t switched on yet. They work once the AI key is added on the server.');
       const data = (await res.json()) as Recipe & { error?: string };
@@ -57,7 +57,8 @@ export function RecipeView() {
       setSavedId(null);
       setState({ busy: false });
     } catch (e) {
-      setState({ busy: false, error: (e as Error).message });
+      const slow = (e as Error).name === 'TimeoutError' || (e as Error).name === 'AbortError';
+      setState({ busy: false, error: slow ? 'That took too long — tap to try again. Simpler requests are quicker.' : (e as Error).message });
     }
   }
 

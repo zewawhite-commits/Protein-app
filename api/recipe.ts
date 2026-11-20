@@ -2,6 +2,7 @@
  * POST /api/recipe { context, request } → Recipe
  * AI recipe; nutrition is calculated by the app from its database. Pro.
  */
+export const maxDuration = 60;
 import Anthropic from '@anthropic-ai/sdk';
 import { contextText } from '../src/lib/coach.js';
 import { recipeWithClient } from '../src/lib/recipe.js';

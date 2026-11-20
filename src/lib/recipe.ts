@@ -4,7 +4,7 @@
  * database record and calculates calories, macros and micronutrients itself.
  */
 import type Anthropic from '@anthropic-ai/sdk';
-import { RECOGNITION_MODEL } from './recognition.js';
+import { CHAT_MODEL } from './coach.js';
 import type { CoachContext } from './coach.js';
 
 export interface RecipeIngredient { name: string; localName: string; searchQueries: string[]; grams: number; note: string }
@@ -42,11 +42,11 @@ Do NOT state any nutrient values — the app calculates them from its food datab
 
 export async function recipeWithClient(client: Anthropic, context: CoachContext, request: string, contextText: (c: CoachContext) => string): Promise<Recipe> {
   const response = await client.beta.messages.create({
-    model: RECOGNITION_MODEL,
+    model: CHAT_MODEL,
     max_tokens: 8000,
     betas: ['server-side-fallback-2026-07-01'],
     fallbacks: 'default',
-    output_config: { effort: 'medium', format: { type: 'json_schema', schema: SCHEMA as unknown as Record<string, unknown> } },
+    output_config: { effort: 'low', format: { type: 'json_schema', schema: SCHEMA as unknown as Record<string, unknown> } },
     system: [
       { type: 'text', text: SYSTEM, cache_control: { type: 'ephemeral' } },
       { type: 'text', text: contextText(context) },

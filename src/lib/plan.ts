@@ -5,7 +5,7 @@
  * automatically.
  */
 import type Anthropic from '@anthropic-ai/sdk';
-import { RECOGNITION_MODEL } from './recognition.js';
+import { CHAT_MODEL } from './coach.js';
 import type { CoachContext } from './coach.js';
 
 export interface PlanItem { name: string; localName: string; searchQueries: string[]; grams: number }
@@ -59,11 +59,11 @@ Do NOT state any nutrient values — the app calculates them from its database.
 
 export async function planWithClient(client: Anthropic, context: CoachContext, request: string, contextText: (c: CoachContext) => string): Promise<DayPlan> {
   const response = await client.beta.messages.create({
-    model: RECOGNITION_MODEL,
+    model: CHAT_MODEL,
     max_tokens: 12000,
     betas: ['server-side-fallback-2026-07-01'],
     fallbacks: 'default',
-    output_config: { effort: 'medium', format: { type: 'json_schema', schema: SCHEMA as unknown as Record<string, unknown> } },
+    output_config: { effort: 'low', format: { type: 'json_schema', schema: SCHEMA as unknown as Record<string, unknown> } },
     system: [
       { type: 'text', text: SYSTEM, cache_control: { type: 'ephemeral' } },
       { type: 'text', text: contextText(context) },

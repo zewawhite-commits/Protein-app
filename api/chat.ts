@@ -2,6 +2,7 @@
  * POST /api/chat { turns: [{role, content}], context } → { reply, foods }
  * AI nutrition coach. Requires a Premium pass when payments are configured.
  */
+export const maxDuration = 60;
 import Anthropic from '@anthropic-ai/sdk';
 import { cleanTurns, coachStream, coachWithClient, type ChatImage } from '../src/lib/coach.js';
 import { json } from './_lib/premium.js';

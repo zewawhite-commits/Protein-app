@@ -2,6 +2,7 @@
  * POST /api/plan { context, request? } → DayPlan
  * AI eating plan for one day. Requires a Premium pass when payments are configured.
  */
+export const maxDuration = 60;
 import Anthropic from '@anthropic-ai/sdk';
 import { contextText } from '../src/lib/coach.js';
 import { planWithClient } from '../src/lib/plan.js';

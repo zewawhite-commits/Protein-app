@@ -7,6 +7,7 @@
  * POST /api/recognize  { image: <base64 JPEG/PNG/WebP>, mediaType: "image/jpeg" }
  *   → { isFood, items: [...], note }
  */
+export const maxDuration = 60;
 import Anthropic from '@anthropic-ai/sdk';
 import { recognizeWithClient } from '../src/lib/recognition.js';
 import { gate } from './_lib/quota.js';
