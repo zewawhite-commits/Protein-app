@@ -8,7 +8,7 @@ import { dailyTargets } from '@/lib/energy';
 import { splitName } from '@/lib/foods';
 import { Segmented, cx, fmt } from '@/components/ui';
 
-type Period = 'week' | 'month';
+type Period = 'week' | 'month' | 'year';
 
 /** Start and end (inclusive) of the week (Mon–Sun) or month that is `offset` periods back. */
 function range(period: Period, offset: number): { from: string; to: string; label: string } {
@@ -19,13 +19,17 @@ function range(period: Period, offset: number): { from: string; to: string; labe
     const f = (k: string) => fromKey(k).toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
     return { from: monday, to, label: `${f(monday)} – ${f(to)}` };
   }
+  if (period === 'year') {
+    const y = now.getFullYear() - offset;
+    return { from: `${y}-01-01`, to: `${y}-12-31`, label: String(y) };
+  }
   const first = new Date(now.getFullYear(), now.getMonth() - offset, 1);
   const last = new Date(first.getFullYear(), first.getMonth() + 1, 0);
   return { from: toKey(first), to: toKey(last), label: first.toLocaleDateString(undefined, { month: 'long', year: 'numeric' }) };
 }
 
 /**
- * Weekly and monthly reports, worked out from your own logs (any past period, so they are
+ * Weekly, monthly and yearly reports, worked out from your own logs (any past period, so they are
  * always there to revisit). Averages use only days with food logged; missing days are not zero.
  */
 export default function Reports() {
@@ -83,11 +87,11 @@ export default function Reports() {
         <h1 className="flex-1 text-[26px] font-extrabold tracking-tight">Reports</h1>
         <button onClick={() => window.print()} className="chip !h-10"><Download size={15} /> PDF</button>
       </header>
-      <div className="print:hidden"><Segmented full value={period} onChange={(p) => { setPeriod(p); setOffset(0); }} options={[{ value: 'week', label: 'Weekly' }, { value: 'month', label: 'Monthly' }]} /></div>
+      <div className="print:hidden"><Segmented full value={period} onChange={(p) => { setPeriod(p); setOffset(0); }} options={[{ value: 'week', label: 'Weekly' }, { value: 'month', label: 'Monthly' }, { value: 'year', label: 'Yearly' }]} /></div>
 
       <div className="mt-4 flex items-center justify-between">
         <button onClick={() => setOffset((o) => o + 1)} className="grid h-10 w-10 place-items-center rounded-full bg-surface print:hidden" aria-label="Previous"><ChevronLeft size={18} /></button>
-        <p className="text-center font-bold">Nutivili AI {period === 'week' ? 'weekly' : 'monthly'} report · {r.label}</p>
+        <p className="text-center font-bold">Nutivili AI {period === 'week' ? 'weekly' : period === 'month' ? 'monthly' : 'yearly'} report · {r.label}</p>
         <button disabled={offset === 0} onClick={() => setOffset((o) => Math.max(0, o - 1))} className="grid h-10 w-10 place-items-center rounded-full bg-surface disabled:opacity-30 print:hidden" aria-label="Next"><ChevronRight size={18} /></button>
       </div>
 

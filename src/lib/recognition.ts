@@ -158,7 +158,7 @@ For a combined dish (soup, stew, curry, rice dish, salad, sandwich…), also lis
 Do not provide any nutrient values. If the photo contains no food (or only a menu, a person, etc.), set isFood to false and items to [] and explain briefly in "note".`;
 
 /** Run recognition with an Anthropic client (server-side key, or the user's own key in the browser). */
-export async function recognizeWithClient(client: Anthropic, imageBase64: string | null, mediaType: string, description?: string, opts: { menu?: boolean } = {}): Promise<RecognitionResult> {
+export async function recognizeWithClient(client: Anthropic, imageBase64: string | null, mediaType: string, description?: string, opts: { menu?: boolean; leftovers?: string[] } = {}): Promise<RecognitionResult> {
   const response = await client.beta.messages.create({
     model: RECOGNITION_MODEL,
     max_tokens: 8000,
@@ -180,7 +180,9 @@ export async function recognizeWithClient(client: Anthropic, imageBase64: string
               mediaType === 'application/pdf'
                 ? { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: imageBase64 } }
                 : { type: 'image', source: { type: 'base64', media_type: mediaType as 'image/jpeg', data: imageBase64 } },
-              { type: 'text', text: opts.menu
+              { type: 'text', text: opts.leftovers?.length
+                ? `This is a photo taken AFTER eating: it shows what is LEFT on the plate. Before eating the plate had:\n${opts.leftovers.map((l, i) => `${i + 1}. ${l}`).join('\n')}\nReturn exactly one item per food above, in the same order and with the same name, where estimatedGrams (with a range) is how much of it is LEFT in this photo — 0 if it is all gone. Do not add new foods. If the photo doesn't show a plate or leftovers, set isFood to false and explain in "note".`
+                : opts.menu
                 ? 'This is a photo of a restaurant, café or takeaway menu, not a plate. List up to 12 main dishes from it as items, as each would be served: use the dish name as written (English in "name", the menu’s own wording in "localName" if different), a typical restaurant portion in estimatedGrams with a range, the cooking method, ingredients for combined dishes, and hidden extras at restaurant levels (restaurants usually use more oil, butter and salt than home cooking). Skip drinks and sides unless the menu is only drinks. photoQuality = how readable the menu is. If it isn’t a menu or food, set isFood to false and explain in "note".'
                 : 'Identify every food and drink in this photo — the whole plate, not just the main item.' },
             ]

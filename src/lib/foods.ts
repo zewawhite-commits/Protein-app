@@ -1,4 +1,4 @@
-import { EXTRA_KEYS } from './nutrients';
+import { EXTRA_KEYS, knownAddedSugar } from './nutrients';
 /**
  * Food database: loads public/data/foods.json (USDA SR Legacy + USDA FNDDS +
  * FAO/INFOODS West Africa, built by scripts/build-foods.mjs) and merges custom
@@ -95,6 +95,9 @@ export function loadFoodDb(): Promise<FoodDb> {
           const usda = src === 's' || src === 'f';
           // Recipe rows carry their other names in brackets: "Egusi soup (egushi, melon seed soup)".
           const m = src === 'r' ? /^(.*?) \((.*)\)$/.exec(name) : null;
+          const category = file.categories[cat] ?? 'Other';
+          const extras: Record<string, number | null> = extra ? Object.fromEntries(EXTRA_KEYS.map((k, i) => [k, extra[i] ?? null])) : {};
+          const added = knownAddedSugar(name, category, extras.sugar, extras.addedSugar);
           return {
             id: `${ID_PREFIX[src]}:${key}`,
             fdcId: usda ? Number(key) : undefined,
@@ -102,9 +105,9 @@ export function loadFoodDb(): Promise<FoodDb> {
             name: m ? m[1] : name,
             ...(m && { aliases: m[2].split(', ') }),
             ...(note && { sourceNote: note }),
-            category: file.categories[cat] ?? 'Other',
+            category,
             state,
-            per100: { protein, kcal, fat, carbs, fiber, ...(extra && Object.fromEntries(EXTRA_KEYS.map((k, i) => [k, extra[i] ?? null]))) },
+            per100: { protein, kcal, fat, carbs, fiber, ...extras, addedSugar: added },
             portions: portions.map(([label, grams]) => ({ label, grams })),
             source: SOURCE_OF[src],
           };

@@ -46,6 +46,16 @@ export async function recognizePhoto(photo: Blob, premiumToken?: string): Promis
   return send({ image: await toBase64(photo), mediaType: photo.type || 'image/jpeg' }, premiumToken);
 }
 
+/** What's left on the plate after eating: grams left of each food, in the same order (uses one AI scan). */
+export async function recognizeLeftovers(photo: Blob, before: { name: string; grams: number }[]): Promise<number[]> {
+  const r = await send({ image: await toBase64(photo), mediaType: photo.type || 'image/jpeg', leftovers: before.map((b) => `${b.name}, about ${Math.round(b.grams)} g`) });
+  if (!r.isFood) throw new Error(r.note || 'Couldn’t see the leftovers. Try another photo.');
+  return before.map((b, i) => {
+    const hit = r.items.find((x) => x.name.toLowerCase() === b.name.toLowerCase()) ?? r.items[i];
+    return Math.max(0, Math.min(b.grams, hit?.estimatedGrams ?? 0));
+  });
+}
+
 /** Read a nutrition label from a photo (uses one AI scan). */
 export async function readLabelPhoto(photo: Blob): Promise<LabelRead> {
   return (await send({ image: await toBase64(photo), mediaType: photo.type || 'image/jpeg', label: true })) as unknown as LabelRead;
@@ -61,7 +71,7 @@ export async function recognizeMenuUrl(url: string): Promise<RecognitionResult> 
   return send({ menuUrl: url });
 }
 
-async function send(payload: { image?: string; mediaType?: string; text?: string; label?: boolean; menu?: boolean; menuUrl?: string }, premiumToken?: string): Promise<RecognitionResult> {
+async function send(payload: { image?: string; mediaType?: string; text?: string; label?: boolean; menu?: boolean; menuUrl?: string; leftovers?: string[] }, premiumToken?: string): Promise<RecognitionResult> {
   void premiumToken;
   let res: Response;
   try {

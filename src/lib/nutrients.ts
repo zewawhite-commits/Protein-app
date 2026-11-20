@@ -6,7 +6,7 @@
  */
 export const EXTRA_KEYS = [
   'sugar', 'satFat', 'cholesterol', 'sodium', 'potassium', 'calcium', 'iron',
-  'magnesium', 'zinc', 'vitA', 'vitC', 'vitD', 'vitB12', 'folate',
+  'magnesium', 'zinc', 'vitA', 'vitC', 'vitD', 'vitB12', 'folate', 'addedSugar',
 ] as const;
 export type ExtraKey = (typeof EXTRA_KEYS)[number];
 
@@ -35,4 +35,20 @@ export const NUTRIENTS: Record<ExtraKey, NutrientInfo> = {
   vitD: { label: 'Vitamin D', unit: 'µg', dv: 20, group: 'vitamins' },
   vitB12: { label: 'Vitamin B12', unit: 'µg', dv: 2.4, group: 'vitamins' },
   folate: { label: 'Folate', unit: 'µg', dv: 400, group: 'vitamins' },
+  // FDA daily value for added sugars is 50 g. Only known for plain foods (none added), pack labels and your own foods.
+  addedSugar: { label: 'Added sugar', unit: 'g', dv: 50, limit: true, group: 'carbs' },
 };
+
+/**
+ * Added sugar, when it can honestly be known without a label: plain, single-ingredient foods
+ * (fresh fruit, vegetables, plain meat, fish, eggs, beans, grains, milk, oils) have none added,
+ * and a food with no sugar at all has no added sugar. Anything else stays unknown (null).
+ */
+const PLAIN = /^(fruits and fruit juices|fruit \(uk\)|fruits and their products|apples|bananas|grapes|melons|pears|pineapple|strawberries|blueberries|citrus fruits|mango and papaya|peaches|other fruits|vegetables|other dark green|other red and orange|other starchy|onions|tomatoes|spinach|string beans|broccoli|cabbage|carrots|corn$|lettuce|white potatoes, baked or boiled|starchy roots|poultry products|chicken, whole pieces|turkey, duck|beef products|beef, excludes|ground beef|pork$|pork products|lamb|liver and organ|meat, poultry and their products|finfish|fish$|fish and its products|shellfish$|eggs and omelets|eggs and their products|legumes|beans, peas, legumes$|nut and seed|nuts and seeds|nuts, seeds|cereal grains|cereals and their products|rice$|pasta, noodles, cooked grains|oatmeal|fats and oils|salad dressings and vegetable oils|butter and animal fats|spices|herbs and spices|milk, (whole|reduced fat|lowfat|nonfat)$|milk and its products|yogurt, (regular|greek)$|cheese$|tap water|bottled water|coffee$|tea$)/i;
+const SWEETENED = /sweeten|sugar|syrup|candied|honey|glaze|\bjam\b|jelly|chocolate|flavou?red|vanilla|with fruit|juice drink|nectar|cocktail|cured|cereal|dessert|\bpie\b|cake|cookie|sauce|ketchup|marinade|breaded|condensed|dried fruit|\bcanned\b.*\bin (heavy|light)\b|pickle|\bsweet\b(?!\s*(potato|corn|pepper))/i;
+export function knownAddedSugar(name: string, category: string | undefined, sugar: number | null | undefined, given?: number | null): number | null {
+  if (given != null) return given;
+  if (sugar === 0) return 0;
+  if (category && PLAIN.test(category) && !SWEETENED.test(name)) return 0;
+  return null;
+}

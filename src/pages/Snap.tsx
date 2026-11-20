@@ -7,7 +7,7 @@ import { ArrowLeft, BookOpen, Check, ChevronRight, CircleCheck, Crown, Focus, Im
 import { useStore } from '@/store/useStore';
 import { useFoodDb, usePhotoUrl } from '@/lib/hooks';
 import { deletePhoto, getPhoto, resizeImage, savePhoto } from '@/lib/photos';
-import { recognizeMenuUrl, matchItem, matchItems, pickKey, portionConfidence, recognizeMenu, sendFeedback, PremiumRequiredError, SignInRequiredError, readLabelPhoto, recognizePhoto, recognizeText, RecognitionUnavailableError, ScanLimitError, type MatchedItem } from '@/lib/recognize-client';
+import { recognizeLeftovers, recognizeMenuUrl, matchItem, matchItems, pickKey, portionConfidence, recognizeMenu, sendFeedback, PremiumRequiredError, SignInRequiredError, readLabelPhoto, recognizePhoto, recognizeText, RecognitionUnavailableError, ScanLimitError, type MatchedItem } from '@/lib/recognize-client';
 import { refreshPremium } from '@/lib/premium';
 import { SOURCE_SHORT, searchFoods, splitName } from '@/lib/foods';
 import { mealForNow, todayKey } from '@/lib/dates';
@@ -317,7 +317,7 @@ export default function Snap() {
             </Link>
           )}
           {isMenu && <MenuFits matches={matches} date={date} onPick={(i) => { const m = matches[i]; if (m.candidates[0]) setPick({ food: m.candidates[0], grams: m.item.estimatedGrams || undefined, label: m.item.name, index: i }); }} />}
-          {!isMenu && matches.length > 0 && <PlateWeight matches={matches} onApply={(factor, msg) => { setMatches((ms) => ms.map((m) => ({ ...m, item: { ...m.item, estimatedGrams: Math.round(m.item.estimatedGrams * factor), gramsLow: Math.round((msg ? m.item.gramsLow : m.item.estimatedGrams) * factor), gramsHigh: Math.round((msg ? m.item.gramsHigh : m.item.estimatedGrams) * factor) } }))); toast(msg ?? 'Portions updated from your plate weight'); }} />}
+          {!isMenu && matches.length > 0 && <PlateWeight matches={matches} onLeftovers={(left) => { setMatches((ms) => ms.map((m, k) => { const eaten = Math.max(0, m.item.estimatedGrams - (left[k] ?? 0)); const f = m.item.estimatedGrams ? eaten / m.item.estimatedGrams : 1; return { ...m, item: { ...m.item, estimatedGrams: Math.round(eaten), gramsLow: Math.round(m.item.gramsLow * f), gramsHigh: Math.round(m.item.gramsHigh * f) } }; })); toast('Portions updated: what you ate = plate before − what’s left'); }} onApply={(factor, msg) => { setMatches((ms) => ms.map((m) => ({ ...m, item: { ...m.item, estimatedGrams: Math.round(m.item.estimatedGrams * factor), gramsLow: Math.round((msg ? m.item.gramsLow : m.item.estimatedGrams) * factor), gramsHigh: Math.round((msg ? m.item.gramsHigh : m.item.estimatedGrams) * factor) } }))); toast(msg ?? 'Portions updated from your plate weight'); }} />}
           {!isMenu && <PlateSummary
             matches={matches}
             logged={logged}
@@ -375,7 +375,7 @@ export default function Snap() {
             <input id="lb-name" className="field" maxLength={60} placeholder="e.g. Protein yoghurt, strawberry" value={label.name} onChange={(e) => setLabel({ ...label, name: e.target.value })} />
             <p className="label mt-4">Per 100 {label.unit}</p>
             <div className="grid grid-cols-2 gap-2">
-              {([['kcal', 'Calories', 'kcal'], ['protein', 'Protein', 'g'], ['carbs', 'Carbs', 'g'], ['sugar', 'of which sugars', 'g'], ['fat', 'Fat', 'g'], ['satFat', 'of which saturates', 'g'], ['fiber', 'Fibre', 'g'], ['sodium', 'Sodium', 'mg']] as const).map(([k, l, u]) => (
+              {([['kcal', 'Calories', 'kcal'], ['protein', 'Protein', 'g'], ['carbs', 'Carbs', 'g'], ['sugar', 'of which sugars', 'g'], ['addedSugar', 'incl. added sugars', 'g'], ['fat', 'Fat', 'g'], ['satFat', 'of which saturates', 'g'], ['fiber', 'Fibre', 'g'], ['sodium', 'Sodium', 'mg']] as const).map(([k, l, u]) => (
                 <label key={k} className="rounded-2xl bg-raised px-3 py-2">
                   <span className="block text-xs font-semibold text-silver">{l} ({u})</span>
                   <input inputMode="decimal" aria-label={l} className="num mt-0.5 w-full bg-transparent text-[17px] font-bold outline-none" placeholder="not on label" value={label.per100[k] ?? ''} onChange={(e) => { const v = e.target.value.replace(/[^\d.]/g, ''); setLabel({ ...label, per100: { ...label.per100, [k]: v === '' ? (k === 'protein' ? 0 : null) : Number(v) } }); }} />
@@ -975,8 +975,20 @@ function ScanSteps({ menu }: { menu: boolean }) {
  * A camera can't weigh food. If you weighed the whole plate (minus the empty plate), enter it
  * and the AI's estimates are scaled to match, keeping its split between the foods.
  */
-function PlateWeight({ matches, onApply }: { matches: MatchedItem[]; onApply: (factor: number, msg?: string) => void }) {
+function PlateWeight({ matches, onApply, onLeftovers }: { matches: MatchedItem[]; onApply: (factor: number, msg?: string) => void; onLeftovers: (gramsLeft: number[]) => void }) {
   const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
+  const after = useRef<HTMLInputElement>(null);
+  const readLeft = async (file?: File) => {
+    if (!file) return;
+    setBusy(true); setErr('');
+    try {
+      const img = await resizeImage(file).catch(() => file);
+      onLeftovers(await recognizeLeftovers(img, matches.map((m) => ({ name: m.item.name, grams: m.item.estimatedGrams || 0 }))));
+    } catch (e) { setErr((e as Error).message || 'Couldn’t read that photo. Try again.'); }
+    finally { setBusy(false); if (after.current) after.current.value = ''; }
+  };
   const [g, setG] = useState('');
   const est = matches.reduce((a, m) => a + (m.item.estimatedGrams || 0), 0);
   if (!est) return null;
@@ -991,7 +1003,11 @@ function PlateWeight({ matches, onApply }: { matches: MatchedItem[]; onApply: (f
             {([['¾', 0.75], ['½', 0.5], ['¼', 0.25]] as const).map(([l, f]) => (
               <button key={l} onClick={() => { onApply(f, `Portions set to ${l} of the plate`); }} className="chip !h-8 !px-3">{l}</button>
             ))}
+            <span className="text-silver">or</span>
+            <button disabled={busy} onClick={() => after.current?.click()} className="chip !h-8 !px-3">{busy ? <><Loader2 size={14} className="animate-spin" /> Loading…</> : 'Photo what’s left'}</button>
+            <input ref={after} type="file" accept="image/*" capture="environment" className="hidden" aria-label="Photo of what’s left" onChange={(e) => void readLeft(e.target.files?.[0])} />
           </div>
+          {err && <p className="mt-1.5 text-[13px] text-danger">{err}</p>}
         </>
       ) : (
         <>

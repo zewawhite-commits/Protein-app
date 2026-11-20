@@ -26,6 +26,8 @@ export interface ExerciseEntry {
   kcal: number;
   /** True when the user typed the calories themselves. */
   manual?: boolean;
+  /** Set when corrected, so the newest edit wins across devices. */
+  updatedAt?: number;
   /** Optional detail for strength or timed work: any exercise, with sets, reps, weight and/or hold time. */
   detail?: { name: string; sets?: number; reps?: number; weightKg?: number; seconds?: number };
   /** Distance in km (runs, walks, rides, swims). */

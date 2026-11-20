@@ -23,6 +23,8 @@ export interface Per100 {
   vitD?: number | null;
   vitB12?: number | null;
   folate?: number | null;
+  /** Sugar added in making (pack labels, plain foods = 0); null when unknown. Part of `sugar`. */
+  addedSugar?: number | null;
 }
 
 export interface Portion {

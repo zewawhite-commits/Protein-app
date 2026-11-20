@@ -135,7 +135,9 @@ export function ExerciseList({ date }: { date: string }) {
   const all = useStore((s) => s.exercises);
   const list = useMemo(() => all.filter((e) => e.date === date), [all, date]);
   const remove = useStore((s) => s.removeExercise);
+  const update = useStore((s) => s.updateExercise);
   const unit = useStore((s) => s.settings.bodyUnit);
+  const [edit, setEdit] = useState<{ id: string; minutes: string; kcal: string } | null>(null);
   if (!list.length) return null;
   return (
     <section className="mt-6">
@@ -150,7 +152,15 @@ export function ExerciseList({ date }: { date: string }) {
               <p className="text-sm text-silver">{e.minutes} min{e.km ? ` · ${unit === 'lb' ? `${(e.km / 1.609344).toFixed(1)} mi` : `${e.km} km`}` : ''} · {e.intensity === 'low' ? 'light' : e.intensity === 'medium' ? 'moderate' : 'hard'}{e.manual ? '' : ' · estimate'}</p>
               {e.note && <p className="text-xs text-silver">{e.note}</p>}
             </div>
-            <p className="num text-right"><span className="block text-lg font-bold text-accent">+{fmt(e.kcal)}</span><span className="text-xs text-silver">kcal</span></p>
+            {edit?.id === e.id ? (
+              <div className="flex items-center gap-1.5">
+                <input inputMode="numeric" aria-label="Minutes" className="field !h-10 !w-16 !px-2 text-center" value={edit.minutes} onChange={(x) => setEdit({ ...edit, minutes: x.target.value.replace(/\D/g, '').slice(0, 3) })} />
+                <input inputMode="numeric" aria-label="Calories burned" className="field !h-10 !w-20 !px-2 text-center" value={edit.kcal} onChange={(x) => setEdit({ ...edit, kcal: x.target.value.replace(/\D/g, '').slice(0, 4) })} />
+                <button className="btn-primary !h-10 !px-3 text-sm" disabled={!Number(edit.minutes)} onClick={() => { update(e.id, { minutes: Number(edit.minutes), kcal: Number(edit.kcal) || 0, manual: true }); setEdit(null); }}>Save</button>
+              </div>
+            ) : (
+              <button onClick={() => setEdit({ id: e.id, minutes: String(e.minutes), kcal: String(Math.round(e.kcal)) })} className="num text-right" aria-label="Edit workout"><span className="block text-lg font-bold text-accent">+{fmt(e.kcal)}</span><span className="text-xs text-silver">kcal · edit</span></button>
+            )}
             <button onClick={() => remove(e.id)} className="grid h-9 w-9 place-items-center rounded-full text-dim" aria-label="Delete workout"><Trash2 size={16} /></button>
           </div>
         ))}

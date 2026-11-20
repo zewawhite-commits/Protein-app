@@ -35,6 +35,8 @@ interface State {
   removeMeasurement: (id: string) => void;
   addExercise: (e: Omit<ExerciseEntry, 'id'>) => void;
   removeExercise: (id: string) => void;
+  /** Corrections replace the old numbers (never add to them). */
+  updateExercise: (id: string, patch: Partial<Omit<ExerciseEntry, 'id'>>) => void;
   progressPhotos: ProgressPhoto[];
   logWeight: (kg: number, date?: string, note?: string) => void;
   removeWeight: (date: string) => void;
@@ -127,6 +129,7 @@ export const useStore = create<State>()(
       addMeasurement: (m) => set((s) => ({ measurements: [...s.measurements, { ...m, id: crypto.randomUUID(), createdAt: Date.now() }] })),
       removeMeasurement: (id) => set((s) => ({ measurements: s.measurements.filter((x) => x.id !== id), deleted: { ...s.deleted, [id]: Date.now() } })),
       addExercise: (e) => set((s) => ({ exercises: [...s.exercises, { ...e, id: crypto.randomUUID() }] })),
+      updateExercise: (id, patch) => set((s) => ({ exercises: s.exercises.map((x) => (x.id === id ? { ...x, ...patch, updatedAt: Date.now() } : x)) })),
       removeExercise: (id) => set((s) => ({ exercises: s.exercises.filter((x) => x.id !== id), deleted: { ...s.deleted, [id]: Date.now() } })),
 
       logWeight: (kg, date = todayKey(), note) =>

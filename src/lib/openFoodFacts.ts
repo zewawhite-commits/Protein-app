@@ -43,7 +43,7 @@ export function offToFood(p: OffProduct): Food | null {
     per100: {
       protein, kcal: n(nu['energy-kcal_100g']), fat: n(nu.fat_100g), carbs: n(nu.carbohydrates_100g), fiber: n(nu.fiber_100g),
       // Label values: grams in Open Food Facts; minerals/vitamins converted to mg / µg.
-      sugar: n(nu.sugars_100g), satFat: n(nu['saturated-fat_100g']),
+      sugar: n(nu.sugars_100g), addedSugar: n(nu['added-sugars_100g']), satFat: n(nu['saturated-fat_100g']),
       cholesterol: mg(nu.cholesterol_100g), sodium: mg(nu.sodium_100g), potassium: mg(nu.potassium_100g),
       calcium: mg(nu.calcium_100g), iron: mg(nu.iron_100g), magnesium: mg(nu.magnesium_100g), zinc: mg(nu.zinc_100g),
       vitA: ug(nu['vitamin-a_100g']), vitC: mg(nu['vitamin-c_100g']), vitD: ug(nu['vitamin-d_100g']), vitB12: ug(nu['vitamin-b12_100g']), folate: ug(nu.folates_100g),

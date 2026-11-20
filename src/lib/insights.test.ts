@@ -52,3 +52,16 @@ describe('duplicate foods in search', () => {
     expect(groupDuplicates([f('a', 'Onions, raw', 40), f('b', 'Onions, raw', 41)])[0].conflict).toBe(false);
   });
 });
+
+import { knownAddedSugar } from './nutrients';
+describe('added sugar', () => {
+  it('is 0 for plain foods, unknown for sweetened or mixed ones', () => {
+    expect(knownAddedSugar('Bananas, raw', 'Bananas', 12)).toBe(0);
+    expect(knownAddedSugar('Sweet potato, baked', 'Other starchy vegetables', 6)).toBe(0);
+    expect(knownAddedSugar('Yogurt, vanilla', 'Yogurt, regular', 12)).toBeNull();
+    expect(knownAddedSugar('Peaches, canned, in heavy syrup', 'Fruits and Fruit Juices', 15)).toBeNull();
+    expect(knownAddedSugar('Cola', 'Soft drinks', 10)).toBeNull();
+    expect(knownAddedSugar('Cola', 'Soft drinks', 10, 10)).toBe(10);
+    expect(knownAddedSugar('Chicken pie', 'Meat mixed dishes', 0)).toBe(0);
+  });
+});
