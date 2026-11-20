@@ -29,8 +29,10 @@ export function PlanView() {
   const saved = useStore((s) => s.savedPlans);
   const savePlan = useStore((s) => s.savePlan);
   const removeSavedPlan = useStore((s) => s.removeSavedPlan);
-  const [plan, setPlan] = useState<DayPlan | null>(saved[0]?.plan ?? null);
-  const [savedId, setSavedId] = useState<string | null>(saved[0]?.id ?? null);
+  // Opened from History (?open=id): show that one; otherwise the latest.
+  const first = saved.find((x) => x.id === new URLSearchParams(location.search).get('open')) ?? saved[0];
+  const [plan, setPlan] = useState<DayPlan | null>(first?.plan ?? null);
+  const [savedId, setSavedId] = useState<string | null>(first?.id ?? null);
   const [ask, setAsk] = useState('');
   const [state, setState] = useState<{ busy: boolean; error?: string; premium?: boolean; signIn?: boolean }>({ busy: false });
   const [span, setSpan] = useState<'day' | 'week'>('day');

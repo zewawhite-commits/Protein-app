@@ -1,7 +1,9 @@
+import { FoodVisual } from '@/components/FoodIcon';
+import { archiveChat, pastChats, removeChat, type PastChat } from '@/lib/chats';
 import { mealLabel } from '@/lib/meals';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowUp, ChevronRight, ImagePlus, MessageCircle, RotateCcw, X } from 'lucide-react';
+import { ArrowUp, ChevronRight, History, ImagePlus, MessageCircle, RotateCcw, Trash2, X } from 'lucide-react';
 import { blobToBase64, resizeImage } from '@/lib/photos';
 import { aiHeaders } from '@/lib/premium';
 import { WorkoutView } from '@/components/WorkoutView';
@@ -18,7 +20,7 @@ import type { CoachContext, CoachFood, CoachReply, ChatTurn, ProfileUpdate } fro
 import { partialReply } from '@/lib/coach';
 import type { Food } from '@/lib/types';
 import { FoodSheet } from '@/components/FoodSheet';
-import { Segmented, cx, fmt } from '@/components/ui';
+import { Segmented, Sheet, cx, fmt } from '@/components/ui';
 import { PlanView } from '@/components/PlanView';
 import { APP_NAME, haptic, toast } from '@/components/fx';
 
@@ -56,6 +58,7 @@ async function preparePhoto(file: File): Promise<Pending> {
 }
 
 const STORE_KEY = 'provora-coach';
+const CHAT_ID = 'nutivili-coach-chat-id';
 const load = (): Msg[] => {
   try { return JSON.parse(localStorage.getItem(STORE_KEY) ?? '[]') as Msg[]; } catch { return []; }
 };
@@ -157,7 +160,12 @@ export default function Coach() {
 
 function Chat() {
   const session = useSession();
-  const [msgs, setMsgs] = useState<Msg[]>(load);
+  // Which conversation this is: every chat is kept under Past chats, so "New chat" loses nothing.
+  const wanted = new URLSearchParams(location.search).get('chat');
+  const [chatId, setChatIdState] = useState<string>(() => wanted ?? localStorage.getItem(CHAT_ID) ?? crypto.randomUUID());
+  const setChatId = (id: string) => { setChatIdState(id); try { localStorage.setItem(CHAT_ID, id); } catch { /* storage blocked */ } };
+  const [msgs, setMsgs] = useState<Msg[]>(() => (wanted ? pastChats<Msg>().find((c) => c.id === wanted)?.msgs ?? load() : load()));
+  const [showPast, setShowPast] = useState(false);
   const [text, setText] = useState(() => new URLSearchParams(location.search).get('ask') ?? '');
   const [busy, setBusy] = useState(false);
   const [pending, setPending] = useState<Pending | null>(null);
@@ -166,7 +174,8 @@ function Chat() {
   const endRef = useRef<HTMLDivElement>(null);
   const profile = useStore((s) => s.profile);
 
-  useEffect(() => { save(msgs); endRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' }); }, [msgs]);
+  useEffect(() => { save(msgs); if (!busy) archiveChat(msgs, chatId); endRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' }); }, [msgs, busy]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { try { localStorage.setItem(CHAT_ID, chatId); } catch { /* storage blocked */ } }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const context = useCoachContext();
 
@@ -238,11 +247,11 @@ function Chat() {
 
   return (
     <div className="flex min-h-[calc(100dvh-14rem)] flex-col">
-      {msgs.length > 0 && (
-        <div className="mb-2 flex justify-end">
-          <button onClick={() => { haptic(); setMsgs([]); }} className="chip !h-9" aria-label="New chat"><RotateCcw size={14} /> New chat</button>
-        </div>
-      )}
+      <div className="mb-2 flex justify-end gap-2">
+        {pastChats().some((c) => c.id !== chatId) && <button onClick={() => { haptic(); setShowPast(true); }} className="chip !h-9"><History size={14} /> Past chats</button>}
+        {msgs.length > 0 && <button onClick={() => { haptic(); setChatId(crypto.randomUUID()); setMsgs([]); }} className="chip !h-9" aria-label="New chat"><RotateCcw size={14} /> New chat</button>}
+      </div>
+      <PastChats open={showPast} current={chatId} onClose={() => setShowPast(false)} onPick={(c) => { setShowPast(false); setChatId(c.id); setMsgs(c.msgs); }} />
 
       <p className="mb-3 rounded-2xl bg-warn/10 px-4 py-2.5 text-[13px] font-medium leading-snug text-ink">For general wellness only — the AI Coach is not medical advice. Talk to a doctor or dietitian about medical conditions, pregnancy, eating disorders or medicines.</p>
       <div className="flex-1 space-y-3 pb-28">
@@ -349,6 +358,29 @@ function Chat() {
 }
 
 /** Suggested foods, matched to database records so every number is calculated, not generated. */
+/** Every earlier conversation with the coach, newest first. */
+function PastChats({ open, current, onClose, onPick }: { open: boolean; current: string; onClose: () => void; onPick: (c: PastChat<Msg>) => void }) {
+  const [, redraw] = useState(0);
+  const list = open ? pastChats<Msg>().filter((c) => c.id !== current) : [];
+  return (
+    <Sheet open={open} onClose={onClose} title="Past chats">
+      {list.length === 0 ? <p className="py-6 text-center text-sm text-silver">No earlier chats yet.</p> : (
+        <div className="space-y-1 pb-2">
+          {list.map((c) => (
+            <div key={c.id} className="flex items-center gap-2">
+              <button onClick={() => onPick(c)} className="min-w-0 flex-1 rounded-[18px] px-3 py-2.5 text-left active:bg-raised/60">
+                <p className="truncate text-[15px] font-semibold">{c.title}</p>
+                <p className="text-xs text-silver">{new Date(c.at).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })} · {c.msgs.length} messages</p>
+              </button>
+              <button onClick={() => { removeChat(c.id); redraw((x) => x + 1); }} className="grid h-9 w-9 place-items-center rounded-full text-dim" aria-label={`Delete chat ${c.title}`}><Trash2 size={16} /></button>
+            </div>
+          ))}
+        </div>
+      )}
+    </Sheet>
+  );
+}
+
 function FoodCards({ foods, onOpen, estimate }: { foods: CoachFood[]; onOpen: (f: Food, grams?: number) => void; estimate?: boolean }) {
   const { db } = useFoodDb();
   const custom = useStore((s) => s.customFoods);
@@ -364,6 +396,7 @@ function FoodCards({ foods, onOpen, estimate }: { foods: CoachFood[]; onOpen: (f
         const title = f.localName && f.localName !== f.name ? f.localName : f.name;
         return match ? (
           <button key={i} onClick={() => { haptic(); onOpen(match, f.portionGrams || undefined); }} className="flex w-full items-center gap-3 rounded-[18px] px-3 py-2.5 text-left transition active:bg-raised/60">
+            <FoodVisual name={match.name} category={match.category} size={48} />
             <div className="min-w-0 flex-1">
               <p className="truncate text-[15px] font-semibold">{title}{title !== f.name && <span className="font-normal text-silver"> · {f.name}</span>}</p>
               <p className="num text-xs text-silver">
@@ -375,6 +408,7 @@ function FoodCards({ foods, onOpen, estimate }: { foods: CoachFood[]; onOpen: (f
           </button>
         ) : (
           <Link key={i} to={`/add?q=${encodeURIComponent(f.searchQueries[0] ?? f.name)}`} className="flex items-center gap-3 rounded-[18px] p-2">
+            <FoodVisual name={f.name} size={48} />
             <div className="min-w-0 flex-1">
               <p className="truncate text-[15px] font-semibold">{title}</p>
               <p className="text-xs text-dim">Not in our database yet — tap to search</p>

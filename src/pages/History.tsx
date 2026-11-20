@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { CalendarDays, ChevronLeft, ChevronRight, Images, Search } from 'lucide-react';
+import { BarChart3, BookOpen, CalendarDays, ChevronLeft, ChevronRight, ClipboardList, Dumbbell, FileText, Images, MessageCircle, Scale, Search, UtensilsCrossed } from 'lucide-react';
+import { pastChats } from '@/lib/chats';
 import { useStore, goalOn } from '@/store/useStore';
 import { useFoodLookup, usePhotoUrl } from '@/lib/hooks';
 import { sumEntries, nutrientsFor } from '@/lib/nutrition';
@@ -30,7 +31,7 @@ export default function History() {
           />
         </div>
       )}
-      {view === 'calendar' ? <MonthCalendar /> : view === 'days' ? <Days query={q} /> : <Photos />}
+      {view === 'calendar' ? <><MonthCalendar /><EverythingElse /></> : view === 'days' ? <Days query={q} /> : <Photos />}
     </div>
   );
 }
@@ -180,3 +181,43 @@ function PhotoTile({ entry, onClick }: { entry: LogEntry; onClick: () => void })
     </button>
   );
 }
+
+/** Everything else they've done, in one place: meal preps, workouts, weigh-ins, charts, plans, recipes, chats. */
+function EverythingElse() {
+  const s = useStore();
+  const chats = pastChats();
+  const workouts = s.workoutLogs.length + s.exercises.filter((e) => !s.workoutLogs.some((w) => w.date === e.date)).length;
+  const rows: { to: string; icon: typeof Scale; title: string; note: string; recent?: { to: string; label: string }[] }[] = [
+    { to: '/add?tab=saved', icon: UtensilsCrossed, title: 'Saved meals & meal preps', note: count(s.savedMeals.length, 'saved meal'), recent: s.savedMeals.slice(0, 3).map((m) => ({ to: '/add?tab=saved', label: m.name })) },
+    { to: '/workout', icon: Dumbbell, title: 'Workouts', note: count(workouts, 'workout'), recent: [...s.workoutLogs].sort((a, b) => b.startedAt - a.startedAt).slice(0, 3).map((w) => ({ to: '/workout', label: `${w.name} · ${relativeDay(w.date)}` })) },
+    { to: '/insights', icon: Scale, title: 'Weight & body', note: s.weights.length ? `${count(s.weights.length, 'weigh-in')}${s.measurements.length ? ` · ${count(s.measurements.length, 'measurement')}` : ''}${s.progressPhotos.length ? ` · ${count(s.progressPhotos.length, 'progress photo')}` : ''}` : 'No weigh-ins yet' },
+    { to: '/insights', icon: BarChart3, title: 'Charts & trends', note: 'Calories, macros, protein and weight over time' },
+    { to: '/coach?view=plan', icon: ClipboardList, title: 'Meal plans', note: count(s.savedPlans.length, 'saved plan'), recent: s.savedPlans.slice(0, 3).map((p) => ({ to: `/coach?view=plan&open=${p.id}`, label: p.title })) },
+    { to: '/coach?view=recipe', icon: BookOpen, title: 'Recipes', note: count(s.savedRecipes.length, 'saved recipe'), recent: s.savedRecipes.slice(0, 3).map((r) => ({ to: `/coach?view=recipe&open=${r.id}`, label: r.recipe.title })) },
+    { to: '/coach', icon: MessageCircle, title: 'Coach chats', note: count(chats.length, 'chat'), recent: chats.slice(0, 3).map((c) => ({ to: `/coach?chat=${c.id}`, label: c.title })) },
+    { to: '/reports', icon: FileText, title: 'Reports', note: 'Any dates, to share or print' },
+  ];
+  return (
+    <section className="mt-6">
+      <p className="mb-2 px-1 text-[15px] font-semibold">Everything else</p>
+      <div className="card divide-y divide-line">
+        {rows.map((r) => (
+          <div key={r.title} className="px-4 py-3">
+            <Link to={r.to} className="flex items-center gap-3">
+              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-raised"><r.icon size={18} /></span>
+              <span className="min-w-0 flex-1"><span className="block text-[15px] font-semibold">{r.title}</span><span className="block truncate text-[13px] text-silver">{r.note}</span></span>
+              <ChevronRight size={16} className="shrink-0 text-dim" />
+            </Link>
+            {!!r.recent?.length && (
+              <div className="ml-[52px] mt-2 flex flex-wrap gap-1.5">
+                {r.recent.map((x, i) => <Link key={i} to={x.to} className="chip !h-8 max-w-full !px-3 text-[13px]"><span className="truncate">{x.label}</span></Link>)}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+const count = (n: number, word: string) => (n === 0 ? `No ${word}s yet` : `${n} ${word}${n === 1 ? '' : 's'}`);

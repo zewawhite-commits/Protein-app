@@ -23,8 +23,10 @@ export function RecipeView() {
   const saved = useStore((s) => s.savedRecipes);
   const saveRecipe = useStore((s) => s.saveRecipe);
   const removeRecipe = useStore((s) => s.removeRecipe);
-  const [recipe, setRecipe] = useState<Recipe | null>(saved[0]?.recipe ?? null);
-  const [savedId, setSavedId] = useState<string | null>(saved[0]?.id ?? null);
+  // Opened from History (?open=id): show that one; otherwise the latest.
+  const first = saved.find((x) => x.id === new URLSearchParams(location.search).get('open')) ?? saved[0];
+  const [recipe, setRecipe] = useState<Recipe | null>(first?.recipe ?? null);
+  const [savedId, setSavedId] = useState<string | null>(first?.id ?? null);
   const [ask, setAsk] = useState('');
   // Filters people can combine: calories, protein, diet and time.
   const FILTERS = ['Under 500 kcal', '30 g+ protein', 'Vegetarian', 'Vegan', 'Gluten-free', 'Dairy-free', 'Ready in 15 min', 'Ready in 30 min', 'Budget'];
