@@ -72,7 +72,7 @@ export interface CustomFood extends Food {
   archived?: boolean;
 }
 
-export type Meal = 'breakfast' | 'lunch' | 'dinner' | 'snack';
+export type Meal = 'breakfast' | 'lunch' | 'dinner' | 'snack' | 'snack2' | 'snack3' | 'extra';
 
 export interface LogEntry {
   id: string;
@@ -176,6 +176,8 @@ export interface Settings {
   tracking?: 'simple' | 'detailed' | 'photo';
   /** Hide the "What to eat next" suggestions on Home (AI only speaks when asked). */
   quietAi?: boolean;
+  /** Meal slots per day, 4 (default) to 7. */
+  mealsPerDay?: number;
 }
 
 /** A meal the user saved to log again in one tap (food snapshots + the grams they weighed). */

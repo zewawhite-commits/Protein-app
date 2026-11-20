@@ -1,3 +1,5 @@
+import { useMealOptions } from '@/lib/meals';
+import { MealPicker } from './MealPicker';
 import { aiHeaders } from '@/lib/premium';
 import { Link } from 'react-router-dom';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -19,12 +21,6 @@ import { Ring, Segmented, Sheet, StateBadge, cx, fmt } from './ui';
 import { FoodVisual } from './FoodIcon';
 import { CountUp, haptic, toast } from './fx';
 
-const MEALS: { value: Meal; label: string }[] = [
-  { value: 'breakfast', label: 'Breakfast' },
-  { value: 'lunch', label: 'Lunch' },
-  { value: 'dinner', label: 'Dinner' },
-  { value: 'snack', label: 'Snack' },
-];
 
 interface Props {
   food: Food | null;
@@ -75,6 +71,7 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
   const [unit, setUnitState] = useState<Unit>(() => { try { const u = localStorage.getItem('provora-unit') as Unit | null; return u === 'oz' || ((u === 'kg' || u === 'lb') && !liquid) || (u === 'ml' && liquid) ? u : 'g'; } catch { return 'g'; } });
   const [grams, setGrams] = useState(entry ? toUnit(entry.grams, unit) : '');
   const [meal, setMeal] = useState<Meal>(entry?.meal ?? mealForNow());
+  const MEALS = useMealOptions(meal);
   const [photoId, setPhotoId] = useState<string | undefined>(entry?.photoId ?? preset?.photoId);
   const [busy, setBusy] = useState(false);
   const [showSource, setShowSource] = useState(false);
@@ -307,7 +304,7 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
       </div>
 
       {/* Meal */}
-      <Segmented full value={meal} onChange={setMeal} options={MEALS} />
+      <MealPicker value={meal} onChange={setMeal} options={MEALS} />
       {entry && (
         <label className="flex items-center justify-between gap-3 rounded-2xl bg-raised px-4 py-2.5 text-sm">
           <span className="font-semibold">Day</span>

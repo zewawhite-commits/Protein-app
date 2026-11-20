@@ -5,7 +5,7 @@ import { SignInButtons } from '@/components/SignIn';
 import { useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useEffect } from 'react';
-import { ArrowLeft, ChevronRight, Cloud, CreditCard, Crown, Database, Download, FileText, Flame, HeartHandshake, KeyRound, LifeBuoy, Lightbulb, Lock, LogOut, Mail, Moon, Receipt, RotateCcw, Scale, Settings as SettingsIcon, ShieldCheck, SlidersHorizontal, Smartphone, Sun, Table, Trash2, Upload, UserRound, XCircle } from 'lucide-react';
+import { Utensils, ArrowLeft, ChevronRight, Cloud, CreditCard, Crown, Database, Download, FileText, Flame, HeartHandshake, KeyRound, LifeBuoy, Lightbulb, Lock, LogOut, Mail, Moon, Receipt, RotateCcw, Scale, Settings as SettingsIcon, ShieldCheck, SlidersHorizontal, Smartphone, Sun, Table, Trash2, Upload, UserRound, XCircle } from 'lucide-react';
 import { useStore, exportData } from '@/store/useStore';
 import { fetchBilling, isPremiumActive, manageSubscription, type Billing } from '@/lib/premium';
 import { SUPPORT_EMAIL } from '@/pages/Legal';
@@ -153,6 +153,11 @@ export default function Profile({ mode = 'profile' }: { mode?: 'profile' | 'sett
           <Segmented full value={settings.tracking ?? 'detailed'} onChange={(t) => updateSettings({ tracking: t })} options={[{ value: 'photo', label: 'Photo diary' }, { value: 'simple', label: 'Simple' }, { value: 'detailed', label: 'Detailed' }]} />
         </div>
         <p className="px-4 pb-2 text-xs leading-relaxed text-dim">Photo diary: snap your meals with no numbers — analyse any photo later if you want. Simple shows just calories and protein on Home. Detailed adds carbs, fat and every nutrient. Nothing is lost either way.</p>
+        <Row icon={<Utensils size={18} />} label="Meals per day" />
+        <div className="px-3 pb-2">
+          <Segmented full value={String(settings.mealsPerDay ?? 4)} onChange={(v) => updateSettings({ mealsPerDay: Number(v) })} options={['4', '5', '6', '7'].map((n) => ({ value: n, label: n }))} />
+          <p className="mt-2 text-xs leading-relaxed text-dim">4 = breakfast, snack, lunch, dinner. More adds an afternoon snack, an evening snack and a late meal.</p>
+        </div>
         <Row icon={<Lightbulb size={18} />} label="Suggestions on Home">
           <Toggle on={!settings.quietAi} onChange={(v) => updateSettings({ quietAi: !v })} label="Suggestions on Home" />
         </Row>

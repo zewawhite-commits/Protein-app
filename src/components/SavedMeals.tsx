@@ -1,3 +1,5 @@
+import { MEAL_LABELS, MEAL_ORDER, useMealOptions } from '@/lib/meals';
+import { MealPicker } from './MealPicker';
 import { useMemo, useState } from 'react';
 import { Bookmark, Plus, Trash2 } from 'lucide-react';
 import { useStore } from '@/store/useStore';
@@ -9,15 +11,13 @@ import { FoodVisual } from './FoodIcon';
 import { Segmented, Sheet, cx, fmt } from './ui';
 import { haptic, toast } from './fx';
 
-const MEALS: { value: Meal; label: string }[] = [
-  { value: 'breakfast', label: 'Breakfast' }, { value: 'lunch', label: 'Lunch' }, { value: 'dinner', label: 'Dinner' }, { value: 'snack', label: 'Snack' },
-];
 
 const sum = (items: { food: LogEntry['food']; grams: number }[]) =>
   items.reduce((t, i) => { const n = nutrientsFor(i.food.per100, i.grams); return { kcal: t.kcal + (n.kcal ?? 0), protein: t.protein + n.protein }; }, { kcal: 0, protein: 0 });
 
 /** "Save" button for Today: pick one of today's meals and keep it to log again later. */
 export function SaveMealButton({ entries }: { entries: LogEntry[] }) {
+  const MEALS = MEAL_ORDER.map((value) => ({ value, label: MEAL_LABELS[value] }));
   const saveMeal = useStore((s) => s.saveMeal);
   const meals = MEALS.filter((m) => entries.some((e) => e.meal === m.value));
   const [open, setOpen] = useState(false);
@@ -57,6 +57,7 @@ export function SavedMealsList({ date }: { date: string }) {
   const removeEntry = useStore((s) => s.removeEntry);
   const removeSavedMeal = useStore((s) => s.removeSavedMeal);
   const [meal, setMeal] = useState<Meal>(mealForNow());
+  const MEALS = useMealOptions(meal);
   const totals = useMemo(() => new Map(saved.map((m) => [m.id, sum(m.items)])), [saved]);
 
   function logAll(m: SavedMeal) {
@@ -70,7 +71,7 @@ export function SavedMealsList({ date }: { date: string }) {
   }
   return (
     <div className="space-y-3">
-      <Segmented full value={meal} onChange={setMeal} options={MEALS} />
+      <MealPicker value={meal} onChange={setMeal} options={MEALS} />
       {saved.map((m) => {
         const t = totals.get(m.id)!;
         return (

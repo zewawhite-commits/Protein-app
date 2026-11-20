@@ -1,3 +1,4 @@
+import { mealLabel } from '@/lib/meals';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowUp, ChevronRight, ImagePlus, MessageCircle, RotateCcw, X } from 'lucide-react';
@@ -118,7 +119,7 @@ export function useCoachContext(): CoachContext {
       targets: { kcal: t?.kcal, protein: goal || undefined, carbs: t?.carbs, fat: t?.fat, fiber: t?.fiber },
       today: { kcal: totals.kcal, protein: totals.protein, carbs: totals.carbs, fat: totals.fat, fiber: totals.fiber, sugar: totals.sugar, sodiumMg: totals.sodium },
       ...extra,
-      eatenToday: entries.filter((e) => !e.planned).map((e) => `${splitName(e.food.name).title} (${Math.round(e.grams)} g, ${e.meal})`),
+      eatenToday: entries.filter((e) => !e.planned).map((e) => `${splitName(e.food.name).title} (${Math.round(e.grams)} g, ${mealLabel(e.meal).toLowerCase()})`),
       localTime: new Date().toLocaleString(undefined, { weekday: 'long', hour: '2-digit', minute: '2-digit' }),
     };
   }, [profile, goal, totals, entries, extra]);

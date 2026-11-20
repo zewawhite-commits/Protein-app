@@ -1,3 +1,4 @@
+import { MEAL_LABELS, MEAL_ORDER } from '@/lib/meals';
 import { Link } from 'react-router-dom';
 import { ActivitySummary } from '@/components/ActivitySummary';
 import { WeightHistory } from '@/components/WeightHistory';
@@ -43,7 +44,7 @@ export default function Insights() {
     const inRange = entries.filter((e) => set.has(e.date));
     const perDay = new Map<string, number>();
     const perFood = new Map<string, { name: string; protein: number; count: number }>();
-    const perMeal: Record<Meal, number> = { breakfast: 0, lunch: 0, dinner: 0, snack: 0 };
+    const perMeal = Object.fromEntries(MEAL_ORDER.map((m) => [m, 0])) as Record<Meal, number>;
     for (const e of inRange) {
       const p = e.planned ? 0 : nutrientsFor(e.food.per100, e.grams)[metric] ?? 0;
       perDay.set(e.date, (perDay.get(e.date) ?? 0) + p);
@@ -127,12 +128,12 @@ export default function Insights() {
           <section className="card p-5">
             <h2 className="mb-4 text-lg font-semibold tracking-tight">By meal</h2>
             <div className="space-y-3">
-              {(Object.entries(data.perMeal) as [Meal, number][]).map(([meal, p]) => {
+              {(Object.entries(data.perMeal) as [Meal, number][]).filter(([m, p]) => p > 0 || ['breakfast', 'lunch', 'dinner', 'snack'].includes(m)).map(([meal, p]) => {
                 const share = data.total ? p / data.total : 0;
                 return (
                   <div key={meal}>
                     <div className="mb-1.5 flex justify-between text-sm">
-                      <span className="font-semibold capitalize">{meal}</span>
+                      <span className="font-semibold">{MEAL_LABELS[meal]}</span>
                       <span className="tabular-nums">{fmt(share * 100)}% <span className="text-dim">· {fmt(p)} {unit}</span></span>
                     </div>
                     <div className="h-2.5 overflow-hidden rounded-full bg-raised">

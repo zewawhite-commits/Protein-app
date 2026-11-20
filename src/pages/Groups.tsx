@@ -1,3 +1,4 @@
+import { MEAL_LABELS, MEAL_ORDER, feedMeal } from '@/lib/meals';
 import { SharedRecipeCard, toShared } from '@/components/SharedRecipeCard';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowLeft, Check, ChevronDown, Copy, Crown, Droplet, Drumstick, Dumbbell, Flame, Globe2, Heart, ImagePlus, Link2, Loader2, Lock, LogOut, MessageCircle, Plus, RefreshCw, Reply, Send, Share2, Smile, SmilePlus, ThumbsUp, Trash2, UserRound, Users, Utensils, Wheat, X } from 'lucide-react';
@@ -26,7 +27,7 @@ import { useStreak } from './Today';
 const GROUP_KEY = 'provora-group';
 const REACTION_ICON: Record<Reaction, typeof Flame> = { '🔥': Flame, '💪': Dumbbell, '👏': ThumbsUp, '😋': Smile, '❤️': Heart };
 const REACTION_LABEL: Record<Reaction, string> = { '🔥': 'Fire', '💪': 'Strong', '👏': 'Nice', '😋': 'Tasty', '❤️': 'Love' };
-const MEAL_LABEL: Record<Meal, string> = { breakfast: 'Breakfast', lunch: 'Lunch', dinner: 'Dinner', snack: 'Snack' };
+const MEAL_LABEL = MEAL_LABELS;
 
 export default function Groups() {
   const session = useSession();
@@ -508,7 +509,7 @@ function PostCard({ post, me, onReact, onOpen, onDelete, onAuthor }: { post: Pos
 
 function ShareSheet({ open, groupId, onClose, onShared, initialTitle = '', initialText = '' }: { open: boolean; groupId: string; onClose: () => void; onShared: () => void; initialTitle?: string; initialText?: string }) {
   const { entries } = useDay(todayKey());
-  const meals = (['breakfast', 'lunch', 'dinner', 'snack'] as Meal[]).filter((m) => entries.some((e) => e.meal === m));
+  const meals = MEAL_ORDER.filter((m) => entries.some((e) => e.meal === m));
   const [meal, setMeal] = useState<Meal | 'none'>('none');
   const [text, setText] = useState('');
   const [title, setTitle] = useState('');
@@ -549,7 +550,7 @@ function ShareSheet({ open, groupId, onClose, onShared, initialTitle = '', initi
       }
       const caption = text.trim();
       const rec = myRecipes.find((c) => c.id === recipeId);
-      await sharePost({ groupId, title: heading.slice(0, 120), caption, meal: items.length ? (meal as Meal) : undefined, ...(items.length ? { kcal: t.kcal, protein: t.protein, carbs: t.carbs, fat: t.fat } : {}), photo: img, ...(rec ? { recipe: toShared(rec) ?? undefined } : {}) });
+      await sharePost({ groupId, title: heading.slice(0, 120), caption, meal: items.length ? feedMeal(meal as Meal) : undefined, ...(items.length ? { kcal: t.kcal, protein: t.protein, carbs: t.carbs, fat: t.fat } : {}), photo: img, ...(rec ? { recipe: toShared(rec) ?? undefined } : {}) });
       haptic([10, 30, 10]);
       toast('Posted');
       setText(''); setTitle(''); setNeedTitle(false); setMeal('none'); setPhoto(null); setRecipeId('');

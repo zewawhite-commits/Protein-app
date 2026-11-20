@@ -1,3 +1,4 @@
+import { mealLabel } from '@/lib/meals';
 import { Link } from 'react-router-dom';
 import { Camera } from 'lucide-react';
 import type { LogEntry } from '@/lib/types';
@@ -10,7 +11,7 @@ function Tile({ entry }: { entry: LogEntry }) {
   return (
     <figure className="overflow-hidden rounded-2xl bg-raised">
       <div className="aspect-square w-full">{url ? <img src={url} alt={entry.food.name} className="h-full w-full object-cover" /> : <div className="grid h-full place-items-center p-2 text-center text-[13px] font-semibold text-silver">{splitName(entry.food.name).title}</div>}</div>
-      <figcaption className="px-2 py-1.5 text-[12px] font-semibold capitalize text-silver">{entry.meal}</figcaption>
+      <figcaption className="px-2 py-1.5 text-[12px] font-semibold text-silver">{mealLabel(entry.meal)}</figcaption>
     </figure>
   );
 }
