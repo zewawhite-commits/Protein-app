@@ -15,8 +15,10 @@ type Step = 'signup' | 'login' | 'confirm' | 'code';
  * New accounts may need confirming with a code first, depending on the Supabase setting.
  */
 export function EmailAuth({ start = 'signup', onBack }: { start?: 'signup' | 'login'; onBack?: () => void }) {
-  const [step, setStep] = useState<Step>(start);
-  const [email, setEmail] = useState('');
+  // Remembered for this tab, so a reload while they open their email doesn't lose the screen.
+  const saved = (() => { try { return JSON.parse(sessionStorage.getItem('nutivili-auth') ?? 'null') as { step: Step; email: string } | null; } catch { return null; } })();
+  const [step, setStep] = useState<Step>(saved?.step === 'confirm' ? 'confirm' : start);
+  const [email, setEmail] = useState(saved?.step === 'confirm' ? saved.email : '');
   const [pw, setPw] = useState('');
   const [phone, setPhone] = useState('');
   const tel = cleanPhone(phone);
@@ -34,7 +36,10 @@ export function EmailAuth({ start = 'signup', onBack }: { start?: 'signup' | 'lo
     // Run fn first: `after?.(await fn())` would skip fn entirely when there is no `after`.
     try { const r = await fn(); after?.(r); } catch (e) { setErr((e as Error).message); } finally { setBusy(false); }
   };
-  const go = (s: Step) => { setErr(''); setNote(''); setCode(''); setShowCode(false); setStep(s); };
+  const go = (s: Step) => {
+    setErr(''); setNote(''); setCode(''); setShowCode(false); setStep(s);
+    try { if (s === 'confirm') sessionStorage.setItem('nutivili-auth', JSON.stringify({ step: s, email: email.trim() })); else sessionStorage.removeItem('nutivili-auth'); } catch { /* storage blocked */ }
+  };
 
   const Spinner = busy ? <Loader2 size={18} className="animate-spin" /> : null;
   const messages = (

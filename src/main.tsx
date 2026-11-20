@@ -11,16 +11,25 @@ import { registerSW } from 'virtual:pwa-register';
 installErrorReporting();
 captureInstallPrompt();
 
-// Updates: a new version takes over (and the page reloads) as soon as it's downloaded,
-// instead of waiting for the app to be opened twice. Checked on open, when the app comes
-// back into view, and every 30 minutes.
+// Updates: a new version is downloaded in the background. It's switched on (with a reload)
+// only when that can't lose anything: while the app is in the background for someone who
+// has finished setting up. Never during sign-up or onboarding, where a reload would wipe what
+// they were doing (for example the "check your email" screen while they open their email).
+const setupDone = () => {
+  try { return !!JSON.parse(localStorage.getItem('protein-app') ?? '{}').state?.profile; } catch { return false; }
+};
+let waiting = false;
 const updateSW = registerSW({
   immediate: true,
+  onNeedRefresh() { waiting = true; },
   onRegisteredSW(_url, reg) {
     if (!reg) return;
     const check = () => { if (navigator.onLine) void reg.update().catch(() => undefined); };
     setInterval(check, 30 * 60_000);
-    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') check(); });
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') check();
+      else if (waiting && setupDone() && !/^\/(onboarding|signin|welcome)/.test(location.pathname)) void updateSW(true);
+    });
   },
 });
 void updateSW;

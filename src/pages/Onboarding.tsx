@@ -511,7 +511,9 @@ function Choice<T>({ option, selected, onClick, multi }: { option: Option<T>; se
 }
 
 function Welcome({ signedIn, email, onStart }: { signedIn: boolean; email?: string; onStart: () => void }) {
-  const [mode, setMode] = useState<'choose' | 'signup' | 'login' | 'phone' | 'code'>('choose');
+  // Back on the "check your email" screen after a reload (e.g. while they opened their email).
+  const [mode, setMode] = useState<'choose' | 'signup' | 'login' | 'phone' | 'code'>(() => { try { return sessionStorage.getItem('nutivili-auth') ? 'signup' : 'choose'; } catch { return 'choose'; } });
+  useEffect(() => { if (signedIn) try { sessionStorage.removeItem('nutivili-auth'); } catch { /* storage blocked */ } }, [signedIn]);
   // Default to the phone's region (e.g. en-GB → United Kingdom), else the United Kingdom.
   const [dialLabel, setDialLabel] = useState(() => {
     const region = (navigator.language.split('-')[1] ?? '').toUpperCase();
@@ -563,7 +565,7 @@ function Welcome({ signedIn, email, onStart }: { signedIn: boolean; email?: stri
           <p className="mt-4 text-center text-xs text-silver">Your data stays on this device. Export a backup any time from Profile.</p>
         </>
       ) : mode === 'signup' || mode === 'login' ? (
-        <EmailAuth key={mode} start={mode} onBack={() => setMode('choose')} />
+        <EmailAuth key={mode} start={mode} onBack={() => { try { sessionStorage.removeItem('nutivili-auth'); } catch { /* blocked */ } setMode('choose'); }} />
       ) : mode === 'phone' ? (
         <div className="grid gap-2">
           <div className="flex gap-2">
