@@ -6,14 +6,15 @@
  * (e.g. every banana record shares the banana photo).
  */
 import { artFor } from './foodArt';
+import { photoMust } from './photoQueries';
 
 /** Dishes with a photo of their own, checked before the general illustration key. */
 const DISH_RULES: [RegExp, string][] = [
   // Common foods that need their own photo (a whole roast chicken is wrong for "chicken breast").
   [/\bchicken\b.*\bbreast|\bbreast\b.*\bchicken/, 'chicken_breast'], [/\bchicken\b.*\bwings?\b|\bwings?\b.*\bchicken|^wings?\b/, 'chicken_wings'],
   [/\bchicken\b.*\b(thigh|drumstick|leg)s?\b/, 'chicken_thigh'], [/peanut butter|groundnut (paste|butter)/, 'peanut_butter'], [/cottage cheese/, 'cottage_cheese'],
-  [/\balmonds?\b/, 'almonds'], [/\bsalmon\b/, 'salmon'], [/\btuna\b/, 'tuna'], [/scrambled egg/, 'scrambled_eggs'], [/\begg\b.*\bfried|fried egg/, 'fried_egg'],
-  [/\bjollof/, 'jollof'], [/\bfried rice\b/, 'fried_rice'], [/\begusi|\begushi/, 'egusi'], [/\bpounded yam|\bpoundo|\biyan\b/, 'pounded_yam'],
+  [/\balmonds?\b(?! (butter|oil|paste|milk|flour|meal|extract))/, 'almonds'], [/\bsalmon\b/, 'salmon'], [/\btuna\b/, 'tuna'], [/scrambled egg/, 'scrambled_eggs'], [/\begg\b.*\bfried|fried egg/, 'fried_egg'],
+  [/\bjollof(?! (spaghetti|macaroni|pasta|fonio|couscous|beans))/, 'jollof'], [/\bfried rice\b/, 'fried_rice'], [/\begusi|\begushi/, 'egusi'], [/\bpounded yam|\bpoundo|\biyan\b/, 'pounded_yam'],
   [/\bamala/, 'amala'], [/\beba\b|gari swallow/, 'eba'], [/\bfufu|\bakpu\b|\bfoufou/, 'fufu'], [/\bsemovita|\bsemo\b|semolina (swallow|fufu)/, 'semovita'],
   [/\btuwo/, 'tuwo'], [/\bbanku/, 'banku'], [/\bkenkey/, 'kenkey'], [/\bugali|\bnsima|\bsadza/, 'ugali'], [/\binjera/, 'injera'],
   [/\bsuya\b|\bkilishi/, 'suya'], [/\bmoi ?moi|\bmoin|bean pudding/, 'moi_moi'], [/\bakara\b|\baccara|bean fritter/, 'akara'],
@@ -22,24 +23,55 @@ const DISH_RULES: [RegExp, string][] = [
   [/\bofada/, 'ofada'], [/\babacha|african salad/, 'abacha'], [/\bzobo|\bsobolo|\bbissap/, 'zobo'], [/\bwaakye/, 'waakye'], [/\bkelewele/, 'kelewele'],
   [/\bmasa\b|\bwaina/, 'masa'], [/\bboli\b|roasted plantain/, 'boli'], [/\bkuli ?kuli/, 'kuli_kuli'], [/\bshawarma/, 'shawarma'], [/\bmeat pie/, 'meat_pie'],
   [/beans porridge|\bewa riro/, 'beans_porridge'], [/yam porridge|\basaro|yam pottage/, 'yam_porridge'], [/ewa agoyin/, 'ewa_agoyin'], [/\basun\b/, 'asun'],
-  [/\bsnail/, 'peppered_snail'], [/\bthieboudienne|\bjollof fish/, 'thieboudienne'], [/groundnut soup|peanut soup|\bmafe\b/, 'groundnut_soup'],
+  [/^peppered snails?|\bigbin\b/, 'peppered_snail'], [/\bthieboudienne|\bjollof fish/, 'thieboudienne'], [/groundnut soup|peanut soup|\bmafe\b/, 'groundnut_soup'],
   [/\bogi\b|\bpap\b|\bakamu|\bkoko\b/, 'pap'], [/agege bread/, 'agege_bread'], [/\bdodo\b|plantain, (cooked|fried|ripe.*fried)|fried plantain|\balloco/, 'plantain'],
   [/^yam\b|\byam, (cooked|boiled|tuber)/, 'yam'], [/\boats?\b|\boatmeal|\bporridge, oat/, 'oats'], [/\byogh?urt/, 'yogurt'], [/\btofu\b/, 'tofu'],
 ];
 
 /** Which photo a food uses (a dish of its own, or its food type), or undefined for none. */
+// Foods that aren't simply "the food in the photo": mixed dishes, snacks, organ meats, brands…
+// They get a plain tile rather than a photo of something else.
+const NOT_PLAIN = /\b(with|and|&|sandwich|burger|pounder|pie|pies|soup|stew|curry|salad|sauce|gravy|dip|chips|crisps|crackers?|biscuits?|cookies?|snacks?|pudding|mix|cakes?|nuggets?|fingers?|sticks?|patty|patties|balls?|rolls?|wraps?|frozen|flavou?r(ed)?|baby food|infant|formula|liver|giblets?|gizzards?|hearts?|kidneys?|feet|neck|tongue|tripe|blood|substitute|imitation|powder|extract|juice|drink|spread|fast food|restaurant|caterpillar|insects?|larvae|split|nectar|crumbs?|breadcrumbs|deviled|quiche|cacciatore|beverage|paper|wrapper|fishcakes?|sausages?|separable|bacon bits|croutons?|stuffing|dumplings?|filling|topping|syrup|candied|canned in syrup|dressing|flour|creole|mixed|shake|beverage|beverages|confectionery|cereals?|muffins?|granola|candy|chocolate[- ]coated|covered)\b| or /;
+const BRANDED = /\b[A-Z]{3,}\b/;
+
+// These are ordinary foods, so they follow the same "is it plainly this food?" check as everything else.
+const PLAIN_DISHES = new Set(['chicken_breast', 'chicken_wings', 'chicken_thigh', 'peanut_butter', 'cottage_cheese', 'almonds', 'salmon', 'tuna', 'scrambled_eggs', 'fried_egg', 'yam', 'oats', 'yogurt', 'tofu', 'plantain']);
+// Cooking notes that don't change what the food looks like ("with skin", "fried in oil", "broilers or fryers").
+const NOTES = /\b(with|without|in) (added )?(cooking spray|[a-z]+ oil|oil|butter|margarine|animal fat|fat|salt|skin|bone|added solution)\b|\b(meat|skin|bone|flesh) and (skin|bone|meat|fat)\b|broilers? or fryers?|\bns as to [a-z ]+|\bor (raw|cooked|frozen)\b/g;
+
+// "Fish, salmon" / "Nuts, almonds": the main word is the food family, so the rest decides.
+const PLAIN_HEADS = /^(fish|chicken|nuts|eggs?|seafood|poultry|beef|meat|spreads?)$/;
+// Names whose last word is a different food from what it looks like.
+const FALSE_FRIENDS = /^(cocoa|shea|almond|cashew|hazelnut|apple|honey|sunflower|seed|custard|cashew|star|prickly|balsam|mammie|sugar|rose|bitter|kung pao|mapo|atole|potato|banana|bread|sea|sweet corn) |\bnuts?$/;
+
+/** Which photo a food uses, or undefined for a plain tile. Only when we're sure it shows this food. */
 export function photoKeyFor(name: string, category?: string): string | undefined {
   const n = name.toLowerCase();
-  for (const [re, key] of DISH_RULES) if (re.test(n)) return key;
+  if (BRANDED.test(name) || /\b(fast foods?|restaurant|breaded|breading|nuggets?|sandwich(es)?|burger|luncheon|deli|baby food|infant|as ingredient)\b/.test(n)) return undefined;
+  const plain = !NOT_PLAIN.test(n.replace(NOTES, ' '));
+  // The food's main name: "Bread, wheat" → "bread"; "Jollof rice (party jollof)" → "jollof rice".
+  const main = n.split(/[,(:*]/)[0].trim();
+  for (const [re, key] of DISH_RULES) {
+    if (PLAIN_DISHES.has(key)) { if (re.test(n)) return plain && (re.test(main) || PLAIN_HEADS.test(main)) ? key : undefined; continue; }
+    // Named dishes: only when the dish is the food itself, not "fufu of plantain with palm oil".
+    if (re.test(main)) return / of | with |\*/.test(n.split('(')[0]) ? undefined : key;
+  }
+  if (!plain) return undefined;
   const art = artFor(name, category);
-  return art === 'fork_and_knife_with_plate' ? undefined : art;
+  if (art === 'fork_and_knife_with_plate') return undefined;
+  // The main word must be what the photo shows: "White fish" → fish, but "Lemon sole", "Bitter gourd",
+  // "Corn nuts" or "Plantains" don't borrow the lemon, melon, corn or banana photo.
+  if (FALSE_FRIENDS.test(main)) return undefined;
+  const head = main.split(/\s+/).pop() ?? '';
+  const must = photoMust(art);
+  return must.some((w) => new RegExp(`^${w}(e?s)?$`).test(head)) ? art : undefined;
 }
 
 export interface FoodPhoto { url: string; author: string | null; authorUrl: string | null; page: string | null; color: string | null }
 
 // Photos are asked for in small batches (all the foods on screen at once) and remembered on the
 // phone for a week, so scrolling a list costs one request, not one per food.
-const KEY = 'nutivili-photos-v2';
+const KEY = 'nutivili-photos-v3';
 const WEEK = 7 * 864e5;
 type Cached = { p: FoodPhoto | null; t: number };
 let cache: Record<string, Cached> = {};

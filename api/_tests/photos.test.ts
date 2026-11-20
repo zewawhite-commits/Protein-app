@@ -83,6 +83,8 @@ describe('food photos API', () => {
     expect(photoMatches('egg', 'two boiled eggs on a plate')).toBe(true);
     expect(photoMatches('egg', 'boiled eggs and toast on a plate')).toBe(false);
     expect(photoMatches('cheese_wedge', 'a pizza with cheese and toppings')).toBe(false);
+    expect(photoMatches('bacon', 'hash brown with egg and bacon dish')).toBe(false);
+    expect(photoMatches('bacon', 'crispy bacon strips on a board')).toBe(true);
     expect(photoMatches('bacon', 'brown and white abstract painting')).toBe(false);
     expect(photoMatches('bacon', 'crispy bacon strips in a pan')).toBe(true);
   });

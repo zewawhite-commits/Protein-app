@@ -29,10 +29,13 @@ export function photoMatches(key: string, text: string): boolean {
   // A different dish in the photo (pizza for "cheese", toast for "eggs") means it isn't really this food.
   const query = ` ${(PHOTO_QUERIES[key] ?? '').toLowerCase()} `;
   for (const d of OTHER_DISHES) if (new RegExp(`\\b${d}(e?s)?\\b`).test(t) && !query.includes(d)) return false;
-  return must.some((w) => new RegExp(`\\b${w}(e?s)?\\b`).test(t));
+  // The food must be the subject, not a side: "hash brown with egg and bacon" isn't a bacon photo.
+  const lead = t.split(/\b(with|and|beside|next to|served|alongside|topped|surrounded|near|behind)\b/)[0];
+  return must.some((w) => new RegExp(`\\b${w}(e?s)?\\b`).test(lead));
 }
 // Only the photo's own description (tags are too loose: a painting can be tagged "bacon").
-const describe = (p: UnsplashPhoto) => [p.alt_description, p.description].filter(Boolean).join(' ');
+// Unsplash's alt text says what's in the picture; the photographer's caption is the fallback.
+const describe = (p: UnsplashPhoto) => p.alt_description || p.description || '';
 const OTHER_DISHES = ['pizza', 'burger', 'sandwich', 'pasta', 'spaghetti', 'noodle', 'cake', 'cupcake', 'salad', 'sushi', 'taco', 'pastry', 'bread', 'toast', 'fries', 'onion ring', 'soup', 'cookie', 'donut', 'doughnut', 'pie', 'waffle', 'pancake', 'cereal', 'smoothie', 'coffee', 'cocktail', 'wine', 'beer'];
 
 async function find(q: string, square: boolean) {
