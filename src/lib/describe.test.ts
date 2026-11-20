@@ -36,3 +36,14 @@ describe('units are read whole', () => {
     expect(parseAmount('2 lbs')).toEqual({ qty: 2, unit: 'lb' });
   });
 });
+import { parseRoutineText } from './liveWorkout';
+describe('importing a workout plan', () => {
+  it('reads common formats', () => {
+    expect(parseRoutineText('Day 1\n1. Squat 3x8 60kg\n- Bench press – 4 sets of 10 @ 50 kg\nPlank 3 x 45s\nPull-ups 3x8-10')).toEqual([
+      { name: 'Squat', sets: 3, reps: '8', weightKg: 60 },
+      { name: 'Bench press', sets: 4, reps: '10', weightKg: 50 },
+      { name: 'Plank', sets: 3, reps: '45s' },
+      { name: 'Pull-ups', sets: 3, reps: '8-10' },
+    ]);
+  });
+});

@@ -1,3 +1,4 @@
+import { parseRoutineText } from '@/lib/liveWorkout';
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, Check, Pencil, Plus, Share2, Trash2 } from 'lucide-react';
@@ -60,6 +61,7 @@ function Editor({ initial, onDone }: { initial: Routine | null; onDone: () => vo
   const [name, setName] = useState(initial?.name ?? '');
   const [list, setList] = useState<(RoutineExercise & { w: string })[]>((initial?.exercises ?? []).map((e) => ({ ...e, w: e.weightKg ? fmt(lb ? e.weightKg * LB : e.weightKg, 1) : '' })));
   const [custom, setCustom] = useState('');
+  const [paste, setPaste] = useState('');
   const add = (n: string, muscle?: string) => { if (!n.trim()) return; haptic(); setList((l) => [...l, { name: n.trim().slice(0, 40), muscle, sets: 3, reps: '10', w: '' }]); setCustom(''); };
   const set = (i: number, patch: Partial<RoutineExercise & { w: string }>) => setList((l) => l.map((x, k) => (k === i ? { ...x, ...patch } : x)));
   const ok = name.trim().length >= 2 && list.length > 0;
@@ -69,6 +71,14 @@ function Editor({ initial, onDone }: { initial: Routine | null; onDone: () => vo
         <button onClick={onDone} className="grid h-11 w-11 place-items-center rounded-full bg-surface" style={{ boxShadow: 'var(--shadow)' }} aria-label="Back"><ArrowLeft size={20} /></button>
         <h1 className="text-[26px] font-extrabold tracking-tight">{initial ? 'Edit routine' : 'New routine'}</h1>
       </header>
+      {!initial && (
+        <details className="card mb-4 p-4">
+          <summary className="cursor-pointer font-semibold">Import a workout plan</summary>
+          <p className="mt-1 text-sm text-silver">Paste it from anywhere — one exercise per line, like “Squat 3x8 60kg” or “Bench press – 4 sets of 10 @ 50 kg”. Check it before saving.</p>
+          <textarea value={paste} onChange={(e) => setPaste(e.target.value)} rows={5} className="field mt-2 !h-auto py-3 text-[15px]" aria-label="Workout plan text" placeholder={'Squat 3x8 60kg\nBench press 4x10 50kg\nPlank 3 x 45s'} />
+          <button disabled={!paste.trim()} onClick={() => { const got = parseRoutineText(paste); if (!got.length) { toast('Couldn’t find exercises — use lines like “Squat 3x8 60kg”'); return; } setList((l) => [...l, ...got.map((g) => ({ ...g, w: g.weightKg ? fmt(lb ? g.weightKg * LB : g.weightKg, 1) : '' }))]); toast(`${got.length} exercise${got.length > 1 ? 's' : ''} added`); setPaste(''); }} className="btn-primary mt-2 w-full">Read plan</button>
+        </details>
+      )}
       <label className="label" htmlFor="rt-name">Name</label>
       <input id="rt-name" className="field" maxLength={40} placeholder="e.g. Push day" value={name} onChange={(e) => setName(e.target.value)} />
       <div className="mt-4 space-y-2">

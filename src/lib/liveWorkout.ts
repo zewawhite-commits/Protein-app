@@ -60,3 +60,18 @@ export const GUIDES: Record<string, Guide> = {
 };
 
 export const CATEGORY_LABEL: Record<ExerciseKind, string> = { strength: 'Sets & reps', cardio: 'Time & distance', time: 'Timed' };
+
+/**
+ * Read a pasted workout plan ("Squat 3x8 60kg", "Bench press – 4 sets of 10 @ 50 kg",
+ * "Plank 3 x 45s") into routine exercises. Lines that don't look like exercises are skipped.
+ */
+export function parseRoutineText(text: string): { name: string; sets: number; reps: string; weightKg?: number }[] {
+  return text.split(/\n|;/).map((l) => l.replace(/^[\s\-•*\d.)]+(?=[a-z])/i, '').trim()).filter((l) => l.length > 2).map((l) => {
+    const sxr = /(\d+)\s*(?:x|×|sets? of)\s*(\d+(?:\s*-\s*\d+)?)\s*(s|sec|secs|seconds|reps?)?/i.exec(l);
+    const kg = /(\d+(?:[.,]\d+)?)\s*(kg|kgs|lb|lbs)\b/i.exec(l);
+    const name = l.split(/\s+[-–]\s+|\s*[–:@(]\s*|\s+\d/)[0].trim();
+    if (!name || !sxr) return null;
+    const w = kg ? Number(kg[1].replace(',', '.')) * (/lb/i.test(kg[2]) ? 0.4536 : 1) : undefined;
+    return { name: name.slice(0, 40), sets: Math.min(20, Number(sxr[1])), reps: `${sxr[2].replace(/\s/g, '')}${sxr[3] && /^s/i.test(sxr[3]) ? 's' : ''}`, ...(w ? { weightKg: Math.round(w * 10) / 10 } : {}) };
+  }).filter((x): x is NonNullable<typeof x> => !!x);
+}
