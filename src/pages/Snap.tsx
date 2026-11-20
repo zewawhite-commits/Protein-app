@@ -305,6 +305,11 @@ export default function Snap() {
             Tap the closest match, then weigh. AI identifies the food — calories and nutrients always come from the database record.
             {note && quality !== 'poor' && <span className="mt-1 block text-ink/80">{note}</span>}
           </p>
+          {!isMenu && matches.length > 0 && (
+            <p className="mt-2 px-1 text-xs leading-relaxed text-dim">
+              Want it exact? Shop-bought: <Link to="/barcode" className="font-semibold text-accent">scan its barcode</Link>. Home-made: <Link to="/recipe" className="font-semibold text-accent">use your recipe</Link> — a photo can’t see what went inside. Scans are estimates for general wellness, not medical advice.
+            </p>
+          )}
           {left && (
             <Link to="/premium" className="mt-3 flex items-center justify-between rounded-2xl bg-accent/10 px-4 py-3 text-[14px] font-semibold text-accent">
               <span>{left.left} of {left.limit} free AI scans left today</span>

@@ -568,7 +568,7 @@ function Welcome({ signedIn, email, onStart }: { signedIn: boolean; email?: stri
             <select value={dialLabel} onChange={(e) => setDialLabel(e.target.value)} className="field !w-28 shrink-0 !px-2 text-sm" aria-label="Country code">
               {DIAL_CODES.map(([label, c]) => <option key={label} value={label}>{label} {c}</option>)}
             </select>
-            <input type="tel" inputMode="tel" autoComplete="tel-national" className="field flex-1" placeholder="801 234 5678" value={phone} onChange={(e) => setPhone(e.target.value)} />
+            <input type="tel" inputMode="tel" autoComplete="tel-national" className="field flex-1" placeholder="Phone number" value={phone} onChange={(e) => setPhone(e.target.value)} />
           </div>
           <button disabled={busy || fullPhone.replace(/\D/g, '').length < 8} onClick={() => run(() => sendPhoneCode(fullPhone), () => setMode('code'))} className="btn-primary">
             {busy && <Loader2 size={18} className="animate-spin" />} Text me a code

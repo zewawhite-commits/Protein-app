@@ -332,7 +332,7 @@ function Chat() {
           <ArrowUp size={22} strokeWidth={2.5} />
         </button>
       </form>
-      <p className="mt-2 text-center text-[12px] text-dim">AI coach — general guidance, not medical advice.</p>
+      <p className="mt-2 text-center text-[12px] text-dim">AI Coach gives general fitness and nutrition guidance, not medical advice.</p>
 
       <FoodSheet food={open?.food ?? null} date={todayKey()} preset={{ aiEstimate: open?.grams }} onClose={() => setOpen(null)} />
     </div>
