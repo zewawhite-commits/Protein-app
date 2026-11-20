@@ -1,4 +1,5 @@
-import { PHOTOS } from '@/data/foodPhotos.gen';
+import { useEffect, useState } from 'react';
+import type { FoodPhoto } from '@/data/foodPhotos';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { APP_NAME } from '@/components/fx';
@@ -203,18 +204,23 @@ export function Refunds() {
 
 /** Who took the food photos and under which licence (required by Creative Commons). */
 export function Credits() {
-  const list = Object.entries(PHOTOS).sort(([a], [b]) => a.localeCompare(b));
+  const [list, setList] = useState<[string, FoodPhoto][] | null>(null);
+  useEffect(() => {
+    fetch('/api/photos?all=1').then((r) => (r.ok ? r.json() : { photos: {} })).then((d: { photos: Record<string, FoodPhoto | null> }) => setList(Object.entries(d.photos).filter((e): e is [string, FoodPhoto] => !!e[1]))).catch(() => setList([]));
+  }, []);
   return (
     <Page title="Photo credits">
-      <p>Food photos come from Wikimedia Commons under free licences. Thank you to the photographers below. Photos are cropped and resized for the app; any changes are shared under the same licence.</p>
-      <p>Food illustrations: Microsoft Fluent Emoji (MIT licence).</p>
-      <ul className="space-y-2">
-        {list.map(([key, c]) => (
-          <li key={key} className="text-sm">
-            <b className="text-ink">{key.replace(/_/g, ' ')}</b> — {c.artist || 'Unknown'}, <a className="text-accent underline" href={c.page} target="_blank" rel="noreferrer">{c.license}</a>
-          </li>
-        ))}
-      </ul>
+      <p>Food photos are from <a className="text-accent underline" href="https://unsplash.com/?utm_source=nutivili_ai&utm_medium=referral" target="_blank" rel="noreferrer">Unsplash</a>. Thank you to the photographers below.</p>
+      <p>Food illustrations (shown where there’s no photo): Microsoft Fluent Emoji (MIT licence).</p>
+      {list === null ? <p className="text-sm text-silver">Loading…</p> : (
+        <ul className="space-y-2">
+          {list.map(([key, c]) => (
+            <li key={key} className="text-sm">
+              <b className="text-ink">{key.replace(/_/g, ' ')}</b>: photo by <a className="text-accent underline" href={c.authorUrl ?? undefined} target="_blank" rel="noreferrer">{c.author ?? 'Unknown'}</a> on <a className="text-accent underline" href={c.page ?? 'https://unsplash.com/?utm_source=nutivili_ai&utm_medium=referral'} target="_blank" rel="noreferrer">Unsplash</a>
+            </li>
+          ))}
+        </ul>
+      )}
     </Page>
   );
 }

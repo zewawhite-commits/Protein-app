@@ -1,13 +1,11 @@
 /**
- * Real food photos (Wikimedia Commons, free licences), shown instead of the illustration
- * when we have a good one. Credits for every photo are listed on the Photo credits page.
+ * Real food photos from Unsplash (found once per food type by /api/photos, shown from
+ * Unsplash's own links with the photographer credited on the Photo credits page).
  *
  * A food gets a photo by its dish (e.g. "Amala"), or else by its illustration key
  * (e.g. every banana record shares the banana photo).
  */
 import { artFor } from './foodArt';
-import { PHOTOS } from './foodPhotos.gen';
-export { PHOTOS };
 
 /** Dishes with a photo of their own, checked before the general illustration key. */
 const DISH_RULES: [RegExp, string][] = [
@@ -25,10 +23,65 @@ const DISH_RULES: [RegExp, string][] = [
   [/^yam\b|\byam, (cooked|boiled|tuber)/, 'yam'], [/\boats?\b|\boatmeal|\bporridge, oat/, 'oats'], [/\byogh?urt/, 'yogurt'], [/\btofu\b/, 'tofu'],
 ];
 
-/** The photo for a food, or undefined to show the illustration. */
-export function photoFor(name: string, category?: string): string | undefined {
+/** Which photo a food uses (a dish of its own, or its food type), or undefined for none. */
+export function photoKeyFor(name: string, category?: string): string | undefined {
   const n = name.toLowerCase();
-  for (const [re, key] of DISH_RULES) if (re.test(n) && PHOTOS[key]) return `/food-photos/${key}.jpg`;
+  for (const [re, key] of DISH_RULES) if (re.test(n)) return key;
   const art = artFor(name, category);
-  return art !== 'fork_and_knife_with_plate' && PHOTOS[art] ? `/food-photos/${art}.jpg` : undefined;
+  return art === 'fork_and_knife_with_plate' ? undefined : art;
 }
+
+export interface FoodPhoto { url: string; author: string | null; authorUrl: string | null; page: string | null; color: string | null }
+
+// Photos are asked for in small batches (all the foods on screen at once) and remembered on the
+// phone for a week, so scrolling a list costs one request, not one per food.
+const KEY = 'nutivili-photos-v1';
+const WEEK = 7 * 864e5;
+type Cached = { p: FoodPhoto | null; t: number };
+let cache: Record<string, Cached> = {};
+try { cache = JSON.parse(localStorage.getItem(KEY) ?? '{}'); } catch { /* storage blocked */ }
+const listeners = new Map<string, Set<() => void>>();
+let queue = new Set<string>();
+let timer: ReturnType<typeof setTimeout> | undefined;
+const inFlight = new Set<string>();
+
+function save() { try { localStorage.setItem(KEY, JSON.stringify(cache)); } catch { /* full or blocked */ } }
+function flush() {
+  timer = undefined;
+  const keys = [...queue].filter((k) => !inFlight.has(k)).slice(0, 40);
+  queue = new Set();
+  if (!keys.length) return;
+  keys.forEach((k) => inFlight.add(k));
+  fetch(`/api/photos?keys=${encodeURIComponent(keys.join(','))}`)
+    .then((r) => (r.ok && r.headers.get('content-type')?.includes('json') ? r.json() : { photos: {} }))
+    .then((d: { photos?: Record<string, FoodPhoto | null>; pending?: boolean }) => {
+      const now = Date.now();
+      for (const k of keys) {
+        if (k in (d.photos ?? {})) cache[k] = { p: d.photos![k], t: now };
+        // Not looked up yet (the server finds a few at a time): ask again soon.
+        else cache[k] = { p: null, t: now - WEEK + 60_000 };
+        listeners.get(k)?.forEach((f) => f());
+      }
+      save();
+    })
+    .catch(() => undefined)
+    .finally(() => keys.forEach((k) => inFlight.delete(k)));
+}
+
+export function photoFor(key: string | undefined): FoodPhoto | null | undefined {
+  if (!key) return null;
+  const c = cache[key];
+  if (c && Date.now() - c.t < WEEK) return c.p;
+  queue.add(key);
+  if (!timer) timer = setTimeout(flush, 60);
+  return c?.p ?? undefined;
+}
+
+export function subscribePhoto(key: string, f: () => void) {
+  if (!listeners.has(key)) listeners.set(key, new Set());
+  listeners.get(key)!.add(f);
+  return () => { listeners.get(key)?.delete(f); };
+}
+
+/** An Unsplash image at the size it's shown (their CDN resizes and crops). */
+export const sizedPhoto = (url: string, px: number) => `${url}${url.includes('?') ? '&' : '?'}w=${px}&h=${px}&fit=crop&crop=entropy&auto=format&q=70`;
