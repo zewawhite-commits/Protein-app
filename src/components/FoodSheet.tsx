@@ -1,3 +1,4 @@
+import { CreateFood } from './CreateFood';
 import { useMealOptions } from '@/lib/meals';
 import { MealPicker } from './MealPicker';
 import { aiHeaders } from '@/lib/premium';
@@ -52,6 +53,7 @@ export function FoodSheet({ food, date, entry, onClose, onSaved, onSwitchFood, p
 }
 
 function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Props & { food: Food }) {
+  const [fixing, setFixing] = useState(false);
   const addEntry = useStore((s) => s.addEntry);
   const updateEntry = useStore((s) => s.updateEntry);
   const removeEntry = useStore((s) => s.removeEntry);
@@ -347,6 +349,10 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
         <button onClick={() => setShowMore((s) => !s)} className="mt-3 flex w-full items-center justify-center gap-1 text-xs font-semibold text-accent">
           {showMore ? 'Hide' : 'Show'} vitamins, minerals & sugar <ChevronDown size={14} className={cx('transition', showMore && 'rotate-180')} />
         </button>
+        {food.source !== 'custom' && !entry && (
+          <button onClick={() => setFixing(true)} className="mt-1 flex w-full items-center justify-center gap-1 text-xs font-semibold text-silver">Numbers don’t match your pack? <span className="text-accent underline">Fix them</span></button>
+        )}
+        <CreateFood open={fixing} onClose={() => setFixing(false)} from={food} onSaved={(f) => onSwitchFood?.(f)} />
         {showMore && (
           <div className="mt-1 animate-fade">
             <NutrientList compact values={Object.fromEntries(EXTRA_KEYS.map((k) => [k, scale(per100[k] ?? null, g)]))} />
@@ -427,6 +433,7 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
                 Something wrong with these numbers? Report it
               </button>
             )}
+
             {food.source === 'off' && (
               <Link to="/snap?mode=label" onClick={onClose} className="mt-2 block text-xs font-semibold text-accent">Numbers don’t match your pack? Scan its nutrition label to save the right ones</Link>
             )}

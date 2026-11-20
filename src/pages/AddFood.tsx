@@ -1,3 +1,4 @@
+import { CreateFood } from '@/components/CreateFood';
 import { sendMessage } from '@/lib/feedback';
 import { useDeferredValue, useEffect, useMemo, useState } from 'react';
 import { AllergyTag } from '@/components/Allergy';
@@ -41,6 +42,7 @@ type Tab = 'picks' | 'recent' | 'favs' | 'saved' | 'custom';
 const TABS: [Tab, string][] = [['recent', 'Recent'], ['picks', 'Popular'], ['favs', 'Favourites'], ['saved', 'Saved meals'], ['custom', 'My recipes']];
 
 export default function AddFood() {
+  const [creating, setCreating] = useState(() => new URLSearchParams(location.search).get('create') === '1');
   const nav = useNavigate();
   const [params] = useSearchParams();
   const date = params.get('date') ?? todayKey();
@@ -228,9 +230,11 @@ export default function AddFood() {
             <Link to={`/snap?mode=describe&q=${encodeURIComponent(dq)}`} className="btn-primary !h-12 text-sm">Describe it</Link>
             <Link to="/barcode" className="btn-ghost !h-12 text-sm">Scan barcode</Link>
           </div>
+          <button onClick={() => setCreating(true)} className="btn-ghost mt-2 w-full !h-12 text-sm">Create it yourself — enter the numbers</button>
           <RequestFood query={dq} />
         </div>
       )}
+      <CreateFood open={creating} onClose={() => setCreating(false)} onSaved={(f) => setSelected(f)} />
 
       {db && (
         <p className="mt-6 text-center text-[12px] font-medium leading-relaxed text-dim">
