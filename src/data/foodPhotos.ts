@@ -9,6 +9,10 @@ import { artFor } from './foodArt';
 
 /** Dishes with a photo of their own, checked before the general illustration key. */
 const DISH_RULES: [RegExp, string][] = [
+  // Common foods that need their own photo (a whole roast chicken is wrong for "chicken breast").
+  [/\bchicken\b.*\bbreast|\bbreast\b.*\bchicken/, 'chicken_breast'], [/\bchicken\b.*\bwings?\b|\bwings?\b.*\bchicken|^wings?\b/, 'chicken_wings'],
+  [/\bchicken\b.*\b(thigh|drumstick|leg)s?\b/, 'chicken_thigh'], [/peanut butter|groundnut (paste|butter)/, 'peanut_butter'], [/cottage cheese/, 'cottage_cheese'],
+  [/\balmonds?\b/, 'almonds'], [/\bsalmon\b/, 'salmon'], [/\btuna\b/, 'tuna'], [/scrambled egg/, 'scrambled_eggs'], [/\begg\b.*\bfried|fried egg/, 'fried_egg'],
   [/\bjollof/, 'jollof'], [/\bfried rice\b/, 'fried_rice'], [/\begusi|\begushi/, 'egusi'], [/\bpounded yam|\bpoundo|\biyan\b/, 'pounded_yam'],
   [/\bamala/, 'amala'], [/\beba\b|gari swallow/, 'eba'], [/\bfufu|\bakpu\b|\bfoufou/, 'fufu'], [/\bsemovita|\bsemo\b|semolina (swallow|fufu)/, 'semovita'],
   [/\btuwo/, 'tuwo'], [/\bbanku/, 'banku'], [/\bkenkey/, 'kenkey'], [/\bugali|\bnsima|\bsadza/, 'ugali'], [/\binjera/, 'injera'],

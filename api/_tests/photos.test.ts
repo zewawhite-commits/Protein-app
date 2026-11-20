@@ -23,8 +23,8 @@ beforeEach(() => {
   vi.stubGlobal('fetch', vi.fn(async (url: string, init?: { headers?: Record<string, string> }) => {
     unsplash(url, init?.headers?.authorization);
     if (String(url).includes('/search/photos')) return new Response(JSON.stringify({ results: [
-      { urls: { raw: 'https://images.unsplash.com/a' }, user: { name: 'Low Likes', links: { html: 'https://unsplash.com/@low' } }, links: { html: 'https://unsplash.com/photos/a', download_location: 'https://api.unsplash.com/photos/a/download' }, likes: 3 },
-      { urls: { raw: 'https://images.unsplash.com/b' }, user: { name: 'Best Photo', links: { html: 'https://unsplash.com/@best' } }, links: { html: 'https://unsplash.com/photos/b', download_location: 'https://api.unsplash.com/photos/b/download' }, likes: 90, color: '#a63' },
+      { urls: { raw: 'https://images.unsplash.com/a' }, user: { name: 'Low Likes', links: { html: 'https://unsplash.com/@low' } }, links: { html: 'https://unsplash.com/photos/a', download_location: 'https://api.unsplash.com/photos/a/download' }, likes: 3, alt_description: 'jollof rice banana egusi soup fufu suya' },
+      { urls: { raw: 'https://images.unsplash.com/b' }, user: { name: 'Best Photo', links: { html: 'https://unsplash.com/@best' } }, links: { html: 'https://unsplash.com/photos/b', download_location: 'https://api.unsplash.com/photos/b/download' }, likes: 90, color: '#a63', alt_description: 'jollof rice banana egusi soup fufu suya' },
     ] }), { status: 200 });
     return new Response('{}', { status: 200 });
   }));
@@ -61,7 +61,7 @@ describe('food photos API', () => {
       if (String(url).includes('commons.wikimedia.org')) return new Response(JSON.stringify({ query: { pages: {
         1: { index: 1, imageinfo: [{ url: 'u', thumburl: 'https://upload.wikimedia.org/small.jpg', width: 800, height: 800, mime: 'image/jpeg', descriptionurl: 'd1', extmetadata: { LicenseShortName: { value: 'CC BY-SA 4.0' } } }] },
         2: { index: 2, imageinfo: [{ url: 'u', thumburl: 'https://upload.wikimedia.org/nc.jpg', width: 3000, height: 2000, mime: 'image/jpeg', descriptionurl: 'd2', extmetadata: { LicenseShortName: { value: 'CC BY-NC 2.0' } } }] },
-        3: { index: 3, imageinfo: [{ url: 'u', thumburl: 'https://upload.wikimedia.org/good.jpg', width: 3000, height: 2400, mime: 'image/jpeg', descriptionurl: 'https://commons.wikimedia.org/wiki/File:Egusi.jpg', extmetadata: { LicenseShortName: { value: 'CC BY-SA 4.0' }, Artist: { value: '<a href="x">Ada</a>' } } }] },
+        3: { index: 3, title: 'File:Egusi soup.jpg', imageinfo: [{ url: 'u', thumburl: 'https://upload.wikimedia.org/good.jpg', width: 3000, height: 2400, mime: 'image/jpeg', descriptionurl: 'https://commons.wikimedia.org/wiki/File:Egusi.jpg', extmetadata: { LicenseShortName: { value: 'CC BY-SA 4.0' }, Artist: { value: '<a href="x">Ada</a>' } } }] },
       } } }), { status: 200 });
       return new Response('{}', { status: 404 });
     }));
@@ -70,5 +70,15 @@ describe('food photos API', () => {
     // Too small and non-commercial licences are skipped.
     expect(d.photos.egusi.url).toBe('https://upload.wikimedia.org/good.jpg');
     expect(d.photos.egusi.author).toBe('Ada (CC BY-SA 4.0)');
+  });
+  it('never uses a photo whose description is about something else', async () => {
+    const { photoMatches } = await import('../photos.js');
+    expect(photoMatches('peanut_butter', 'sliced bread on a white table')).toBe(false);
+    expect(photoMatches('peanut_butter', 'jar of creamy peanut butter')).toBe(true);
+    expect(photoMatches('chicken_wings', 'a whole roast chicken')).toBe(false);
+    expect(photoMatches('chicken_wings', 'spicy buffalo chicken wings')).toBe(true);
+    expect(photoMatches('egg', 'ants carrying white eggs in a basket')).toBe(false);
+    expect(photoMatches('cottage_cheese', 'cheese on supermarket shelves')).toBe(false);
+    expect(photoMatches('egg', 'two boiled eggs on toast')).toBe(true);
   });
 });

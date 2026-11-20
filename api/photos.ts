@@ -7,7 +7,7 @@
  * everyone, so the free 50-searches-an-hour limit is plenty. Needs UNSPLASH_ACCESS_KEY.
  */
 import { admin } from './_lib/accounts.js';
-import { PHOTO_QUERIES } from '../src/data/photoQueries.js';
+import { PHOTO_QUERIES, photoMust } from '../src/data/photoQueries.js';
 
 interface Row { key: string; url: string | null; author: string | null; author_url: string | null; photo_page: string | null; blur_color: string | null; tried_at: string }
 const RETRY_MS = 7 * 864e5;
@@ -19,12 +19,23 @@ const json = (d: unknown, s = 200, cache = 'public, max-age=300, s-maxage=3600')
 
 const out = (r: Row) => (r.url ? { url: r.url, author: r.author, authorUrl: r.author_url, page: r.photo_page, color: r.blur_color } : null);
 
+type UnsplashPhoto = { urls: { raw: string }; user: { name: string; links: { html: string } }; links: { html: string; download_location: string }; color?: string; likes?: number; alt_description?: string | null; description?: string | null; tags?: { title?: string }[] };
+/** Does the photo's own description mention the food? (Keeps out bread for "peanut butter".) */
+export function photoMatches(key: string, text: string): boolean {
+  const must = photoMust(key);
+  if (!must.length) return true;
+  const t = ` ${text.toLowerCase().replace(/[^a-z\s]/g, ' ')} `;
+  if (/\b(ants?|insects?|bugs?|shelf|shelves|supermarket|grocery|aisle|store|illustration|drawing|cartoon|toy|plastic|vector|3d render)\b/.test(t)) return false;
+  return must.some((w) => new RegExp(`\\b${w}(e?s)?\\b`).test(t));
+}
+const describe = (p: UnsplashPhoto) => [p.alt_description, p.description, ...(p.tags ?? []).map((t) => t.title)].filter(Boolean).join(' ');
+
 async function find(q: string, square: boolean) {
   const res = await fetch(`https://api.unsplash.com/search/photos?query=${encodeURIComponent(q)}&per_page=5${square ? '&orientation=squarish' : ''}&content_filter=high`, {
     headers: { authorization: `Client-ID ${process.env.UNSPLASH_ACCESS_KEY}`, 'accept-version': 'v1' },
   });
   if (!res.ok) throw new Error(`unsplash ${res.status}`);
-  const data = (await res.json()) as { results?: { urls: { raw: string }; user: { name: string; links: { html: string } }; links: { html: string; download_location: string }; color?: string; likes?: number }[] };
+  const data = (await res.json()) as { results?: UnsplashPhoto[] };
   return data.results ?? [];
 }
 
@@ -53,7 +64,7 @@ async function fromWikimedia(key: string, q: string): Promise<Omit<Row, 'tried_a
   if (!res.ok) return null;
   type Info = { url: string; thumburl?: string; width: number; height: number; mime: string; descriptionurl: string; extmetadata?: Record<string, { value?: string }> };
   const data = (await res.json()) as { query?: { pages?: Record<string, { index: number; imageinfo?: Info[] }> } };
-  const pages = Object.values(data.query?.pages ?? {}).sort((a, b) => a.index - b.index);
+  const pages = Object.values(data.query?.pages ?? {}).sort((a, b) => a.index - b.index) as { index: number; title?: string; imageinfo?: Info[] }[];
   for (const pg of pages) {
     const i = pg.imageinfo?.[0];
     if (!i?.thumburl || i.mime !== 'image/jpeg' || Math.min(i.width, i.height) < 1200) continue;
@@ -61,6 +72,7 @@ async function fromWikimedia(key: string, q: string): Promise<Omit<Row, 'tried_a
     if (ratio < 0.66 || ratio > 1.6) continue;
     const lic = strip(i.extmetadata?.LicenseShortName?.value) ?? '';
     if (!FREE.test(lic)) continue;
+    if (!photoMatches(key, `${pg.title ?? ''} ${strip(i.extmetadata?.ImageDescription?.value) ?? ''}`)) continue;
     return { key, url: i.thumburl, author: `${strip(i.extmetadata?.Artist?.value) ?? 'Unknown'} (${lic})`, author_url: i.descriptionurl, photo_page: i.descriptionurl, blur_color: null };
   }
   return null;
@@ -83,8 +95,9 @@ async function search(key: string): Promise<Omit<Row, 'tried_at'>> {
 async function searchUnsplash(key: string): Promise<Omit<Row, 'tried_at'>> {
   const q = PHOTO_QUERIES[key];
   // Square photos fit the food tiles best; many dishes only have a few photos, so widen if none.
-  let results = await find(q, true);
-  if (!results.length) results = await find(q, false);
+  // Only photos whose description mentions the food; square ones first, then any shape.
+  let results = (await find(q, true)).filter((p) => photoMatches(key, describe(p)));
+  if (!results.length) results = (await find(q, false)).filter((p) => photoMatches(key, describe(p)));
   // The most liked of the top results tends to be the best-looking photo.
   const best = [...results].sort((a, b) => (b.likes ?? 0) - (a.likes ?? 0))[0];
   if (!best) return (await fromPexels(key, q).catch(() => null)) ?? (await fromWikimedia(key, q).catch(() => null)) ?? { key, url: null, author: null, author_url: null, photo_page: null, blur_color: null };

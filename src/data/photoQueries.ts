@@ -1,5 +1,15 @@
 // What to search Unsplash for, per food photo key (see foodPhotos.ts). Server-side only.
 export const PHOTO_QUERIES: Record<string, string> = {
+ "chicken_breast": "grilled chicken breast sliced",
+ "chicken_wings": "chicken wings",
+ "chicken_thigh": "chicken drumsticks",
+ "peanut_butter": "peanut butter jar",
+ "cottage_cheese": "cottage cheese bowl",
+ "almonds": "almonds nuts",
+ "salmon": "salmon fillet",
+ "tuna": "tuna steak",
+ "scrambled_eggs": "scrambled eggs",
+ "fried_egg": "fried egg sunny side up",
  "poultry_leg": "roast chicken",
  "cut_of_meat": "beef steak grilled",
  "meat_on_bone": "lamb chops",
@@ -157,3 +167,19 @@ export const PHOTO_QUERIES: Record<string, string> = {
  "agege_bread": "agege bread loaf",
  "bole_fish": "grilled fish african"
 };
+
+/**
+ * A photo is only used if Unsplash's own description of it mentions one of these words
+ * (by default, the main food word of the search), so a search for "peanut butter" can't
+ * return a photo of plain bread. No match → no photo, rather than a wrong one.
+ */
+const GENERIC = new Set(['of', 'with', 'and', 'the', 'a', 'bowl', 'plate', 'glass', 'jar', 'sliced', 'cooked', 'grilled', 'fried', 'roast', 'roasted', 'boiled', 'fresh', 'food', 'dish', 'nigerian', 'african', 'ghanaian', 'indian', 'traditional', 'side', 'up', 'sunny', 'steak', 'fillet', 'nuts', 'loaf', 'cup', 'breakfast', 'dessert', 'soup', 'stew', 'rice']);
+const MUST_OVERRIDE: Record<string, string[]> = {
+  chicken_breast: ['chicken'], chicken_wings: ['wing'], chicken_thigh: ['chicken', 'drumstick'], peanut_butter: ['peanut'], cottage_cheese: ['cottage'],
+  cooked_rice: ['rice'], fried_rice: ['rice'], jollof: ['jollof', 'rice'], egusi: ['egusi', 'soup', 'stew'], salmon: ['salmon'], tuna: ['tuna'], fish: ['fish'],
+};
+export function photoMust(key: string): string[] {
+  if (MUST_OVERRIDE[key]) return MUST_OVERRIDE[key];
+  const words = (PHOTO_QUERIES[key] ?? '').toLowerCase().split(/\s+/).filter((w) => w.length > 2 && !GENERIC.has(w));
+  return words.length ? words.map((w) => w.replace(/(es|s)$/, '')) : [];
+}
