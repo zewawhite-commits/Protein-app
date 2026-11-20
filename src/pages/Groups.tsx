@@ -507,7 +507,7 @@ function PostCard({ post, me, onReact, onOpen, onDelete, onAuthor }: { post: Pos
   );
 }
 
-function ShareSheet({ open, groupId, onClose, onShared, initialTitle = '', initialText = '' }: { open: boolean; groupId: string; onClose: () => void; onShared: () => void; initialTitle?: string; initialText?: string }) {
+function ShareSheet({ open, groupId, onClose, onShared, initialTitle = '', initialText = '', initialRecipe = '' }: { open: boolean; groupId: string; onClose: () => void; onShared: () => void; initialTitle?: string; initialText?: string; initialRecipe?: string }) {
   const { entries } = useDay(todayKey());
   const meals = MEAL_ORDER.filter((m) => entries.some((e) => e.meal === m));
   const [meal, setMeal] = useState<Meal | 'none'>('none');
@@ -517,7 +517,7 @@ function ShareSheet({ open, groupId, onClose, onShared, initialTitle = '', initi
   const [photo, setPhoto] = useState<{ blob: Blob; url: string } | null>(null);
   const customFoods = useStore((s) => s.customFoods);
   const myRecipes = useMemo(() => customFoods.filter((c) => c.recipe && !c.archived), [customFoods]);
-  const [recipeId, setRecipeId] = useState<string>('');
+  const [recipeId, setRecipeId] = useState<string>(initialRecipe);
   const [busy, setBusy] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const titleRef = useRef<HTMLInputElement>(null);
@@ -800,12 +800,13 @@ function CommunityFeed() {
   const [sharing, setSharing] = useState(false);
   const [params, setParams] = useSearchParams();
   // /feed?post=Title&text=… opens a new post with that filled in (used after subscribing).
-  const [draft] = useState(() => ({ title: params.get('post') ?? '', text: params.get('text') ?? '' }));
+  const [draft] = useState(() => ({ title: params.get('post') ?? '', text: params.get('text') ?? '', recipe: params.get('recipe') ?? '' }));
+  const draftRecipe = useStore((s) => s.customFoods.find((c) => c.id === draft.recipe));
   useEffect(() => {
-    if (!draft.title || !mine?.username) return;
+    if (!(draft.title || draft.recipe) || !mine?.username) return;
     setSharing(true);
     setParams({}, { replace: true });
-  }, [draft.title, mine?.username, setParams]);
+  }, [draft.title, draft.recipe, mine?.username, setParams]);
   const [openPost, setOpenPost] = useState<Post | null>(null);
   const [person, setPerson] = useState<{ id: string; profile: PublicProfile } | null>(null);
   const [error, setError] = useState('');
@@ -859,7 +860,7 @@ function CommunityFeed() {
           {posts.map((p) => <PostCard key={p.id} post={p} me={me} onAuthor={() => setPerson({ id: p.user_id, profile: p.author! })} onReact={(e) => react(p, e)} onOpen={() => setOpenPost(p)} onDelete={async () => { await deletePost(p); toast('Post deleted'); void load(); }} />)}
         </div>
       )}
-      <ShareSheet open={sharing} groupId={COMMUNITY_ID} initialTitle={draft.title} initialText={draft.text} onClose={() => setSharing(false)} onShared={() => { setSharing(false); void load(); }} />
+      <ShareSheet open={sharing} groupId={COMMUNITY_ID} initialTitle={draft.title || draftRecipe?.name || ''} initialText={draft.text} initialRecipe={draft.recipe} onClose={() => setSharing(false)} onShared={() => { setSharing(false); void load(); }} />
       <CommentsSheet post={openPost} onClose={() => { setOpenPost(null); void load(); }} />
       <PersonSheet groupId={COMMUNITY_ID} person={person} me={me} onClose={() => setPerson(null)} onEdit={() => { setPerson(null); setEditing(true); }} />
     </>

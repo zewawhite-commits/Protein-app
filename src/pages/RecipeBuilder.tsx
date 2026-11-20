@@ -1,6 +1,7 @@
+import { ShareRecipeSheet } from '@/components/ShareRecipe';
 import { useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Plus, Search, Trash2 } from 'lucide-react';
+import { ArrowLeft, Plus, Search, Trash2, Share2 } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 import { useFoodDb } from '@/lib/hooks';
 import { searchFoods, splitName } from '@/lib/foods';
@@ -39,6 +40,7 @@ export default function RecipeBuilder() {
   const custom = useStore((s) => s.customFoods);
   const upsert = useStore((s) => s.upsertCustomFood);
   const archive = useStore((s) => s.archiveCustomFood);
+  const [share, setShare] = useState(false);
   const existing = custom.find((c) => c.id === params.get('id') && c.recipe);
   const { db } = useFoodDb();
 
@@ -90,8 +92,10 @@ export default function RecipeBuilder() {
     <div className="mx-auto min-h-dvh max-w-lg animate-fade-up px-5 pb-16 md:max-w-2xl md:px-8">
       <header className="pt-safe flex items-center gap-3 pb-4">
         <button onClick={() => navigate(-1)} className="grid h-11 w-11 place-items-center rounded-full bg-surface" style={{ boxShadow: 'var(--shadow)' }} aria-label="Back"><ArrowLeft size={20} /></button>
-        <h1 className="text-[26px] font-extrabold tracking-tight">{existing ? 'Edit recipe' : 'New recipe'}</h1>
+        <h1 className="flex-1 text-[26px] font-extrabold tracking-tight">{existing ? 'Edit recipe' : 'New recipe'}</h1>
+        {existing && <button onClick={() => setShare(true)} className="chip !h-10"><Share2 size={15} /> Share</button>}
       </header>
+      {existing && <ShareRecipeSheet food={existing} open={share} onClose={() => setShare(false)} />}
 
       {!existing && <div className="mb-5"><RecipeImport onImported={imported} /></div>}
       {check && (check.unmatched.length > 0 || check.guessed.length > 0 || check.note) && (

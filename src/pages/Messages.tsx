@@ -15,6 +15,8 @@ export default function Messages() {
   const session = useSession();
   const [params, setParams] = useSearchParams();
   const open = params.get('with');
+  const sending = params.get('recipe') ?? '';
+  const sendingName = useStore((s) => s.customFoods.find((c) => c.id === sending)?.name);
   const [list, setList] = useState<Conversation[] | null>(null);
   const [error, setError] = useState('');
   const [who, setWho] = useState('');
@@ -28,11 +30,12 @@ export default function Messages() {
   if (open) {
     const c = list?.find((x) => x.with === open);
     const profile = c?.profile ?? (partner?.user_id === open ? partner : undefined);
-    return <Thread other={open} profile={profile} onBack={() => { setParams({}); load(); }} />;
+    return <Thread other={open} profile={profile} preRecipe={sending} onBack={() => { setParams(sending ? { recipe: sending } : {}); load(); }} />;
   }
 
   return (
     <Shell back={() => nav(-1)}>
+      {sendingName && <p className="mb-3 rounded-2xl bg-accent/10 px-4 py-3 text-sm font-semibold text-accent">Choose who to send “{sendingName}” to.</p>}
       <div className="flex gap-2">
         <div className="relative flex-1">
           <Search size={17} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-dim" />
@@ -44,7 +47,7 @@ export default function Messages() {
             const u = await findUser(who.trim());
             if (!u) setError('No one with that username. Check the spelling.');
             else if (u.user_id === (await myUserId())) setError('That’s you!');
-            else { setPartner(u); setParams({ with: u.user_id }); }
+            else { setPartner(u); setParams({ with: u.user_id, ...(sending ? { recipe: sending } : {}) }); }
           } catch (e) { setError((e as Error).message); } finally { setFinding(false); }
         }} className="btn-primary !px-5">{finding ? <Loader2 size={17} className="animate-spin" /> : 'Chat'}</button>
       </div>
@@ -54,7 +57,7 @@ export default function Messages() {
       ) : (
         <div className="card mt-4 divide-y divide-line p-1.5">
           {list.map((c) => (
-            <button key={c.with} onClick={() => setParams({ with: c.with })} className="flex w-full items-center gap-3 px-3 py-3 text-left">
+            <button key={c.with} onClick={() => setParams({ with: c.with, ...(sending ? { recipe: sending } : {}) })} className="flex w-full items-center gap-3 px-3 py-3 text-left">
               <span className="grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-full bg-raised font-bold">{c.profile.photoUrl ? <img src={c.profile.photoUrl} alt="" className="h-full w-full object-cover" /> : c.profile.display_name.slice(0, 1)}</span>
               <span className="min-w-0 flex-1">
                 <span className="block truncate font-semibold">{c.profile.display_name}{c.profile.username ? <span className="font-normal text-silver"> @{c.profile.username}</span> : null}</span>
@@ -81,13 +84,13 @@ function Shell({ children, back, title = 'Messages' }: { children: React.ReactNo
   );
 }
 
-function Thread({ other, profile, onBack }: { other: string; profile?: PublicProfile; onBack: () => void }) {
+function Thread({ other, profile, onBack, preRecipe }: { other: string; profile?: PublicProfile; onBack: () => void; preRecipe?: string }) {
   const [msgs, setMsgs] = useState<DirectMessage[] | null>(null);
   const [me, setMe] = useState<string>();
   const [text, setText] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  const [picking, setPicking] = useState(false);
+  const [picking, setPicking] = useState(!!preRecipe);
   const customFoods = useStore((s) => s.customFoods);
   const recipes = useMemo(() => customFoods.filter((c) => c.recipe && !c.archived), [customFoods]);
   const end = useRef<HTMLDivElement>(null);

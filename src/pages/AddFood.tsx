@@ -2,7 +2,8 @@ import { sendMessage } from '@/lib/feedback';
 import { useDeferredValue, useEffect, useMemo, useState } from 'react';
 import { AllergyTag } from '@/components/Allergy';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Camera, ChevronRight, Globe2, Heart, Loader2, Mic, Search, X, ChefHat, Plus } from 'lucide-react';
+import { ArrowLeft, Camera, ChevronRight, Globe2, Heart, Loader2, Mic, Search, Share2, X, ChefHat, Plus } from 'lucide-react';
+import { ShareRecipeSheet } from '@/components/ShareRecipe';
 import { haptic, toast } from '@/components/fx';
 import { useFoodDb, useFoodLookup, usePhotoUrl } from '@/lib/hooks';
 import { SOURCE_SHORT, searchFoods, splitName, groupDuplicates, hasCoreNutrition } from '@/lib/foods';
@@ -290,6 +291,7 @@ function FoodRow({ food, onClick }: { food: Food; onClick: () => void }) {
   const rememberFood = useStore((s) => s.rememberFood);
   const addEntry = useStore((s) => s.addEntry);
   const [params] = useSearchParams();
+  const [share, setShare] = useState(false);
   // Calories for a normal serving ("105 kcal, 1 medium"), like a food diary shows them; 100 g when there is none.
   const portion = typicalPortion(food);
   const kcal = food.per100.kcal != null ? (food.per100.kcal * portion.grams) / 100 : null;
@@ -318,7 +320,13 @@ function FoodRow({ food, onClick }: { food: Food; onClick: () => void }) {
         </div>
       </div>
     </button>
-      {'recipe' in food && (food as CustomFood).recipe && <Link to={`/recipe?id=${encodeURIComponent(food.id)}`} className="grid h-10 shrink-0 place-items-center rounded-full bg-raised px-3 text-xs font-bold text-accent">Edit</Link>}
+      {'recipe' in food && (food as CustomFood).recipe && (
+        <>
+          <button onClick={() => setShare(true)} className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-raised text-accent" aria-label={`Share ${title}`}><Share2 size={16} /></button>
+          <Link to={`/recipe?id=${encodeURIComponent(food.id)}`} className="ml-1 grid h-10 shrink-0 place-items-center rounded-full bg-raised px-3 text-xs font-bold text-accent">Edit</Link>
+          <ShareRecipeSheet food={food as CustomFood} open={share} onClose={() => setShare(false)} />
+        </>
+      )}
     <button
       onClick={() => { haptic(); rememberFood(food); toggleFavorite(food.id); toast(isFav ? 'Removed from favourites' : 'Saved to favourites'); }}
       className={cx('grid h-11 w-9 shrink-0 place-items-center rounded-full transition active:scale-90', isFav ? 'text-accent' : 'text-dim')}

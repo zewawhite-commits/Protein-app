@@ -17,7 +17,7 @@ export function toShared(f: CustomFood, by?: string): SharedRecipe | null {
 }
 
 /** Shows a shared recipe with per-serving numbers; one tap saves your own copy (credit kept). */
-export function SharedRecipeCard({ recipe }: { recipe: SharedRecipe }) {
+export function SharedRecipeCard({ recipe, readOnly }: { recipe: SharedRecipe; readOnly?: boolean }) {
   const upsert = useStore((s) => s.upsertCustomFood);
   const [open, setOpen] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -32,7 +32,7 @@ export function SharedRecipeCard({ recipe }: { recipe: SharedRecipe }) {
       )}
       <div className="mt-3 flex gap-2">
         <button onClick={() => setOpen((v) => !v)} className="chip !h-9">{open ? 'Hide ingredients' : `${recipe.ingredients.length} ingredients`}</button>
-        <button disabled={saved} onClick={() => {
+        {!readOnly && <button disabled={saved} onClick={() => {
           upsert({
             name: recipe.name.slice(0, 60), category: 'My recipes', state: 'cooked', per100: recipe.per100 as unknown as Per100,
             portions: [{ label: '1 serving', grams: Math.round(serving) }],
@@ -40,7 +40,7 @@ export function SharedRecipeCard({ recipe }: { recipe: SharedRecipe }) {
             recipe: { ingredients: recipe.ingredients.map((i) => ({ foodId: `shared:${i.name}`, name: i.name, grams: i.grams, per100: i.per100 as unknown as Per100 })), cookedGrams: recipe.cookedGrams, servings: recipe.servings },
           });
           haptic(); setSaved(true); toast('Saved to My recipes');
-        }} className="chip chip-on !h-9"><BookmarkPlus size={15} /> {saved ? 'Saved' : 'Save recipe'}</button>
+        }} className="chip chip-on !h-9"><BookmarkPlus size={15} /> {saved ? 'Saved' : 'Save recipe'}</button>}
       </div>
     </div>
   );

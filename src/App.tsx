@@ -33,6 +33,7 @@ const Help = lazy(() => import('./pages/Help'));
 const Reports = lazy(() => import('./pages/Reports'));
 const Routines = lazy(() => import('./pages/Routines'));
 const Messages = lazy(() => import('./pages/Messages'));
+const SharedRecipePage = lazy(() => import('./pages/SharedRecipePage'));
 const Feed = lazy(() => import('./pages/Groups').then((m) => ({ default: m.CommunityFeedPage })));
 
 export default function App() {
@@ -49,6 +50,7 @@ export default function App() {
   if (!profile && (path === '/privacy' || path === '/terms' || path === '/refunds')) return <Suspense fallback={null}>{path === '/privacy' ? <Privacy /> : path === '/terms' ? <Terms /> : <Refunds />}</Suspense>;
   // Prices are visible before sign-up, so nobody meets a surprise paywall.
   if (!profile && path === '/premium') return <Suspense fallback={null}><Toaster /><Premium /></Suspense>;
+  if (path === '/r') return <Suspense fallback={null}><Toaster /><SharedRecipePage /></Suspense>;
   if (!profile) return <Onboarding />;
   return (
     <Suspense fallback={null}>

@@ -20,7 +20,7 @@ export function LogMenu({ open, onClose, date }: { open: boolean; onClose: () =>
     { icon: PenLine, label: 'Describe', sub: 'Type or say it', to: `/snap${q ? `${q}&` : '?'}mode=describe` },
     { icon: Search, label: 'Food database', sub: '18,000+ foods', to: `/add${q}` },
     { icon: Bookmark, label: 'Saved meals', sub: 'Log in one tap', to: `/add?tab=saved${q ? `&${q.slice(1)}` : ''}` },
-    { icon: ChefHat, label: 'My recipes', sub: 'Homemade dishes', to: `/add?tab=custom${q ? `&${q.slice(1)}` : ''}` },
+    { icon: ChefHat, label: 'Recipes', sub: 'Make, import & share', to: `/add?tab=custom${q ? `&${q.slice(1)}` : ''}` },
   ];
   return (
     <>
