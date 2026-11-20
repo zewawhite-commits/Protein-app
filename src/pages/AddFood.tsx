@@ -13,7 +13,7 @@ import { addDays, mealForNow, relativeDay, todayKey } from '@/lib/dates';
 import { useStore } from '@/store/useStore';
 import type { CustomFood, Food, PrepState } from '@/lib/types';
 import { FoodSheet } from '@/components/FoodSheet';
-import { FoodArt, FoodVisual } from '@/components/FoodIcon';
+import { FoodVisual } from '@/components/FoodIcon';
 import { WorldFoods } from '@/components/WorldFoods';
 import { VoiceSheet, canUseVoice } from '@/components/VoiceSheet';
 import { SavedMealsList } from '@/components/SavedMeals';
@@ -344,7 +344,7 @@ function PhotoCards({ foods, onPick }: { foods: Food[]; onPick: (f: Food) => voi
         return (
           <button key={f.id} onClick={() => { haptic(); onPick(f); }} className="flex h-48 w-40 shrink-0 snap-start flex-col justify-between rounded-[26px] bg-surface p-4 text-left transition active:scale-[.97]" style={{ boxShadow: 'var(--shadow)' }}>
             <div className="flex items-start justify-between">
-              <span className="grid h-14 w-14 place-items-center rounded-2xl bg-raised"><FoodArt name={f.name} category={f.category} size={34} /></span>
+              <FoodVisual name={f.name} category={f.category} size={56} />
               {f.state !== 'na' && <StateBadge state={f.state} />}
             </div>
             <div>

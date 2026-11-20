@@ -12,7 +12,7 @@ import type { Recipe } from '@/lib/recipe';
 import { useCoachContext } from '@/pages/Coach';
 import { SignInButtons } from './SignIn';
 import { PlanBadge } from './PlanBadge';
-import { FoodArt } from './FoodIcon';
+import { FoodVisual } from './FoodIcon';
 import { cx, fmt } from './ui';
 import { haptic, toast } from './fx';
 
@@ -74,7 +74,7 @@ export function RecipeView() {
         <div className="-mx-5 mt-3 flex gap-2 overflow-x-auto px-5 pb-0.5 no-scrollbar">
           {ideas.map((i) => (
             <button key={i.label} onClick={() => { setAsk(i.label); void make(i.label); }} disabled={state.busy} className="chip !h-10 shrink-0 !pl-2 text-[14px]">
-              <span className="grid h-7 w-7 place-items-center rounded-full bg-surface"><FoodArt name={i.art} size={18} /></span>{i.label}
+              <FoodVisual name={i.art} size={28} className="!rounded-full" />{i.label}
             </button>
           ))}
         </div>
@@ -155,8 +155,8 @@ function RecipeCard({ recipe, savedId, onSave, onDelete }: { recipe: Recipe; sav
               <button onClick={onSave} className="grid h-10 w-10 place-items-center rounded-full bg-surface text-accent" style={{ boxShadow: 'var(--shadow)' }} aria-label="Save recipe"><Bookmark size={17} /></button>
             )}
           </div>
-          <span className="grid h-20 w-20 place-items-center rounded-[26px] bg-surface" style={{ boxShadow: 'var(--shadow)' }}>
-            <FoodArt name={`${recipe.title} ${recipe.ingredients[0]?.name ?? ''}`} size={52} />
+          <span className="block w-20 overflow-hidden rounded-[26px]" style={{ boxShadow: 'var(--shadow)' }}>
+            <FoodVisual name={`${recipe.title} ${recipe.ingredients[0]?.name ?? ''}`} size={80} />
           </span>
           <p className="mt-4 pr-12 text-[24px] font-extrabold leading-tight tracking-tight">{recipe.title}</p>
           <div className="mt-2.5 flex flex-wrap gap-1.5 text-[13px] font-semibold text-ink/75">
@@ -186,7 +186,7 @@ function RecipeCard({ recipe, savedId, onSave, onDelete }: { recipe: Recipe; sav
         <ul className="mt-3 space-y-2.5">
           {rows.map(({ it, food }, i) => (
             <li key={i} className="flex items-center gap-3 text-[15px]">
-              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-raised"><FoodArt name={it.name} category={food?.category} size={24} /></span>
+              <FoodVisual name={it.name} category={food?.category} size={40} />
               <div className="min-w-0 flex-1">
                 <p className="font-medium">{it.localName && it.localName !== it.name ? `${it.localName} (${it.name})` : it.name}{it.note && <span className="text-silver">, {it.note}</span>}</p>
                 <p className="truncate text-xs text-dim">{food ? `Matched: ${splitName(food.name).title}` : 'Not in our database — not counted'}</p>
