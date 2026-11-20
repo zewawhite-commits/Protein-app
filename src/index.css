@@ -89,3 +89,6 @@
   body { background: #fff !important; }
   .card { box-shadow: none !important; border: 1px solid #ddd; break-inside: avoid; }
 }
+
+/* Taps register straight away on phones (no double-tap-zoom delay), so choice cards feel instant. */
+button, a, [role='radio'], [role='switch'], label { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }

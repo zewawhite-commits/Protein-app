@@ -491,16 +491,17 @@ function Choice<T>({ option, selected, onClick, multi }: { option: Option<T>; se
   return (
     <button
       onClick={() => { haptic(); onClick(); }}
-      className={cx('flex items-center gap-4 rounded-[22px] border-2 bg-surface p-4 text-left transition active:scale-[.98]', selected ? 'border-ink' : 'border-transparent')}
+      aria-pressed={selected}
+      className={cx('flex min-h-[76px] w-full items-center gap-4 rounded-[22px] border-2 p-4 text-left transition-colors duration-100 active:scale-[.99]', selected ? 'border-accent bg-accent/10' : 'border-transparent bg-surface')}
       style={{ boxShadow: 'var(--shadow)' }}
     >
-      <span className={cx('grid h-12 w-12 shrink-0 place-items-center rounded-2xl', selected ? 'bg-primary text-on-primary' : 'bg-raised')}><Icon size={22} /></span>
+      <span className={cx('grid h-12 w-12 shrink-0 place-items-center rounded-2xl', selected ? 'bg-accent text-white' : 'bg-raised')}><Icon size={22} /></span>
       <span className="flex-1">
         <span className="block font-semibold">{option.label}</span>
         <span className="block text-sm text-silver">{option.sub}</span>
       </span>
       {multi && (
-        <span className={cx('grid h-6 w-6 shrink-0 place-items-center rounded-md border-2', selected ? 'border-ink bg-ink text-bg' : 'border-line')}>
+        <span className={cx('grid h-6 w-6 shrink-0 place-items-center rounded-md border-2', selected ? 'border-accent bg-accent text-white' : 'border-line')}>
           {selected && <Check size={15} strokeWidth={3} />}
         </span>
       )}
