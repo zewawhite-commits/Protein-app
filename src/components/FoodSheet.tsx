@@ -147,6 +147,11 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
     if (!entry && isFuture) { planForLater(); return; }
     savedRef.current = true;
     const crossesGoal = day.goal > 0 && before + (entry ? nutrientsFor(entry.food.per100, entry.grams).protein : 0) < day.goal && after >= day.goal;
+    if (entry) {
+      // Edits can be undone too: put back exactly what was there.
+      const was = { grams: entry.grams, meal: entry.meal, photoId: entry.photoId, date: entry.date, planned: entry.planned, note: entry.note };
+      toast('Changes saved', { action: { label: 'Undo', run: () => useStore.getState().updateEntry(entry.id, was) } });
+    }
     if (entry) updateEntry(entry.id, { grams: round1(g), meal, photoId, ...(entry.planned && !isFuture ? { planned: false } : {}), ...(moveTo && moveTo !== entry.date ? { date: moveTo } : {}), ...(entry.note?.startsWith('Portion estimated') && round1(g) !== entry.grams ? { note: 'Weight set by you' } : {}) });
     else {
       // Same food on the same day in the last 2 minutes: probably a double tap, so say so and offer undo.

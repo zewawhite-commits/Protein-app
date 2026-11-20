@@ -47,6 +47,19 @@ export async function POST(request: Request): Promise<Response> {
     return json({ ok: true });
   }
 
+  // Onboarding progress: which step a signed-in person reached (the owner sees the drop-off).
+  if (body?.type === 'event') {
+    const b = body as { name?: unknown; step?: unknown };
+    const step = clip(b.step, 40);
+    const user = await userFromToken(request.headers.get('x-user-token'));
+    const url = supabaseUrl(), key = supabaseServiceKey();
+    if (b.name === 'onboarding' && step && /^[\w-]+$/.test(step) && user && url && key) {
+      const db = createClient(url, key, { auth: { persistSession: false } });
+      await db.from('recognition_feedback').insert({ ai_name: 'ONBOARDING', chosen_food_id: step, chosen_name: user.id, candidate_rank: -1, kind: 'item' });
+    }
+    return json({ ok: true });
+  }
+
   if (body?.type === 'error') {
     console.error('[app-error]', JSON.stringify({ message: clip(body.message, 300), path: clip(body.path, 100), stack: clip(body.stack, 1500) }));
     return json({ ok: true });

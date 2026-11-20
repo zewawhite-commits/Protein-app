@@ -34,5 +34,18 @@ export async function GET(request: Request): Promise<Response> {
   const totalCost = Object.entries(ai).reduce((a, [k, v]) => a + v.uses * (COST[k] ?? 0.05), 0);
   const people = new Set((usage ?? []).map((u) => String(u.subscriber).split(':').pop())).size;
   const aiCost = { estimatedUsd: Math.round(totalCost * 100) / 100, perActivePerson: people ? Math.round((totalCost / people) * 100) / 100 : 0, people };
-  return json({ ...summarize(rows), aiThisMonth: ai, aiCost });
+  // Onboarding funnel: how many people reached each step (from /api/feedback events).
+  const { data: steps } = await db.from('recognition_feedback').select('chosen_food_id, chosen_name').eq('ai_name', 'ONBOARDING').limit(20000);
+  const funnelMap = new Map<string, Set<string>>();
+  for (const r of steps ?? []) { const k = String(r.chosen_food_id); if (!funnelMap.has(k)) funnelMap.set(k, new Set()); funnelMap.get(k)!.add(String(r.chosen_name)); }
+  const funnel = [...funnelMap.entries()].sort((a, b) => a[0].localeCompare(b[0])).map(([step, s]) => ({ step: step.replace(/^\d+-/, ''), people: s.size }));
+  // New accounts per day, last 14 days (from sign-up time).
+  const since = new Date(Date.now() - 14 * 864e5).toISOString();
+  const signups: Record<string, number> = {};
+  for (let page = 1; page <= 20; page++) {
+    const { data: list } = await db.auth.admin.listUsers({ page, perPage: 1000 });
+    for (const u of list?.users ?? []) if (u.created_at >= since) signups[u.created_at.slice(0, 10)] = (signups[u.created_at.slice(0, 10)] ?? 0) + 1;
+    if (!list || list.users.length < 1000) break;
+  }
+  return json({ ...summarize(rows), aiThisMonth: ai, aiCost, funnel, signups });
 }

@@ -1,7 +1,8 @@
+import { trackStep } from '@/lib/feedback';
 import { Logo } from '@/components/Logo';
 import { useNavigate } from 'react-router-dom';
 import { DIET_PREFS, TRAINING } from '@/lib/cuisines';
-import { useState, type ReactNode } from 'react';
+import { useState, type ReactNode, useEffect } from 'react';
 import { ArrowLeft, Check, Bike, Coffee, Droplet, Drumstick, Dumbbell, Flame, HeartPulse, Leaf, Loader2, Mail, Pencil, Phone, Rabbit, Scale, Sofa, Soup, ThumbsDown, ThumbsUp, Trophy, Turtle, Fish, Salad, Utensils, Wheat, Zap, Footprints } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 import { accountsEnabled, sendPhoneCode, signInWithGoogle, toE164, useSession, verifyPhoneCode } from '@/lib/account';
@@ -108,6 +109,7 @@ export default function Onboarding() {
   // Only what's needed for a good first plan. Training type, challenges and reminders can be set later in Profile.
   const flow = ['welcome', 'goals', 'about', 'direction', ...(wantsChange ? ['goalweight'] : []), 'activity', 'diet', 'cuisines', 'plan', 'choose'];
   const at = flow[step];
+  useEffect(() => { trackStep(`${String(flow.indexOf(at) + 1).padStart(2, '0')}-${at}`); }, [at]); // eslint-disable-line react-hooks/exhaustive-deps
   const STEPS = flow.length;
   const next = () => setStep((s) => Math.min(STEPS - 1, s + 1));
   const back = () => setStep((s) => Math.max(0, s - 1));

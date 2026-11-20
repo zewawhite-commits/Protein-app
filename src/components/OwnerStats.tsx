@@ -11,6 +11,8 @@ interface Stats {
   retention?: Record<'day1' | 'day7' | 'day30', { eligible: number; returned: number; rate: number | null }>;
   topFoods?: { name: string; entries: number; people: number }[];
   aiCost?: { estimatedUsd: number; perActivePerson: number; people: number };
+  funnel?: { step: string; people: number }[];
+  signups?: Record<string, number>;
 }
 const AI_LABEL: Record<string, string> = { scan: 'AI scans', coach: 'Coach messages', workout: 'Workout guides', recipe: 'AI recipes', plan: 'Eating plans', ideas: 'Meal ideas' };
 
@@ -54,6 +56,33 @@ export function OwnerStats() {
             </div>
           ))}
         </div>
+        {s.signups && (() => {
+          const days = Array.from({ length: 14 }, (_, i) => new Date(Date.now() - (13 - i) * 864e5).toISOString().slice(0, 10));
+          const max = Math.max(1, ...days.map((d) => s.signups![d] ?? 0));
+          const today = s.signups[days[13]] ?? 0;
+          return (
+            <div className="mt-3 rounded-2xl bg-raised p-3.5">
+              <p className="text-[14px] font-semibold">New sign-ups <span className="font-normal text-silver">· {today} today</span></p>
+              <div className="mt-2 flex h-16 items-end gap-1" aria-label="Sign-ups per day, last 14 days">
+                {days.map((d) => <div key={d} title={`${d}: ${s.signups![d] ?? 0}`} className="flex-1 rounded-t bg-accent" style={{ height: `${Math.max(4, ((s.signups![d] ?? 0) / max) * 100)}%`, opacity: s.signups![d] ? 1 : 0.25 }} />)}
+              </div>
+              <p className="mt-1 text-xs text-silver">Last 14 days. Gmail sends about 500 confirmation emails a day: move to your own domain before you get close.</p>
+            </div>
+          );
+        })()}
+        {s.funnel && s.funnel.length > 0 && (
+          <div className="mt-3 rounded-2xl bg-raised p-3.5">
+            <p className="text-[14px] font-semibold">Where people stop in onboarding</p>
+            <ul className="mt-2 space-y-1.5">
+              {s.funnel.map((f) => (
+                <li key={f.step} className="text-[13px]">
+                  <div className="flex justify-between"><span className="capitalize">{f.step.replace(/_/g, ' ')}</span><span className="num font-semibold">{f.people}</span></div>
+                  <div className="mt-0.5 h-1.5 overflow-hidden rounded-full bg-surface"><div className="h-full rounded-full bg-accent" style={{ width: `${(f.people / Math.max(1, s.funnel![0].people)) * 100}%` }} /></div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
         {ret && (
           <div className="mt-3 rounded-2xl bg-raised p-3.5">
             <p className="text-[14px] font-semibold">Retention</p>

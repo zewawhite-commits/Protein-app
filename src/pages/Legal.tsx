@@ -6,7 +6,7 @@ import { APP_NAME } from '@/components/fx';
 import { USD_PRICES } from '@/lib/prices';
 
 /** Set these in Vercel (Settings → Environment Variables) so the policies name the business. */
-export const SUPPORT_EMAIL: string | undefined = import.meta.env.VITE_SUPPORT_EMAIL || undefined;
+export const SUPPORT_EMAIL: string | undefined = import.meta.env.VITE_SUPPORT_EMAIL || 'nutiviliai@gmail.com';
 const BUSINESS: string = import.meta.env.VITE_BUSINESS_NAME || APP_NAME;
 const ADDRESS: string | undefined = import.meta.env.VITE_BUSINESS_ADDRESS || undefined;
 const UPDATED = '16 November 2026';
