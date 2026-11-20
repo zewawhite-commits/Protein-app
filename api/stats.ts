@@ -18,7 +18,7 @@ export async function GET(request: Request): Promise<Response> {
     for (let page = 1; page <= 50; page++) {
       const { data: list } = await db.auth.admin.listUsers({ page, perPage: 1000 });
       for (const u of list?.users ?? []) {
-        if (u.email && u.user_metadata?.marketing_opt_in === true) lines.push([u.email, String(u.user_metadata?.full_name ?? u.user_metadata?.name ?? '').replace(/[",\n]/g, ' '), u.created_at.slice(0, 10)].join(','));
+        if (u.email && u.user_metadata?.marketing_opt_in !== false) lines.push([u.email, String(u.user_metadata?.full_name ?? u.user_metadata?.name ?? '').replace(/[",\n]/g, ' '), u.created_at.slice(0, 10)].join(','));
       }
       if (!list || list.users.length < 1000) break;
     }

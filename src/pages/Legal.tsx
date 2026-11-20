@@ -71,6 +71,7 @@ export function Privacy() {
       <H>How we use it</H>
       <ul className="list-disc space-y-2 pl-5">
         <li>To run the app: calculate your targets, show your progress, warn you about foods on your avoid list, and keep your data in sync across devices.</li>
+        <li>To send occasional tips, recipes and offers by email. You can turn these off at sign-up, any time in Settings → Tips &amp; offers by email, or by asking us. Account emails (like confirming your email or resetting your password) are always sent.</li>
         <li>To provide AI features: when you scan a meal or label, describe food, chat with the coach or ask for a workout, recipe, plan or meal ideas, the photo or text and the relevant parts of your profile and recent log are sent to our AI provider, Anthropic, to produce a reply. Your first name may be included so the coach can address you; your email address and account details are not sent. Under Anthropic’s commercial terms, this data isn’t used to train their models.</li>
         <li>To take payments, manage your subscription and give free Pro time.</li>
         <li>To keep the service safe, prevent abuse and fix problems.</li>

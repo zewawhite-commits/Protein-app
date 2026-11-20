@@ -1,10 +1,11 @@
+import { MessagesButton } from '@/components/MessagesButton';
 import { MEAL_LABELS, MEAL_ORDER, feedMeal } from '@/lib/meals';
 import { SharedRecipeCard, toShared } from '@/components/SharedRecipeCard';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowLeft, Check, ChevronDown, Copy, Crown, Droplet, Drumstick, Dumbbell, Flame, Globe2, Heart, ImagePlus, Link2, Loader2, Lock, LogOut, MessageCircle, Plus, RefreshCw, Reply, Send, Share2, Smile, SmilePlus, ThumbsUp, Trash2, UserRound, Users, Utensils, Wheat, X } from 'lucide-react';
 import { AVATAR_COLORS, Avatar } from '@/components/Avatar';
 import { GroupChat } from '@/components/GroupChat';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useStore } from '@/store/useStore';
 import { accountsEnabled, useSession } from '@/lib/account';
 import { useDay } from '@/lib/hooks';
@@ -17,6 +18,7 @@ import {
   REACTIONS, addComment, ago, comments as loadComments, createGroup, deletePost, feed, joinGroup, leaveGroup, members as loadMembers,
   COMMUNITY_ID, inviteUrl, joinCommunity, joinPublicGroup, myGroups, myProfile, pendingJoin, publicGroups, myUserId, sharePost, toggleReaction, uploadAvatar, upsertMyProfile, usernameAvailable,
   type Comment, type Group, type Member, type MyProfile, type Post, type PublicGroup, type PublicProfile, type Reaction,
+  following, setFollow,
 } from '@/lib/social';
 import { SignInButtons } from '@/components/SignIn';
 import { FoodVisual } from '@/components/FoodIcon';
@@ -683,6 +685,8 @@ function ProfileEditor({ initial, defaultName, onSaved, onCancel }: { initial: M
 /** A person's profile within this group: photo, name, streak and their posts. */
 function PersonSheet({ groupId, person, me, onClose, onEdit }: { groupId: string; person: { id: string; profile: PublicProfile } | null; me?: string; onClose: () => void; onEdit: () => void }) {
   const [posts, setPosts] = useState<Post[] | null>(null);
+  const [isFollowing, setIsFollowing] = useState(false);
+  useEffect(() => { if (person) void following().then((s) => setIsFollowing(s.has(person.id))); }, [person]);
   useEffect(() => {
     if (!person) return;
     setPosts(null);
@@ -696,12 +700,15 @@ function PersonSheet({ groupId, person, me, onClose, onEdit }: { groupId: string
           <div className="flex flex-col items-center text-center">
             <Avatar name={p.display_name} color={p.avatar} photoUrl={p.photoUrl} size={96} />
             <p className="mt-3 text-[20px] font-extrabold">{p.display_name}</p>
-            <div className="num mt-3 grid w-full grid-cols-2 gap-2">
-              <div className="rounded-2xl bg-raised p-3"><p className="text-[22px] font-extrabold">{p.streak}</p><p className="text-sm text-silver">Day streak</p></div>
-              <div className="rounded-2xl bg-raised p-3"><p className="text-[22px] font-extrabold">{posts?.length ?? '–'}</p><p className="text-sm text-silver">Posts</p></div>
-            </div>
+            {p.username && <p className="text-sm text-silver">@{p.username}</p>}
+            <p className="num mt-1 text-sm text-silver">{posts?.length ?? '–'} posts{p.streak ? ` · ${p.streak}-day streak` : ''}</p>
             {person?.id === me && <button onClick={onEdit} className="btn-ghost mt-3 w-full"><UserRound size={17} /> Edit profile</button>}
-            {person && person.id !== me && <Link to={`/messages?with=${person.id}`} className="btn-primary mt-3 w-full"><MessageCircle size={17} /> Message</Link>}
+            {person && person.id !== me && (
+              <div className="mt-3 grid w-full grid-cols-2 gap-2">
+                <button onClick={async () => { const on = !isFollowing; setIsFollowing(on); haptic(); try { await setFollow(person.id, on); toast(on ? `Following ${p.display_name}` : 'Unfollowed'); } catch (e) { setIsFollowing(!on); toast((e as Error).message); } }} className={isFollowing ? 'btn-ghost' : 'btn-primary'}>{isFollowing ? 'Following' : 'Follow'}</button>
+                <Link to={`/messages?with=${person.id}`} className="btn-ghost"><MessageCircle size={17} /> Message</Link>
+              </div>
+            )}
           </div>
           <div className="mt-5 grid grid-cols-3 gap-1.5">
             {(posts ?? []).map((x) => (
@@ -710,7 +717,7 @@ function PersonSheet({ groupId, person, me, onClose, onEdit }: { groupId: string
               </div>
             ))}
           </div>
-          {posts?.length === 0 && <p className="mt-2 text-center text-sm text-silver">No posts in this group yet.</p>}
+          {posts?.length === 0 && <p className="mt-2 text-center text-sm text-silver">No posts yet.</p>}
         </>
       )}
     </Sheet>
@@ -762,9 +769,12 @@ export function CommunityFeedPage() {
   const session = useSession();
   return (
     <div className="animate-fade-up pb-6">
-      <header className="pt-safe pb-4">
-        <h1 className="text-[30px] font-extrabold tracking-tight">Feed</h1>
-        <p className="text-sm text-silver">Real journeys from the Nutivili AI community</p>
+      <header className="pt-safe flex items-start justify-between gap-3 pb-4">
+        <div>
+          <h1 className="text-[30px] font-extrabold tracking-tight">Feed</h1>
+          <p className="text-sm text-silver">Real journeys from the Nutivili AI community</p>
+        </div>
+        {session && <MessagesButton />}
       </header>
       {!accountsEnabled ? <FeedPreview note="The feed will open once accounts are switched on for this app." />
         : session === undefined ? <Loading />
@@ -810,6 +820,10 @@ function CommunityFeed() {
   const [openPost, setOpenPost] = useState<Post | null>(null);
   const [person, setPerson] = useState<{ id: string; profile: PublicProfile } | null>(null);
   const [error, setError] = useState('');
+  const [show, setShow] = useState<'all' | 'following'>('all');
+  const [follows, setFollows] = useState<Set<string>>(new Set());
+  useEffect(() => { void following().then(setFollows); }, [person]);
+  const shown = useMemo(() => (posts ?? []).filter((p) => show === 'all' || follows.has(p.user_id)), [posts, show, follows]);
 
   const load = useCallback(async () => {
     try {
@@ -843,13 +857,12 @@ function CommunityFeed() {
 
   return (
     <>
-      <Link to="/messages" className="mb-3 flex items-center justify-end gap-1.5 text-sm font-semibold text-accent"><MessageCircle size={16} /> Messages</Link>
       <button onClick={() => { haptic(); setSharing(true); }} className="card mb-5 flex w-full items-center gap-3 p-3 text-left">
         <Avatar name={mine.display_name} color={mine.avatar} photoUrl={mine.photoUrl} size={44} />
         <span className="flex-1 text-[15px] text-dim">Share a meal, a win or your progress…</span>
         <span className="grid h-10 w-10 place-items-center rounded-full bg-primary text-on-primary"><Plus size={18} /></span>
       </button>
-      <GroupsStrip />
+      <div className="mb-4"><Segmented full value={show} onChange={setShow} options={[{ value: 'all', label: 'Everyone' }, { value: 'following', label: 'Following' }]} /></div>
       {posts === null ? <Loading /> : posts.length === 0 ? (
         <div className="card p-6 text-center">
           <p className="font-bold">Be the first to post</p>
@@ -857,7 +870,8 @@ function CommunityFeed() {
         </div>
       ) : (
         <div className="space-y-4">
-          {posts.map((p) => <PostCard key={p.id} post={p} me={me} onAuthor={() => setPerson({ id: p.user_id, profile: p.author! })} onReact={(e) => react(p, e)} onOpen={() => setOpenPost(p)} onDelete={async () => { await deletePost(p); toast('Post deleted'); void load(); }} />)}
+          {shown.length === 0 && show === 'following' && <p className="card p-5 text-sm text-silver">Posts from people you follow show here. Tap someone’s name on a post, then Follow.</p>}
+          {shown.map((p) => <PostCard key={p.id} post={p} me={me} onAuthor={() => setPerson({ id: p.user_id, profile: p.author! })} onReact={(e) => react(p, e)} onOpen={() => setOpenPost(p)} onDelete={async () => { await deletePost(p); toast('Post deleted'); void load(); }} />)}
         </div>
       )}
       <ShareSheet open={sharing} groupId={COMMUNITY_ID} initialTitle={draft.title || draftRecipe?.name || ''} initialText={draft.text} initialRecipe={draft.recipe} onClose={() => setSharing(false)} onShared={() => { setSharing(false); void load(); }} />
@@ -867,35 +881,3 @@ function CommunityFeed() {
   );
 }
 
-/** On the Feed: your groups as bubbles, plus "New group" and "Find groups". */
-function GroupsStrip() {
-  const nav = useNavigate();
-  const [list, setList] = useState<Group[] | null>(null);
-  useEffect(() => { myGroups().then((g) => setList(g.filter((x) => x.id !== COMMUNITY_ID)), () => setList([])); }, []);
-  const open = (id: string) => { try { localStorage.setItem(GROUP_KEY, id); } catch { /* ignore */ } haptic(); nav('/groups'); };
-  return (
-    <section className="mb-5">
-      <div className="mb-2 flex items-baseline justify-between px-1">
-        <p className="text-[17px] font-bold">Your groups</p>
-        <button onClick={() => { haptic(); nav('/groups?new=1'); }} className="text-sm font-semibold text-accent">Find groups</button>
-      </div>
-      <div className="-mx-5 flex gap-3 overflow-x-auto px-5 pb-1 no-scrollbar">
-        <button onClick={() => { haptic(); nav('/groups?new=create'); }} className="w-20 shrink-0 text-center">
-          <span className="mx-auto grid h-16 w-16 place-items-center rounded-full border-2 border-dashed border-line text-silver"><Plus size={22} /></span>
-          <span className="mt-1.5 block text-xs font-bold">New group</span>
-        </button>
-        {(list ?? []).map((g, i) => (
-          <button key={g.id} onClick={() => open(g.id)} className="w-20 shrink-0 text-center">
-            <Avatar name={g.name} color={Object.keys(AVATAR_COLORS)[i % Object.keys(AVATAR_COLORS).length]} size={64} className="mx-auto" />
-            <span className="mt-1.5 block truncate text-xs font-bold">{g.name}</span>
-          </button>
-        ))}
-        {list && list.length === 0 && (
-          <div className="flex min-w-[200px] items-center rounded-[20px] bg-surface px-4 text-sm text-silver" style={{ boxShadow: 'var(--shadow)' }}>
-            Make a private group with friends, or join one.
-          </div>
-        )}
-      </div>
-    </section>
-  );
-}

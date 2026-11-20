@@ -2,10 +2,10 @@ import { InstallBanner } from '@/components/InstallApp';
 import { PhotoDiary } from '@/components/PhotoDiary';
 import { WaterCard } from '@/components/Water';
 import { Logo } from '@/components/Logo';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Check, ChevronRight, Copy, Droplet, Drumstick, Flame, Mail, Plus, Wheat } from 'lucide-react';
-import { unreadCount } from '@/lib/social';
+import { Check, ChevronRight, Copy, Droplet, Drumstick, Flame, Plus, Wheat } from 'lucide-react';
+import { MessagesButton } from '@/components/MessagesButton';
 import { useStore, goalOn } from '@/store/useStore';
 import { useDay, useFoodLookup } from '@/lib/hooks';
 import { addDays, fromKey, relativeDay, todayKey, weekOf } from '@/lib/dates';
@@ -413,17 +413,5 @@ function Restored() {
         </button>
       </div>
     </div>
-  );
-}
-
-/** Messages, at the top of Home next to notifications, with the number of unread chats. */
-function MessagesButton() {
-  const [n, setN] = useState(0);
-  useEffect(() => { void unreadCount().then(setN).catch(() => undefined); }, []);
-  return (
-    <Link to="/messages" className="relative grid h-11 w-11 place-items-center rounded-full bg-surface" style={{ boxShadow: 'var(--shadow)' }} aria-label={n ? `Messages, ${n} unread` : 'Messages'}>
-      <Mail size={19} />
-      {n > 0 && <span className="absolute -right-0.5 -top-0.5 grid h-[18px] min-w-[18px] place-items-center rounded-full bg-danger px-1 text-[11px] font-bold text-white">{n > 9 ? '9+' : n}</span>}
-    </Link>
   );
 }

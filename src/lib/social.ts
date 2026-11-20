@@ -333,3 +333,14 @@ export async function unreadCount(): Promise<number> {
   const { count, error } = await db().from('direct_messages').select('id', { count: 'exact', head: true }).eq('recipient', me).is('read_at', null);
   return error ? 0 : count ?? 0;
 }
+
+/** Who I follow (private — nobody sees follower counts). */
+export async function following(): Promise<Set<string>> {
+  const { data, error } = await db().from('follows').select('followee');
+  if (error) return new Set();
+  return new Set((data ?? []).map((r) => String(r.followee)));
+}
+export async function setFollow(userId: string, on: boolean): Promise<void> {
+  const { error } = on ? await db().from('follows').insert({ followee: userId }) : await db().from('follows').delete().eq('followee', userId);
+  if (error && !/duplicate/i.test(error.message)) throw new Error(error.message);
+}

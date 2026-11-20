@@ -24,7 +24,7 @@ export function EmailAuth({ start = 'signup', onBack }: { start?: 'signup' | 'lo
   const tel = cleanPhone(phone);
   const phoneOk = !phone.trim() || validPhone(tel);
   const [agreed, setAgreed] = useState(false);
-  const [marketing, setMarketing] = useState(false);
+  const [marketing, setMarketing] = useState(true);
   const [show, setShow] = useState(false);
   const [code, setCode] = useState('');
   const [showCode, setShowCode] = useState(false);
@@ -110,7 +110,7 @@ export function EmailAuth({ start = 'signup', onBack }: { start?: 'signup' | 'lo
           </label>
           <label className="flex items-start gap-2.5 px-1 text-[13px] leading-snug text-silver">
             <input type="checkbox" checked={marketing} onChange={(e) => setMarketing(e.target.checked)} className="mt-0.5 h-5 w-5 shrink-0 accent-[rgb(var(--accent))]" aria-label="Email me tips and offers" />
-            <span>Email me tips, recipes and offers (optional — unsubscribe any time).</span>
+            <span>Send me tips, recipes and offers by email. Untick if you’d rather not — you can also turn it off any time in Settings.</span>
           </label>
           <p className="px-1 text-[13px] text-silver">We’ll email you a link to confirm your email.</p>
         </>

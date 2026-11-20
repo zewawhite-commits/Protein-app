@@ -62,7 +62,7 @@ export function OwnerStats() {
           const url = URL.createObjectURL(await res.blob());
           const a = document.createElement('a'); a.href = url; a.download = 'nutivili-mailing-list.csv'; a.click();
           setTimeout(() => URL.revokeObjectURL(url), 5000);
-        }} className="btn-ghost mt-3 w-full !h-11 text-sm">Download mailing list (people who opted in)</button>
+        }} className="btn-ghost mt-3 w-full !h-11 text-sm">Download mailing list (everyone except people who opted out)</button>
         {s.signups && (() => {
           const days = Array.from({ length: 14 }, (_, i) => new Date(Date.now() - (13 - i) * 864e5).toISOString().slice(0, 10));
           const max = Math.max(1, ...days.map((d) => s.signups![d] ?? 0));

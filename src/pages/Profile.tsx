@@ -505,7 +505,7 @@ function PhoneRow({ saved }: { saved: string }) {
 /** Tips and offers by email — only for signed-in people, off unless they turn it on. */
 function MarketingRow() {
   const session = useSession();
-  const [on, setOn] = useState<boolean>(!!session?.user.user_metadata?.marketing_opt_in);
+  const [on, setOn] = useState<boolean>(session?.user.user_metadata?.marketing_opt_in !== false);
   if (!session) return null;
   return (
     <>
