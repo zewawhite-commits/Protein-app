@@ -52,7 +52,7 @@ export function ActivitySummary() {
     <section className="card p-5">
       <div className="flex items-center justify-between gap-2">
         <h2 className="flex items-center gap-2 text-lg font-bold"><Dumbbell size={18} className="text-accent" /> Activity</h2>
-        <Link to="/routines" className="chip !h-9">My routines</Link>
+        <span className="flex gap-1.5"><Link to="/workout" className="chip !h-9">Workouts</Link><Link to="/routines" className="chip !h-9">Routines</Link></span>
       </div>
       {goal > 0 && (
         <div className="mt-3 rounded-2xl bg-raised px-4 py-3">

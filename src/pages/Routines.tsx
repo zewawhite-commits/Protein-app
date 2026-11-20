@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, Check, Pencil, Plus, Share2, Trash2 } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 import { EXERCISE_LIBRARY, burnedKcal, type Routine, type RoutineExercise } from '@/lib/exercise';
@@ -135,7 +135,8 @@ function LogSession({ routine, onDone }: { routine: Routine; onDone: () => void 
           addExercise({ date: todayKey(), type: 'weights', intensity: 'medium', minutes: per, kcal: burnedKcal('weights', 'medium', per, kg), detail: { name: e.name, sets: e.sets, ...(Number.isFinite(reps) && reps > 0 ? { reps } : {}), ...(e.weightKg ? { weightKg: e.weightKg } : {}) }, note: routine.name });
         }
         haptic([10, 30, 10]); toast(`${routine.name} logged`); onDone();
-      }} className="btn-primary mt-6 w-full">Log {picked.length} exercise{picked.length === 1 ? '' : 's'}</button>
+      }} className="btn-ghost mt-6 w-full">Already done it? Log {picked.length} exercise{picked.length === 1 ? '' : 's'}</button>
+      <Link to={`/workout?routine=${routine.id}`} className="btn-primary mt-2 w-full">Start it live — timer, sets &amp; rest</Link>
     </div>
   );
 }

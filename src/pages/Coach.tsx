@@ -106,6 +106,13 @@ export function useCoachContext(): CoachContext {
     const avg = (xs: number[]) => (xs.length ? Math.round(xs.reduce((a, b) => a + b, 0) / xs.length) : null);
     const a = avg([...days.entries()].filter(([d]) => tdays.has(d)).map(([, k]) => k)), r = avg([...days.entries()].filter(([d]) => !tdays.has(d)).map(([, k]) => k));
     if (a != null && r != null) progress.push(`Last 4 weeks: about ${a} kcal on workout days vs ${r} kcal on rest days (logged days only).`);
+    // Workout preferences and the latest live workout, so chat, workouts, recipes and plans all know them.
+    try {
+      const wp = JSON.parse(localStorage.getItem('nutivili-workout-prefs') ?? 'null') as { daysPerWeek?: number; minutes?: number; place?: string; level?: string; focus?: string } | null;
+      if (wp?.daysPerWeek) progress.push(`Workout preferences: ${wp.daysPerWeek} days a week, ${wp.minutes} min, ${wp.place}, ${wp.level}${wp.focus ? `; notes: ${wp.focus.slice(0, 120)}` : ''}.`);
+    } catch { /* none */ }
+    const lastLog = useStore.getState().workoutLogs.at(-1);
+    if (lastLog) progress.push(`Last workout (${lastLog.date}): ${lastLog.name}, ${lastLog.minutes} min — ${lastLog.exercises.slice(0, 5).map((e) => e.name).join(', ')}.`);
     return { recentFoods, progress };
   }, [allEntries, weights]);
   return useMemo<CoachContext>(() => {

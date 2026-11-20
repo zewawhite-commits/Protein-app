@@ -1,0 +1,370 @@
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { ArrowDown, ArrowLeft, ArrowUp, BookOpen, Check, Dumbbell, History, Pause, Play, Plus, RefreshCw, Search, SkipForward, Timer, Trash2, Trophy, X } from 'lucide-react';
+import { useStore } from '@/store/useStore';
+import { EXERCISE_LIBRARY } from '@/lib/exercise';
+import { CATEGORY_LABEL, GUIDES, clock, elapsed, est1rm, type ActiveWorkout, type ExerciseKind, type LiveExercise, type WorkoutLog } from '@/lib/liveWorkout';
+import { fromKey } from '@/lib/dates';
+import { Segmented, Sheet, cx, fmt } from '@/components/ui';
+import { haptic, toast } from '@/components/fx';
+
+const RESTS = [30, 45, 60, 90, 120];
+const key = () => crypto.randomUUID().slice(0, 8);
+
+/** Every exercise people can pick: built-in guides, the routine library and their own. */
+function useCatalogue() {
+  const custom = useStore((s) => s.customExercises);
+  return useMemo(() => {
+    const m = new Map<string, { name: string; muscle: string; kind: ExerciseKind; custom?: boolean; equipment?: string }>();
+    for (const [name, g] of Object.entries(GUIDES)) m.set(name.toLowerCase(), { name, muscle: g.muscles.split(',')[0], kind: g.kind, equipment: g.equipment });
+    for (const e of EXERCISE_LIBRARY) if (!m.has(e.name.toLowerCase())) m.set(e.name.toLowerCase(), { name: e.name, muscle: e.muscle, kind: 'strength' });
+    for (const c of custom) m.set(c.name.toLowerCase(), { name: c.name, muscle: c.muscle, kind: c.category, custom: true, equipment: c.equipment });
+    return [...m.values()].sort((a, b) => a.name.localeCompare(b.name));
+  }, [custom]);
+}
+
+export function newExercise(name: string, muscle = '', kind: ExerciseKind = 'strength', sets = 3, reps?: number, weightKg?: number): LiveExercise {
+  return { key: key(), name, muscle, kind, sets: kind === 'cardio' ? [] : Array.from({ length: sets }, () => ({ done: false, ...(reps ? { reps } : {}), ...(weightKg ? { weightKg } : {}) })) };
+}
+
+/** Live workout: start, track, finish — plus history and personal records. */
+export default function LiveWorkout() {
+  const active = useStore((s) => s.activeWorkout);
+  return active ? <Active w={active} /> : <Start />;
+}
+
+function Start() {
+  const nav = useNavigate();
+  const [params] = useSearchParams();
+  const setActive = useStore((s) => s.setActiveWorkout);
+  const routines = useStore((s) => s.routines);
+  const guide = useStore((s) => s.workoutPlan);
+  const logs = useStore((s) => s.workoutLogs);
+  const [browse, setBrowse] = useState(false);
+  const start = (name: string, exercises: LiveExercise[]) => { haptic(); setActive({ name, startedAt: Date.now(), pausedMs: 0, rest: 90, exercises }); };
+  // Started from somewhere else (a routine or the AI guide): ?routine=<id> or ?guideDay=<n>.
+  useEffect(() => {
+    const r = routines.find((x) => x.id === params.get('routine'));
+    if (r) start(r.name, r.exercises.map((e) => newExercise(e.name, e.muscle ?? '', 'strength', e.sets || 3, parseInt(e.reps, 10) || undefined, e.weightKg)));
+    const d = params.get('guideDay') != null ? guide?.plan.days[Number(params.get('guideDay'))] : undefined;
+    if (d) start(d.name, d.exercises.map((e) => newExercise(e.name, '', GUIDES[e.name]?.kind ?? 'strength', e.sets || 3, parseInt(String(e.reps), 10) || undefined)));
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const week = logs.filter((l) => Date.now() - l.startedAt < 7 * 864e5);
+  const prs = usePRs();
+  return (
+    <div className="mx-auto min-h-dvh max-w-lg animate-fade-up px-5 pb-16 md:max-w-2xl">
+      <header className="pt-safe flex items-center gap-3 pb-4">
+        <button onClick={() => nav(-1)} className="grid h-11 w-11 place-items-center rounded-full bg-surface" style={{ boxShadow: 'var(--shadow)' }} aria-label="Back"><ArrowLeft size={20} /></button>
+        <h1 className="flex-1 text-[26px] font-extrabold tracking-tight">Workout</h1>
+        <button onClick={() => setBrowse(true)} className="chip !h-10"><BookOpen size={15} /> Exercises</button>
+      </header>
+
+      <button onClick={() => start('Workout', [])} className="btn-primary w-full !h-14 text-[17px]"><Play size={20} /> Start an empty workout</button>
+      <p className="mt-2 text-center text-sm text-silver">Add exercises as you go — anything you do, gym, home or outdoors.</p>
+
+      {routines.length > 0 && (
+        <section className="mt-6">
+          <p className="mb-2 px-1 font-semibold">From my routines</p>
+          <div className="card divide-y divide-line p-1">
+            {routines.map((r) => (
+              <button key={r.id} onClick={() => start(r.name, r.exercises.map((e) => newExercise(e.name, e.muscle ?? '', 'strength', e.sets || 3, parseInt(e.reps, 10) || undefined, e.weightKg)))} className="flex w-full items-center gap-3 p-3 text-left">
+                <span className="grid h-10 w-10 place-items-center rounded-full bg-accent/10 text-accent"><Dumbbell size={18} /></span>
+                <span className="min-w-0 flex-1"><span className="block truncate font-semibold">{r.name}</span><span className="text-sm text-silver">{r.exercises.length} exercises</span></span>
+                <Play size={18} className="text-accent" />
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
+      {guide && (
+        <section className="mt-6">
+          <p className="mb-2 px-1 font-semibold">From your AI guide</p>
+          <div className="card divide-y divide-line p-1">
+            {guide.plan.days.map((d, i) => (
+              <button key={i} onClick={() => start(d.name, d.exercises.map((e) => newExercise(e.name, '', GUIDES[e.name]?.kind ?? 'strength', e.sets || 3, parseInt(String(e.reps), 10) || undefined)))} className="flex w-full items-center gap-3 p-3 text-left">
+                <span className="grid h-10 w-10 place-items-center rounded-full bg-accent/10 text-accent"><Timer size={18} /></span>
+                <span className="min-w-0 flex-1"><span className="block truncate font-semibold">{d.name}</span><span className="text-sm text-silver">{d.minutes} min · {d.exercises.length} exercises — change anything as you go</span></span>
+                <Play size={18} className="text-accent" />
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
+      <Link to="/routines" className="mt-3 block text-center text-sm font-semibold text-accent">Build a routine to reuse →</Link>
+
+      <section className="mt-7">
+        <p className="mb-2 flex items-center gap-2 px-1 font-semibold"><History size={17} /> History</p>
+        <div className="mb-3 grid grid-cols-3 gap-2 text-center">
+          <div className="card py-3"><p className="num text-xl font-extrabold">{logs.length}</p><p className="text-xs text-silver">workouts</p></div>
+          <div className="card py-3"><p className="num text-xl font-extrabold">{week.length}</p><p className="text-xs text-silver">this week</p></div>
+          <div className="card py-3"><p className="num text-xl font-extrabold">{fmt(logs.reduce((a, l) => a + l.minutes, 0) / 60, 1)}</p><p className="text-xs text-silver">hours trained</p></div>
+        </div>
+        {prs.length > 0 && (
+          <div className="card mb-3 p-4">
+            <p className="flex items-center gap-2 font-semibold"><Trophy size={16} className="text-accent" /> Personal records</p>
+            <ul className="mt-2 space-y-1 text-sm">{prs.slice(0, 8).map((p) => <li key={p.name} className="flex justify-between gap-2"><span>{p.name}</span><span className="num text-silver">{fmt(p.kg, 1)} kg × {p.reps} <span className="text-dim">(~{fmt(p.e1rm)} kg 1RM est.)</span></span></li>)}</ul>
+          </div>
+        )}
+        {logs.length === 0 ? <p className="card p-5 text-sm text-silver">Finished workouts show here, with every set, so you can see your progress.</p> : (
+          <div className="space-y-2">{[...logs].reverse().slice(0, 30).map((l) => <LogCard key={l.id} log={l} />)}</div>
+        )}
+      </section>
+      <GuideBrowser open={browse} onClose={() => setBrowse(false)} />
+    </div>
+  );
+}
+
+function usePRs() {
+  const logs = useStore((s) => s.workoutLogs);
+  return useMemo(() => {
+    const best = new Map<string, { name: string; kg: number; reps: number; e1rm: number }>();
+    for (const l of logs) for (const e of l.exercises) for (const s of e.sets) {
+      if (!s.done || !s.weightKg || !s.reps) continue;
+      const v = est1rm(s.weightKg, s.reps);
+      const cur = best.get(e.name.toLowerCase());
+      if (!cur || v > cur.e1rm) best.set(e.name.toLowerCase(), { name: e.name, kg: s.weightKg, reps: s.reps, e1rm: v });
+    }
+    return [...best.values()].sort((a, b) => b.e1rm - a.e1rm);
+  }, [logs]);
+}
+
+function LogCard({ log }: { log: WorkoutLog }) {
+  const [open, setOpen] = useState(false);
+  const remove = useStore((s) => s.removeWorkoutLog);
+  const sets = log.exercises.reduce((a, e) => a + e.sets.filter((s) => s.done).length, 0);
+  const volume = log.exercises.reduce((a, e) => a + e.sets.reduce((b, s) => b + (s.done ? (s.weightKg ?? 0) * (s.reps ?? 0) : 0), 0), 0);
+  return (
+    <div className="card p-4">
+      <button onClick={() => setOpen((v) => !v)} className="flex w-full items-start justify-between gap-2 text-left">
+        <span><span className="block font-semibold">{log.name}</span><span className="num text-sm text-silver">{fromKey(log.date).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' })} · {log.minutes} min · {log.exercises.length} exercises · {sets} sets{volume ? ` · ${fmt(volume)} kg lifted` : ''}</span></span>
+      </button>
+      {open && (
+        <div className="mt-2 space-y-1.5 text-sm">
+          {log.exercises.map((e) => (
+            <p key={e.key}><b>{e.name}</b> <span className="num text-silver">{e.kind === 'cardio' ? `${e.minutes ?? '–'} min${e.km ? ` · ${e.km} km` : ''}` : e.sets.filter((s) => s.done).map((s) => (s.seconds ? `${s.seconds}s` : `${s.weightKg ? `${s.weightKg}kg×` : ''}${s.reps ?? ''}`)).join(', ')}</span></p>
+          ))}
+          {log.note && <p className="text-silver">“{log.note}”</p>}
+          <button onClick={() => { if (confirm('Delete this workout from history?')) remove(log.id); }} className="mt-1 text-xs font-semibold text-danger">Delete</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Active({ w }: { w: ActiveWorkout }) {
+  const nav = useNavigate();
+  const set = useStore((s) => s.setActiveWorkout);
+  const finish = useStore((s) => s.finishWorkout);
+  const logs = useStore((s) => s.workoutLogs);
+  const [, tick] = useState(0);
+  useEffect(() => { const t = setInterval(() => tick((n) => n + 1), 1000); return () => clearInterval(t); }, []);
+  const [adding, setAdding] = useState<{ replace?: string } | null>(null);
+  const [guideFor, setGuideFor] = useState<string | null>(null);
+  const [rest, setRest] = useState<{ until: number; total: number } | null>(null);
+  const update = (k: string, f: (e: LiveExercise) => LiveExercise) => set((cur) => ({ ...cur, exercises: cur.exercises.map((e) => (e.key === k ? f(e) : e)) }));
+  const move = (i: number, d: number) => set((cur) => { const ex = [...cur.exercises]; const j = i + d; if (j < 0 || j >= ex.length) return cur; [ex[i], ex[j]] = [ex[j], ex[i]]; return { ...cur, exercises: ex }; });
+  const previous = (name: string) => { for (let i = logs.length - 1; i >= 0; i--) { const e = logs[i].exercises.find((x) => x.name.toLowerCase() === name.toLowerCase()); if (e) return e; } return null; };
+  const paused = !!w.pausedAt;
+  const doneSets = w.exercises.reduce((a, e) => a + e.sets.filter((s) => s.done).length, 0);
+
+  function tickSet(e: LiveExercise, i: number) {
+    const was = e.sets[i].done;
+    update(e.key, (x) => ({ ...x, sets: x.sets.map((s, j) => (j === i ? { ...s, done: !s.done } : s)) }));
+    if (!was) { haptic(); setRest({ until: Date.now() + w.rest * 1000, total: w.rest }); }
+  }
+  function end() {
+    if (!doneSets && !w.exercises.some((e) => e.minutes || e.km)) { if (confirm('Nothing recorded yet. Discard this workout?')) set(null); return; }
+    const log = finish();
+    if (log) { toast(`Workout saved · ${log.minutes} min`, { tone: 'celebrate' }); nav('/workout'); }
+  }
+
+  return (
+    <div className="mx-auto min-h-dvh max-w-lg px-5 pb-40 md:max-w-2xl">
+      <header className="pt-safe sticky top-0 z-10 -mx-5 bg-bg/95 px-5 pb-3 backdrop-blur">
+        <div className="flex items-center gap-2">
+          <input value={w.name} onChange={(e) => set((c) => ({ ...c, name: e.target.value.slice(0, 50) }))} aria-label="Workout name" className="min-w-0 flex-1 bg-transparent text-[22px] font-extrabold outline-none" />
+          <button onClick={end} className="btn-primary !h-10 !px-4 text-sm">Finish</button>
+        </div>
+        <div className="mt-1 flex items-center gap-3">
+          <span className={cx('num text-[28px] font-extrabold tabular-nums', paused && 'text-silver')} aria-label="Workout time">{clock(elapsed(w))}</span>
+          <button onClick={() => set((c) => (c.pausedAt ? { ...c, pausedMs: c.pausedMs + (Date.now() - c.pausedAt), pausedAt: undefined } : { ...c, pausedAt: Date.now() }))} className="chip !h-9">{paused ? <><Play size={14} /> Resume</> : <><Pause size={14} /> Pause</>}</button>
+          <span className="num ml-auto text-sm text-silver">{doneSets} set{doneSets === 1 ? '' : 's'} done</span>
+        </div>
+      </header>
+
+      {w.exercises.length === 0 && <p className="card mt-2 p-5 text-sm text-silver">Add your first exercise — pick one or create your own.</p>}
+      <div className="mt-2 space-y-3">
+        {w.exercises.map((e, i) => {
+          const prev = previous(e.name);
+          return (
+            <section key={e.key} className={cx('card p-4', e.skipped && 'opacity-50')}>
+              <div className="flex items-start gap-2">
+                <button onClick={() => setGuideFor(e.name)} className="min-w-0 flex-1 text-left">
+                  <p className="truncate text-[16px] font-bold text-accent">{e.name}</p>
+                  <p className="text-xs text-silver">{[e.muscle, CATEGORY_LABEL[e.kind]].filter(Boolean).join(' · ')} · tap for how-to</p>
+                </button>
+                <button onClick={() => move(i, -1)} disabled={i === 0} className="grid h-8 w-8 place-items-center rounded-full bg-raised disabled:opacity-30" aria-label={`Move ${e.name} up`}><ArrowUp size={14} /></button>
+                <button onClick={() => move(i, 1)} disabled={i === w.exercises.length - 1} className="grid h-8 w-8 place-items-center rounded-full bg-raised disabled:opacity-30" aria-label={`Move ${e.name} down`}><ArrowDown size={14} /></button>
+              </div>
+              {e.kind === 'cardio' ? (
+                <div className="mt-3 grid grid-cols-2 gap-2">
+                  <label className="rounded-2xl bg-raised px-3 py-2"><span className="block text-xs font-semibold text-silver">Minutes</span><input inputMode="decimal" aria-label={`${e.name} minutes`} value={e.minutes ?? ''} onChange={(x) => update(e.key, (y) => ({ ...y, minutes: Number(x.target.value) || undefined }))} className="num w-full bg-transparent text-lg font-bold outline-none" /></label>
+                  <label className="rounded-2xl bg-raised px-3 py-2"><span className="block text-xs font-semibold text-silver">Distance (km)</span><input inputMode="decimal" aria-label={`${e.name} distance`} value={e.km ?? ''} onChange={(x) => update(e.key, (y) => ({ ...y, km: Number(x.target.value.replace(',', '.')) || undefined }))} className="num w-full bg-transparent text-lg font-bold outline-none" /></label>
+                </div>
+              ) : (
+                <div className="mt-3">
+                  <div className="grid grid-cols-[1.5rem_1fr_4.2rem_4.2rem_2.5rem] gap-2 px-1 text-[11px] font-bold uppercase tracking-wide text-dim">
+                    <span>Set</span><span>Previous</span><span>{e.kind === 'time' ? 'Kg' : 'Kg'}</span><span>{e.kind === 'time' ? 'Secs' : 'Reps'}</span><span />
+                  </div>
+                  {e.sets.map((s, j) => {
+                    const p = prev?.sets[j];
+                    return (
+                      <div key={j} className={cx('mt-1.5 grid grid-cols-[1.5rem_1fr_4.2rem_4.2rem_2.5rem] items-center gap-2 rounded-xl px-1 py-1', s.done && 'bg-accent/10')}>
+                        <span className="num text-sm font-bold">{j + 1}</span>
+                        <span className="num truncate text-xs text-silver">{p ? (p.seconds ? `${p.seconds}s` : `${p.weightKg ? `${p.weightKg}×` : ''}${p.reps ?? '–'}`) : '—'}</span>
+                        <input inputMode="decimal" aria-label={`Set ${j + 1} kg`} value={s.weightKg ?? ''} placeholder={p?.weightKg ? String(p.weightKg) : '–'} onChange={(x) => update(e.key, (y) => ({ ...y, sets: y.sets.map((z, k) => (k === j ? { ...z, weightKg: Number(x.target.value.replace(',', '.')) || undefined } : z)) }))} className="field !h-9 !px-2 text-center" />
+                        {e.kind === 'time'
+                          ? <input inputMode="numeric" aria-label={`Set ${j + 1} seconds`} value={s.seconds ?? ''} placeholder={p?.seconds ? String(p.seconds) : '–'} onChange={(x) => update(e.key, (y) => ({ ...y, sets: y.sets.map((z, k) => (k === j ? { ...z, seconds: Number(x.target.value) || undefined } : z)) }))} className="field !h-9 !px-2 text-center" />
+                          : <input inputMode="numeric" aria-label={`Set ${j + 1} reps`} value={s.reps ?? ''} placeholder={p?.reps ? String(p.reps) : '–'} onChange={(x) => update(e.key, (y) => ({ ...y, sets: y.sets.map((z, k) => (k === j ? { ...z, reps: Number(x.target.value) || undefined } : z)) }))} className="field !h-9 !px-2 text-center" />}
+                        <button onClick={() => tickSet(e, j)} className={cx('grid h-9 w-9 place-items-center rounded-xl', s.done ? 'bg-accent text-white' : 'bg-raised text-dim')} aria-label={`Set ${j + 1} done`} aria-pressed={s.done}><Check size={17} strokeWidth={3} /></button>
+                      </div>
+                    );
+                  })}
+                  <button onClick={() => update(e.key, (y) => ({ ...y, sets: [...y.sets, { done: false, ...(y.sets.at(-1)?.weightKg ? { weightKg: y.sets.at(-1)!.weightKg } : {}), ...(y.sets.at(-1)?.reps ? { reps: y.sets.at(-1)!.reps } : {}) }] }))} className="mt-2 w-full rounded-xl bg-raised py-2 text-sm font-semibold">+ Add set</button>
+                </div>
+              )}
+              <input value={e.note ?? ''} onChange={(x) => update(e.key, (y) => ({ ...y, note: x.target.value.slice(0, 200) }))} placeholder="Note (optional)" aria-label={`${e.name} note`} className="mt-2 w-full bg-transparent text-sm text-silver outline-none" />
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                <button onClick={() => setAdding({ replace: e.key })} className="chip !h-8 !px-3 text-[13px]"><RefreshCw size={13} /> Replace</button>
+                <button onClick={() => update(e.key, (y) => ({ ...y, skipped: !y.skipped }))} className="chip !h-8 !px-3 text-[13px]"><SkipForward size={13} /> {e.skipped ? 'Unskip' : 'Skip'}</button>
+                <button onClick={() => set((c) => ({ ...c, exercises: c.exercises.filter((x) => x.key !== e.key) }))} className="chip !h-8 !px-3 text-[13px]"><Trash2 size={13} /> Remove</button>
+              </div>
+            </section>
+          );
+        })}
+      </div>
+      <button onClick={() => setAdding({})} className="btn-ghost mt-4 w-full"><Plus size={18} /> Add exercise</button>
+      <textarea value={w.note ?? ''} onChange={(e) => set((c) => ({ ...c, note: e.target.value.slice(0, 500) }))} rows={2} placeholder="How did it feel? (optional)" className="field mt-3 !h-auto py-3" aria-label="Workout note" />
+      <button onClick={() => { if (confirm('Discard this workout? Nothing will be saved.')) set(null); }} className="mt-3 w-full text-sm font-semibold text-danger">Discard workout</button>
+
+      <RestBar rest={rest} restLength={w.rest} onLength={(v) => set((c) => ({ ...c, rest: v }))} onAdjust={(d) => setRest((r) => (r ? { until: r.until + d * 1000, total: r.total + d } : r))} onSkip={() => setRest(null)} />
+      <AddExercise open={!!adding} onClose={() => setAdding(null)} onPick={(x) => {
+        const ex = newExercise(x.name, x.muscle, x.kind);
+        set((c) => ({ ...c, exercises: adding?.replace ? c.exercises.map((e) => (e.key === adding.replace ? ex : e)) : [...c.exercises, ex] }));
+        setAdding(null);
+      }} />
+      <GuideSheet name={guideFor} onClose={() => setGuideFor(null)} />
+    </div>
+  );
+}
+
+/** Rest timer: counts down after each set; beeps and vibrates at the end. */
+function RestBar({ rest, restLength, onLength, onAdjust, onSkip }: { rest: { until: number; total: number } | null; restLength: number; onLength: (v: number) => void; onAdjust: (d: number) => void; onSkip: () => void }) {
+  const [, tick] = useState(0);
+  const rang = useRef(false);
+  useEffect(() => { rang.current = false; }, [rest?.until]);
+  useEffect(() => { const t = setInterval(() => tick((n) => n + 1), 250); return () => clearInterval(t); }, []);
+  const left = rest ? Math.max(0, Math.ceil((rest.until - Date.now()) / 1000)) : 0;
+  useEffect(() => {
+    if (!rest || left > 0 || rang.current) return;
+    rang.current = true;
+    try { navigator.vibrate?.([200, 100, 200]); } catch { /* none */ }
+    try { const ctx = new AudioContext(); const o = ctx.createOscillator(); const g = ctx.createGain(); o.frequency.value = 880; o.connect(g); g.connect(ctx.destination); g.gain.setValueAtTime(0.2, ctx.currentTime); o.start(); o.stop(ctx.currentTime + 0.4); } catch { /* no sound */ }
+    toast('Rest over — next set');
+    onSkip();
+  }, [left, rest, onSkip]);
+  return (
+    <div className="fixed inset-x-0 bottom-0 z-20 mx-auto max-w-lg px-5 md:max-w-2xl" style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 1rem)' }}>
+      <div className="card p-3">
+        {rest ? (
+          <div className="flex items-center gap-2">
+            <span className="num w-16 text-[24px] font-extrabold tabular-nums" aria-label="Rest left">{clock(left)}</span>
+            <div className="h-2 flex-1 overflow-hidden rounded-full bg-raised"><div className="h-full rounded-full bg-accent transition-all" style={{ width: `${Math.min(100, (left / rest.total) * 100)}%` }} /></div>
+            <button onClick={() => onAdjust(-15)} className="chip !h-9 !px-2.5 text-xs">−15</button>
+            <button onClick={() => onAdjust(15)} className="chip !h-9 !px-2.5 text-xs">+15</button>
+            <button onClick={onSkip} className="chip !h-9 !px-3 text-xs" aria-label="Skip rest">Skip</button>
+          </div>
+        ) : (
+          <div className="flex items-center justify-between gap-2">
+            <span className="flex items-center gap-1.5 text-sm font-semibold"><Timer size={15} /> Rest</span>
+            <Segmented<string> value={String(restLength)} onChange={(v) => onLength(Number(v))} options={RESTS.map((r) => ({ value: String(r), label: r < 60 ? `${r}s` : `${r / 60}${r % 60 ? '.5' : ''}m` }))} />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function AddExercise({ open, onClose, onPick }: { open: boolean; onClose: () => void; onPick: (x: { name: string; muscle: string; kind: ExerciseKind }) => void }) {
+  const all = useCatalogue();
+  const save = useStore((s) => s.saveCustomExercise);
+  const [q, setQ] = useState('');
+  const [making, setMaking] = useState(false);
+  const [form, setForm] = useState({ name: '', muscle: '', category: 'strength' as ExerciseKind, equipment: '' });
+  const list = all.filter((x) => !q.trim() || `${x.name} ${x.muscle}`.toLowerCase().includes(q.trim().toLowerCase()));
+  return (
+    <Sheet open={open} onClose={() => { setMaking(false); onClose(); }} title={making ? 'Create an exercise' : 'Add exercise'}>
+      {making ? (
+        <div className="space-y-2.5">
+          <input className="field" placeholder="Name, e.g. Sandbag carry" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} aria-label="Exercise name" maxLength={50} />
+          <input className="field" placeholder="Muscles worked, e.g. Legs, core" value={form.muscle} onChange={(e) => setForm({ ...form, muscle: e.target.value })} aria-label="Muscles" maxLength={50} />
+          <input className="field" placeholder="Equipment, e.g. Sandbag (optional)" value={form.equipment} onChange={(e) => setForm({ ...form, equipment: e.target.value })} aria-label="Equipment" maxLength={50} />
+          <Segmented<ExerciseKind> full value={form.category} onChange={(v) => setForm({ ...form, category: v })} options={[{ value: 'strength', label: 'Sets & reps' }, { value: 'time', label: 'Timed' }, { value: 'cardio', label: 'Time & distance' }]} />
+          <button disabled={form.name.trim().length < 2} onClick={() => { const c = save(form); toast(`${c.name} saved to your exercises`); onPick({ name: c.name, muscle: c.muscle, kind: c.category }); setMaking(false); setForm({ name: '', muscle: '', category: 'strength', equipment: '' }); }} className="btn-primary w-full">Save and add</button>
+        </div>
+      ) : (
+        <>
+          <div className="relative"><Search size={17} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-dim" /><input className="field !pl-11" placeholder="Search exercises" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Search exercises" /></div>
+          <button onClick={() => { setMaking(true); setForm((f) => ({ ...f, name: q })); }} className="mt-2 w-full rounded-2xl bg-accent/10 py-3 text-sm font-semibold text-accent">+ Create your own exercise{q ? ` “${q}”` : ''}</button>
+          <div className="mt-2 max-h-[50dvh] divide-y divide-line overflow-y-auto">
+            {list.map((x) => (
+              <button key={x.name} onClick={() => onPick(x)} className="flex w-full items-center justify-between gap-2 px-1 py-3 text-left">
+                <span><span className="block font-semibold">{x.name}{x.custom && <span className="ml-1.5 text-xs font-normal text-accent">yours</span>}</span><span className="text-xs text-silver">{x.muscle} · {CATEGORY_LABEL[x.kind]}</span></span>
+                <Plus size={18} className="text-accent" />
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+    </Sheet>
+  );
+}
+
+function GuideSheet({ name, onClose }: { name: string | null; onClose: () => void }) {
+  const custom = useStore((s) => s.customExercises.find((c) => c.name.toLowerCase() === (name ?? '').toLowerCase()));
+  const g = name ? GUIDES[name] ?? Object.entries(GUIDES).find(([k]) => k.toLowerCase() === name.toLowerCase())?.[1] : undefined;
+  return (
+    <Sheet open={!!name} onClose={onClose} title={name ?? ''}>
+      {g ? (
+        <div className="space-y-3 text-[15px]">
+          <p><b>Works:</b> {g.muscles}</p>
+          <p><b>Equipment:</b> {g.equipment}</p>
+          <p><b>Start:</b> {g.start}</p>
+          <div><p className="font-bold">How to</p><ol className="mt-1 list-decimal space-y-1 pl-5">{g.steps.map((s) => <li key={s}>{s}</li>)}</ol></div>
+          {g.mistakes.length > 0 && <div><p className="font-bold">Common mistakes</p><ul className="mt-1 list-disc space-y-1 pl-5 text-silver">{g.mistakes.map((s) => <li key={s}>{s}</li>)}</ul></div>}
+          {g.alternatives.length > 0 && <p><b>Alternatives:</b> {g.alternatives.join(', ')}</p>}
+          <p className="text-xs text-dim">Written guide — demonstration videos may come later. Stop if anything hurts. General fitness guidance, not medical advice.</p>
+        </div>
+      ) : (
+        <p className="text-[15px] text-silver">{custom ? `Your exercise · ${custom.muscle || 'muscles not set'}${custom.equipment ? ` · ${custom.equipment}` : ''}.` : 'No written guide for this exercise yet.'} Record it the way you do it.</p>
+      )}
+    </Sheet>
+  );
+}
+
+function GuideBrowser({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const [name, setName] = useState<string | null>(null);
+  const all = useCatalogue();
+  return (
+    <>
+      <Sheet open={open && !name} onClose={onClose} title="Exercise guides">
+        <div className="max-h-[65dvh] divide-y divide-line overflow-y-auto">
+          {all.map((x) => <button key={x.name} onClick={() => setName(x.name)} className="flex w-full items-center justify-between px-1 py-3 text-left"><span><span className="block font-semibold">{x.name}</span><span className="text-xs text-silver">{x.muscle}</span></span><BookOpen size={16} className="text-dim" /></button>)}
+        </div>
+      </Sheet>
+      <GuideSheet name={name} onClose={() => setName(null)} />
+      {name && <button className="hidden" onClick={() => setName(null)} aria-hidden><X /></button>}
+    </>
+  );
+}

@@ -83,6 +83,7 @@ export function ExerciseSheet({ open, onClose, date }: { open: boolean; onClose:
 
   return (
     <Sheet open={open} onClose={onClose} title="Log exercise">
+      <button onClick={() => { onClose(); navToRoutines('/workout'); }} className="btn-primary mb-2 w-full"><Dumbbell size={18} /> Start a live workout (timer, sets, rest)</button>
       <button onClick={() => { onClose(); navToRoutines('/routines'); }} className="mb-4 flex w-full items-center gap-3 rounded-[18px] bg-accent/10 px-4 py-3 text-left font-semibold text-accent"><Dumbbell size={18} /> Use a saved routine (sets, reps, weights)</button>
       <div className="flex flex-wrap gap-2">
         {(Object.keys(EXERCISES) as ExerciseType[]).map((t) => (

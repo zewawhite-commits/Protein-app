@@ -11,7 +11,8 @@ import type { CustomFood, Food, LogEntry, Meal, Profile, ProgressPhoto, SavedMea
 import { dailyGoal } from '@/lib/nutrition';
 import { todayKey } from '@/lib/dates';
 import { deletePhoto } from '@/lib/photos';
-import type { ExerciseEntry, Routine } from '@/lib/exercise';
+import { burnedKcal, type ExerciseEntry, type ExerciseType, type Routine } from '@/lib/exercise';
+import { elapsed, type ActiveWorkout, type CustomExercise, type LiveSet, type WorkoutLog } from '@/lib/liveWorkout';
 
 interface State {
   profile: Profile | null;
@@ -29,6 +30,16 @@ interface State {
   exercises: ExerciseEntry[];
   measurements: MeasurementEntry[];
   routines: Routine[];
+  /** Exercises the person made themselves (reusable). */
+  customExercises: CustomExercise[];
+  saveCustomExercise: (e: Omit<CustomExercise, 'id' | 'createdAt'>) => CustomExercise;
+  /** Finished live workouts (history, personal records). */
+  workoutLogs: WorkoutLog[];
+  removeWorkoutLog: (id: string) => void;
+  /** The workout in progress (kept if the app is closed). */
+  activeWorkout: ActiveWorkout | null;
+  setActiveWorkout: (w: ActiveWorkout | null | ((w: ActiveWorkout) => ActiveWorkout)) => void;
+  finishWorkout: () => WorkoutLog | null;
   saveRoutine: (r: Omit<Routine, 'id' | 'createdAt'> & { id?: string }) => void;
   removeRoutine: (id: string) => void;
   addMeasurement: (m: Omit<MeasurementEntry, 'id' | 'createdAt'>) => void;
@@ -111,6 +122,36 @@ export const useStore = create<State>()(
       weights: [],
       exercises: [],
       measurements: [],
+      customExercises: [],
+      saveCustomExercise: (e) => {
+        const dup = get().customExercises.find((x) => x.name.trim().toLowerCase() === e.name.trim().toLowerCase());
+        const next: CustomExercise = { ...e, name: e.name.trim(), id: dup?.id ?? crypto.randomUUID(), createdAt: dup?.createdAt ?? Date.now(), updatedAt: Date.now() };
+        set((s) => ({ customExercises: dup ? s.customExercises.map((x) => (x.id === dup.id ? next : x)) : [...s.customExercises, next] }));
+        return next;
+      },
+      workoutLogs: [],
+      removeWorkoutLog: (id) => set((s) => ({ workoutLogs: s.workoutLogs.filter((x) => x.id !== id), deleted: { ...s.deleted, [id]: Date.now() } })),
+      activeWorkout: null,
+      setActiveWorkout: (w) => set((s) => ({ activeWorkout: typeof w === 'function' ? (s.activeWorkout ? w(s.activeWorkout) : null) : w })),
+      finishWorkout: () => {
+        const w = get().activeWorkout;
+        if (!w) return null;
+        const minutes = Math.max(1, Math.round(elapsed(w) / 60));
+        const done = w.exercises.filter((e) => !e.skipped && (e.sets.some((x) => x.done) || e.minutes || e.km));
+        const log: WorkoutLog = { id: crypto.randomUUID(), date: todayKey(), name: w.name, startedAt: w.startedAt, minutes, exercises: done, note: w.note, createdAt: Date.now() };
+        const kg = get().profile?.bodyWeightKg ?? 0;
+        // Each exercise also goes in the day's activity (calories are an estimate).
+        const share = Math.max(1, Math.round(minutes / Math.max(1, done.length)));
+        const entries: ExerciseEntry[] = done.map((e) => {
+          const type: ExerciseType = e.kind === 'cardio' ? (/run/i.test(e.name) ? 'run' : /walk/i.test(e.name) ? 'walk' : /cycl|bike/i.test(e.name) ? 'cycle' : /swim/i.test(e.name) ? 'swim' : 'hiit') : /yoga|stretch|pilates/i.test(e.name) ? 'yoga' : 'weights';
+          const mins = e.minutes ?? share;
+          const sets = e.sets.filter((x) => x.done);
+          const best = sets.reduce<LiveSet | null>((b, x) => (!b || (x.weightKg ?? 0) * (x.reps ?? 0) > (b.weightKg ?? 0) * (b.reps ?? 0) ? x : b), null);
+          return { id: crypto.randomUUID(), date: log.date, type, intensity: 'medium', minutes: mins, kcal: burnedKcal(type, 'medium', mins, kg), ...(e.km ? { km: e.km } : {}), ...(sets.length ? { detail: { name: e.name, sets: sets.length, ...(best?.reps ? { reps: best.reps } : {}), ...(best?.weightKg ? { weightKg: best.weightKg } : {}), ...(best?.seconds ? { seconds: best.seconds } : {}) } } : {}), note: w.name };
+        });
+        set((s) => ({ workoutLogs: [...s.workoutLogs, log], exercises: [...s.exercises, ...entries], activeWorkout: null }));
+        return log;
+      },
       routines: [],
       saveRoutine: (r) => set((s) => {
         const old = r.id ? s.routines.find((x) => x.id === r.id) : undefined;
@@ -284,13 +325,15 @@ export const useStore = create<State>()(
           exercises: d.exercises ?? [],
           measurements: (d as { measurements?: MeasurementEntry[] }).measurements ?? [],
           routines: (d as { routines?: Routine[] }).routines ?? [],
+          customExercises: (d as { customExercises?: CustomExercise[] }).customExercises ?? [],
+          workoutLogs: (d as { workoutLogs?: WorkoutLog[] }).workoutLogs ?? [],
           water: (d as { water?: Record<string, number> }).water ?? {},
           deleted: (d as { deleted?: Record<string, number> }).deleted ?? {},
         });
       },
 
       resetAll: () =>
-        set({ profile: null, settings: defaultSettings, entries: [], customFoods: [], goalHistory: {}, recentFoodIds: [], favoriteFoodIds: [], remoteFoods: {}, savedMeals: [], savedPlans: [], workoutPlan: null, savedRecipes: [], weights: [], exercises: [], measurements: [], routines: [], progressPhotos: [], premium: null, perks: null, serverTier: null, picks: {}, water: {}, deleted: {} }),
+        set({ profile: null, settings: defaultSettings, entries: [], customFoods: [], goalHistory: {}, recentFoodIds: [], favoriteFoodIds: [], remoteFoods: {}, savedMeals: [], savedPlans: [], workoutPlan: null, savedRecipes: [], weights: [], exercises: [], measurements: [], routines: [], customExercises: [], workoutLogs: [], activeWorkout: null, progressPhotos: [], premium: null, perks: null, serverTier: null, picks: {}, water: {}, deleted: {} }),
     }),
     {
       name: 'protein-app',
@@ -325,7 +368,7 @@ export function goalOn(date: string, goalHistory: Record<string, number>, profil
 
 export function exportData() {
   // Premium passes and personal API keys are never written to backup files.
-  const { profile, settings, entries, customFoods, goalHistory, recentFoodIds, favoriteFoodIds, remoteFoods, savedMeals, savedPlans, workoutPlan, savedRecipes, weights, exercises, measurements, routines, water, deleted } = useStore.getState();
+  const { profile, settings, entries, customFoods, goalHistory, recentFoodIds, favoriteFoodIds, remoteFoods, savedMeals, savedPlans, workoutPlan, savedRecipes, weights, exercises, measurements, routines, customExercises, workoutLogs, water, deleted } = useStore.getState();
   const safeSettings = settings;
-  return { app: 'protein-app', exportedAt: new Date().toISOString(), profile, settings: safeSettings, entries, customFoods, goalHistory, recentFoodIds, favoriteFoodIds, remoteFoods, savedMeals, savedPlans, workoutPlan, savedRecipes, weights, exercises, measurements, routines, water, deleted };
+  return { app: 'protein-app', exportedAt: new Date().toISOString(), profile, settings: safeSettings, entries, customFoods, goalHistory, recentFoodIds, favoriteFoodIds, remoteFoods, savedMeals, savedPlans, workoutPlan, savedRecipes, weights, exercises, measurements, routines, customExercises, workoutLogs, water, deleted };
 }

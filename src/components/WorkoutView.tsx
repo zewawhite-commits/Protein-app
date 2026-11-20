@@ -28,13 +28,15 @@ export function WorkoutView() {
   const profile = useStore((s) => s.profile);
   const saved = useStore((s) => s.workoutPlan);
   const setWorkoutPlan = useStore((s) => s.setWorkoutPlan);
-  const [req, setReq] = useState<WorkoutRequest>(() => ({
+  // Your choices are remembered for next time (and used by the coach).
+  const [req, setReqState] = useState<WorkoutRequest>(() => { try { const r = JSON.parse(localStorage.getItem('nutivili-workout-prefs') ?? 'null'); if (r?.daysPerWeek) return r as WorkoutRequest; } catch { /* none */ } return ({
     daysPerWeek: DAYS_FOR[profile?.activity ?? ''] ?? 3,
     minutes: 45,
     place: profile?.training?.some((t) => /home/i.test(t)) && !profile.training.some((t) => /gym/i.test(t)) ? 'home' : 'gym',
     level: profile?.activity === 'athlete' ? 'advanced' : profile?.activity === 'active' ? 'intermediate' : 'beginner',
     focus: '',
-  }));
+  }); });
+  const setReq = (r: WorkoutRequest) => { setReqState(r); try { localStorage.setItem('nutivili-workout-prefs', JSON.stringify(r)); } catch { /* ignore */ } };
   const [editing, setEditing] = useState(!saved);
   const [state, setState] = useState<{ busy: boolean; error?: string; premium?: boolean; signIn?: boolean }>({ busy: false });
 
@@ -81,7 +83,7 @@ export function WorkoutView() {
           <div className="flex gap-2">
             {LEVELS.map(([v, l]) => <button key={v} onClick={() => setReq({ ...req, level: v })} className={cx('chip !h-11 flex-1 justify-center !px-2 text-[14px]', req.level === v && 'chip-on')}>{l}</button>)}
           </div>
-          <input value={req.focus} onChange={(e) => setReq({ ...req, focus: e.target.value })} maxLength={200} placeholder="Anything else? e.g. ‘bad knee’, ‘glutes’, ‘5k run’" className="field mt-4" />
+          <input value={req.focus} onChange={(e) => setReq({ ...req, focus: e.target.value })} maxLength={200} placeholder="Injuries, limits or exercises to avoid, equipment you have, goals — e.g. ‘bad knee, no jumping; dumbbells only’" className="field mt-4" />
 
           <button onClick={() => void make()} disabled={state.busy} className="btn-primary mt-4 w-full">
             {state.busy ? <><Loader2 size={18} className="animate-spin" /> Building your week…</> : 'Build my workout guide'}
@@ -115,7 +117,7 @@ export function WorkoutView() {
             {state.busy && <p className="mt-2 flex items-center gap-2 text-sm text-silver"><Loader2 size={15} className="animate-spin" /> Rebuilding your week…</p>}
             {state.error && <p className="mt-2 text-sm text-silver">{state.error} {state.premium && <Link to="/premium" className="font-semibold text-accent">Get Pro</Link>}</p>}
           </section>
-          {saved.plan.days.map((d, i) => <DayCard key={i} day={d} defaultOpen={i === 0} />)}
+          {saved.plan.days.map((d, i) => <DayCard key={i} day={d} index={i} defaultOpen={i === 0} />)}
           {saved.plan.tips.length > 0 && (
             <div className="card p-5">
               <p className="flex items-center gap-2 font-semibold"><Lightbulb size={16} className="text-accent" /> Tips</p>
@@ -129,7 +131,7 @@ export function WorkoutView() {
   );
 }
 
-function DayCard({ day, defaultOpen }: { day: WorkoutDay; defaultOpen: boolean }) {
+function DayCard({ day, defaultOpen, index }: { day: WorkoutDay; defaultOpen: boolean; index: number }) {
   const [open, setOpen] = useState(defaultOpen);
   const addExercise = useStore((s) => s.addExercise);
   const kg = useStore((s) => s.profile?.bodyWeightKg ?? 0);
@@ -168,8 +170,9 @@ function DayCard({ day, defaultOpen }: { day: WorkoutDay; defaultOpen: boolean }
               </li>
             ))}
           </ol>
-          <button onClick={logDone} disabled={done} className="btn-primary mt-5 w-full">
-            {done ? <><Check size={18} /> Logged for today</> : 'I did this workout'}
+          <Link to={`/workout?guideDay=${index}`} className="btn-primary mt-5 w-full">Start it live — change anything as you go</Link>
+          <button onClick={logDone} disabled={done} className="btn-ghost mt-2 w-full">
+            {done ? <><Check size={18} /> Logged for today</> : 'Already did it? Log it'}
           </button>
         </div>
       )}
