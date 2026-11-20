@@ -19,15 +19,22 @@ const json = (d: unknown, s = 200, cache = 'public, max-age=300, s-maxage=3600')
 
 const out = (r: Row) => (r.url ? { url: r.url, author: r.author, authorUrl: r.author_url, page: r.photo_page, color: r.blur_color } : null);
 
-async function search(key: string): Promise<Omit<Row, 'tried_at'>> {
-  const q = PHOTO_QUERIES[key];
-  const res = await fetch(`https://api.unsplash.com/search/photos?query=${encodeURIComponent(q)}&per_page=5&orientation=squarish&content_filter=high`, {
+async function find(q: string, square: boolean) {
+  const res = await fetch(`https://api.unsplash.com/search/photos?query=${encodeURIComponent(q)}&per_page=5${square ? '&orientation=squarish' : ''}&content_filter=high`, {
     headers: { authorization: `Client-ID ${process.env.UNSPLASH_ACCESS_KEY}`, 'accept-version': 'v1' },
   });
   if (!res.ok) throw new Error(`unsplash ${res.status}`);
   const data = (await res.json()) as { results?: { urls: { raw: string }; user: { name: string; links: { html: string } }; links: { html: string; download_location: string }; color?: string; likes?: number }[] };
+  return data.results ?? [];
+}
+
+async function search(key: string): Promise<Omit<Row, 'tried_at'>> {
+  const q = PHOTO_QUERIES[key];
+  // Square photos fit the food tiles best; many dishes only have a few photos, so widen if none.
+  let results = await find(q, true);
+  if (!results.length) results = await find(q, false);
   // The most liked of the top results tends to be the best-looking photo.
-  const best = [...(data.results ?? [])].sort((a, b) => (b.likes ?? 0) - (a.likes ?? 0))[0];
+  const best = [...results].sort((a, b) => (b.likes ?? 0) - (a.likes ?? 0))[0];
   if (!best) return { key, url: null, author: null, author_url: null, photo_page: null, blur_color: null };
   // Unsplash asks apps to report when a photo is used.
   void fetch(best.links.download_location, { headers: { authorization: `Client-ID ${process.env.UNSPLASH_ACCESS_KEY}` } }).catch(() => undefined);
