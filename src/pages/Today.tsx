@@ -4,7 +4,7 @@ import { WaterCard } from '@/components/Water';
 import { Logo } from '@/components/Logo';
 import { useMemo, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Check, ChevronRight, Copy, Droplet, Drumstick, Flame, Plus, Wheat } from 'lucide-react';
+import { Check, ChevronRight, Copy, Droplet, Drumstick, Flame, Plus, UserRound, Wheat } from 'lucide-react';
 import { useStore, goalOn } from '@/store/useStore';
 import { useDay, useFoodLookup } from '@/lib/hooks';
 import { addDays, fromKey, relativeDay, todayKey, weekOf } from '@/lib/dates';
@@ -81,6 +81,7 @@ export default function Today() {
               </Link>
             )}
             <NotificationBell />
+            <Link to="/profile" className="grid h-10 w-10 place-items-center rounded-full bg-surface lg:hidden" style={{ boxShadow: 'var(--shadow)' }} aria-label="Profile"><UserRound size={19} /></Link>
           </span>
         </div>
       </header>
@@ -104,6 +105,7 @@ export default function Today() {
           <button onClick={() => setDate(today)} className="shrink-0 text-sm font-semibold text-accent">Today</button>
         </div>
       )}
+      {date <= today && <QuickActions dateQuery={isToday ? '' : `?date=${date}`} />}
       {isToday && <Restored />}
       {isToday && <WelcomeBack />}
       {isToday && <InstallBanner className="mt-4" />}
@@ -117,7 +119,6 @@ export default function Today() {
           <div className="mt-2 flex justify-end px-1"><Link to="/settings?edit=1" className="text-sm font-semibold text-accent">Edit targets</Link></div>
         </>
       )}
-      {date <= today && <div className="mt-4"><QuickActions dateQuery={isToday ? '' : `?date=${date}`} /></div>}
       </div>
 
       <section className="mt-8 lg:mt-5">

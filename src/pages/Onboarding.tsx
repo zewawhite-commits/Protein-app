@@ -1,8 +1,9 @@
+import { CustomAvoid } from '@/components/Allergy';
 import { trackStep } from '@/lib/feedback';
 import { Logo } from '@/components/Logo';
 import { useNavigate } from 'react-router-dom';
 import { DIET_PREFS, TRAINING } from '@/lib/cuisines';
-import { useState, type ReactNode, useEffect } from 'react';
+import { useState, type ReactNode, useEffect, useRef } from 'react';
 import { ArrowLeft, Check, Bike, Coffee, Droplet, Drumstick, Dumbbell, Flame, HeartPulse, Leaf, Loader2, Mail, Pencil, Phone, Rabbit, Scale, Sofa, Soup, ThumbsDown, ThumbsUp, Trophy, Turtle, Fish, Salad, Utensils, Wheat, Zap, Footprints } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 import { accountsEnabled, sendPhoneCode, signInWithGoogle, toE164, useSession, verifyPhoneCode } from '@/lib/account';
@@ -53,6 +54,8 @@ const PLAN_CHOICES = [
 export default function Onboarding() {
   const navigate = useNavigate();
   const session = useSession();
+  // Just signed in (Google or an email link) with no profile yet: go straight into the questions.
+  const autoStarted = useRef(false);
   const saveProfile = useStore((s) => s.saveProfile);
   const unit = useStore((s) => s.settings.bodyUnit);
   const updateSettings = useStore((s) => s.updateSettings);
@@ -109,6 +112,7 @@ export default function Onboarding() {
   // Only what's needed for a good first plan. Training type, challenges and reminders can be set later in Profile.
   const flow = ['welcome', 'goals', 'about', 'direction', ...(wantsChange ? ['goalweight'] : []), 'activity', 'diet', 'cuisines', 'plan', 'choose'];
   const at = flow[step];
+  useEffect(() => { if (at === 'welcome' && session && !autoStarted.current) { autoStarted.current = true; next(); } }, [at, session]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { trackStep(`${String(flow.indexOf(at) + 1).padStart(2, '0')}-${at}`); }, [at]); // eslint-disable-line react-hooks/exhaustive-deps
   const STEPS = flow.length;
   const next = () => setStep((s) => Math.min(STEPS - 1, s + 1));
@@ -252,6 +256,7 @@ export default function Onboarding() {
                 </button>
               ))}
             </div>
+            <CustomAvoid avoid={avoid} setAvoid={setAvoid} known={AVOIDS} />
             <div className="flex-1" />
             <button onClick={next} className="btn-primary mt-6 w-full">{cuisines.length ? `Continue · ${cuisines.length} picked` : 'Skip for now'}</button>
           </Question>

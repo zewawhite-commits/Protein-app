@@ -25,3 +25,13 @@ describe('allergen checks', () => {
     expect(avoidSet({ avoid: ['Peanuts'], dietPrefs: ['Halal'] }).sort()).toEqual(['Alcohol', 'Peanuts', 'Pork']);
   });
 });
+
+describe('custom allergies typed by the person', () => {
+  it('matches the typed food and its plural, and keeps built-in rules working', async () => {
+    const { allergensIn, avoidSet } = await import('./allergens');
+    expect(avoidSet({ avoid: ['Mango', 'Peanuts'] })).toEqual(['Mango', 'Peanuts']);
+    expect(allergensIn('Mangoes, raw', ['Mango'])).toEqual(['Mango']);
+    expect(allergensIn('Okra soup', ['Okra'])).toEqual(['Okra']);
+    expect(allergensIn('Rice, white', ['Okra'])).toEqual([]);
+  });
+});

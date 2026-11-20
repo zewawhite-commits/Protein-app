@@ -47,7 +47,8 @@ export const ALLERGEN_NAMES = Object.keys(RULES);
 /** Everything this person avoids: their avoid list plus what their diet preferences imply. */
 export function avoidSet(p: { avoid?: string[]; dietPrefs?: string[] } | null | undefined): string[] {
   const out = new Set<string>();
-  for (const a of p?.avoid ?? []) if (RULES[a]) out.add(a);
+  // Known allergens plus anything the person typed themselves (e.g. "Mango", "Okra").
+  for (const a of p?.avoid ?? []) if (a.trim()) out.add(a.trim());
   for (const d of p?.dietPrefs ?? []) for (const a of FROM_PREFS[d] ?? []) out.add(a);
   return [...out];
 }
@@ -57,7 +58,8 @@ const cache = new Map<string, { hit: RegExp; skip: RegExp | null }>();
 function compiled(name: string) {
   let c = cache.get(name);
   if (!c) {
-    const r = RULES[name];
+    // Something typed in (not one of the built-in allergens): match that word and simple plurals.
+    const r = RULES[name] ?? { words: [name.toLowerCase().replace(/(es|s)$/, '')] };
     // Whole words, with simple plurals (egg/eggs, nut/nuts, noodle/noodles).
     c = {
       hit: new RegExp(`(^|[^a-z])(${r.words.map(esc).join('|')})(e?s)?(?![a-z])`, 'i'),
@@ -73,7 +75,7 @@ export function allergensIn(text: string, avoid: string[]): string[] {
   if (!text || !avoid.length) return [];
   const out: string[] = [];
   for (const a of avoid) {
-    if (!RULES[a]) continue;
+    if (!a.trim()) continue;
     const { hit, skip } = compiled(a);
     const t = skip ? text.replace(skip, ' ') : text;
     if (hit.test(t)) out.push(a);

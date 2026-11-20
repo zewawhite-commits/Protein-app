@@ -1,3 +1,4 @@
+import { CustomAvoid } from '@/components/Allergy';
 import { useState } from 'react';
 import type { Profile } from '@/lib/types';
 import { dailyGoal, fromKg, round1, toKg } from '@/lib/nutrition';
@@ -206,6 +207,7 @@ export function ProfileForm({ initial, submitLabel, onSaved }: { initial?: Profi
         <div className="flex flex-wrap gap-2">
           {AVOIDS.map((c) => <button type="button" key={c} onClick={() => toggle(setAvoid, c)} className={cx('chip !h-9', avoid.includes(c) && '!bg-danger/15 !text-danger')}>{c}</button>)}
         </div>
+        <CustomAvoid avoid={avoid} setAvoid={setAvoid} known={AVOIDS} />
       </div>
 
       <button type="submit" disabled={!valid} className="btn-primary w-full">{submitLabel}</button>

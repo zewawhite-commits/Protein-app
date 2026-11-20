@@ -1,3 +1,4 @@
+import { allergensIn } from './allergens';
 /**
  * Protein target suggestion from onboarding answers. A starting point the user can
  * change — not medical advice. Reference points:
@@ -64,7 +65,7 @@ export function fitsPrefs(food: Pick<Food, 'name' | 'per100'>, p: { diet?: Diet;
   if (!p) return true;
   if (!fitsDiet(food, p.diet)) return false;
   const avoid = new Set([...(p.avoid ?? []), ...(p.dietPrefs ?? []).flatMap((d) => PREF_AVOIDS[d] ?? [])]);
-  for (const a of avoid) if (AVOID_RULES[a]?.test(food.name)) return false;
+  for (const a of avoid) if (AVOID_RULES[a] ? AVOID_RULES[a].test(food.name) : allergensIn(food.name, [a]).length) return false;
   const prefs = p.dietPrefs ?? [];
   if ((prefs.includes('Keto') || prefs.includes('Low-carb')) && (food.per100.carbs ?? 0) > (prefs.includes('Keto') ? 5 : 15)) return false;
   if (prefs.includes('Low-sugar') && (food.per100.sugar ?? 0) > 10) return false;

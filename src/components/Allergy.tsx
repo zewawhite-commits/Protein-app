@@ -1,5 +1,5 @@
-import { useMemo } from 'react';
-import { TriangleAlert } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { TriangleAlert, X } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 import { allergensInAll, avoidSet, foodAllergens } from '@/lib/allergens';
 import { cx } from './ui';
@@ -56,6 +56,34 @@ export function AllergyTextBanner({ texts, what, className }: { texts: string[];
         This {what} may contain {hits.join(', ').toLowerCase()}, which is on your avoid list.
         <span className="block font-normal opacity-90">Swap those ingredients or ask for a new one.</span>
       </p>
+    </div>
+  );
+}
+
+/** Type your own allergy or food to avoid (anything not in the chips), shown as removable chips. */
+export function CustomAvoid({ avoid, setAvoid, known }: { avoid: string[]; setAvoid: (f: (cur: string[]) => string[]) => void; known: string[] }) {
+  const [text, setText] = useState('');
+  const custom = avoid.filter((a) => !known.includes(a));
+  const add = () => {
+    const v = text.trim().replace(/\s+/g, ' ').slice(0, 30);
+    if (!v) return;
+    const name = v[0].toUpperCase() + v.slice(1);
+    setAvoid((cur) => (cur.some((c) => c.toLowerCase() === name.toLowerCase()) ? cur : [...cur, name]));
+    setText('');
+  };
+  return (
+    <div className="mt-2.5">
+      {custom.length > 0 && (
+        <div className="mb-2 flex flex-wrap gap-2">
+          {custom.map((c) => (
+            <button type="button" key={c} onClick={() => setAvoid((cur) => cur.filter((x) => x !== c))} className="chip !h-9 !bg-danger/15 !text-danger" aria-label={`Remove ${c}`}>{c} <X size={14} /></button>
+          ))}
+        </div>
+      )}
+      <div className="flex gap-2">
+        <input className="field flex-1" placeholder="Something else? e.g. Mango, Okra" aria-label="Add your own allergy or food to avoid" value={text} maxLength={30} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); add(); } }} />
+        <button type="button" onClick={add} disabled={!text.trim()} className="btn-ghost !px-4">Add</button>
+      </div>
     </div>
   );
 }

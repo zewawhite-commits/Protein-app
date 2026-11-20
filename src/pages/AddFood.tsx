@@ -43,7 +43,7 @@ export default function AddFood() {
   const nav = useNavigate();
   const [params] = useSearchParams();
   const date = params.get('date') ?? todayKey();
-  const [voice, setVoice] = useState(false);
+  const [voice, setVoice] = useState(() => params.get('voice') === '1');
   const photoId = params.get('photo') ?? undefined;
   const photoUrl = usePhotoUrl(photoId);
   const { db, error } = useFoodDb();

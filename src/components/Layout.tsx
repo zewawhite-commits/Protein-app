@@ -1,8 +1,9 @@
 import { Logo } from './Logo';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { LogMenu } from './LogMenu';
-import { BarChart3, Camera, House, MessageCircle, Plus, UserRound, Users } from 'lucide-react';
+import { BarChart3, Camera, House, Mail, MessageCircle, Plus, UserRound, Users } from 'lucide-react';
+import { unreadCount } from '@/lib/social';
 import { cx } from './ui';
 import { BrandName } from './fx';
 
@@ -11,8 +12,11 @@ const tabs = [
   { to: '/insights', label: 'Progress', icon: BarChart3 },
   { to: '/feed', label: 'Feed', icon: Users },
   { to: '/coach', label: 'Coach', icon: MessageCircle },
+  { to: '/messages', label: 'Messages', icon: Mail },
   { to: '/profile', label: 'Profile', icon: UserRound },
 ] as const;
+// Phones have room for five: Profile sits at the top of Home instead.
+const phoneTabs = tabs.filter((t) => t.to !== '/profile');
 
 /**
  * Phones: content column + floating bottom bar. Tablets: wider column.
@@ -24,6 +28,8 @@ export function Layout() {
   const day = new URLSearchParams(loc.search).get('date');
   const q = day ? `?date=${day}` : '';
   const [menu, setMenu] = useState(false);
+  const [unread, setUnread] = useState(0);
+  useEffect(() => { void unreadCount().then(setUnread).catch(() => undefined); }, [loc.pathname]);
   return (
     <div className="relative min-h-dvh">
       {/* Side menu (large screens) */}
@@ -61,17 +67,18 @@ export function Layout() {
         aria-label="Main"
       >
         <div className="card flex h-[68px] flex-1 items-center justify-around !rounded-full px-2">
-          {tabs.map((t) => (
+          {phoneTabs.map((t) => (
             <NavLink
               key={t.to}
               to={t.to}
               end={t.to === '/'}
-              className={({ isActive }) => cx('flex h-14 flex-1 flex-col items-center justify-center gap-1 text-[12px] font-semibold transition', isActive ? 'text-ink' : 'text-dim')}
+              className={({ isActive }) => cx('relative flex h-14 flex-1 flex-col items-center justify-center gap-1 text-[12px] font-semibold transition', isActive ? 'text-ink' : 'text-dim')}
             >
               {({ isActive }) => (
                 <>
                   <t.icon size={22} strokeWidth={isActive ? 2.5 : 2} fill={isActive && t.to === '/' ? 'currentColor' : 'none'} fillOpacity={0.12} />
                   <span>{t.label}</span>
+                  {t.to === '/messages' && unread > 0 && <span className="absolute right-[18%] top-1.5 grid h-[18px] min-w-[18px] place-items-center rounded-full bg-danger px-1 text-[11px] font-bold text-white">{unread > 9 ? '9+' : unread}</span>}
                 </>
               )}
             </NavLink>
