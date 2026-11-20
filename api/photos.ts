@@ -67,8 +67,14 @@ async function fromWikimedia(key: string, q: string): Promise<Omit<Row, 'tried_a
 }
 
 async function search(key: string): Promise<Omit<Row, 'tried_at'>> {
-  try { return await searchUnsplash(key); } catch (e) {
+  if (!process.env.UNSPLASH_ACCESS_KEY) {
     const alt = (await fromPexels(key, PHOTO_QUERIES[key]).catch(() => null)) ?? (await fromWikimedia(key, PHOTO_QUERIES[key]).catch(() => null));
+    return alt ?? { key, url: null, author: null, author_url: null, photo_page: null, blur_color: null };
+  }
+  try { return await searchUnsplash(key); } catch (e) {
+    // Unsplash busy (hourly limit): Pexels is as good; otherwise wait and try Unsplash again
+    // rather than settle for a lower-quality photo.
+    const alt = await fromPexels(key, PHOTO_QUERIES[key]).catch(() => null);
     if (alt) return alt;
     throw e;
   }

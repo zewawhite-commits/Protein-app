@@ -53,6 +53,22 @@ describe('food photos API', () => {
     delete process.env.UNSPLASH_ACCESS_KEY;
     const { GET } = await import('../photos.js');
     await GET(new Request('https://x/api/photos?keys=jollof'));
-    expect(unsplash).not.toHaveBeenCalled();
+    expect(unsplash.mock.calls.filter(([u]) => /unsplash/.test(u))).toHaveLength(0);
+  });
+  it('falls back to a large, freely licensed Wikimedia photo', async () => {
+    delete process.env.UNSPLASH_ACCESS_KEY;
+    vi.stubGlobal('fetch', vi.fn(async (url: string) => {
+      if (String(url).includes('commons.wikimedia.org')) return new Response(JSON.stringify({ query: { pages: {
+        1: { index: 1, imageinfo: [{ url: 'u', thumburl: 'https://upload.wikimedia.org/small.jpg', width: 800, height: 800, mime: 'image/jpeg', descriptionurl: 'd1', extmetadata: { LicenseShortName: { value: 'CC BY-SA 4.0' } } }] },
+        2: { index: 2, imageinfo: [{ url: 'u', thumburl: 'https://upload.wikimedia.org/nc.jpg', width: 3000, height: 2000, mime: 'image/jpeg', descriptionurl: 'd2', extmetadata: { LicenseShortName: { value: 'CC BY-NC 2.0' } } }] },
+        3: { index: 3, imageinfo: [{ url: 'u', thumburl: 'https://upload.wikimedia.org/good.jpg', width: 3000, height: 2400, mime: 'image/jpeg', descriptionurl: 'https://commons.wikimedia.org/wiki/File:Egusi.jpg', extmetadata: { LicenseShortName: { value: 'CC BY-SA 4.0' }, Artist: { value: '<a href="x">Ada</a>' } } }] },
+      } } }), { status: 200 });
+      return new Response('{}', { status: 404 });
+    }));
+    const { GET } = await import('../photos.js');
+    const d = await (await GET(new Request('https://x/api/photos?keys=egusi'))).json();
+    // Too small and non-commercial licences are skipped.
+    expect(d.photos.egusi.url).toBe('https://upload.wikimedia.org/good.jpg');
+    expect(d.photos.egusi.author).toBe('Ada (CC BY-SA 4.0)');
   });
 });
