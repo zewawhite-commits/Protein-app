@@ -22,9 +22,10 @@ beforeEach(() => {
   process.env.UNSPLASH_ACCESS_KEY = 'test-key';
   vi.stubGlobal('fetch', vi.fn(async (url: string, init?: { headers?: Record<string, string> }) => {
     unsplash(url, init?.headers?.authorization);
+    const q = new URL(String(url), 'https://x').searchParams.get('query') ?? '';
     if (String(url).includes('/search/photos')) return new Response(JSON.stringify({ results: [
-      { urls: { raw: 'https://images.unsplash.com/a' }, user: { name: 'Low Likes', links: { html: 'https://unsplash.com/@low' } }, links: { html: 'https://unsplash.com/photos/a', download_location: 'https://api.unsplash.com/photos/a/download' }, likes: 3, alt_description: 'jollof rice banana egusi soup fufu suya' },
-      { urls: { raw: 'https://images.unsplash.com/b' }, user: { name: 'Best Photo', links: { html: 'https://unsplash.com/@best' } }, links: { html: 'https://unsplash.com/photos/b', download_location: 'https://api.unsplash.com/photos/b/download' }, likes: 90, color: '#a63', alt_description: 'jollof rice banana egusi soup fufu suya' },
+      { urls: { raw: 'https://images.unsplash.com/a' }, user: { name: 'Low Likes', links: { html: 'https://unsplash.com/@low' } }, links: { html: 'https://unsplash.com/photos/a', download_location: 'https://api.unsplash.com/photos/a/download' }, likes: 3, alt_description: q },
+      { urls: { raw: 'https://images.unsplash.com/b' }, user: { name: 'Best Photo', links: { html: 'https://unsplash.com/@best' } }, links: { html: 'https://unsplash.com/photos/b', download_location: 'https://api.unsplash.com/photos/b/download' }, likes: 90, color: '#a63', alt_description: q },
     ] }), { status: 200 });
     return new Response('{}', { status: 200 });
   }));
@@ -79,6 +80,10 @@ describe('food photos API', () => {
     expect(photoMatches('chicken_wings', 'spicy buffalo chicken wings')).toBe(true);
     expect(photoMatches('egg', 'ants carrying white eggs in a basket')).toBe(false);
     expect(photoMatches('cottage_cheese', 'cheese on supermarket shelves')).toBe(false);
-    expect(photoMatches('egg', 'two boiled eggs on toast')).toBe(true);
+    expect(photoMatches('egg', 'two boiled eggs on a plate')).toBe(true);
+    expect(photoMatches('egg', 'boiled eggs and toast on a plate')).toBe(false);
+    expect(photoMatches('cheese_wedge', 'a pizza with cheese and toppings')).toBe(false);
+    expect(photoMatches('bacon', 'brown and white abstract painting')).toBe(false);
+    expect(photoMatches('bacon', 'crispy bacon strips in a pan')).toBe(true);
   });
 });

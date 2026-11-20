@@ -176,7 +176,7 @@ export const PHOTO_QUERIES: Record<string, string> = {
 const GENERIC = new Set(['of', 'with', 'and', 'the', 'a', 'bowl', 'plate', 'glass', 'jar', 'sliced', 'cooked', 'grilled', 'fried', 'roast', 'roasted', 'boiled', 'fresh', 'food', 'dish', 'nigerian', 'african', 'ghanaian', 'indian', 'traditional', 'side', 'up', 'sunny', 'steak', 'fillet', 'nuts', 'loaf', 'cup', 'breakfast', 'dessert', 'soup', 'stew', 'rice']);
 const MUST_OVERRIDE: Record<string, string[]> = {
   chicken_breast: ['chicken'], chicken_wings: ['wing'], chicken_thigh: ['chicken', 'drumstick'], peanut_butter: ['peanut'], cottage_cheese: ['cottage'],
-  cooked_rice: ['rice'], fried_rice: ['rice'], jollof: ['jollof', 'rice'], egusi: ['egusi', 'soup', 'stew'], salmon: ['salmon'], tuna: ['tuna'], fish: ['fish'],
+  cooked_rice: ['rice'], scrambled_eggs: ['scrambled'], cheese_wedge: ['cheese'], bacon: ['bacon'], squid: ['squid', 'calamari'], butter: ['butter'], egg: ['egg'], fried_egg: ['egg'], almonds: ['almond'], fried_rice: ['rice'], jollof: ['jollof', 'rice'], egusi: ['egusi', 'soup', 'stew'], salmon: ['salmon'], tuna: ['tuna'], fish: ['fish'],
 };
 export function photoMust(key: string): string[] {
   if (MUST_OVERRIDE[key]) return MUST_OVERRIDE[key];

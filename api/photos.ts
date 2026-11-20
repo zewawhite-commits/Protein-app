@@ -25,10 +25,15 @@ export function photoMatches(key: string, text: string): boolean {
   const must = photoMust(key);
   if (!must.length) return true;
   const t = ` ${text.toLowerCase().replace(/[^a-z\s]/g, ' ')} `;
-  if (/\b(ants?|insects?|bugs?|shelf|shelves|supermarket|grocery|aisle|store|illustration|drawing|cartoon|toy|plastic|vector|3d render)\b/.test(t)) return false;
+  if (/\b(ants?|insects?|bugs?|shelf|shelves|supermarket|grocery|aisle|store|illustration|drawing|painting|abstract|artwork|art|cartoon|toy|plastic|vector|3d render|logo|sign|menu)\b/.test(t)) return false;
+  // A different dish in the photo (pizza for "cheese", toast for "eggs") means it isn't really this food.
+  const query = ` ${(PHOTO_QUERIES[key] ?? '').toLowerCase()} `;
+  for (const d of OTHER_DISHES) if (new RegExp(`\\b${d}(e?s)?\\b`).test(t) && !query.includes(d)) return false;
   return must.some((w) => new RegExp(`\\b${w}(e?s)?\\b`).test(t));
 }
-const describe = (p: UnsplashPhoto) => [p.alt_description, p.description, ...(p.tags ?? []).map((t) => t.title)].filter(Boolean).join(' ');
+// Only the photo's own description (tags are too loose: a painting can be tagged "bacon").
+const describe = (p: UnsplashPhoto) => [p.alt_description, p.description].filter(Boolean).join(' ');
+const OTHER_DISHES = ['pizza', 'burger', 'sandwich', 'pasta', 'spaghetti', 'noodle', 'cake', 'cupcake', 'salad', 'sushi', 'taco', 'pastry', 'bread', 'toast', 'fries', 'onion ring', 'soup', 'cookie', 'donut', 'doughnut', 'pie', 'waffle', 'pancake', 'cereal', 'smoothie', 'coffee', 'cocktail', 'wine', 'beer'];
 
 async function find(q: string, square: boolean) {
   const res = await fetch(`https://api.unsplash.com/search/photos?query=${encodeURIComponent(q)}&per_page=5${square ? '&orientation=squarish' : ''}&content_filter=high`, {
