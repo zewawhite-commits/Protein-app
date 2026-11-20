@@ -1,5 +1,5 @@
 import { ShareRecipeSheet } from '@/components/ShareRecipe';
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Plus, Search, Trash2, Share2 } from 'lucide-react';
 import { useStore } from '@/store/useStore';
@@ -37,10 +37,12 @@ export function recipePer100(ingredients: RecipeDef['ingredients'], cookedGrams:
 export default function RecipeBuilder() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
+  const importScrolled = useRef(false);
   const custom = useStore((s) => s.customFoods);
   const upsert = useStore((s) => s.upsertCustomFood);
   const archive = useStore((s) => s.archiveCustomFood);
   const [share, setShare] = useState(false);
+  const [steps, setSteps] = useState(() => custom.find((c) => c.id === params.get('id'))?.recipe?.steps?.join('\n') ?? '');
   const existing = custom.find((c) => c.id === params.get('id') && c.recipe);
   const { db } = useFoodDb();
 
@@ -54,6 +56,7 @@ export default function RecipeBuilder() {
     if (r.title && !name.trim()) setName(r.title);
     if (r.servings) setServings(String(r.servings));
     setItems((cur) => [...cur, ...r.items]);
+    if (r.steps.length) setSteps(r.steps.join('\n'));
     setCheck(r);
     toast(`${r.items.length} ingredient${r.items.length === 1 ? '' : 's'} added`);
   };
@@ -82,7 +85,7 @@ export default function RecipeBuilder() {
       per100,
       portions: [{ label: '1 serving', grams: Math.round(servingGrams) }],
       sourceNote: `My recipe, ${Math.round(cookedGrams)} g cooked: ${items.map((i) => `${Math.round(i.grams)} g ${i.name}`).join('; ')}`,
-      recipe: { ingredients: items, cookedGrams: Math.round(cookedGrams), servings: nServings },
+      recipe: { ingredients: items, cookedGrams: Math.round(cookedGrams), servings: nServings, ...(steps.trim() ? { steps: steps.split('\n').map((x) => x.trim()).filter(Boolean).slice(0, 40) } : {}) },
     });
     toast(existing ? 'Recipe updated' : 'Recipe saved to My foods');
     navigate('/add?tab=custom', { replace: true });
@@ -97,11 +100,12 @@ export default function RecipeBuilder() {
       </header>
       {existing && <ShareRecipeSheet food={existing} open={share} onClose={() => setShare(false)} />}
 
-      {!existing && <div className="mb-5"><RecipeImport onImported={imported} /></div>}
-      {check && (check.unmatched.length > 0 || check.guessed.length > 0 || check.note) && (
+      {!existing && <div className="mb-5" ref={(el) => { if (el && params.get('import') && !importScrolled.current) { importScrolled.current = true; el.scrollIntoView({ block: 'start' }); } }}><RecipeImport onImported={imported} /></div>}
+      {check && (check.unmatched.length > 0 || check.guessed.length > 0 || check.missing.length > 0 || check.note) && (
         <div className="mb-5 rounded-[20px] bg-warn/15 p-4 text-sm">
           <p className="font-bold">Please check</p>
           {check.unmatched.length > 0 && <p className="mt-1">Not found, add these yourself below: {check.unmatched.join('; ')}</p>}
+          {check.missing.length > 0 && <p className="mt-1"><b>Needs an amount</b> (the recipe doesn’t say how much — enter what you used, they’re at 0 g): {check.missing.join('; ')}</p>}
           {check.guessed.length > 0 && <p className="mt-1">Amounts guessed (no quantity in the recipe): {check.guessed.join('; ')}</p>}
           {check.note && <p className="mt-1 text-silver">{check.note}</p>}
           <p className="mt-1 text-silver">Weigh the finished pot and enter the cooked weight for the most accurate numbers.</p>
@@ -176,6 +180,8 @@ export default function RecipeBuilder() {
         </div>
       )}
 
+      <label className="label mt-5" htmlFor="rb-steps">Method (optional)</label>
+      <textarea id="rb-steps" value={steps} onChange={(e) => setSteps(e.target.value)} rows={5} maxLength={6000} placeholder={'One step per line\n1. Wash the rice…'} className="field !h-auto resize-y py-3 text-[15px]" />
       <button onClick={save} disabled={!valid} className="btn-primary mt-6 w-full">{existing ? 'Save changes' : 'Save recipe'}</button>
       {existing && (
         <button onClick={() => { if (confirm('Delete this recipe? Meals you already logged with it stay in your history.')) { archive(existing.id, true); toast('Recipe deleted'); navigate('/add?tab=custom', { replace: true }); } }} className="mt-3 w-full text-sm font-semibold text-danger">Delete recipe</button>

@@ -26,6 +26,9 @@ export function RecipeView() {
   const [recipe, setRecipe] = useState<Recipe | null>(saved[0]?.recipe ?? null);
   const [savedId, setSavedId] = useState<string | null>(saved[0]?.id ?? null);
   const [ask, setAsk] = useState('');
+  // Filters people can combine: calories, protein, diet and time.
+  const FILTERS = ['Under 500 kcal', '30 g+ protein', 'Vegetarian', 'Vegan', 'Gluten-free', 'Dairy-free', 'Ready in 15 min', 'Ready in 30 min', 'Budget'];
+  const [filters, setFilters] = useState<string[]>([]);
   const [state, setState] = useState<{ busy: boolean; error?: string; premium?: boolean; signIn?: boolean }>({ busy: false });
 
   const ideas = useMemo(() => {
@@ -46,7 +49,7 @@ export function RecipeView() {
     haptic();
     setState({ busy: true });
     try {
-      const res = await fetch('/api/recipe', { method: 'POST', headers: await aiHeaders(), body: JSON.stringify({ context, request: text }), signal: AbortSignal.timeout(75_000) });
+      const res = await fetch('/api/recipe', { method: 'POST', headers: await aiHeaders(), body: JSON.stringify({ context, request: filters.length ? `${text || 'Any recipe'}. Must be: ${filters.join(', ')}.` : text }), signal: AbortSignal.timeout(75_000) });
       const isJson = res.headers.get('content-type')?.includes('application/json');
       if (!isJson || res.status === 404 || res.status === 501) throw new Error('Recipes aren’t switched on yet. They work once the AI key is added on the server.');
       const data = (await res.json()) as Recipe & { error?: string };
@@ -78,6 +81,9 @@ export function RecipeView() {
               <FoodVisual name={i.art} size={28} className="!rounded-full" />{i.label}
             </button>
           ))}
+        </div>
+        <div className="mt-3 flex flex-wrap gap-1.5" role="group" aria-label="Recipe filters">
+          {FILTERS.map((f) => <button key={f} onClick={() => setFilters((x) => (x.includes(f) ? x.filter((y) => y !== f) : [...x, f]))} className={cx('chip !h-8 !px-3 text-[13px]', filters.includes(f) && 'chip-on')}>{f}</button>)}
         </div>
         <button onClick={() => make()} disabled={state.busy} className="btn-primary mt-4 w-full">
           {state.busy ? <><Loader2 size={18} className="animate-spin" /> Writing your recipe…</> : ask.trim() ? 'Get recipe' : 'Surprise me'}

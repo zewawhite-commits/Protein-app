@@ -20,7 +20,7 @@ export interface ImportedIngredient {
   /** True when the recipe gives no quantity and the grams are a guess. */
   guessed: boolean;
 }
-export interface ImportedRecipe { isRecipe: boolean; title: string; servings: number; ingredients: ImportedIngredient[]; note: string }
+export interface ImportedRecipe { isRecipe: boolean; title: string; servings: number; ingredients: ImportedIngredient[]; steps: string[]; note: string }
 
 const SCHEMA = {
   type: 'object',
@@ -44,20 +44,22 @@ const SCHEMA = {
         additionalProperties: false,
       },
     },
+    steps: { type: 'array', items: { type: 'string' } },
     note: { type: 'string' },
   },
-  required: ['isRecipe', 'title', 'servings', 'ingredients', 'note'],
+  required: ['isRecipe', 'title', 'servings', 'ingredients', 'steps', 'note'],
   additionalProperties: false,
 } as const;
 
 const SYSTEM = `You read recipes for a nutrition app. Extract the ingredient list exactly as written, then convert every amount to grams.
 - One entry per ingredient line. Keep "original" as written (amount + unit + food).
-- "grams": convert units carefully (1 cup cooked rice ≈ 160 g, 1 cup flour ≈ 125 g, 1 tbsp oil ≈ 13.5 g, 1 tsp salt ≈ 6 g, 1 medium onion ≈ 110 g, 1 large egg ≈ 50 g, 1 Maggi/stock cube ≈ 10 g, 1 lb = 454 g, 1 oz = 28 g, 1 ml water = 1 g). Ignore invisible or odd characters in the text. If no quantity is given ("salt to taste", "oil for frying"), estimate a sensible amount for the whole recipe and set "guessed" to true; for deep-frying oil estimate only what is absorbed.
+- "grams": convert units carefully (1 cup cooked rice ≈ 160 g, 1 cup flour ≈ 125 g, 1 tbsp oil ≈ 13.5 g, 1 tsp salt ≈ 6 g, 1 medium onion ≈ 110 g, 1 large egg ≈ 50 g, 1 Maggi/stock cube ≈ 10 g, 1 lb = 454 g, 1 oz = 28 g, 1 ml water = 1 g). Ignore invisible or odd characters in the text. If no quantity is given ("salt to taste", "oil for frying"), do NOT estimate: set "grams" to 0 and "guessed" to true, so the person fills it in.
 - "form": whether the amount is raw, cooked or dry (dry rice, dry beans), or "na".
 - "searchQueries": 2–3 short queries phrased like food-composition database entries, most specific first (e.g. ["palm oil", "oil palm"], ["beef stewing raw", "beef raw"], ["rice white long-grain raw"]).
 - "servings": the number of servings stated, else a sensible estimate (at least 1).
 - If the text or photo is not a recipe, set isRecipe false, leave ingredients empty and explain in "note". Otherwise "note" is "" or one short sentence about anything unclear.
-- Never invent ingredients that aren't in the recipe.`;
+- "steps": the method/instructions as written, one step per entry, in order (empty if the recipe has none). Copy them; don't rewrite or add steps.
+- Never invent ingredients or amounts that aren't in the recipe.`;
 
 export async function importRecipeWithClient(client: Anthropic, input: { text?: string; image?: { data: string; mediaType: 'image/jpeg' | 'image/png' | 'image/webp' } }): Promise<ImportedRecipe> {
   const content = input.image
@@ -86,6 +88,7 @@ export function cleanImported(raw: unknown): ImportedRecipe {
     title: s(r.title, 80),
     servings: Math.min(50, Math.max(1, Math.round(Number(r.servings) || 1))),
     note: s(r.note, 200),
+    steps: (Array.isArray(r.steps) ? r.steps : []).map((x) => s(x, 400)).filter(Boolean).slice(0, 40),
     ingredients: (Array.isArray(r.ingredients) ? r.ingredients : []).slice(0, 40).map((i) => ({
       original: s(i?.original, 100),
       name: s(i?.name, 60),

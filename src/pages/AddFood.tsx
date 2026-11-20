@@ -2,7 +2,7 @@ import { sendMessage } from '@/lib/feedback';
 import { useDeferredValue, useEffect, useMemo, useState } from 'react';
 import { AllergyTag } from '@/components/Allergy';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Camera, ChevronRight, Globe2, Heart, Loader2, Mic, Search, Share2, X, ChefHat, Plus } from 'lucide-react';
+import { ArrowLeft, Camera, ChevronRight, Download, Globe2, Heart, Loader2, Mic, Search, Share2, X, ChefHat, Plus } from 'lucide-react';
 import { ShareRecipeSheet } from '@/components/ShareRecipe';
 import { haptic, toast } from '@/components/fx';
 import { useFoodDb, useFoodLookup, usePhotoUrl } from '@/lib/hooks';
@@ -184,6 +184,16 @@ export default function AddFood() {
           <span className="min-w-0 flex-1">
             <span className="block text-[16px] font-bold">Create a recipe</span>
             <span className="block text-sm text-silver">Add ingredients and the cooked weight — we work out the nutrition.</span>
+          </span>
+          <ChevronRight size={20} className="shrink-0 text-dim" />
+        </Link>
+      )}
+      {!searching && tab === 'custom' && (
+        <Link to="/recipe?import=1" className="card mb-3 flex items-center gap-4 p-4 transition active:scale-[.99]">
+          <span className="grid h-12 w-12 shrink-0 place-items-center rounded-[16px] bg-accent text-white"><Download size={22} /></span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-[16px] font-bold">Import a recipe</span>
+            <span className="block text-sm text-silver">From a website link, pasted ingredients, or a photo or screenshot — check and edit before saving.</span>
           </span>
           <ChevronRight size={20} className="shrink-0 text-dim" />
         </Link>

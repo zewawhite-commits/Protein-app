@@ -9,7 +9,7 @@ import { Segmented, cx } from './ui';
 import { haptic } from './fx';
 
 type Mode = 'paste' | 'link' | 'photo';
-export interface ImportResult { title: string; servings: number; items: RecipeDef['ingredients']; unmatched: string[]; guessed: string[]; note: string }
+export interface ImportResult { title: string; servings: number; items: RecipeDef['ingredients']; unmatched: string[]; guessed: string[]; missing: string[]; steps: string[]; note: string }
 
 /**
  * Bring a recipe in from text, a web link or a photo. The AI reads the ingredient list;
@@ -34,13 +34,15 @@ export function RecipeImport({ onImported }: { onImported: (r: ImportResult) => 
       if (!data.isRecipe || !data.ingredients.length) throw new Error(data.note || 'No ingredients found. Check it’s a recipe with an ingredient list.');
       const items: RecipeDef['ingredients'] = [];
       const unmatched: string[] = [];
+      const missing: string[] = [];
       for (const ing of data.ingredients) {
         const food = confidentMatch([...ing.searchQueries, ing.name]);
-        if (food && ing.grams > 0) items.push({ foodId: food.id, name: splitName(food.name).title, grams: ing.grams, per100: food.per100 });
+        // Matched but no amount written: added with 0 g so the person types the real amount.
+        if (food) { items.push({ foodId: food.id, name: splitName(food.name).title, grams: ing.grams > 0 ? ing.grams : 0, per100: food.per100 }); if (!(ing.grams > 0)) missing.push(ing.original || ing.name); }
         else unmatched.push(ing.original || ing.name);
       }
       haptic([10, 30, 10]);
-      onImported({ title: data.title, servings: data.servings, items, unmatched, guessed: data.ingredients.filter((i) => i.guessed).map((i) => i.original || i.name), note: data.note });
+      onImported({ title: data.title, servings: data.servings, items, unmatched, guessed: data.ingredients.filter((i) => i.guessed && i.grams > 0).map((i) => i.original || i.name), missing, steps: data.steps ?? [], note: data.note });
     } catch (e) {
       setErr((e as Error).message);
     } finally {

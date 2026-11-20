@@ -26,7 +26,7 @@ export interface Post {
   latestComments?: Comment[];
 }
 /** A recipe as shared with others: per-100 g values from the sharer's food database. */
-export interface SharedRecipe { name: string; servings: number; cookedGrams: number; ingredients: { name: string; grams: number; per100: Record<string, number | null> }[]; per100: Record<string, number | null>; by?: string }
+export interface SharedRecipe { name: string; servings: number; cookedGrams: number; steps?: string[]; ingredients: { name: string; grams: number; per100: Record<string, number | null> }[]; per100: Record<string, number | null>; by?: string }
 export interface Comment { id: string; post_id: string; user_id: string; body: string; created_at: string; author?: PublicProfile }
 
 function db() {

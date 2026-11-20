@@ -71,6 +71,8 @@ export interface RecipeDef {
   ingredients: { foodId: string; name: string; grams: number; per100: Per100 }[];
   cookedGrams: number;
   servings: number;
+  /** The method, as written (imported recipes) or typed by the person. */
+  steps?: string[];
 }
 
 export interface CustomFood extends Food {
