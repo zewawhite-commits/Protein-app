@@ -312,7 +312,7 @@ export default function Snap() {
             </Link>
           )}
           {isMenu && <MenuFits matches={matches} date={date} onPick={(i) => { const m = matches[i]; if (m.candidates[0]) setPick({ food: m.candidates[0], grams: m.item.estimatedGrams || undefined, label: m.item.name, index: i }); }} />}
-          {!isMenu && matches.length > 0 && <PlateWeight matches={matches} onApply={(factor) => { setMatches((ms) => ms.map((m) => ({ ...m, item: { ...m.item, estimatedGrams: Math.round(m.item.estimatedGrams * factor), gramsLow: Math.round(m.item.estimatedGrams * factor), gramsHigh: Math.round(m.item.estimatedGrams * factor) } }))); toast('Portions updated from your plate weight'); }} />}
+          {!isMenu && matches.length > 0 && <PlateWeight matches={matches} onApply={(factor, msg) => { setMatches((ms) => ms.map((m) => ({ ...m, item: { ...m.item, estimatedGrams: Math.round(m.item.estimatedGrams * factor), gramsLow: Math.round((msg ? m.item.gramsLow : m.item.estimatedGrams) * factor), gramsHigh: Math.round((msg ? m.item.gramsHigh : m.item.estimatedGrams) * factor) } }))); toast(msg ?? 'Portions updated from your plate weight'); }} />}
           {!isMenu && <PlateSummary
             matches={matches}
             logged={logged}
@@ -970,7 +970,7 @@ function ScanSteps({ menu }: { menu: boolean }) {
  * A camera can't weigh food. If you weighed the whole plate (minus the empty plate), enter it
  * and the AI's estimates are scaled to match, keeping its split between the foods.
  */
-function PlateWeight({ matches, onApply }: { matches: MatchedItem[]; onApply: (factor: number) => void }) {
+function PlateWeight({ matches, onApply }: { matches: MatchedItem[]; onApply: (factor: number, msg?: string) => void }) {
   const [open, setOpen] = useState(false);
   const [g, setG] = useState('');
   const est = matches.reduce((a, m) => a + (m.item.estimatedGrams || 0), 0);
@@ -979,7 +979,15 @@ function PlateWeight({ matches, onApply }: { matches: MatchedItem[]; onApply: (f
   return (
     <div className="mt-3 rounded-2xl bg-raised px-4 py-3 text-sm">
       {!open ? (
-        <button onClick={() => setOpen(true)} className="w-full text-left font-semibold text-accent">Weighed your food? Enter the total for exact portions →</button>
+        <>
+          <button onClick={() => setOpen(true)} className="w-full text-left font-semibold text-accent">Weighed your food? Enter the total for exact portions →</button>
+          <div className="mt-2 flex flex-wrap items-center gap-1.5">
+            <span className="mr-1 text-silver">Didn’t finish it? I ate:</span>
+            {([['¾', 0.75], ['½', 0.5], ['¼', 0.25]] as const).map(([l, f]) => (
+              <button key={l} onClick={() => { onApply(f, `Portions set to ${l} of the plate`); }} className="chip !h-8 !px-3">{l}</button>
+            ))}
+          </div>
+        </>
       ) : (
         <>
           <p className="font-semibold">Total weight of the food (without the plate)</p>

@@ -26,6 +26,16 @@ const STATES: { value: PrepState | 'all'; label: string }[] = [
   { value: 'dry', label: 'Dry' },
 ];
 
+/** Cooking methods people filter by; matched on the food's name. */
+const METHODS: { value: string; label: string; re: RegExp }[] = [
+  { value: 'boiled', label: 'Boiled', re: /\bboil|\bpoach|\bsimmer/i },
+  { value: 'fried', label: 'Fried', re: /\bfried\b|\bfry\b|\bsaut[ée]/i },
+  { value: 'grilled', label: 'Grilled', re: /^(?!.*\bfried\b).*(\bgrill|\bbroiled\b|\bbarbecue|\bbbq\b|\broast)/i },
+  { value: 'steamed', label: 'Steamed', re: /\bsteam/i },
+  { value: 'baked', label: 'Baked', re: /\bbake/i },
+];
+type Sort = 'recent' | 'az' | 'used';
+
 type Tab = 'picks' | 'recent' | 'favs' | 'saved' | 'custom';
 const TABS: [Tab, string][] = [['recent', 'Recent'], ['picks', 'Popular'], ['favs', 'Favourites'], ['saved', 'Saved meals'], ['custom', 'My recipes']];
 
@@ -46,6 +56,9 @@ export default function AddFood() {
   const [q, setQ] = useState(params.get('q') ?? '');
   const dq = useDeferredValue(q);
   const [state, setState] = useState<PrepState | 'all'>('all');
+  const [method, setMethod] = useState<string>('');
+  const [sort, setSort] = useState<Sort>('recent');
+  const entries = useStore((s) => s.entries);
   const [tab, setTab] = useState<Tab>((params.get('tab') as Tab | null) ?? (recentIds.length ? 'recent' : 'picks'));
   const [selected, setSelected] = useState<Food | null>(null);
   const searching = !!dq.trim();
@@ -60,14 +73,15 @@ export default function AddFood() {
     const ids = tab === 'recent' ? recentIds : tab === 'favs' ? favIds : [];
     const list =
       tab === 'picks' ? (db?.quickPicks ?? []).filter((f) => fitsDiet(f, diet))
-      : tab === 'custom' ? custom.filter((c) => !c.archived)
+      : tab === 'custom' ? sortCustom(custom.filter((c) => !c.archived), sort, entries)
       : (ids.map(lookup).filter(Boolean) as Food[]);
     return state === 'all' ? list : list.filter((f) => f.state === state);
-  }, [tab, db, custom, recentIds, favIds, lookup, state, diet]);
+  }, [tab, db, custom, recentIds, favIds, lookup, state, diet, sort, entries]);
 
   // Optional: hide foods whose source doesn't list all the core numbers.
   const [completeOnly, setCompleteOnly] = useState(() => { try { return localStorage.getItem('provora-complete-only') === '1'; } catch { return false; } });
-  const list = (searching ? results : browse).filter((f) => !completeOnly || hasCoreNutrition(f));
+  const methodRe = METHODS.find((m) => m.value === method)?.re;
+  const list = (searching ? results : browse).filter((f) => (!completeOnly || hasCoreNutrition(f)) && (!methodRe || methodRe.test(f.name)));
   const groups = useMemo(() => (searching ? groupDuplicates(list) : list.map((food) => ({ food, others: [] as Food[], conflict: false }))), [list, searching]);
   const [openGroup, setOpenGroup] = useState<string | null>(null);
   const back = () => nav(date === todayKey() ? '/' : `/?date=${date}`);
@@ -124,6 +138,8 @@ export default function AddFood() {
           {searching
             ? [...STATES.map((s) => (
                 <button key={s.value} onClick={() => setState(s.value)} className={cx('chip', state === s.value && 'chip-on')}>{s.label}</button>
+              )), ...METHODS.map((m) => (
+                <button key={m.value} onClick={() => setMethod((v) => (v === m.value ? '' : m.value))} className={cx('chip shrink-0', method === m.value && 'chip-on')} aria-pressed={method === m.value}>{m.label}</button>
               )), (
                 <button key="complete" onClick={() => setCompleteOnly((v) => { try { localStorage.setItem('provora-complete-only', v ? '0' : '1'); } catch { /* ignore */ } return !v; })} className={cx('chip shrink-0', completeOnly && 'chip-on')} aria-pressed={completeOnly}>Complete nutrition only</button>
               )]
@@ -156,6 +172,11 @@ export default function AddFood() {
       {db && !searching && tab === 'picks' && <PhotoCards foods={list} onPick={setSelected} />}
 
       {!searching && tab === 'saved' && <SavedMealsList date={date} />}
+ {!searching && tab === 'custom' && custom.filter((c) => !c.archived).length > 1 && (
+        <div className="mb-3 mt-1 flex gap-2" role="radiogroup" aria-label="Sort">
+          {([['recent', 'Newest'], ['az', 'A–Z'], ['used', 'Most used']] as [Sort, string][]).map(([v, l]) => <button key={v} role="radio" aria-checked={sort === v} onClick={() => setSort(v)} className={cx('chip !h-9', sort === v && 'chip-on')}>{l}</button>)}
+        </div>
+      )}
       {!searching && tab === 'custom' && (
         <Link to="/recipe" className="card mb-3 mt-1 flex items-center gap-4 p-4 transition active:scale-[.99]">
           <span className="grid h-12 w-12 shrink-0 place-items-center rounded-[16px] bg-accent text-white"><ChefHat size={22} /></span>
@@ -382,4 +403,15 @@ function RequestFood({ query }: { query: string }) {
       Request “{query.trim().slice(0, 40)}” to be added
     </button>
   );
+}
+
+/** My recipes and foods: newest first, A–Z, or the ones you log most. */
+function sortCustom<T extends { id: string; name: string; createdAt?: number; updatedAt?: number }>(list: T[], sort: Sort, entries: { foodId: string }[]): T[] {
+  if (sort === 'az') return [...list].sort((a, b) => a.name.localeCompare(b.name));
+  if (sort === 'used') {
+    const n = new Map<string, number>();
+    for (const e of entries) n.set(e.foodId, (n.get(e.foodId) ?? 0) + 1);
+    return [...list].sort((a, b) => (n.get(b.id) ?? 0) - (n.get(a.id) ?? 0) || a.name.localeCompare(b.name));
+  }
+  return [...list].sort((a, b) => (b.updatedAt ?? b.createdAt ?? 0) - (a.updatedAt ?? a.createdAt ?? 0));
 }
