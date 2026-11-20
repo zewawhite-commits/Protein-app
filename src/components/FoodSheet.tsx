@@ -95,6 +95,8 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
   const setG = (v: number) => setGrams(toUnit(v, unit));
   const setUnit = (u: Unit) => { setGrams(g ? toUnit(g, u) : ''); setUnitState(u); try { localStorage.setItem('provora-unit', u); } catch { /* ignore */ } };
   const n = nutrientsFor(per100, g);
+  // Share of calories from carbs, fat and protein (4 / 9 / 4 kcal per gram), like a food label pie.
+  const split = (() => { const c = (per100.carbs ?? 0) * 4, f = (per100.fat ?? 0) * 9, p = per100.protein * 4, t = c + f + p; return t > 0 && per100.carbs != null && per100.fat != null ? { carbs: c / t, fat: f / t, protein: p / t } : null; })();
   const { title, detail } = splitName(food.name);
   const alt = useMemo(() => (db ? counterparts(food, db.foods) : []), [db, food]);
   const avoid = useAvoid();
@@ -275,6 +277,11 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
           <div className="min-w-0 flex-1">
             <p className="num text-[34px] font-bold leading-none">{n.kcal == null ? '—' : <CountUp value={n.kcal} duration={300} />}<span className="text-lg text-silver"> kcal</span></p>
             <p className="mt-1 text-[14px] font-medium text-silver">in {fmt(g)} g</p>
+            {split && (
+              <div className="mt-2 flex h-2 w-full max-w-[180px] overflow-hidden rounded-full bg-raised" aria-label="Where the calories come from">
+                {(['carbs', 'fat', 'protein'] as const).map((k) => <span key={k} className={MACRO_COLOR[k]} style={{ width: `${split[k] * 100}%` }} />)}
+              </div>
+            )}
           </div>
           <div className="flex flex-col items-center">
             <Ring value={day.goal ? after / day.goal : 0} size={58} stroke={6} color="accent" track="raised">
@@ -287,6 +294,7 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
           {([['Protein', n.protein, 'protein'], ['Carbs', n.carbs, 'carbs'], ['Fat', n.fat, 'fat'], ['Fibre', n.fiber, 'fiber']] as const).map(([l, v, c]) => (
             <div key={l} className="rounded-2xl bg-raised px-1 py-2">
               <span className={cx('mx-auto mb-1 block h-1.5 w-5 rounded-full', MACRO_COLOR[c])} />
+              {c !== 'fiber' && split && <p className="num text-[12px] font-semibold text-silver">{Math.round(split[c] * 100)}%</p>}
               <p className="num text-[15px] font-bold">{v == null ? '—' : fmt(v, v < 10 ? 1 : 0)}<span className="text-[12px] text-silver">g</span></p>
               <p className="text-[12px] text-silver">{l}</p>
             </div>

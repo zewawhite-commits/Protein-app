@@ -276,11 +276,30 @@ function WorldProducts({ query, onPick, localCount }: { query: string; onPick: (
   );
 }
 
+/** A normal serving to show and quick-log: "1 medium", "1 cup", "1 serving" — not "1 linear inch" or a pinch. */
+function typicalPortion(food: Food): { label: string; grams: number } {
+  const ok = (food.portions ?? []).filter((p) => p.grams >= 25 && p.grams <= 500 && !/inch|tbsp|tsp|tablespoon|teaspoon|\boz\b|fl oz|nlea|pat\b|\bdash|pinch/i.test(p.label));
+  const score = (l: string) => (/medium|serving|regular|whole|piece|\bportion|bowl|plate/i.test(l) ? 0 : /cup|large|small|slice|1 \w+$/i.test(l) ? 1 : 2);
+  return ok.sort((a, b) => score(a.label) - score(b.label))[0] ?? { label: '100 g', grams: 100 };
+}
+
 function FoodRow({ food, onClick }: { food: Food; onClick: () => void }) {
   const { title, detail } = food.source === 'off' ? { title: food.name, detail: '' } : splitName(food.name);
   const isFav = useStore((s) => s.favoriteFoodIds.includes(food.id));
   const toggleFavorite = useStore((s) => s.toggleFavorite);
   const rememberFood = useStore((s) => s.rememberFood);
+  const addEntry = useStore((s) => s.addEntry);
+  const [params] = useSearchParams();
+  // Calories for a normal serving ("105 kcal, 1 medium"), like a food diary shows them; 100 g when there is none.
+  const portion = typicalPortion(food);
+  const kcal = food.per100.kcal != null ? (food.per100.kcal * portion.grams) / 100 : null;
+  const protein = (food.per100.protein * portion.grams) / 100;
+  const quickAdd = () => {
+    haptic();
+    rememberFood(food);
+    const added = addEntry({ date: params.get('date') ?? todayKey(), meal: mealForNow(), food, grams: portion.grams });
+    toast(`Logged ${title.split(',')[0]} · ${portion.label}`, { action: { label: 'Undo', run: () => useStore.getState().removeEntry(added.id) } });
+  };
   return (
     <div className="flex items-center rounded-[22px] transition active:bg-raised/60">
     <button onClick={onClick} className="flex min-w-0 flex-1 items-center gap-4 p-3.5 pr-1 text-left transition active:scale-[.99]">
@@ -288,27 +307,28 @@ function FoodRow({ food, onClick }: { food: Food; onClick: () => void }) {
       <div className="min-w-0 flex-1">
         <p className="line-clamp-2 text-[16px] font-bold leading-snug">{title}</p>
         {detail && <p className="mt-0.5 truncate text-[13px] text-silver">{detail}</p>}
-        {/* Labels wrap onto a second line rather than spill into the calorie column. */}
+        <p className="num mt-0.5 text-[14px] text-silver">
+          {kcal != null ? `${fmt(kcal)} kcal` : '– kcal'}, {portion.label}{portion.label.includes(' g') ? '' : ` (${fmt(portion.grams)} g)`} · <span className="font-semibold text-accent">{fmt(protein, protein < 10 ? 1 : 0)} g protein</span>
+        </p>
+        {/* Labels wrap onto a second line rather than spill into the buttons. */}
         <div className="mt-1.5 flex min-w-0 flex-wrap items-center gap-1.5">
           <StateBadge state={food.state} className="shrink-0" />
           <AllergyTag food={food} />
           {food.source !== 'usda-sr' && <span className="shrink-0 rounded-full bg-raised px-2 text-[12px] font-semibold uppercase leading-5 tracking-wide text-silver">{SOURCE_SHORT[food.source]}</span>}
         </div>
       </div>
-      <div className="shrink-0 text-right">
-        <p className="num text-lg font-bold leading-none">{food.per100.kcal != null ? fmt(food.per100.kcal) : '–'}<span className="text-xs font-medium text-silver"> kcal</span></p>
-        <p className="num mt-1 text-[13px] font-semibold text-accent">{fmt(food.per100.protein, food.per100.protein < 10 ? 1 : 0)} g protein</p>
-        <p className="text-[11px] font-medium text-dim">per 100 g</p>
-      </div>
     </button>
       {'recipe' in food && (food as CustomFood).recipe && <Link to={`/recipe?id=${encodeURIComponent(food.id)}`} className="grid h-10 shrink-0 place-items-center rounded-full bg-raised px-3 text-xs font-bold text-accent">Edit</Link>}
     <button
       onClick={() => { haptic(); rememberFood(food); toggleFavorite(food.id); toast(isFav ? 'Removed from favourites' : 'Saved to favourites'); }}
-      className={cx('grid h-11 w-11 shrink-0 place-items-center rounded-full transition active:scale-90', isFav ? 'text-accent' : 'text-dim')}
+      className={cx('grid h-11 w-9 shrink-0 place-items-center rounded-full transition active:scale-90', isFav ? 'text-accent' : 'text-dim')}
       aria-label={isFav ? 'Remove from favourites' : 'Save to favourites'}
       aria-pressed={isFav}
     >
-      <Heart size={19} fill={isFav ? 'currentColor' : 'none'} />
+      <Heart size={18} fill={isFav ? 'currentColor' : 'none'} />
+    </button>
+    <button onClick={quickAdd} className="mr-1.5 grid h-11 w-11 shrink-0 place-items-center rounded-full bg-raised text-accent transition active:scale-90" aria-label={`Log ${portion.label} of ${title}`}>
+      <Plus size={22} strokeWidth={2.5} />
     </button>
     </div>
   );

@@ -80,18 +80,51 @@ export default function Reports() {
     ['Water', now.water == null ? '—' : `${fmt(now.water / 1000, 1)} L`, null, now.water ? now.water / 2000 : null],
   ];
 
+  const kind = period === 'week' ? 'weekly' : period === 'month' ? 'monthly' : 'yearly';
+  /** A real PDF file saved to the phone (share sheet on phones, download on computers). */
+  const savePdf = async () => {
+    const { jsPDF } = await import('jspdf');
+    const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+    let y = 56;
+    const line = (t: string, size = 11, bold = false, gap = 18) => { if (y > 790) { doc.addPage(); y = 56; } doc.setFont('helvetica', bold ? 'bold' : 'normal'); doc.setFontSize(size); doc.text(t, 48, y); y += gap; };
+    line(`Nutivili AI ${kind} report`, 20, true, 26);
+    line(r.label, 13, false, 26);
+    if (now.logged === 0) line('No food logged in this period. Missing days are not counted as zero.');
+    else {
+      line(`Daily averages on the ${now.logged} of ${length} days you logged (change vs previous ${period})`, 11, true, 22);
+      for (const [label, value, change] of rows) line(`${label}: ${value}${change ? `   (${change})` : ''}`);
+      y += 8;
+      line('Highlights', 11, true, 22);
+      line(`Days hitting protein: ${now.proteinDays} of ${now.logged}`);
+      line(`Workouts: ${now.workouts} · ${now.minutes} min${now.km ? ` · ${fmt(now.km, 1)} km` : ''}`);
+      line(`Latest weight: ${now.lastWeight ? w(now.lastWeight) : '—'}`);
+      line(`Weight change: ${now.weightChange == null ? '—' : `${now.weightChange >= 0 ? '+' : '−'}${w(Math.abs(now.weightChange))}`}`);
+      if (now.top.length) { y += 8; line('Most logged foods', 11, true, 22); now.top.forEach(([f, c], i) => line(`${i + 1}. ${f} — ${c}×`)); }
+    }
+    y += 12;
+    line('General wellness information from your own logs, not medical advice. Scanned portions are estimates.', 9, false);
+    const name = `nutivili-${kind}-report-${r.from}.pdf`;
+    const file = new File([doc.output('blob')], name, { type: 'application/pdf' });
+    try {
+      if (navigator.canShare?.({ files: [file] })) { await navigator.share({ files: [file], title: `Nutivili ${kind} report` }); return; }
+    } catch (e) { if ((e as Error).name === 'AbortError') return; }
+    const url = URL.createObjectURL(file);
+    const a = document.createElement('a'); a.href = url; a.download = name; a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+  };
+
   return (
     <div className="mx-auto min-h-dvh max-w-lg animate-fade-up px-5 pb-16 md:max-w-2xl md:px-8 print:max-w-none">
       <header className="pt-safe flex items-center gap-3 pb-4 print:hidden">
         <button onClick={() => nav(-1)} className="grid h-11 w-11 place-items-center rounded-full bg-surface" style={{ boxShadow: 'var(--shadow)' }} aria-label="Back"><ArrowLeft size={20} /></button>
         <h1 className="flex-1 text-[26px] font-extrabold tracking-tight">Reports</h1>
-        <button onClick={() => window.print()} className="chip !h-10"><Download size={15} /> PDF</button>
+        <button onClick={() => void savePdf()} className="chip !h-10"><Download size={15} /> PDF</button>
       </header>
       <div className="print:hidden"><Segmented full value={period} onChange={(p) => { setPeriod(p); setOffset(0); }} options={[{ value: 'week', label: 'Weekly' }, { value: 'month', label: 'Monthly' }, { value: 'year', label: 'Yearly' }]} /></div>
 
       <div className="mt-4 flex items-center justify-between">
         <button onClick={() => setOffset((o) => o + 1)} className="grid h-10 w-10 place-items-center rounded-full bg-surface print:hidden" aria-label="Previous"><ChevronLeft size={18} /></button>
-        <p className="text-center font-bold">Nutivili AI {period === 'week' ? 'weekly' : period === 'month' ? 'monthly' : 'yearly'} report · {r.label}</p>
+        <p className="text-center font-bold">Nutivili AI {kind} report · {r.label}</p>
         <button disabled={offset === 0} onClick={() => setOffset((o) => Math.max(0, o - 1))} className="grid h-10 w-10 place-items-center rounded-full bg-surface disabled:opacity-30 print:hidden" aria-label="Next"><ChevronRight size={18} /></button>
       </div>
 
