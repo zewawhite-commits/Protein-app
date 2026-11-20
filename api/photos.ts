@@ -39,12 +39,17 @@ async function review(request: Request, db: NonNullable<ReturnType<typeof admin>
     const res = await fetch(`https://api.unsplash.com/search/photos?query=${encodeURIComponent(q)}&per_page=20&page=${Number(params.get('page')) || 1}&content_filter=high`, { headers });
     if (!res.ok) return json({ error: `unsplash ${res.status}` }, 502, 'no-store');
     const data = (await res.json()) as { results?: (UnsplashPhoto & { id: string })[] };
-    return json({ results: (data.results ?? []).map((p) => ({ id: p.id, thumb: `${p.urls.raw}&w=300&h=300&fit=crop`, alt: p.alt_description, author: p.user.name })) }, 200, 'no-store');
+    return json({ results: (data.results ?? []).map((p) => ({ id: p.id, thumb: `${p.urls.raw}&w=300&h=300&fit=crop`, alt: p.alt_description, author: p.user.name, photo: p })) }, 200, 'no-store');
   }
   if (mode === 'pick') {
-    const res = await fetch(`https://api.unsplash.com/photos/${encodeURIComponent(params.get('id') ?? '')}`, { headers });
-    if (!res.ok) return json({ error: `unsplash ${res.status}` }, 502, 'no-store');
-    const p = (await res.json()) as UnsplashPhoto;
+    // The photo's details from the candidates list (saves an Unsplash request), or looked up by id.
+    let p: UnsplashPhoto | null = null;
+    try { const x = JSON.parse(params.get('photo') ?? 'null') as UnsplashPhoto | null; if (x && /^https:\/\/images\.unsplash\.com\//.test(x.urls.raw) && /^https:\/\/api\.unsplash\.com\//.test(x.links.download_location) && /^https:\/\/unsplash\.com\//.test(x.links.html) && /^https:\/\/unsplash\.com\//.test(x.user.links.html)) p = x; } catch { /* use the id */ }
+    if (!p) {
+      const res = await fetch(`https://api.unsplash.com/photos/${encodeURIComponent(params.get('id') ?? '')}`, { headers });
+      if (!res.ok) return json({ error: `unsplash ${res.status}` }, 502, 'no-store');
+      p = (await res.json()) as UnsplashPhoto;
+    }
     void fetch(p.links.download_location, { headers }).catch(() => undefined);
     const row = { key, url: p.urls.raw, author: p.user.name, author_url: `${p.user.links.html}?${UTM}`, photo_page: `${p.links.html}?${UTM}`, blur_color: p.color ?? null, tried_at: new Date().toISOString(), verified: true };
     const { error } = await db.from('food_photos').upsert(row);
