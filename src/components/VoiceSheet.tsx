@@ -3,7 +3,7 @@ import { Check, Mic, Plus, Search, Trash2, Volume2, VolumeX, X } from 'lucide-re
 import { useStore } from '@/store/useStore';
 import { useFoodDb } from '@/lib/hooks';
 import { matchItems } from '@/lib/recognize-client';
-import { asRecognition, gramsFor, parseAmount, parseSaid, type SaidFood } from '@/lib/describe';
+import { lastAmount, asRecognition, gramsFor, parseAmount, parseSaid, type SaidFood } from '@/lib/describe';
 import { splitName } from '@/lib/foods';
 import { mealForNow, todayKey } from '@/lib/dates';
 import { MEAL_LABELS } from '@/lib/meals';
@@ -97,8 +97,10 @@ export function VoiceSheet({ onClose, onSearch, date }: { onClose: () => void; o
       const fits = p.qty != null ? all.find((f) => gramsFor(f, p.qty, p.unit)) : undefined;
       const options = (fits ? [fits, ...all.filter((f) => f !== fits)] : all).slice(0, 4);
       const food = options[0] ?? null;
-      // No amount said: ask, rather than assume a serving.
+      // No amount said: use what they had last time if we know it; otherwise ask, never assume.
       const g = food && (p.qty != null || p.unit) ? gramsFor(food, p.qty, p.unit) : null;
+      const last = !g && food && p.qty == null && !p.unit ? lastAmount(useStore.getState().entries, food) : null;
+      if (last) return { key: `${Date.now()}-${i}`, said: p, food, options, grams: last, how: `your usual ${fmt(last)} g of` };
       return { key: `${Date.now()}-${i}`, said: p, food, options, grams: g?.grams ?? null, how: g?.how ?? '' };
     });
     setLines((cur) => {

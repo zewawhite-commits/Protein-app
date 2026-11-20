@@ -16,6 +16,7 @@ import { useAvoid } from './Allergy';
 import { deletePhoto, savePhoto } from '@/lib/photos';
 import { useFoodDb, usePhotoUrl, useDay } from '@/lib/hooks';
 import { useStore } from '@/store/useStore';
+import { lastAmount } from '@/lib/describe';
 import { AllergyBanner } from './Allergy';
 import { fromKey, mealForNow, todayKey } from '@/lib/dates';
 import { Ring, Segmented, Sheet, StateBadge, cx, fmt } from './ui';
@@ -71,7 +72,9 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
   // The amount typed, in the chosen unit; nutrition always uses grams.
   const liquid = isLiquid(food);
   const [unit, setUnitState] = useState<Unit>(() => { try { const u = localStorage.getItem('provora-unit') as Unit | null; return u === 'oz' || ((u === 'kg' || u === 'lb') && !liquid) || (u === 'ml' && liquid) ? u : 'g'; } catch { return 'g'; } });
-  const [grams, setGrams] = useState(entry ? toUnit(entry.grams, unit) : '');
+  // What they had last time is their own number, so a new entry starts there (they can change it).
+  const [usual] = useState(() => (entry ? null : lastAmount(useStore.getState().entries, food)));
+  const [grams, setGrams] = useState(entry ? toUnit(entry.grams, unit) : usual ? toUnit(usual, unit) : '');
   const [meal, setMeal] = useState<Meal>(entry?.meal ?? mealForNow());
   const MEALS = useMealOptions(meal);
   const [photoId, setPhotoId] = useState<string | undefined>(entry?.photoId ?? preset?.photoId);
@@ -116,9 +119,11 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
   // Foods eaten in pieces (wings, eggs, slices, cups…): count them instead of weighing.
   const countable = food.portions.filter((p) => p.grams > 0).sort((a, b) => Number(/\b(piece|wing|drumstick|thigh|leg|egg|slice|medium|large|small|whole|fillet|ball|serving|cup)\b/i.test(b.label)) - Number(/\b(piece|wing|drumstick|thigh|leg|egg|slice|medium|large|small|whole|fillet|ball|serving|cup)\b/i.test(a.label)));
   const pieceFirst = !!countable[0] && /\b(piece|wing|drumstick|thigh|leg|egg|slice|fillet|ball)\b/i.test(countable[0].label);
-  const [byCount, setByCount] = useState(() => !entry && pieceFirst);
+  const usualCount = usual && countable[0] ? Math.round((usual / countable[0].grams) * 2) / 2 : null;
+  const usualFits = !!usualCount && Math.abs(usualCount * countable[0].grams - usual!) < 1;
+  const [byCount, setByCount] = useState(() => !entry && pieceFirst && (!usual || usualFits));
   const [portionIdx, setPortionIdx] = useState(0);
-  const [count, setCount] = useState(entry ? '' : pieceFirst ? '1' : '');
+  const [count, setCount] = useState(entry ? '' : pieceFirst ? (usual && usualFits ? String(usualCount) : usual ? '' : '1') : '');
   const portion = countable[portionIdx] ?? countable[0];
   const applyCount = (c: string, p = portion) => { setCount(c); const n = Number(c.replace(',', '.')); if (p && n >= 0) setGrams(toUnit(n * p.grams, unit)); };
   useEffect(() => { if (byCount && count && portion) applyCount(count); }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -265,6 +270,11 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
           {!!preset?.aiEstimate && !entry && (
             <button onClick={() => { haptic(); setG(preset.aiEstimate!); }} className="chip shrink-0 border border-dashed border-accent !bg-accent/10 !text-accent" title="A rough guess from your photo — weigh for accuracy">
               AI estimate ~{preset.aiEstimate}g
+            </button>
+          )}
+          {!!usual && (
+            <button onClick={() => { haptic(); setG(usual); }} className={cx('chip shrink-0', Math.round(g) === Math.round(usual) && 'chip-on')} title="The amount you logged last time">
+              Last time {fmt(usual)}g
             </button>
           )}
           {[50, 100, 150, 200].map((v) => (

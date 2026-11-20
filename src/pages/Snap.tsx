@@ -1,5 +1,5 @@
 import type { RecognitionResult } from '@/lib/recognition';
-import { asRecognition, gramsFor, parseSaid } from '@/lib/describe';
+import { asRecognition, gramsFor, lastAmount, parseSaid } from '@/lib/describe';
 import { photoFingerprint, recall, remember } from '@/lib/scanMemory';
 import { MenuFits } from '@/components/MenuFits';
 import { PHOTO_ONLY } from '@/lib/photoDiary';
@@ -98,7 +98,11 @@ export default function Snap() {
     const said = parseSaid(text);
     if (!said.length) { setError('Say or type the foods, e.g. “2 eggs and a cup of rice”.'); setPhase('error'); return; }
     const ms = matchItems(asRecognition(said), custom, useStore.getState().picks).map((m, i) => {
-      const g = m.candidates[0] ? gramsFor(m.candidates[0], said[i].qty, said[i].unit) : null;
+      const f = m.candidates[0];
+      const stated = f && (said[i].qty != null || said[i].unit) ? gramsFor(f, said[i].qty, said[i].unit) : null;
+      // Nothing said about the amount: their own last amount of this food, if they've logged it before.
+      const usual = f && !stated && said[i].qty == null && !said[i].unit ? lastAmount(useStore.getState().entries, f) : null;
+      const g = stated ?? (usual ? { grams: usual } : f ? gramsFor(f, null, null) : null);
       return g ? { ...m, item: { ...m.item, estimatedGrams: g.grams, gramsLow: g.grams, gramsHigh: g.grams, confidence: 'high' as const } } : m;
     });
     setIsMenu(false);

@@ -78,3 +78,16 @@ export function parseAmount(answer: string): { qty: number | null; unit: string 
   const qty = WORDS[m[1]] ?? Number(m[1].replace(',', '.'));
   return { qty: Number.isFinite(qty) ? qty : null, unit: m[2] ? sing(m[2]) : null };
 }
+
+/**
+ * The amount this person logged last time for this food (their own number, not a guess), so we
+ * don't ask again what we already know. Planned meals don't count.
+ */
+export function lastAmount(entries: { foodId: string; food: { name: string }; grams: number; loggedAt: number; planned?: boolean }[], food: { id?: string; name: string }): number | null {
+  let best: { grams: number; loggedAt: number } | null = null;
+  for (const e of entries) {
+    if (e.planned || !(e.grams > 0)) continue;
+    if ((food.id && e.foodId === food.id) || e.food.name === food.name) if (!best || e.loggedAt > best.loggedAt) best = e;
+  }
+  return best ? best.grams : null;
+}

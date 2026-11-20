@@ -28,7 +28,9 @@ export function RecipeView() {
   const [ask, setAsk] = useState('');
   // Filters people can combine: calories, protein, diet and time.
   const FILTERS = ['Under 500 kcal', '30 g+ protein', 'Vegetarian', 'Vegan', 'Gluten-free', 'Dairy-free', 'Ready in 15 min', 'Ready in 30 min', 'Budget'];
-  const [filters, setFilters] = useState<string[]>([]);
+  // Filters picked last time stay picked, so they don't have to choose again.
+  const [filters, setFiltersState] = useState<string[]>(() => { try { return JSON.parse(localStorage.getItem('nutivili-recipe-filters') ?? '[]'); } catch { return []; } });
+  const setFilters = (f: (x: string[]) => string[]) => setFiltersState((x) => { const n = f(x); try { localStorage.setItem('nutivili-recipe-filters', JSON.stringify(n)); } catch { /* storage blocked */ } return n; });
   const [state, setState] = useState<{ busy: boolean; error?: string; premium?: boolean; signIn?: boolean }>({ busy: false });
 
   const ideas = useMemo(() => {

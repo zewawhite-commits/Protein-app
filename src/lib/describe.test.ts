@@ -47,3 +47,12 @@ describe('importing a workout plan', () => {
     ]);
   });
 });
+
+describe('lastAmount', () => {
+  it('uses the most recent amount for the same food, skipping planned ones', async () => {
+    const { lastAmount } = await import('./describe');
+    const e = (foodId: string, grams: number, loggedAt: number, planned = false) => ({ foodId, food: { name: foodId }, grams, loggedAt, planned });
+    expect(lastAmount([e('a', 100, 1), e('a', 150, 2), e('a', 300, 3, true), e('b', 50, 4)], { id: 'a', name: 'a' })).toBe(150);
+    expect(lastAmount([e('b', 50, 4)], { id: 'a', name: 'a' })).toBeNull();
+  });
+});
