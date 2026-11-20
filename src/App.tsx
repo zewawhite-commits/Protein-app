@@ -32,6 +32,7 @@ const Credits = lazy(() => import('./pages/Legal').then((m) => ({ default: m.Cre
 const Help = lazy(() => import('./pages/Help'));
 const Reports = lazy(() => import('./pages/Reports'));
 const Routines = lazy(() => import('./pages/Routines'));
+const Messages = lazy(() => import('./pages/Messages'));
 const Feed = lazy(() => import('./pages/Groups').then((m) => ({ default: m.CommunityFeedPage })));
 
 export default function App() {
@@ -76,6 +77,7 @@ export default function App() {
         <Route path="help" element={<Help />} />
         <Route path="reports" element={<Reports />} />
         <Route path="routines" element={<Routines />} />
+        <Route path="messages" element={<Messages />} />
         <Route path="add" element={<div className="mx-auto max-w-lg px-5 pb-16 md:max-w-2xl md:px-8 lg:max-w-3xl"><AddFood /></div>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

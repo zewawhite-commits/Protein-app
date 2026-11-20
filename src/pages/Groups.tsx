@@ -1,3 +1,4 @@
+import { SharedRecipeCard, toShared } from '@/components/SharedRecipeCard';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowLeft, Check, ChevronDown, Copy, Crown, Droplet, Drumstick, Dumbbell, Flame, Globe2, Heart, ImagePlus, Link2, Loader2, Lock, LogOut, MessageCircle, Plus, RefreshCw, Reply, Send, Share2, Smile, SmilePlus, ThumbsUp, Trash2, UserRound, Users, Utensils, Wheat, X } from 'lucide-react';
 import { AVATAR_COLORS, Avatar } from '@/components/Avatar';
@@ -453,6 +454,7 @@ function PostCard({ post, me, onReact, onOpen, onDelete, onAuthor }: { post: Pos
       <p className="mt-3 px-4 text-[17px] font-semibold leading-snug">{post.title}</p>
       {post.caption && <p className="mt-1 px-4 text-[15px] text-silver">{post.caption}</p>}
       {post.photoUrl && <img src={post.photoUrl} alt={post.title} className="mx-4 mt-3 aspect-[4/3] w-[calc(100%-2rem)] rounded-[18px] object-cover" loading="lazy" />}
+      {post.recipe && <SharedRecipeCard recipe={post.recipe} />}
       {post.kcal != null && (
         <div className="num mt-3 grid grid-cols-4 gap-2 px-4">
           {([['Calories', post.kcal, '', Flame, 'text-ink'], ['Protein', post.protein, 'g', Drumstick, 'text-accent'], ['Carbs', post.carbs, 'g', Wheat, 'text-[rgb(var(--carbs))]'], ['Fats', post.fat, 'g', Droplet, 'text-[rgb(var(--fat))]']] as const).map(([l, v, u, Icon, c]) => (
@@ -512,6 +514,9 @@ function ShareSheet({ open, groupId, onClose, onShared, initialTitle = '', initi
   const [title, setTitle] = useState('');
   const [needTitle, setNeedTitle] = useState(false);
   const [photo, setPhoto] = useState<{ blob: Blob; url: string } | null>(null);
+  const customFoods = useStore((s) => s.customFoods);
+  const myRecipes = useMemo(() => customFoods.filter((c) => c.recipe && !c.archived), [customFoods]);
+  const [recipeId, setRecipeId] = useState<string>('');
   const [busy, setBusy] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const titleRef = useRef<HTMLInputElement>(null);
@@ -543,10 +548,11 @@ function ShareSheet({ open, groupId, onClose, onShared, initialTitle = '', initi
         if (b) img = await resizeImage(b, 1080);
       }
       const caption = text.trim();
-      await sharePost({ groupId, title: heading.slice(0, 120), caption, meal: items.length ? (meal as Meal) : undefined, ...(items.length ? { kcal: t.kcal, protein: t.protein, carbs: t.carbs, fat: t.fat } : {}), photo: img });
+      const rec = myRecipes.find((c) => c.id === recipeId);
+      await sharePost({ groupId, title: heading.slice(0, 120), caption, meal: items.length ? (meal as Meal) : undefined, ...(items.length ? { kcal: t.kcal, protein: t.protein, carbs: t.carbs, fat: t.fat } : {}), photo: img, ...(rec ? { recipe: toShared(rec) ?? undefined } : {}) });
       haptic([10, 30, 10]);
       toast('Posted');
-      setText(''); setTitle(''); setNeedTitle(false); setMeal('none'); setPhoto(null);
+      setText(''); setTitle(''); setNeedTitle(false); setMeal('none'); setPhoto(null); setRecipeId('');
       onShared();
     } catch (e) {
       toast((e as Error).message);
@@ -555,7 +561,7 @@ function ShareSheet({ open, groupId, onClose, onShared, initialTitle = '', initi
     }
   }
 
-  const canPost = !!title.trim() || !!text.trim() || items.length > 0 || !!photo;
+  const canPost = !!title.trim() || !!text.trim() || items.length > 0 || !!photo || !!recipeId;
   return (
     <Sheet open={open} onClose={onClose} title="New post">
       <input ref={titleRef} value={title} onChange={(e) => { setTitle(e.target.value); if (e.target.value.trim()) setNeedTitle(false); }} maxLength={120} aria-label="Title" placeholder="Title (e.g. Post-gym dinner)" className={cx('field text-[16px] font-semibold', needTitle && '!ring-2 !ring-danger')} />
@@ -570,6 +576,16 @@ function ShareSheet({ open, groupId, onClose, onShared, initialTitle = '', initi
         <button onClick={() => fileRef.current?.click()} className="mt-3 flex h-14 w-full items-center justify-center gap-2 rounded-[18px] border-2 border-dashed border-line font-bold text-silver"><ImagePlus size={19} /> Add a photo</button>
       )}
       <input ref={fileRef} type="file" accept="image/*" hidden onChange={(e) => { void pick(e.target.files?.[0]); e.target.value = ''; }} />
+      {myRecipes.length > 0 && (
+        <>
+          <p className="label mt-5">Share one of your recipes</p>
+          <div className="flex flex-wrap gap-2">
+            {[{ id: '', name: 'No recipe' }, ...myRecipes].map((r) => (
+              <button key={r.id || 'none'} onClick={() => { setRecipeId(r.id); if (r.id && !title.trim()) setTitle(r.name); }} className={cx('chip !h-10', recipeId === r.id && 'chip-on')}>{r.name}</button>
+            ))}
+          </div>
+        </>
+      )}
       <p className="label mt-5">Attach a meal from today</p>
       <div className="flex flex-wrap gap-2">
         {(['none', ...meals] as (Meal | 'none')[]).map((m) => (
@@ -684,6 +700,7 @@ function PersonSheet({ groupId, person, me, onClose, onEdit }: { groupId: string
               <div className="rounded-2xl bg-raised p-3"><p className="text-[22px] font-extrabold">{posts?.length ?? '–'}</p><p className="text-sm text-silver">Posts</p></div>
             </div>
             {person?.id === me && <button onClick={onEdit} className="btn-ghost mt-3 w-full"><UserRound size={17} /> Edit profile</button>}
+            {person && person.id !== me && <Link to={`/messages?with=${person.id}`} className="btn-primary mt-3 w-full"><MessageCircle size={17} /> Message</Link>}
           </div>
           <div className="mt-5 grid grid-cols-3 gap-1.5">
             {(posts ?? []).map((x) => (
@@ -824,6 +841,7 @@ function CommunityFeed() {
 
   return (
     <>
+      <Link to="/messages" className="mb-3 flex items-center justify-end gap-1.5 text-sm font-semibold text-accent"><MessageCircle size={16} /> Messages</Link>
       <button onClick={() => { haptic(); setSharing(true); }} className="card mb-5 flex w-full items-center gap-3 p-3 text-left">
         <Avatar name={mine.display_name} color={mine.avatar} photoUrl={mine.photoUrl} size={44} />
         <span className="flex-1 text-[15px] text-dim">Share a meal, a win or your progress…</span>

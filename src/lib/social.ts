@@ -16,6 +16,8 @@ export interface Post {
   id: string; group_id: string; user_id: string; title: string; caption: string | null; meal: string | null;
   kcal: number | null; protein: number | null; carbs: number | null; fat: number | null;
   photo_path: string | null; created_at: string;
+  /** A recipe attached to the post (after supabase/recipes-messages.sql has been run). */
+  recipe?: SharedRecipe | null;
   author?: PublicProfile;
   photoUrl?: string;
   reactions: { emoji: Reaction; user_id: string }[];
@@ -23,6 +25,8 @@ export interface Post {
   /** Up to two latest comments, shown under the post. */
   latestComments?: Comment[];
 }
+/** A recipe as shared with others: per-100 g values from the sharer's food database. */
+export interface SharedRecipe { name: string; servings: number; cookedGrams: number; ingredients: { name: string; grams: number; per100: Record<string, number | null> }[]; per100: Record<string, number | null>; by?: string }
 export interface Comment { id: string; post_id: string; user_id: string; body: string; created_at: string; author?: PublicProfile }
 
 function db() {
@@ -154,7 +158,7 @@ async function signedUrls(paths: string[]): Promise<Map<string, string>> {
 
 export async function sharePost(p: {
   groupId: string; title: string; caption?: string; meal?: string;
-  kcal?: number; protein?: number; carbs?: number; fat?: number; photo?: Blob;
+  kcal?: number; protein?: number; carbs?: number; fat?: number; photo?: Blob; recipe?: SharedRecipe;
 }) {
   const uid = await myUserId();
   if (!uid) throw new Error('Sign in first.');
@@ -168,7 +172,9 @@ export async function sharePost(p: {
   const { error } = await db().from('posts').insert({
     group_id: p.groupId, user_id: uid, title: p.title.slice(0, 120), caption: p.caption?.slice(0, 500) || null, meal: p.meal ?? null,
     kcal: round(p.kcal), protein: round(p.protein), carbs: round(p.carbs), fat: round(p.fat), photo_path,
+    ...(p.recipe ? { recipe: p.recipe } : {}),
   });
+  if (error && p.recipe && /recipe/.test(error.message)) throw new Error('Recipe sharing needs a quick database update (supabase/recipes-messages.sql).');
   fail(error);
 }
 
@@ -269,4 +275,61 @@ export const COMMUNITY_ID = '00000000-0000-0000-0000-00000000c0de';
 export async function joinCommunity() {
   const { error } = await db().rpc('join_community');
   fail(error);
+}
+
+// ---------- private messages (needs supabase/recipes-messages.sql) ----------
+
+export interface DirectMessage { id: string; sender: string; recipient: string; body: string | null; recipe: SharedRecipe | null; created_at: string; read_at: string | null }
+export interface Conversation { with: string; profile: PublicProfile; last: DirectMessage; unread: number }
+
+const setupHint = (e: { message: string } | null) => { if (e && /direct_messages|find_user|blocks|does not exist/.test(e.message)) throw new Error('Messages need a quick database update (run supabase/recipes-messages.sql in Supabase).'); fail(e); };
+
+/** Your chats, newest first, with the other person's profile and unread count. */
+export async function conversations(): Promise<Conversation[]> {
+  const me = await myUserId();
+  if (!me) return [];
+  const { data, error } = await db().from('direct_messages').select('*').or(`sender.eq.${me},recipient.eq.${me}`).order('created_at', { ascending: false }).limit(500);
+  setupHint(error);
+  const byOther = new Map<string, { last: DirectMessage; unread: number }>();
+  for (const m of (data ?? []) as DirectMessage[]) {
+    const other = m.sender === me ? m.recipient : m.sender;
+    const c = byOther.get(other) ?? { last: m, unread: 0 };
+    if (m.recipient === me && !m.read_at) c.unread++;
+    byOther.set(other, c);
+  }
+  const profiles = await profilesFor([...byOther.keys()]);
+  return [...byOther.entries()].map(([w, c]) => ({ with: w, profile: profiles.get(w) ?? { display_name: 'Member', avatar: '', streak: 0 }, ...c }));
+}
+
+export async function thread(other: string): Promise<DirectMessage[]> {
+  const me = await myUserId();
+  if (!me) return [];
+  const { data, error } = await db().from('direct_messages').select('*')
+    .or(`and(sender.eq.${me},recipient.eq.${other}),and(sender.eq.${other},recipient.eq.${me})`).order('created_at', { ascending: true }).limit(300);
+  setupHint(error);
+  const msgs = (data ?? []) as DirectMessage[];
+  const unread = msgs.filter((m) => m.recipient === me && !m.read_at).map((m) => m.id);
+  if (unread.length) void db().from('direct_messages').update({ read_at: new Date().toISOString() }).in('id', unread).then(() => undefined);
+  return msgs;
+}
+
+export async function sendDirect(to: string, body: string, recipe?: SharedRecipe) {
+  const { error } = await db().from('direct_messages').insert({ recipient: to, body: body.trim().slice(0, 2000) || null, recipe: recipe ?? null });
+  setupHint(error);
+}
+
+export async function findUser(username: string): Promise<(PublicProfile & { user_id: string }) | null> {
+  const { data, error } = await db().rpc('find_user', { p_username: username.replace(/^@/, '') });
+  setupHint(error);
+  const u = (data as { user_id: string; display_name: string; username: string; avatar: string; photo_path: string | null }[] | null)?.[0];
+  return u ? { user_id: u.user_id, display_name: u.display_name, username: u.username, avatar: u.avatar, streak: 0, photoUrl: avatarUrl(u.photo_path) } : null;
+}
+
+export async function blockUser(id: string) { const { error } = await db().from('blocks').insert({ blocked: id }); setupHint(error); }
+export async function reportMessage(id: string, reason: string) { const { error } = await db().from('message_reports').insert({ message_id: id, reason: reason.slice(0, 300) }); setupHint(error); }
+export async function unreadCount(): Promise<number> {
+  const me = await myUserId();
+  if (!me) return 0;
+  const { count, error } = await db().from('direct_messages').select('id', { count: 'exact', head: true }).eq('recipient', me).is('read_at', null);
+  return error ? 0 : count ?? 0;
 }
