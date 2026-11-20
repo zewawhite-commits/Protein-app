@@ -248,9 +248,9 @@ export async function signInWithPassword(email: string, password: string) {
  * people in straight away, or 'confirm' when Supabase first emails a confirmation
  * (6-digit code if the "Confirm signup" template has {{ .Token }}, plus a link).
  */
-export async function signUpWithPassword(email: string, password: string, phone?: string): Promise<'signed-in' | 'confirm'> {
+export async function signUpWithPassword(email: string, password: string, phone?: string, marketing = false): Promise<'signed-in' | 'confirm'> {
   if (!supabase) return 'signed-in';
-  const { data, error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: returnUrl(), ...(phone ? { data: { phone_number: phone } } : {}) } });
+  const { data, error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: returnUrl(), data: { ...(phone ? { phone_number: phone } : {}), marketing_opt_in: marketing } } });
   if (error) throw new Error(friendly(error.message));
   // Supabase hides whether an email is taken by returning a user with no identities.
   if (data.user && (data.user.identities?.length ?? 0) === 0) throw new Error(friendly('already registered'));
@@ -279,5 +279,12 @@ export const cleanPhone = (p: string) => (p.trim().startsWith('+') ? '+' : '') +
 export async function setPhoneNumber(phone: string) {
   if (!supabase) return;
   const { error } = await supabase.auth.updateUser({ data: { phone_number: phone || null } });
+  if (error) throw new Error(friendly(error.message));
+}
+
+/** Tips and offers by email: on only if the person ticked it (stored on their account). */
+export async function setMarketingOptIn(on: boolean): Promise<void> {
+  if (!supabase) return;
+  const { error } = await supabase.auth.updateUser({ data: { marketing_opt_in: on } });
   if (error) throw new Error(friendly(error.message));
 }

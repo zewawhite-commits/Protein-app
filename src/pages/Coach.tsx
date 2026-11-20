@@ -151,7 +151,7 @@ export default function Coach() {
 function Chat() {
   const session = useSession();
   const [msgs, setMsgs] = useState<Msg[]>(load);
-  const [text, setText] = useState('');
+  const [text, setText] = useState(() => new URLSearchParams(location.search).get('ask') ?? '');
   const [busy, setBusy] = useState(false);
   const [pending, setPending] = useState<Pending | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -237,12 +237,14 @@ function Chat() {
         </div>
       )}
 
+      <p className="mb-3 rounded-2xl bg-warn/10 px-4 py-2.5 text-[13px] font-medium leading-snug text-ink">For general wellness only — the AI Coach is not medical advice. Talk to a doctor or dietitian about medical conditions, pregnancy, eating disorders or medicines.</p>
       <div className="flex-1 space-y-3 pb-28">
         {msgs.length === 0 && (
           <div className="card p-5">
             <p className="text-[15px] font-semibold">Hi{profile?.name ? ` ${profile.name}` : ''}! Ask me anything about food.</p>
             <p className="mt-1 text-sm text-silver">I can plan meals with foods from {profile?.country || 'where you live'}, check how today is going, or help you hit your targets. Numbers always come from the {APP_NAME} food database.</p>
-            <div className="mt-4 flex flex-wrap gap-2">
+            <p className="mt-4 text-[13px] font-semibold text-silver">Chat ideas</p>
+            <div className="mt-2 flex flex-wrap gap-2">
               {STARTERS.map((s) => <button key={s} onClick={() => (s.startsWith('Send a photo') ? fileRef.current?.click() : send(s))} className="chip !h-9 !bg-raised text-[14px]">{s.startsWith('Send a photo') && <ImagePlus size={15} />}{s}</button>)}
             </div>
             {accountsEnabled && session === null && (

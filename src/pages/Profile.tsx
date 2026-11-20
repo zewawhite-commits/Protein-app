@@ -9,6 +9,7 @@ import { Droplet, Dumbbell, Utensils, ArrowLeft, ChevronRight, Cloud, CreditCard
 import { useStore, exportData } from '@/store/useStore';
 import { fetchBilling, isPremiumActive, manageSubscription, type Billing } from '@/lib/premium';
 import { SUPPORT_EMAIL } from '@/pages/Legal';
+import { setMarketingOptIn } from '@/lib/account';
 import { accountsEnabled, changeEmail, cleanPhone, deleteAccount, setPassword, setPhoneNumber, signOut, useSession, validPhone } from '@/lib/account';
 import { toast } from '@/components/fx';
 
@@ -172,6 +173,7 @@ export default function Profile({ mode = 'profile' }: { mode?: 'profile' | 'sett
           <Toggle on={!settings.quietAi} onChange={(v) => updateSettings({ quietAi: !v })} label="Suggestions on Home" />
         </Row>
         <p className="px-4 pb-2 text-xs leading-relaxed text-dim">Turn off to hide “What to eat next”. The coach only ever speaks when you ask it.</p>
+        <MarketingRow />
         <Row icon={<HeartHandshake size={18} />} label="Gentle mode">
           <Toggle on={!!settings.gentle} onChange={(v) => updateSettings({ gentle: v })} label="Gentle mode" />
         </Row>
@@ -496,6 +498,21 @@ function PhoneRow({ saved }: { saved: string }) {
           {!ok && <p className="mt-1.5 px-1 text-[13px] text-danger">Add your country code with + at the start.</p>}
         </div>
       )}
+    </>
+  );
+}
+
+/** Tips and offers by email — only for signed-in people, off unless they turn it on. */
+function MarketingRow() {
+  const session = useSession();
+  const [on, setOn] = useState<boolean>(!!session?.user.user_metadata?.marketing_opt_in);
+  if (!session) return null;
+  return (
+    <>
+      <Row icon={<Mail size={18} />} label="Tips & offers by email">
+        <Toggle on={on} onChange={(v) => { setOn(v); setMarketingOptIn(v).then(() => toast(v ? 'You’ll get tips and offers by email' : 'Unsubscribed from tips and offers'), (e: Error) => { setOn(!v); toast(e.message); }); }} label="Tips and offers by email" />
+      </Row>
+      <p className="px-4 pb-2 text-xs leading-relaxed text-dim">Occasional recipes, tips and offers from Nutivili AI. Account emails (like confirming your email) are always sent.</p>
     </>
   );
 }

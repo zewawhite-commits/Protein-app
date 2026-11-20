@@ -24,6 +24,7 @@ export function EmailAuth({ start = 'signup', onBack }: { start?: 'signup' | 'lo
   const tel = cleanPhone(phone);
   const phoneOk = !phone.trim() || validPhone(tel);
   const [agreed, setAgreed] = useState(false);
+  const [marketing, setMarketing] = useState(false);
   const [show, setShow] = useState(false);
   const [code, setCode] = useState('');
   const [showCode, setShowCode] = useState(false);
@@ -87,7 +88,7 @@ export function EmailAuth({ start = 'signup', onBack }: { start?: 'signup' | 'lo
     <form className="grid gap-2.5" onSubmit={(e) => {
       e.preventDefault();
       if (busy || !validEmail(addr) || !pwOk || (signup && (!phoneOk || !agreed))) return;
-      if (signup) void run(() => signUpWithPassword(addr, pw, phone.trim() ? tel : undefined), (r) => { if (r === 'confirm') go('confirm'); });
+      if (signup) void run(() => signUpWithPassword(addr, pw, phone.trim() ? tel : undefined, marketing), (r) => { if (r === 'confirm') go('confirm'); });
       else void run(() => signInWithPassword(addr, pw));
     }}>
       <p className="text-[19px] font-bold tracking-tight">{signup ? 'Create your account' : 'Welcome back'}</p>
@@ -106,6 +107,10 @@ export function EmailAuth({ start = 'signup', onBack }: { start?: 'signup' | 'lo
           <label className="flex items-start gap-3 px-1 py-1 text-[13px] leading-relaxed text-silver">
             <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} className="mt-0.5 h-5 w-5 shrink-0 accent-[rgb(var(--accent))]" aria-label="I agree to the Terms and Privacy Policy" />
             <span>I agree to the <a href="/terms" target="_blank" className="font-semibold text-accent underline">Terms</a> and <a href="/privacy" target="_blank" className="font-semibold text-accent underline">Privacy Policy</a>. Nutivili AI gives general wellness guidance, not medical advice.</span>
+          </label>
+          <label className="flex items-start gap-2.5 px-1 text-[13px] leading-snug text-silver">
+            <input type="checkbox" checked={marketing} onChange={(e) => setMarketing(e.target.checked)} className="mt-0.5 h-5 w-5 shrink-0 accent-[rgb(var(--accent))]" aria-label="Email me tips and offers" />
+            <span>Email me tips, recipes and offers (optional — unsubscribe any time).</span>
           </label>
           <p className="px-1 text-[13px] text-silver">We’ll email you a link to confirm your email.</p>
         </>
@@ -132,6 +137,7 @@ export function SignInButtons() {
   return (
     <div className="grid gap-3">
       <button onClick={() => signInWithGoogle().catch((e) => setErr((e as Error).message))} className="btn w-full bg-surface text-ink" style={{ boxShadow: 'var(--shadow)' }}><GoogleIcon /> Continue with Google</button>
+      <p className="-mt-1 text-center text-[12px] text-dim">By continuing with Google you agree to the <a href="/terms" target="_blank" className="font-semibold underline">Terms</a> and <a href="/privacy" target="_blank" className="font-semibold underline">Privacy Policy</a>. General wellness guidance, not medical advice.</p>
       {err && <p className="text-sm text-danger">{err}</p>}
       <div className="flex items-center gap-3 text-xs font-semibold uppercase tracking-wide text-dim"><span className="h-px flex-1 bg-line" />or<span className="h-px flex-1 bg-line" /></div>
       <EmailAuth start="signup" />

@@ -599,6 +599,7 @@ function Welcome({ signedIn, email, onStart }: { signedIn: boolean; email?: stri
           <button disabled={busy} onClick={() => run(signInWithGoogle)} className="btn bg-surface text-ink" style={{ boxShadow: 'var(--shadow)' }}>
             <GoogleIcon /> Continue with Google
           </button>
+          <p className="-mt-1 text-center text-[12px] text-dim">By continuing with Google you agree to the <a href="/terms" target="_blank" className="font-semibold underline">Terms</a> and <a href="/privacy" target="_blank" className="font-semibold underline">Privacy Policy</a>. General wellness guidance, not medical advice.</p>
           {import.meta.env.VITE_PHONE_SIGNIN === 'on' && (
             <button onClick={() => setMode('phone')} className="btn bg-surface text-ink" style={{ boxShadow: 'var(--shadow)' }}>
               <Phone size={18} /> Continue with phone

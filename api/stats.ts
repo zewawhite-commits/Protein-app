@@ -12,6 +12,18 @@ export async function GET(request: Request): Promise<Response> {
   const user = await userFromToken(request.headers.get('x-user-token'));
   if (!user) return json({ error: 'Sign in first.' }, 401);
   if (!isAdmin(user.email)) return json({ error: 'Not available.' }, 403);
+  // The owner's mailing list: only people who ticked "Email me tips and offers", as a CSV.
+  if (new URL(request.url).searchParams.get('export') === 'marketing') {
+    const lines = ['email,name,signed_up'];
+    for (let page = 1; page <= 50; page++) {
+      const { data: list } = await db.auth.admin.listUsers({ page, perPage: 1000 });
+      for (const u of list?.users ?? []) {
+        if (u.email && u.user_metadata?.marketing_opt_in === true) lines.push([u.email, String(u.user_metadata?.full_name ?? u.user_metadata?.name ?? '').replace(/[",\n]/g, ' '), u.created_at.slice(0, 10)].join(','));
+      }
+      if (!list || list.users.length < 1000) break;
+    }
+    return new Response(lines.join('\n'), { headers: { 'content-type': 'text/csv; charset=utf-8', 'content-disposition': 'attachment; filename="nutivili-mailing-list.csv"', 'cache-control': 'no-store' } });
+  }
   const rows: Row[] = [];
   for (let from = 0; from < 20000; from += 1000) {
     const { data, error } = await db.from('user_data').select('data, updated_at').range(from, from + 999);
