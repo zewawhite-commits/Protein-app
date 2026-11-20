@@ -44,6 +44,38 @@ const PLAIN_HEADS = /^(fish|chicken|nuts|eggs?|seafood|poultry|beef|meat|spreads
 // Names whose last word is a different food from what it looks like.
 const FALSE_FRIENDS = /^(cocoa|shea|almond|cashew|hazelnut|apple|honey|sunflower|seed|custard|cashew|star|prickly|balsam|mammie|sugar|rose|bitter|kung pao|mapo|atole|potato|banana|bread|sea|sweet corn) |\bnuts?$/;
 
+/**
+ * Broad groups whose checked photo shows one particular kind: only foods of that kind use it.
+ * (The beef photo is a grilled steak, so ground or corned beef get a plain tile instead.)
+ */
+const ONLY: Record<string, { yes: RegExp; no?: RegExp }> = {
+  cut_of_meat: { yes: /\b(steak|sirloin|rib ?eye|tenderloin|t-bone|porterhouse|strip loin|flank|rump|skirt|filet mignon)\b/, no: /\b(ground|mince|corned|cured|jerky|raw)\b/ },
+  poultry_leg: { yes: /\b(roast(ed)?|rotisserie)\b.*\b(chicken|whole)|\bwhole\b.*\broast/ },
+  // The checked photos: grilled whole fish; raw salmon fillet; grilled chicken breast; raw thighs/legs; cooked prawns.
+  fish: { yes: /./, no: /\b(raw|dried|dry|salted|smoked|canned|pickled|roe|paste|oil|fingers?|sticks?|cakes?|balls?|frozen|ns as to|gefilte|surimi)\b/ },
+  salmon: { yes: /\b(raw|smoked|fresh|fillet|lox|gravlax|cold-smoked)\b/, no: /\b(cooked|baked|grilled|fried|broiled|canned|steamed|poached|roasted|microwaved|dry heat)\b/ },
+  chicken_breast: { yes: /./, no: /\b(raw|uncooked|breaded|coated|fried|batter|deli|sliced|luncheon|canned)\b/ },
+  chicken_thigh: { yes: /\braw\b/, no: /\b(fried|coated|cooked|roasted|baked|stewed|grilled|from raw)\b/ },
+  shrimp: { yes: /./, no: /\b(raw|dried|dry|canned|paste|breaded|fried|kung pao)\b/ },
+  cooked_rice: { yes: /\bwhite\b.*\b(cooked|boiled|steamed)\b|\b(cooked|boiled|steamed)\b.*\bwhite\b/, no: /\b(raw|uncooked|dry|flour|brown|wild|red|yellow|fried|beverage|cakes?)\b/ },
+  potato: { yes: /\braw\b/, no: /\b(flour|flakes|powder|dehydrated|chips|fries)\b/ },
+  egg: { yes: /\bwhole\b|^eggs?, (chicken|hen)(, raw|, boiled|, hard)/, no: /\b(white|yolk|dried|dry|powder|substitute|omelet|fried|scrambled|baked|poached|pickled|duck|goose|quail|turkey|deviled)\b/ },
+  leafy_green: { yes: /^spinach\b.*\braw\b/, no: /\b(cooked|boiled|frozen|canned|creamed|souffle|dip)\b/ },
+  hot_beverage: { yes: /^coffee\b/, no: /\b(latte|mocha|cappuccino|macchiato|iced|frappe|cafe|con leche|with|creamer|liqueur|powder|dry|not reconstituted|irish|cuban|turkish|lightened|milk|sweetened)\b/ },
+  pea_pod: { yes: /\b(green|garden)\b.*\bpeas?\b|^peas?, (green|garden|fresh|frozen)/, no: /\b(pigeon|split|dried|dry|mature|yellow|snow|snap|edible-podded|chick|black-eyed|cowpea|canned|sprouted|flour|soup)\b/ },
+  yogurt: { yes: /\b(plain|natural|greek|unflavou?red)\b/, no: /\b(fruit|flavou?r(ed|s)?|vanilla|strawberry|frozen|drink|liquid|chocolate|honey|coffee|lemon|banana|berry|peach|cereal)\b/ },
+  bell_pepper: { yes: /\b(sweet|bell|capsicum)\b/, no: /\b(hot|chil[ie]|jalapeno|serrano|dried|stuffed|black|pasilla|cooked|boiled|sauteed|fried|canned|roasted|frozen|pickled)\b/ },
+  teacup_without_handle: { yes: /^tea\b/, no: /\b(iced|bubble|long island|milk|chai|sweetened|instant|powder|bottled|dry|leaves|lemon|ready-to-drink|kombucha|green|herbal|chamomile|matcha|mint|fruit)\b/ },
+  chicken_wings: { yes: /./, no: /\b(raw|glazed|barbecued?|bbq|buffalo|sauce|teriyaki|honey|frozen|marinated)\b/ },
+  mushroom: { yes: /\b(white|button|common|agaricus)\b/, no: /\b(cooked|boiled|fried|canned|dried|shiitake|oyster|enoki|portabell?a|chanterelle|morel|maitake|jew|asian|straw|stuffed|sauteed|microwaved|grilled)\b/ },
+  wine_glass: { yes: /\bred\b/, no: /\b(white|rose|sparkling|fortified|non-?alcoholic|cooking|dessert|port|sherry)\b/ },
+  red_apple: { yes: /\b(raw|fresh|red|eating)\b/, no: /\b(dried|baked|juice|sauce|canned|cooked|stewed|green|granny|peeled|without skin|flesh only|crab|rose|star|custard|cashew|sugar|mammie|wax|chips|sweet apple)\b/ },
+  onion: { yes: /\braw\b/, no: /\b(red|spring|green|pearl|cooked|fried|dried|powder|rings?|welsh|young|scallion|shallot|pickled|sweet)\b/ },
+  tuna: { yes: /\b(fresh|steak|fillet|yellowfin|bluefin|skipjack|albacore)\b/, no: /\b(canned|raw|salad|smoked|dried|sushi|sauce|cream)\b/ },
+  glass_of_milk: { yes: /^milk\b/, no: /\b(soy|soya|almond|oat|rice|coconut|goat|shake|chocolate|evaporated|condensed|powder|dried|dry|buttermilk|human)\b/ },
+};
+const onlyOk = (key: string, n: string) => { const o = ONLY[key]; return !o || (o.yes.test(n) && !o.no?.test(n)); };
+
 /** Which photo a food uses, or undefined for a plain tile. Only when we're sure it shows this food. */
 export function photoKeyFor(name: string, category?: string): string | undefined {
   const n = name.toLowerCase();
@@ -52,9 +84,9 @@ export function photoKeyFor(name: string, category?: string): string | undefined
   // The food's main name: "Bread, wheat" → "bread"; "Jollof rice (party jollof)" → "jollof rice".
   const main = n.split(/[,(:*]/)[0].trim();
   for (const [re, key] of DISH_RULES) {
-    if (PLAIN_DISHES.has(key)) { if (re.test(n)) return plain && (re.test(main) || PLAIN_HEADS.test(main)) ? key : undefined; continue; }
+    if (PLAIN_DISHES.has(key)) { if (re.test(n)) return plain && (re.test(main) || PLAIN_HEADS.test(main)) && onlyOk(key, n) ? key : undefined; continue; }
     // Named dishes: only when the dish is the food itself, not "fufu of plantain with palm oil".
-    if (re.test(main)) return / of | with |\*/.test(n.split('(')[0]) ? undefined : key;
+    if (re.test(main)) return / of | with |\*/.test(n.split('(')[0]) || !onlyOk(key, n) ? undefined : key;
   }
   if (!plain) return undefined;
   const art = artFor(name, category);
@@ -64,7 +96,7 @@ export function photoKeyFor(name: string, category?: string): string | undefined
   if (FALSE_FRIENDS.test(main)) return undefined;
   const head = main.split(/\s+/).pop() ?? '';
   const must = photoMust(art);
-  return must.some((w) => new RegExp(`^${w}(e?s)?$`).test(head)) ? art : undefined;
+  return must.some((w) => new RegExp(`^${w}(e?s)?$`).test(head)) && onlyOk(art, n) ? art : undefined;
 }
 
 export interface FoodPhoto { url: string; author: string | null; authorUrl: string | null; page: string | null; color: string | null }
