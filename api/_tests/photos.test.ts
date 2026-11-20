@@ -1,91 +1,63 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-// A tiny in-memory stand-in for the food_photos table.
+// A tiny in-memory stand-in for the food_photos and app_config tables.
 const rows = new Map<string, Record<string, unknown>>();
+const TOKEN = 'review-token-0123456789abcdef';
 vi.mock('../_lib/accounts.js', () => ({
   admin: () => ({
-    from: () => {
+    from: (table: string) => {
+      const f: Record<string, unknown> = {};
+      const list = () => [...rows.values()].filter((r) => Object.entries(f).every(([k, v]) => (k === '_in' ? (v as string[]).includes(String(r.key)) : r[k] === v)));
       const q = {
-        _in: [] as string[], _all: false,
-        select() { return q; }, not() { q._all = true; return q; }, order() { return Promise.resolve({ data: [...rows.values()].filter((r) => r.url) }); },
-        in(_c: string, keys: string[]) { q._in = keys; return Promise.resolve({ data: keys.map((k) => rows.get(k)).filter(Boolean) }); },
+        select() { return q; }, not() { return q; }, eq(c: string, v: unknown) { f[c] = v; return q; },
+        in(_c: string, keys: string[]) { f._in = keys; return q; },
+        order() { return Promise.resolve({ data: list().filter((r) => r.url) }); },
+        maybeSingle() { return Promise.resolve({ data: table === 'app_config' ? { value: TOKEN } : null }); },
+        then(res: (x: unknown) => unknown) { return Promise.resolve({ data: list() }).then(res); },
         upsert(r: Record<string, unknown>) { rows.set(String(r.key), r); return Promise.resolve({ error: null }); },
+        delete() { return { eq: (_c: string, k: string) => { rows.delete(k); return Promise.resolve({ error: null }); } }; },
       };
       return q;
     },
   }),
 }));
 
-const unsplash = vi.fn();
+const calls = vi.fn();
 beforeEach(() => {
-  rows.clear(); unsplash.mockReset();
+  rows.clear(); calls.mockReset();
   process.env.UNSPLASH_ACCESS_KEY = 'test-key';
-  vi.stubGlobal('fetch', vi.fn(async (url: string, init?: { headers?: Record<string, string> }) => {
-    unsplash(url, init?.headers?.authorization);
-    const q = new URL(String(url), 'https://x').searchParams.get('query') ?? '';
-    if (String(url).includes('/search/photos')) return new Response(JSON.stringify({ results: [
-      { urls: { raw: 'https://images.unsplash.com/a' }, user: { name: 'Low Likes', links: { html: 'https://unsplash.com/@low' } }, links: { html: 'https://unsplash.com/photos/a', download_location: 'https://api.unsplash.com/photos/a/download' }, likes: 3, alt_description: q },
-      { urls: { raw: 'https://images.unsplash.com/b' }, user: { name: 'Best Photo', links: { html: 'https://unsplash.com/@best' } }, links: { html: 'https://unsplash.com/photos/b', download_location: 'https://api.unsplash.com/photos/b/download' }, likes: 90, color: '#a63', alt_description: q },
-    ] }), { status: 200 });
+  vi.stubGlobal('fetch', vi.fn(async (url: string) => {
+    calls(url);
+    if (String(url).includes('/search/photos')) return new Response(JSON.stringify({ results: [{ id: 'b', urls: { raw: 'https://images.unsplash.com/b?ixid=1' }, user: { name: 'Best Photo', links: { html: 'https://unsplash.com/@best' } }, links: { html: 'https://unsplash.com/photos/b', download_location: 'https://api.unsplash.com/photos/b/download' }, alt_description: 'boiled eggs' }] }), { status: 200 });
+    if (String(url).includes('/photos/b')) return new Response(JSON.stringify({ urls: { raw: 'https://images.unsplash.com/b' }, user: { name: 'Best Photo', links: { html: 'https://unsplash.com/@best' } }, links: { html: 'https://unsplash.com/photos/b', download_location: 'https://api.unsplash.com/photos/b/download' }, color: '#a63' }), { status: 200 });
     return new Response('{}', { status: 200 });
   }));
 });
 
 describe('food photos API', () => {
-  it('searches Unsplash once, keeps the best photo with credit, and reports the download', async () => {
+  it('only shows photos a person has approved, and never searches on its own', async () => {
     const { GET } = await import('../photos.js');
-    const d = await (await GET(new Request('https://x/api/photos?keys=jollof,banana,nonsense'))).json();
-    expect(d.photos.jollof).toMatchObject({ url: 'https://images.unsplash.com/b', author: 'Best Photo' });
-    expect(d.photos.jollof.authorUrl).toContain('utm_source=nutivili_ai');
-    expect(unsplash.mock.calls.some(([u, auth]) => /download/.test(u) && auth === 'Client-ID test-key')).toBe(true);
+    rows.set('egg', { key: 'egg', url: 'https://images.unsplash.com/unchecked', verified: false });
+    rows.set('banana', { key: 'banana', url: 'https://images.unsplash.com/ok', author: 'A', verified: true });
+    const d = await (await GET(new Request('https://x/api/photos?keys=egg,banana,nonsense'))).json();
+    expect(d.photos.egg).toBeNull();
+    expect(d.photos.banana).toMatchObject({ url: 'https://images.unsplash.com/ok' });
     expect('nonsense' in d.photos).toBe(false);
-    const searches = unsplash.mock.calls.filter(([u]) => /search/.test(u)).length;
-    // Second time: served from the database, no new search for jollof.
-    await GET(new Request('https://x/api/photos?keys=jollof'));
-    expect(unsplash.mock.calls.filter(([u]) => /search/.test(u)).length).toBe(searches);
+    expect(calls).not.toHaveBeenCalled();
   });
-  it('finds at most 2 new photos per request (stays inside the hourly limit)', async () => {
+  it('review needs the token', async () => {
     const { GET } = await import('../photos.js');
-    const d = await (await GET(new Request('https://x/api/photos?keys=jollof,banana,egusi,fufu,suya'))).json();
-    expect(unsplash.mock.calls.filter(([u]) => /search/.test(u)).length).toBe(2);
-    expect(d.pending).toBe(true);
+    expect((await GET(new Request('https://x/api/photos?review=candidates&key=egg'))).status).toBe(403);
+    expect((await GET(new Request('https://x/api/photos?review=candidates&key=egg', { headers: { 'x-review-token': 'wrong-token-0123456789abc' } }))).status).toBe(403);
   });
-  it('without a key, never calls Unsplash', async () => {
-    delete process.env.UNSPLASH_ACCESS_KEY;
+  it('picking a reviewed photo saves it with credit, marks it verified and reports the download', async () => {
     const { GET } = await import('../photos.js');
-    await GET(new Request('https://x/api/photos?keys=jollof'));
-    expect(unsplash.mock.calls.filter(([u]) => /unsplash/.test(u))).toHaveLength(0);
-  });
-  it('falls back to a large, freely licensed Wikimedia photo', async () => {
-    delete process.env.UNSPLASH_ACCESS_KEY;
-    vi.stubGlobal('fetch', vi.fn(async (url: string) => {
-      if (String(url).includes('commons.wikimedia.org')) return new Response(JSON.stringify({ query: { pages: {
-        1: { index: 1, imageinfo: [{ url: 'u', thumburl: 'https://upload.wikimedia.org/small.jpg', width: 800, height: 800, mime: 'image/jpeg', descriptionurl: 'd1', extmetadata: { LicenseShortName: { value: 'CC BY-SA 4.0' } } }] },
-        2: { index: 2, imageinfo: [{ url: 'u', thumburl: 'https://upload.wikimedia.org/nc.jpg', width: 3000, height: 2000, mime: 'image/jpeg', descriptionurl: 'd2', extmetadata: { LicenseShortName: { value: 'CC BY-NC 2.0' } } }] },
-        3: { index: 3, title: 'File:Egusi soup.jpg', imageinfo: [{ url: 'u', thumburl: 'https://upload.wikimedia.org/good.jpg', width: 3000, height: 2400, mime: 'image/jpeg', descriptionurl: 'https://commons.wikimedia.org/wiki/File:Egusi.jpg', extmetadata: { LicenseShortName: { value: 'CC BY-SA 4.0' }, Artist: { value: '<a href="x">Ada</a>' } } }] },
-      } } }), { status: 200 });
-      return new Response('{}', { status: 404 });
-    }));
-    const { GET } = await import('../photos.js');
-    const d = await (await GET(new Request('https://x/api/photos?keys=egusi'))).json();
-    // Too small and non-commercial licences are skipped.
-    expect(d.photos.egusi.url).toBe('https://upload.wikimedia.org/good.jpg');
-    expect(d.photos.egusi.author).toBe('Ada (CC BY-SA 4.0)');
-  });
-  it('never uses a photo whose description is about something else', async () => {
-    const { photoMatches } = await import('../photos.js');
-    expect(photoMatches('peanut_butter', 'sliced bread on a white table')).toBe(false);
-    expect(photoMatches('peanut_butter', 'jar of creamy peanut butter')).toBe(true);
-    expect(photoMatches('chicken_wings', 'a whole roast chicken')).toBe(false);
-    expect(photoMatches('chicken_wings', 'spicy buffalo chicken wings')).toBe(true);
-    expect(photoMatches('egg', 'ants carrying white eggs in a basket')).toBe(false);
-    expect(photoMatches('cottage_cheese', 'cheese on supermarket shelves')).toBe(false);
-    expect(photoMatches('egg', 'two boiled eggs on a plate')).toBe(true);
-    expect(photoMatches('egg', 'boiled eggs and toast on a plate')).toBe(false);
-    expect(photoMatches('cheese_wedge', 'a pizza with cheese and toppings')).toBe(false);
-    expect(photoMatches('bacon', 'hash brown with egg and bacon dish')).toBe(false);
-    expect(photoMatches('bacon', 'crispy bacon strips on a board')).toBe(true);
-    expect(photoMatches('bacon', 'brown and white abstract painting')).toBe(false);
-    expect(photoMatches('bacon', 'crispy bacon strips in a pan')).toBe(true);
+    const h = { headers: { 'x-review-token': TOKEN } };
+    const c = await (await GET(new Request('https://x/api/photos?review=candidates&key=egg', h))).json();
+    expect(c.results[0]).toMatchObject({ id: 'b', alt: 'boiled eggs' });
+    await GET(new Request('https://x/api/photos?review=pick&key=egg&id=b', h));
+    expect(rows.get('egg')).toMatchObject({ url: 'https://images.unsplash.com/b', verified: true, author: 'Best Photo' });
+    expect(String(rows.get('egg')?.author_url)).toContain('utm_source=nutivili_ai');
+    expect(calls.mock.calls.some(([u]) => /download/.test(u))).toBe(true);
   });
 });

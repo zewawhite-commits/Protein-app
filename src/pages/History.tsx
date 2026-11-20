@@ -183,7 +183,7 @@ function PhotoTile({ entry, onClick }: { entry: LogEntry; onClick: () => void })
 }
 
 /** Everything else they've done, in one place: meal preps, workouts, weigh-ins, charts, plans, recipes, chats. */
-function EverythingElse() {
+export function EverythingElse({ title = "Everything else", onProgress = false }: { title?: string; onProgress?: boolean }) {
   const s = useStore();
   const chats = pastChats();
   const workouts = s.workoutLogs.length + s.exercises.filter((e) => !s.workoutLogs.some((w) => w.date === e.date)).length;
@@ -197,11 +197,14 @@ function EverythingElse() {
     { to: '/coach', icon: MessageCircle, title: 'Coach chats', note: count(chats.length, 'chat'), recent: chats.slice(0, 3).map((c) => ({ to: `/coach?chat=${c.id}`, label: c.title })) },
     { to: '/reports', icon: FileText, title: 'Reports', note: 'Any dates, to share or print' },
   ];
+  // On the Progress page the graphs and weight are already above, so the food diary takes their place.
+  const days = new Set(s.entries.map((e) => e.date)).size;
+  const list = onProgress ? [{ to: '/history', icon: CalendarDays, title: 'Food diary', note: days ? `${days} day${days === 1 ? '' : 's'} logged — every meal, by date` : 'Every meal, by date' }, ...rows.filter((r) => r.to !== '/insights')] : rows;
   return (
     <section className="mt-6">
-      <p className="mb-2 px-1 text-[15px] font-semibold">Everything else</p>
+      <p className="mb-2 px-1 text-[15px] font-semibold">{title}</p>
       <div className="card divide-y divide-line">
-        {rows.map((r) => (
+        {list.map((r) => (
           <div key={r.title} className="px-4 py-3">
             <Link to={r.to} className="flex items-center gap-3">
               <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-raised"><r.icon size={18} /></span>

@@ -1,3 +1,4 @@
+import { EverythingElse } from './History';
 import { MEAL_LABELS, MEAL_ORDER } from '@/lib/meals';
 import { Link } from 'react-router-dom';
 import { ActivitySummary } from '@/components/ActivitySummary';
@@ -171,6 +172,8 @@ export default function Insights() {
           </section>
         </div>
       )}
+      {/* Everything they've ever logged or saved, kept for every plan — one tap from the graphs. */}
+      <EverythingElse title="Your history" onProgress />
     </div>
   );
 }

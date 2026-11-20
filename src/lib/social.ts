@@ -280,7 +280,8 @@ export async function joinCommunity() {
 // ---------- private messages (needs supabase/recipes-messages.sql) ----------
 
 export interface DirectMessage { id: string; sender: string; recipient: string; body: string | null; recipe: SharedRecipe | null; created_at: string; read_at: string | null }
-export interface Conversation { with: string; profile: PublicProfile; last: DirectMessage; unread: number }
+/** request: they messaged you, but you don't follow them and haven't replied — it waits under Requests. */
+export interface Conversation { with: string; profile: PublicProfile; last: DirectMessage; unread: number; request: boolean }
 
 const setupHint = (e: { message: string } | null) => { if (e && /direct_messages|find_user|blocks|does not exist/.test(e.message)) throw new Error('Messages need a quick database update (run supabase/recipes-messages.sql in Supabase).'); fail(e); };
 
@@ -290,15 +291,16 @@ export async function conversations(): Promise<Conversation[]> {
   if (!me) return [];
   const { data, error } = await db().from('direct_messages').select('*').or(`sender.eq.${me},recipient.eq.${me}`).order('created_at', { ascending: false }).limit(500);
   setupHint(error);
-  const byOther = new Map<string, { last: DirectMessage; unread: number }>();
+  const byOther = new Map<string, { last: DirectMessage; unread: number; replied: boolean }>();
   for (const m of (data ?? []) as DirectMessage[]) {
     const other = m.sender === me ? m.recipient : m.sender;
-    const c = byOther.get(other) ?? { last: m, unread: 0 };
+    const c = byOther.get(other) ?? { last: m, unread: 0, replied: false };
     if (m.recipient === me && !m.read_at) c.unread++;
+    if (m.sender === me) c.replied = true;
     byOther.set(other, c);
   }
-  const profiles = await profilesFor([...byOther.keys()]);
-  return [...byOther.entries()].map(([w, c]) => ({ with: w, profile: profiles.get(w) ?? { display_name: 'Member', avatar: '', streak: 0 }, ...c }));
+  const [profiles, follows] = await Promise.all([profilesFor([...byOther.keys()]), following()]);
+  return [...byOther.entries()].map(([w, { replied, ...c }]) => ({ with: w, profile: profiles.get(w) ?? { display_name: 'Member', avatar: '', streak: 0 }, ...c, request: !replied && !follows.has(w) }));
 }
 
 export async function thread(other: string): Promise<DirectMessage[]> {
@@ -330,8 +332,8 @@ export async function reportMessage(id: string, reason: string) { const { error 
 export async function unreadCount(): Promise<number> {
   const me = await myUserId();
   if (!me) return 0;
-  const { count, error } = await db().from('direct_messages').select('id', { count: 'exact', head: true }).eq('recipient', me).is('read_at', null);
-  return error ? 0 : count ?? 0;
+  // Requests don't count: only chats with people you follow or have written to.
+  try { return (await conversations()).filter((c) => !c.request).reduce((n, c) => n + c.unread, 0); } catch { return 0; }
 }
 
 /** Who I follow (private — nobody sees follower counts). */

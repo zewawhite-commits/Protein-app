@@ -71,7 +71,7 @@ export interface FoodPhoto { url: string; author: string | null; authorUrl: stri
 
 // Photos are asked for in small batches (all the foods on screen at once) and remembered on the
 // phone for a week, so scrolling a list costs one request, not one per food.
-const KEY = 'nutivili-photos-v3';
+const KEY = 'nutivili-photos-v4';
 const WEEK = 7 * 864e5;
 type Cached = { p: FoodPhoto | null; t: number };
 let cache: Record<string, Cached> = {};

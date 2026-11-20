@@ -22,6 +22,7 @@ export interface SyncSnapshot {
   savedMeals?: (Stamped & { createdAt?: number })[];
   savedPlans?: (Stamped & { createdAt?: number })[];
   savedRecipes?: (Stamped & { createdAt?: number })[];
+  coachChats?: (Stamped & { updatedAt?: number })[];
   weights?: { date: string; kg: number }[];
   goalHistory?: Record<string, number>;
   recentFoodIds?: string[];
@@ -71,6 +72,7 @@ export function mergeSnapshots(local: SyncSnapshot, remote: SyncSnapshot, localT
     savedMeals: mergeList(local.savedMeals, remote.savedMeals, deleted),
     savedPlans: mergeList(local.savedPlans, remote.savedPlans, deleted),
     savedRecipes: mergeList(local.savedRecipes, remote.savedRecipes, deleted),
+    coachChats: mergeList(local.coachChats, remote.coachChats, deleted),
     weights: [...weights.values()].sort((a, b) => a.date.localeCompare(b.date)),
     goalHistory: { ...(older.goalHistory ?? {}), ...(newer.goalHistory ?? {}) },
     remoteFoods: { ...(older.remoteFoods ?? {}), ...(newer.remoteFoods ?? {}) },

@@ -3,10 +3,10 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, ArrowUp, ChefHat, Flag, Loader2, Search, ShieldOff } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 import { useSession } from '@/lib/account';
-import { blockUser, conversations, findUser, myUserId, reportMessage, sendDirect, thread, type Conversation, type DirectMessage, type PublicProfile } from '@/lib/social';
+import { blockUser, conversations, setFollow, findUser, myUserId, reportMessage, sendDirect, thread, type Conversation, type DirectMessage, type PublicProfile } from '@/lib/social';
 import { SharedRecipeCard, toShared } from '@/components/SharedRecipeCard';
 import { SignInButtons } from '@/components/SignIn';
-import { cx } from '@/components/ui';
+import { Segmented, cx } from '@/components/ui';
 import { haptic, toast } from '@/components/fx';
 
 /** Private messages: chats with other Nutivili members, with recipes you can share and save. */
@@ -22,6 +22,7 @@ export default function Messages() {
   const [who, setWho] = useState('');
   const [finding, setFinding] = useState(false);
   const [partner, setPartner] = useState<(PublicProfile & { user_id: string }) | null>(null);
+  const [tab, setTab] = useState<'chats' | 'requests'>('chats');
 
   const load = useCallback(() => { conversations().then(setList, (e: Error) => { setError(e.message); setList([]); }); }, []);
   useEffect(() => { if (session) load(); }, [session, load]);
@@ -30,7 +31,7 @@ export default function Messages() {
   if (open) {
     const c = list?.find((x) => x.with === open);
     const profile = c?.profile ?? (partner?.user_id === open ? partner : undefined);
-    return <Thread other={open} profile={profile} preRecipe={sending} onBack={() => { setParams(sending ? { recipe: sending } : {}); load(); }} />;
+    return <Thread other={open} profile={profile} request={!!c?.request} preRecipe={sending} onBack={() => { setParams(sending ? { recipe: sending } : {}); load(); }} />;
   }
 
   return (
@@ -52,11 +53,15 @@ export default function Messages() {
         }} className="btn-primary !px-5">{finding ? <Loader2 size={17} className="animate-spin" /> : 'Chat'}</button>
       </div>
       {error && <p className="mt-3 rounded-2xl bg-danger/10 px-4 py-3 text-sm text-danger">{error}</p>}
-      {list === null ? <p className="mt-6 flex justify-center text-silver"><Loader2 className="animate-spin" /></p> : list.length === 0 ? (
-        <p className="card mt-4 p-5 text-sm text-silver">No messages yet. Find a friend by their @username above, then share a recipe or say hi.</p>
+      {!!list?.some((c) => c.request) && (
+        <div className="mt-4"><Segmented full value={tab} onChange={setTab} options={[{ value: 'chats', label: 'Chats' }, { value: 'requests', label: `Requests (${list.filter((c) => c.request).length})` }]} /></div>
+      )}
+      {tab === 'requests' && <p className="mt-3 px-1 text-[13px] text-silver">Messages from people you don’t follow wait here. Follow them or reply to move the chat to Chats. They can still like and comment on your posts.</p>}
+      {list === null ? <p className="mt-6 flex justify-center text-silver"><Loader2 className="animate-spin" /></p> : shown(list, tab).length === 0 ? (
+        <p className="card mt-4 p-5 text-sm text-silver">{tab === 'requests' ? 'No message requests.' : 'No messages yet. Find a friend by their @username above, then share a recipe or say hi.'}</p>
       ) : (
         <div className="card mt-4 divide-y divide-line p-1.5">
-          {list.map((c) => (
+          {shown(list, tab).map((c) => (
             <button key={c.with} onClick={() => setParams({ with: c.with, ...(sending ? { recipe: sending } : {}) })} className="flex w-full items-center gap-3 px-3 py-3 text-left">
               <span className="grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-full bg-raised font-bold">{c.profile.photoUrl ? <img src={c.profile.photoUrl} alt="" className="h-full w-full object-cover" /> : c.profile.display_name.slice(0, 1)}</span>
               <span className="min-w-0 flex-1">
@@ -72,6 +77,8 @@ export default function Messages() {
   );
 }
 
+const shown = (list: Conversation[], tab: 'chats' | 'requests') => list.filter((c) => c.request === (tab === 'requests'));
+
 function Shell({ children, back, title = 'Messages' }: { children: React.ReactNode; back: () => void; title?: string }) {
   return (
     <div className="mx-auto min-h-dvh max-w-lg animate-fade-up px-5 pb-28 md:max-w-2xl">
@@ -84,7 +91,8 @@ function Shell({ children, back, title = 'Messages' }: { children: React.ReactNo
   );
 }
 
-function Thread({ other, profile, onBack, preRecipe }: { other: string; profile?: PublicProfile; onBack: () => void; preRecipe?: string }) {
+function Thread({ other, profile, onBack, preRecipe, request }: { other: string; profile?: PublicProfile; onBack: () => void; preRecipe?: string; request?: boolean }) {
+  const [accepted, setAccepted] = useState(false);
   const [msgs, setMsgs] = useState<DirectMessage[] | null>(null);
   const [me, setMe] = useState<string>();
   const [text, setText] = useState('');
@@ -118,6 +126,13 @@ function Thread({ other, profile, onBack, preRecipe }: { other: string; profile?
       <div className="mb-3 flex gap-2">
         <button onClick={async () => { if (confirm('Block this person? They won’t be able to message you.')) { try { await blockUser(other); toast('Blocked'); onBack(); } catch (e) { toast((e as Error).message); } } }} className="chip !h-9"><ShieldOff size={14} /> Block</button>
       </div>
+      {request && !accepted && (
+        <div className="card mb-3 p-4">
+          <p className="text-[15px] font-semibold">Message request</p>
+          <p className="mt-1 text-sm text-silver">You don’t follow {profile?.display_name ?? 'this person'}. Follow them to move this to your chats — or just reply.</p>
+          <button onClick={async () => { try { await setFollow(other, true); setAccepted(true); haptic(); toast('Following — this chat is in your Chats now'); } catch (e) { toast((e as Error).message); } }} className="btn-primary mt-3 !h-11 w-full">Follow &amp; accept</button>
+        </div>
+      )}
       {error && <p className="mb-3 rounded-2xl bg-danger/10 px-4 py-3 text-sm text-danger">{error}</p>}
       <div className="space-y-2">
         {msgs === null && <p className="flex justify-center text-silver"><Loader2 className="animate-spin" /></p>}
