@@ -264,7 +264,7 @@ export default function Onboarding() {
               </div>
               <div>
                 <label className="label mt-2" htmlFor="ob-age">Age</label>
-                <input id="ob-age" className={cx('field text-center', !ageOk && '!ring-2 !ring-danger')} inputMode="numeric" maxLength={3} value={age} onChange={(e) => setAge(e.target.value.replace(/\D/g, ''))} placeholder="30" />
+                <input id="ob-age" className={cx('field text-center', !ageOk && '!ring-2 !ring-danger')} inputMode="numeric" maxLength={3} value={age} onChange={(e) => setAge(e.target.value.replace(/\D/g, ''))} placeholder="Age" />
               </div>
             </div>
             {!ageOk && <p className="mt-1 text-sm text-danger">Enter an age between 13 and 110.</p>}
@@ -289,24 +289,24 @@ export default function Onboarding() {
               <Segmented value={unit} onChange={(u) => { if (weightNum) setWeight(String(round1(fromKg(toKg(weightNum, unit), u)))); updateSettings({ bodyUnit: u }); }} options={[{ value: 'kg', label: 'kg' }, { value: 'lb', label: 'lb' }]} />
             </div>
             <div className="relative mt-2">
-              <input id="ob-weight" className={cx('field !h-16 pr-14 text-2xl font-semibold', weightError && '!ring-2 !ring-danger')} inputMode="decimal" maxLength={5} value={weight} onChange={(e) => setWeight(e.target.value.replace(/[^\d.,]/g, ''))} placeholder={unit === 'kg' ? '75' : '165'} aria-invalid={!!weightError} aria-describedby="ob-weight-err" />
+              <input id="ob-weight" className={cx('field !h-16 pr-14 text-2xl font-semibold', weightError && '!ring-2 !ring-danger')} inputMode="decimal" maxLength={5} value={weight} onChange={(e) => setWeight(e.target.value.replace(/[^\d.,]/g, ''))} placeholder="Weight" aria-invalid={!!weightError} aria-describedby="ob-weight-err" />
               <span className="pointer-events-none absolute right-5 top-1/2 -translate-y-1/2 text-lg text-silver">{unit}</span>
             </div>
             <p id="ob-weight-err" className="mt-2 min-h-5 text-sm text-danger">{weightError}</p>
             <label className="label mt-1" htmlFor="ob-height">Height</label>
             {unit === 'kg' ? (
               <div className="relative">
-                <input id="ob-height" className={cx('field !h-14 pr-14 text-xl font-semibold', heightError && '!ring-2 !ring-danger')} inputMode="numeric" maxLength={3} value={heightCm} onChange={(e) => setHeightCm(e.target.value.replace(/\D/g, ''))} placeholder="175" />
+                <input id="ob-height" className={cx('field !h-14 pr-14 text-xl font-semibold', heightError && '!ring-2 !ring-danger')} inputMode="numeric" maxLength={3} value={heightCm} onChange={(e) => setHeightCm(e.target.value.replace(/\D/g, ''))} placeholder="Height" />
                 <span className="pointer-events-none absolute right-5 top-1/2 -translate-y-1/2 text-lg text-silver">cm</span>
               </div>
             ) : (
               <div className="grid grid-cols-2 gap-3">
                 <div className="relative">
-                  <input id="ob-height" className={cx('field !h-14 pr-12 text-xl font-semibold', heightError && '!ring-2 !ring-danger')} inputMode="numeric" maxLength={1} value={heightFt} onChange={(e) => setHeightFt(e.target.value.replace(/\D/g, ''))} placeholder="5" aria-label="Feet" />
+                  <input id="ob-height" className={cx('field !h-14 pr-12 text-xl font-semibold', heightError && '!ring-2 !ring-danger')} inputMode="numeric" maxLength={1} value={heightFt} onChange={(e) => setHeightFt(e.target.value.replace(/\D/g, ''))} placeholder="ft" aria-label="Feet" />
                   <span className="pointer-events-none absolute right-5 top-1/2 -translate-y-1/2 text-lg text-silver">ft</span>
                 </div>
                 <div className="relative">
-                  <input className="field !h-14 pr-12 text-xl font-semibold" inputMode="numeric" maxLength={2} value={heightIn} onChange={(e) => setHeightIn(e.target.value.replace(/\D/g, ''))} placeholder="9" aria-label="Inches" />
+                  <input className="field !h-14 pr-12 text-xl font-semibold" inputMode="numeric" maxLength={2} value={heightIn} onChange={(e) => setHeightIn(e.target.value.replace(/\D/g, ''))} placeholder="in" aria-label="Inches" />
                   <span className="pointer-events-none absolute right-5 top-1/2 -translate-y-1/2 text-lg text-silver">in</span>
                 </div>
               </div>
@@ -339,7 +339,7 @@ export default function Onboarding() {
         {at === 'goalweight' && (
           <Question title="What’s your goal weight?" sub="We’ll pace your calories so you get there steadily.">
             <div className="relative">
-              <input id="ob-goalweight" className="field !h-20 pr-16 text-center text-[34px] font-extrabold" inputMode="decimal" maxLength={5} value={goalWeight} onChange={(e) => setGoalWeight(e.target.value.replace(/[^\d.,]/g, ''))} placeholder={weightKg ? String(round1(fromKg(weightKg * ((direction ? direction === 'lose' : goals.includes('fatloss')) ? 0.92 : 1.05), unit))) : unit === 'kg' ? '70' : '155'} />
+              <input id="ob-goalweight" className="field !h-20 pr-16 text-center text-[34px] font-extrabold" inputMode="decimal" maxLength={5} value={goalWeight} onChange={(e) => setGoalWeight(e.target.value.replace(/[^\d.,]/g, ''))} placeholder="Goal" />
               <span className="pointer-events-none absolute right-6 top-1/2 -translate-y-1/2 text-xl font-semibold text-silver">{unit}</span>
             </div>
             {goalTooLow && minHealthyKg && (
@@ -466,7 +466,7 @@ export default function Onboarding() {
               {planChoice === 'free' ? 'Start for free' : `Continue with ${planChoice === 'pro' ? 'Pro' : 'Plus'}`}
             </button>
             {planChoice !== 'free' && (
-              <button onClick={() => { haptic(); finish(); }} className="mt-2 h-11 w-full text-sm font-semibold text-silver">Not now — start free</button>
+              <button onClick={() => { haptic(); finish(); }} className="btn-ghost mt-2 w-full">Start free for now</button>
             )}
             <p className="mt-1 text-center text-xs text-dim">No card needed for Free. Upgrade any time for more AI.</p>
           </Question>

@@ -32,8 +32,8 @@ export function Layout() {
           <Logo size={30} />
           <BrandName className="text-xl" />
         </div>
-        <button onClick={() => nav(`/add${q}`)} className="btn-primary mt-8 w-full !h-12"><Plus size={18} /> Log food</button>
-        <button onClick={() => nav(`/snap${q}`)} className="btn-ghost mt-2 w-full !h-12"><Camera size={18} /> Snap a meal</button>
+        <button onClick={() => nav(`/add${q}`)} className="btn-primary mt-8 w-full !h-12"><Plus size={18} /> Add food</button>
+        <button onClick={() => nav(`/snap${q}`)} className="btn-ghost mt-2 w-full !h-12"><Camera size={18} /> Scan food</button>
         <nav className="mt-8 flex flex-col gap-1" aria-label="Main">
           {tabs.map((t) => (
             <NavLink

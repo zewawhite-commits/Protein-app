@@ -292,6 +292,7 @@ export default function Snap() {
             </Link>
           )}
           {isMenu && <MenuFits matches={matches} date={date} onPick={(i) => { const m = matches[i]; if (m.candidates[0]) setPick({ food: m.candidates[0], grams: m.item.estimatedGrams || undefined, label: m.item.name, index: i }); }} />}
+          {!isMenu && matches.length > 0 && <PlateWeight matches={matches} onApply={(factor) => { setMatches((ms) => ms.map((m) => ({ ...m, item: { ...m.item, estimatedGrams: Math.round(m.item.estimatedGrams * factor), gramsLow: Math.round(m.item.estimatedGrams * factor), gramsHigh: Math.round(m.item.estimatedGrams * factor) } }))); toast('Portions updated from your plate weight'); }} />}
           {!isMenu && <PlateSummary
             matches={matches}
             logged={logged}
@@ -907,6 +908,34 @@ function ScanSteps({ menu }: { menu: boolean }) {
   return (
     <div className="flex items-center gap-2 rounded-full bg-black/65 px-4 py-2.5 text-sm font-semibold text-white backdrop-blur-md" role="status">
       <Loader2 size={16} className="animate-spin" /> {steps[i]}…
+    </div>
+  );
+}
+
+/**
+ * A camera can't weigh food. If you weighed the whole plate (minus the empty plate), enter it
+ * and the AI's estimates are scaled to match, keeping its split between the foods.
+ */
+function PlateWeight({ matches, onApply }: { matches: MatchedItem[]; onApply: (factor: number) => void }) {
+  const [open, setOpen] = useState(false);
+  const [g, setG] = useState('');
+  const est = matches.reduce((a, m) => a + (m.item.estimatedGrams || 0), 0);
+  if (!est) return null;
+  const n = Number(g);
+  return (
+    <div className="mt-3 rounded-2xl bg-raised px-4 py-3 text-sm">
+      {!open ? (
+        <button onClick={() => setOpen(true)} className="w-full text-left font-semibold text-accent">Weighed your food? Enter the total for exact portions →</button>
+      ) : (
+        <>
+          <p className="font-semibold">Total weight of the food (without the plate)</p>
+          <p className="mt-0.5 text-silver">The AI estimated about {Math.round(est)} g in total. We’ll keep its split between the foods.</p>
+          <div className="mt-2 flex gap-2">
+            <div className="relative flex-1"><input inputMode="numeric" className="field pr-10" value={g} onChange={(e) => setG(e.target.value.replace(/\D/g, '').slice(0, 5))} aria-label="Total food weight in grams" /><span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-silver">g</span></div>
+            <button disabled={!(n >= 10 && n <= 5000)} onClick={() => { onApply(n / est); setOpen(false); setG(''); }} className="btn-primary !px-5">Apply</button>
+          </div>
+        </>
+      )}
     </div>
   );
 }

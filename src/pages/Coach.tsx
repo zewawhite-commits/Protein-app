@@ -92,6 +92,19 @@ export function useCoachContext(): CoachContext {
     if (trained.length) progress.push(`${trained.length} workout${trained.length > 1 ? 's' : ''} in the last 7 days (${trained.reduce((s, x) => s + x.minutes, 0)} minutes)${trained.some((x) => x.date === todayKey()) ? ', including one today — recovery food and protein matter today' : ''}.`);
     else progress.push('No workouts logged in the last 7 days.');
     if (now != null) progress.push(`7-day average weight ${now.toFixed(1)} kg${prev != null ? ` (${now - prev >= 0 ? '+' : ''}${(now - prev).toFixed(1)} kg vs the week before)` : ''}.`);
+    if (weights.length >= 2) { const first = weights[0], last = weights[weights.length - 1]; progress.push(`Since they started weighing in (${first.date}): ${first.kg} kg → ${last.kg} kg.`); }
+    // Body measurements: latest per site and change since the first.
+    const sites = new Map<string, { first: number; last: number }>();
+    for (const m of [...(st.measurements ?? [])].sort((a, b) => a.date.localeCompare(b.date))) { const c = sites.get(m.site); sites.set(m.site, { first: c?.first ?? m.cm, last: m.cm }); }
+    if (sites.size) progress.push(`Measurements: ${[...sites.entries()].map(([k, v]) => `${k} ${v.last} cm (${v.last - v.first >= 0 ? '+' : ''}${(v.last - v.first).toFixed(1)})`).join(', ')}.`);
+    // Workout days vs rest days over 4 weeks (logged days only).
+    const from28 = addDays(todayKey(), -28);
+    const days = new Map<string, number>();
+    for (const e of allEntries) if (e.date > from28 && !e.planned) days.set(e.date, (days.get(e.date) ?? 0) + (e.food.per100.kcal ?? 0) * e.grams / 100);
+    const tdays = new Set(st.exercises.filter((x) => x.date > from28).map((x) => x.date));
+    const avg = (xs: number[]) => (xs.length ? Math.round(xs.reduce((a, b) => a + b, 0) / xs.length) : null);
+    const a = avg([...days.entries()].filter(([d]) => tdays.has(d)).map(([, k]) => k)), r = avg([...days.entries()].filter(([d]) => !tdays.has(d)).map(([, k]) => k));
+    if (a != null && r != null) progress.push(`Last 4 weeks: about ${a} kcal on workout days vs ${r} kcal on rest days (logged days only).`);
     return { recentFoods, progress };
   }, [allEntries, weights]);
   return useMemo<CoachContext>(() => {

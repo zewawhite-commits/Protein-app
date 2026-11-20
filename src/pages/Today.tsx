@@ -114,6 +114,7 @@ export default function Today() {
         <>
           <HeroCard totals={totals} goal={goal} targets={targets} entries={entries} burned={burned} addBurned={addBurned} />
           <MacroCards totals={totals} goal={goal} targets={targets} simple={simple} />
+          <div className="mt-2 flex justify-end px-1"><Link to="/settings?edit=1" className="text-sm font-semibold text-accent">Edit targets</Link></div>
         </>
       )}
       {date <= today && <div className="mt-4"><QuickActions dateQuery={isToday ? '' : `?date=${date}`} /></div>}
@@ -299,7 +300,14 @@ export function useGoalStats(date = todayKey()) {
     let d = todayKey();
     if (!hit(d)) d = addDays(d, -1);
     let streak = 0;
-    while (hit(d) && streak < 3650) { streak++; d = addDays(d, -1); }
+    // Flexible streaks: one missed day in any 7 doesn't reset it, as long as the day before was hit.
+    let lastFreeze = -99;
+    for (let i = 0; i < 3650; i++) {
+      if (hit(d)) { streak++; d = addDays(d, -1); continue; }
+      const before = addDays(d, -1);
+      if (streak > 0 && i - lastFreeze >= 7 && hit(before)) { lastFreeze = i; d = before; continue; }
+      break;
+    }
     const weekHits = weekOf(date).filter(hit).length;
     return { streak, weekHits };
   }, [entries, goalHistory, profile, date]);
