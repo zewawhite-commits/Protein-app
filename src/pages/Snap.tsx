@@ -1,3 +1,5 @@
+import type { RecognitionResult } from '@/lib/recognition';
+import { asRecognition, gramsFor, parseSaid } from '@/lib/describe';
 import { photoFingerprint, recall, remember } from '@/lib/scanMemory';
 import { MenuFits } from '@/components/MenuFits';
 import { PHOTO_ONLY } from '@/lib/photoDiary';
@@ -89,6 +91,60 @@ export default function Snap() {
   const [retryable, setRetryable] = useState(false);
 
   /** A menu behind a QR code or link: the server opens it and lists the dishes. */
+  /** Free, on-phone reading of a description: each food matched in the database, amounts from its servings. */
+  async function describeLocally(text: string) {
+    setPhase('analyzing');
+    await waitForDb();
+    const said = parseSaid(text);
+    if (!said.length) { setError('Say or type the foods, e.g. “2 eggs and a cup of rice”.'); setPhase('error'); return; }
+    const ms = matchItems(asRecognition(said), custom, useStore.getState().picks).map((m, i) => {
+      const g = m.candidates[0] ? gramsFor(m.candidates[0], said[i].qty, said[i].unit) : null;
+      return g ? { ...m, item: { ...m.item, estimatedGrams: g.grams, gramsLow: g.grams, gramsHigh: g.grams, confidence: 'high' as const } } : m;
+    });
+    setIsMenu(false);
+    setNote('Found on your phone from what you described. Check each food and amount — anything without an amount needs one.');
+    setQuality('fair');
+    setLeft(null);
+    setMatches(ms);
+    setPhase('results');
+  }
+
+  /** Several photos at once (e.g. starter, main and drink): each is scanned, then all the foods are listed together. */
+  async function analyseMany(files: Blob[]) {
+    setRetryable(false);
+    setIsMenu(false);
+    setPhase('analyzing');
+    try {
+      await refreshPremium();
+      const token = useStore.getState().premium?.token ?? premiumToken;
+      const items: RecognitionResult['items'] = [];
+      const notes: string[] = [];
+      let quality: 'good' | 'fair' | 'poor' = 'good';
+      for (const f of files) {
+        const small = await resizeImage(f).catch(() => f);
+        const hash = await photoFingerprint(small);
+        const r = recall(hash, 'food') ?? await recognizePhoto(small, token);
+        remember(hash, 'food', r);
+        if (r.isFood) items.push(...r.items);
+        if (r.note) notes.push(r.note);
+        if (r.photoQuality === 'poor' || (r.photoQuality === 'fair' && quality === 'good')) quality = r.photoQuality;
+      }
+      await waitForDb();
+      if (!items.length) { setError('No food found in those photos.'); setPhase('error'); return; }
+      setNote(`${files.length} photos scanned together.${notes.length ? ` ${notes.join(' ')}` : ''}`);
+      setQuality(quality);
+      setLeft(null);
+      setMatches(matchItems({ isFood: true, photoQuality: quality, items, note: '' }, custom, useStore.getState().picks));
+      setPhase('results');
+    } catch (e) {
+      if (e instanceof SignInRequiredError) setPhase('signin');
+      else if (e instanceof PremiumRequiredError) { setError(e.message); setPhase('premium'); }
+      else if (e instanceof ScanLimitError) { setError(e.message || 'AI scans used up.'); setPhase('limit'); }
+      else if (e instanceof RecognitionUnavailableError) setPhase('unavailable');
+      else { setError((e as Error).message || 'Something went wrong.'); setPhase('error'); }
+    }
+  }
+
   async function analyseMenuUrl(url: string) {
     setRetryable(false);
     setPhase('analyzing');
@@ -164,6 +220,9 @@ export default function Snap() {
       setMatches(matchItems(result, custom, useStore.getState().picks));
       setPhase('results');
     } catch (e) {
+      // Typed or spoken food never dead-ends: without AI (signed out, limit reached, AI off),
+      // the phone reads the description itself and finds each food in the database.
+      if (!file && text?.trim() && (e instanceof SignInRequiredError || e instanceof ScanLimitError || e instanceof RecognitionUnavailableError || e instanceof PremiumRequiredError)) { await describeLocally(text); return; }
       if (e instanceof SignInRequiredError) setPhase('signin');
       else if (e instanceof PremiumRequiredError) { setError(e.message); setPhase('premium'); }
       else if (e instanceof ScanLimitError) { setError(e.message || 'Monthly photo scans used up.'); setPhase('limit'); }
@@ -221,7 +280,7 @@ export default function Snap() {
   const manualUrl = (q = '') => `/add?${new URLSearchParams({ ...(q && { q }), ...(photoId && { photo: photoId }), ...(date !== todayKey() && { date }) })}`;
 
   // Signed out: say so before they take a photo, not after.
-  if (accountsEnabled && session === null && (phase === 'camera' || phase === 'describe')) {
+  if (accountsEnabled && session === null && phase === 'camera') {
     return (
       <div className="mx-auto min-h-dvh max-w-lg animate-fade-up px-5 pb-12 md:max-w-2xl md:px-8">
         <header className="pt-safe flex items-center pb-4">
@@ -234,7 +293,7 @@ export default function Snap() {
       </div>
     );
   }
-  if (phase === 'camera') return <Camera onClose={back} onCapture={(b) => (photoDiary && !labelMode && !menuMode ? saveToDiary(b) : analyse(b)).catch((e: Error) => { setError(e.message || 'Something went wrong. Try again.'); setRetryable(true); setPhase('error'); })} mode={labelMode ? 'label' : menuMode ? 'menu' : 'food'} onMode={(m) => { haptic(); setLabelMode(m === 'label'); setMenuMode(m === 'menu'); }} onBarcode={() => nav(`/barcode${date !== todayKey() ? `?date=${date}` : ''}`)} onMenuUrl={(u) => void analyseMenuUrl(u)} />;
+  if (phase === 'camera') return <Camera onClose={back} onCaptureMany={(fs) => void analyseMany(fs)} onCapture={(b) => (photoDiary && !labelMode && !menuMode ? saveToDiary(b) : analyse(b)).catch((e: Error) => { setError(e.message || 'Something went wrong. Try again.'); setRetryable(true); setPhase('error'); })} mode={labelMode ? 'label' : menuMode ? 'menu' : 'food'} onMode={(m) => { haptic(); setLabelMode(m === 'label'); setMenuMode(m === 'menu'); }} onBarcode={() => nav(`/barcode${date !== todayKey() ? `?date=${date}` : ''}`)} onMenuUrl={(u) => void analyseMenuUrl(u)} />;
   if (phase === 'describe') {
     return (
       <div className="mx-auto min-h-dvh max-w-lg animate-fade-up px-5 pb-12 md:max-w-2xl md:px-8">
@@ -576,7 +635,7 @@ function ItemCard({ match, done, quality, onPick, onMethod, manualUrl, onLogIngr
 }
 
 /** Full-screen camera with a live viewfinder. Falls back to the system camera/gallery picker. */
-function Camera({ onClose, onCapture, mode, onMode, onBarcode, onMenuUrl }: { onClose: () => void; onCapture: (b: Blob) => void; mode: 'food' | 'label' | 'menu'; onMode: (m: 'food' | 'label' | 'menu') => void; onBarcode: () => void; onMenuUrl: (url: string) => void }) {
+function Camera({ onClose, onCapture, onCaptureMany, mode, onMode, onBarcode, onMenuUrl }: { onClose: () => void; onCapture: (b: Blob) => void; onCaptureMany?: (bs: Blob[]) => void; mode: 'food' | 'label' | 'menu'; onMode: (m: 'food' | 'label' | 'menu') => void; onBarcode: () => void; onMenuUrl: (url: string) => void }) {
   const [linkOpen, setLinkOpen] = useState(false);
   const [link, setLink] = useState('');
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -746,7 +805,7 @@ function Camera({ onClose, onCapture, mode, onMode, onBarcode, onMenuUrl }: { on
       </div>
       </div>
 
-      <input ref={fileRef} type="file" accept="image/*" hidden onChange={(e) => e.target.files?.[0] && onCapture(e.target.files[0])} />
+      <input ref={fileRef} type="file" accept="image/*" multiple={mode === 'food'} hidden onChange={(e) => { const fs = Array.from(e.target.files ?? []); if (fs.length > 1 && onCaptureMany) onCaptureMany(fs.slice(0, 6)); else if (fs[0]) onCapture(fs[0]); e.target.value = ''; }} />
       <input ref={captureRef} type="file" accept="image/*" capture="environment" hidden onChange={(e) => e.target.files?.[0] && onCapture(e.target.files[0])} />
     </div>
   );

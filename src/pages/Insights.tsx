@@ -6,14 +6,14 @@ import { Measurements } from '@/components/Measurements';
 import { ProOnly } from '@/components/ProOnly';
 import { EatingPatterns, NutrientGaps, TargetCheck } from '@/components/NutritionInsights';
 import { useMemo, useState } from 'react';
-import { BarChart3 } from 'lucide-react';
+import { MessageCircle } from 'lucide-react';
 import { useStore, goalOn } from '@/store/useStore';
 import { lastNDays, todayKey, fromKey, formatDay } from '@/lib/dates';
 import { nutrientsFor } from '@/lib/nutrition';
 import { dailyTargets } from '@/lib/energy';
 import { splitName } from '@/lib/foods';
 import type { Meal } from '@/lib/types';
-import { Empty, PageHeader, Segmented, cx, fmt } from '@/components/ui';
+import { PageHeader, Segmented, cx, fmt } from '@/components/ui';
 import { FoodVisual } from '@/components/FoodIcon';
 import { useStreak } from './Today';
 import { AverageCalories, WeightAndStreak, WeightChart, BeyondTheScale, SmartTarget } from '@/components/ProgressTop';
@@ -100,10 +100,20 @@ export default function Insights() {
         <h2 className="text-xl font-bold">Nutrition trends</h2>
         <Segmented value={range} onChange={setRange} options={[{ value: '7', label: '7D' }, { value: '30', label: '30D' }, { value: '90', label: '90D' }]} />
       </div>
-      <div className="mb-4"><Segmented full value={metric} onChange={setMetric} options={METRICS.map(({ value, label }) => ({ value, label }))} /></div>
+      {/* Calories and macros are separate: one switch for which, then which macro. */}
+      <div className="mb-2"><Segmented full value={metric === 'kcal' ? 'kcal' : 'macros'} onChange={(v) => setMetric(v === 'kcal' ? 'kcal' : 'protein')} options={[{ value: 'kcal', label: 'Calories' }, { value: 'macros', label: 'Macros' }]} /></div>
+      {metric !== 'kcal' && <div className="mb-4 flex justify-center"><Segmented value={metric} onChange={setMetric} options={METRICS.filter((m) => m.value !== 'kcal').map(({ value, label }) => ({ value, label }))} /></div>}
+      {metric === 'kcal' && <div className="mb-4" />}
 
       {data.loggedDays === 0 ? (
-        <Empty icon={<BarChart3 size={22} />} title="Not enough data yet" body="Log food for a few days to see your trends." />
+        <section className="card p-5">
+          <div className="mb-4 flex items-baseline justify-between">
+            <h2 className="text-lg font-semibold tracking-tight">Daily {label.toLowerCase()}</h2>
+            <span className="text-xs font-semibold text-silver">no food logged yet</span>
+          </div>
+          <BarChart series={data.series} unit={unit} highlight={false} />
+          <p className="mt-3 text-sm text-silver">Your chart fills in as you log food. Days you don’t log stay empty — they’re not counted as zero.</p>
+        </section>
       ) : (
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
@@ -123,6 +133,7 @@ export default function Insights() {
               <span className="flex items-center gap-1.5 text-xs font-semibold text-silver"><span className="inline-block h-0 w-4 border-t-2 border-dashed border-silver" /> goal</span>
             </div>
             <BarChart series={data.series} unit={unit} highlight={metric === 'protein'} />
+            <Link to={`/coach?ask=${encodeURIComponent(`My ${label.toLowerCase()} over the last ${range} days: average ${fmt(data.avg)} ${unit} on ${data.loggedDays} logged days${metric === 'protein' ? `, goal hit on ${data.hit}` : `, within target on ${data.within}`}. What does this chart say about me, and what should I change?`)}`} className="mt-4 flex items-center justify-center gap-2 rounded-2xl bg-accent/10 py-3 text-sm font-semibold text-accent"><MessageCircle size={16} /> Ask the coach about this chart</Link>
           </section>
 
           <section className="card p-5">

@@ -104,8 +104,17 @@ let running: Promise<void> | null = null;
  *  3. save the merged copy here and, only if the cloud copy hasn't changed meanwhile, there.
  * If another device saved in between, start again (up to 3 times).
  */
+// Whether this account's first sync on this device has finished, so screens can wait for the
+// account's saved profile instead of asking the setup questions again.
+const synced = new Set<string>();
+const syncListeners = new Set<() => void>();
+export function useFirstSyncDone(userId?: string): boolean {
+  const [, bump] = useState(0);
+  useEffect(() => { const f = () => bump((n) => n + 1); syncListeners.add(f); return () => { syncListeners.delete(f); }; }, []);
+  return !userId || synced.has(userId);
+}
 export function syncNow(userId: string): Promise<void> {
-  if (!running) running = doSync(userId).finally(() => { running = null; });
+  if (!running) running = doSync(userId).finally(() => { running = null; synced.add(userId); syncListeners.forEach((f) => f()); });
   return running;
 }
 

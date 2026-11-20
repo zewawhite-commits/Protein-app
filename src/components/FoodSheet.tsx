@@ -111,6 +111,15 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
   const before = day.totals.protein - (entry ? nutrientsFor(entry.food.per100, entry.grams).protein : 0);
   const after = before + n.protein;
 
+  // Foods eaten in pieces (wings, eggs, slices, cups…): count them instead of weighing.
+  const countable = food.portions.filter((p) => p.grams > 0).sort((a, b) => Number(/\b(piece|wing|drumstick|thigh|leg|egg|slice|medium|large|small|whole|fillet|ball|serving|cup)\b/i.test(b.label)) - Number(/\b(piece|wing|drumstick|thigh|leg|egg|slice|medium|large|small|whole|fillet|ball|serving|cup)\b/i.test(a.label)));
+  const pieceFirst = !!countable[0] && /\b(piece|wing|drumstick|thigh|leg|egg|slice|fillet|ball)\b/i.test(countable[0].label);
+  const [byCount, setByCount] = useState(() => !entry && pieceFirst);
+  const [portionIdx, setPortionIdx] = useState(0);
+  const [count, setCount] = useState(entry ? '' : pieceFirst ? '1' : '');
+  const portion = countable[portionIdx] ?? countable[0];
+  const applyCount = (c: string, p = portion) => { setCount(c); const n = Number(c.replace(',', '.')); if (p && n >= 0) setGrams(toUnit(n * p.grams, unit)); };
+  useEffect(() => { if (byCount && count && portion) applyCount(count); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const bump = (d: number) => setG(Math.max(0, g + Math.sign(d) * ({ g: 5, ml: 5, oz: 14.17, kg: 50, lb: 45.36 } as const)[unit]));
 
   async function onPhoto(file?: File) {
@@ -203,6 +212,29 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
             <span className="flex items-center gap-1.5 text-[14px] font-semibold text-silver"><Scale size={14} /> {weighHint}</span>
           </div>
         )}
+        {countable.length > 0 && (
+          <div className="mb-4 flex justify-center">
+            <Segmented<'count' | 'weight'> value={byCount ? 'count' : 'weight'} onChange={(v) => { haptic(); setByCount(v === 'count'); if (v === 'count') applyCount(count || '1'); }} options={[{ value: 'count', label: pieceFirst ? 'How many' : 'Servings' }, { value: 'weight', label: 'Weight' }]} />
+          </div>
+        )}
+        {byCount && portion ? (
+          <>
+            <div className="flex items-center gap-3">
+              <button onClick={() => applyCount(String(Math.max(0, (Number(count.replace(',', '.')) || 0) - (Number(count) > 1 ? 1 : 0.5))))} className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-raised" aria-label="One less"><Minus size={20} strokeWidth={2.6} /></button>
+              <label className="flex flex-1 items-baseline justify-center gap-2">
+                <input inputMode="decimal" value={count} onChange={(e) => applyCount(e.target.value.replace(/[^\d.,]/g, ''))} onFocus={(e) => e.target.select()} placeholder="0" aria-label="How many" className="num min-w-0 bg-transparent text-center text-[56px] font-extrabold leading-none outline-none" style={{ width: `${Math.max(1, count.length) + 0.5}ch` }} />
+                <span className="text-xl font-semibold text-silver">× {portion.label.replace(/^1\s+/, '')}</span>
+              </label>
+              <button onClick={() => applyCount(String((Number(count.replace(',', '.')) || 0) + 1))} className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-raised" aria-label="One more"><Plus size={20} strokeWidth={2.6} /></button>
+            </div>
+            <p className="num mt-2 text-center text-[13px] text-silver">= {fmt(g)} g{portion.grams ? ` (${fmt(portion.grams)} g each, from the food record)` : ''}</p>
+            {countable.length > 1 && (
+              <div className="-mx-5 mt-3 flex gap-2 overflow-x-auto px-5 no-scrollbar">
+                {countable.map((p, i) => <button key={p.label} onClick={() => { setPortionIdx(i); applyCount(count || '1', p); }} className={cx('chip shrink-0', i === portionIdx && 'chip-on')}>{p.label} <span className="opacity-60">{fmt(p.grams)}g</span></button>)}
+              </div>
+            )}
+          </>
+        ) : (<>
         <div className="flex items-center gap-3">
           <button onClick={() => bump(-5)} className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-raised" aria-label="Less"><Minus size={20} strokeWidth={2.6} /></button>
           <label className="flex flex-1 items-baseline justify-center">
@@ -242,16 +274,17 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
             </button>
           ))}
         </div>
+        </>)}
       </div>
 
       {similar.length > 0 && onSwitchFood && !entry && (
         <div>
-          <p className="mb-2 px-1 text-[14px] font-medium text-silver">Don’t have it? Similar protein and calories:</p>
+          <p className="mb-2 px-1 text-[14px] font-medium text-silver">Other high-protein options (nutrition differs — check each):</p>
           <div className="-mx-5 flex gap-2 overflow-x-auto px-5 no-scrollbar">
             {similar.map((a) => (
               <button key={a.id} onClick={() => { haptic(); onSwitchFood(a); }} className="chip shrink-0 !bg-surface !text-ink" style={{ boxShadow: 'var(--shadow)' }}>
                 <span className="max-w-[12rem] truncate">{splitName(a.name).title}</span>
-                <span className="num text-[12px] text-silver">{fmt(a.per100.protein, 0)} g P</span>
+                <span className="num text-[12px] text-silver">{fmt(a.per100.protein, 0)} g P · {a.per100.kcal != null ? `${fmt(a.per100.kcal)} kcal` : '– kcal'} /100 g</span>
               </button>
             ))}
           </div>
@@ -261,8 +294,14 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
       {/* Switch raw/cooked */}
       {alt.length > 0 && onSwitchFood && !entry && (
         <div>
+          {(food.state === 'raw' || food.state === 'cooked' || food.state === 'dry') && (
+            <div className="mb-3 flex items-center justify-between gap-3 px-1">
+              <span className="text-[14px] font-semibold">Preparation</span>
+              <Segmented<string> value={food.state} onChange={(v) => { const a = alt.find((x) => x.state === v); if (a) { haptic(); onSwitchFood(a); } }} options={[...new Set([food.state, ...alt.map((a) => a.state)])].filter((st) => st === 'raw' || st === 'cooked' || st === 'dry').map((st) => ({ value: st, label: st === 'raw' ? 'Raw' : st === 'cooked' ? 'Cooked' : 'Dry' }))} />
+            </div>
+          )}
           <p className="mb-2 flex items-center gap-1.5 px-1 text-[14px] font-medium text-silver">
-            <ArrowLeftRight size={14} /> Weighed it {food.state === 'cooked' ? 'before cooking' : 'after cooking'}? Switch to:
+            <ArrowLeftRight size={14} /> Weighed it {food.state === 'cooked' ? 'before cooking' : 'after cooking'}? Pick the matching record:
           </p>
           <div className="-mx-5 flex gap-2 overflow-x-auto px-5 no-scrollbar">
             {alt.slice(0, 4).map((a) => (
@@ -292,7 +331,7 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
             <Ring value={day.goal ? after / day.goal : 0} size={58} stroke={6} color="accent" track="raised">
               <span className="num text-[12px] font-bold">{day.goal ? fmt(Math.min(999, (after / day.goal) * 100)) : 0}%</span>
             </Ring>
-            <span className="mt-1 text-[12px] font-medium text-silver">protein goal</span>
+            <span className="mt-1 text-center text-[12px] font-medium leading-tight text-silver">today’s protein{g > 0 ? ' with this' : ' so far'}</span>
           </div>
         </div>
         <div className="mt-4 grid grid-cols-4 gap-2 text-center">

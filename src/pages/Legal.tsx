@@ -84,7 +84,7 @@ export function Privacy() {
       <p>Food, weight and body details can be health information. We use it only to provide the app to you, and we never share it for advertising. {APP_NAME} gives general guidance, not medical advice.</p>
 
       <H>Your rights</H>
-      <p>You can see, export and delete your data at any time: Profile → Export backup, and Profile → Delete account, which removes your account and everything linked to it. You can also contact {contact}. Depending on where you live, data-protection law — including the Nigeria Data Protection Act 2023, the UK GDPR and the EU GDPR — also gives you the right to correct your data, object to or restrict how it’s used, and complain to a data-protection authority (the Nigeria Data Protection Commission, or the ICO in the UK).</p>
+      <p>You can see, export and delete your data at any time: Profile → Export backup, and Profile → Delete account, which removes your account and everything linked to it. You can also contact {contact}. Depending on where you live, data-protection law may also give you the right to correct your data, object to or restrict how it’s used, and complain to your local data-protection authority.</p>
 
       <H>How long we keep it</H>
       <p>We keep your data while your account is active. When you delete it, it’s removed from our systems within 30 days, except records we must keep by law, such as payment records. Scan corrections are kept without anything that identifies you. Crash reports are kept in our hosting logs for a short period and then deleted automatically.</p>
@@ -150,7 +150,7 @@ export function Terms() {
       <p>We work to keep {APP_NAME} running but can’t promise it will always be available or error-free, and features may change. We provide it “as is”. To the extent the law allows, we aren’t liable for indirect or consequential losses, or for decisions you make based on the app, and our total liability is limited to the amount you paid us in the 12 months before the claim. Nothing in these terms limits rights you have by law as a consumer.</p>
 
       <H>Governing law</H>
-      <p>These terms are governed by the laws of the Federal Republic of Nigeria. If you live elsewhere, you also keep the protection of the mandatory consumer laws of your country, and may bring claims in your local courts.</p>
+      <p>You keep the protection of the mandatory consumer laws of the country where you live, and may bring claims in your local courts.</p>
 
       <H>Changes and contact</H>
       <p>We may update these terms; we’ll change the date above and tell you about significant changes before they apply. Questions: {contact}.</p>

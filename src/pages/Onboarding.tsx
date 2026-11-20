@@ -6,6 +6,7 @@ import { DIET_PREFS, TRAINING } from '@/lib/cuisines';
 import { useState, type ReactNode, useEffect, useRef } from 'react';
 import { ArrowLeft, Check, Bike, Coffee, Droplet, Drumstick, Dumbbell, Flame, HeartPulse, Leaf, Loader2, Mail, Pencil, Phone, Rabbit, Scale, Sofa, Soup, ThumbsDown, ThumbsUp, Trophy, Turtle, Fish, Salad, Utensils, Wheat, Zap, Footprints } from 'lucide-react';
 import { useStore } from '@/store/useStore';
+import { useFirstSyncDone } from '@/lib/account';
 import { accountsEnabled, sendPhoneCode, signInWithGoogle, toE164, useSession, verifyPhoneCode } from '@/lib/account';
 import { EmailAuth } from '@/components/SignIn';
 import { DIAL_CODES } from '@/lib/dialCodes';
@@ -112,7 +113,10 @@ export default function Onboarding() {
   // Only what's needed for a good first plan. Training type, challenges and reminders can be set later in Profile.
   const flow = ['welcome', 'goals', 'about', 'direction', ...(wantsChange ? ['goalweight'] : []), 'activity', 'diet', 'cuisines', 'plan', 'choose'];
   const at = flow[step];
-  useEffect(() => { if (at === 'welcome' && session && !autoStarted.current) { autoStarted.current = true; next(); } }, [at, session]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Signed in: wait until the account's saved data has loaded. If it has a profile, the app goes
+  // straight to Home; only a brand-new account gets the setup questions.
+  const synced = useFirstSyncDone(session?.user.id);
+  useEffect(() => { if (at === 'welcome' && session && synced && !autoStarted.current) { autoStarted.current = true; next(); } }, [at, session, synced]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { trackStep(`${String(flow.indexOf(at) + 1).padStart(2, '0')}-${at}`); }, [at]); // eslint-disable-line react-hooks/exhaustive-deps
   const STEPS = flow.length;
   const next = () => setStep((s) => Math.min(STEPS - 1, s + 1));
@@ -171,6 +175,7 @@ export default function Onboarding() {
     });
   }
 
+  if (session && !synced) return <div className="grid min-h-dvh place-items-center text-silver"><p className="flex items-center gap-2"><Loader2 size={18} className="animate-spin" /> Loading your account…</p></div>;
   if (at === 'welcome') return <Welcome signedIn={!!session} email={session?.user.email} onStart={next} />;
 
   const total = proteinOverride ?? (weightKg ? dailyGoal({ goalMode: 'perKg', gramsPerKg: gPerKg, bodyWeightKg: weightKg, goalGrams: 0 }) : 0);
@@ -609,7 +614,6 @@ function Welcome({ signedIn, email, onStart }: { signedIn: boolean; email?: stri
             <Mail size={18} /> Create account with email
           </button>
           <p className="text-center text-[15px] text-silver">Already have an account? <button onClick={() => setMode('login')} className="font-semibold text-accent">Log in</button></p>
-          <button onClick={onStart} className="mt-1 h-11 text-sm font-semibold text-silver">Skip — use without an account</button>
           <p className="text-center text-xs text-dim">An account saves your data so you can use it on any phone.</p>
           <p className="mb-2 text-center text-[13px] text-silver">Free to start, no card. Pro is $7.99/mo, or save 60% yearly · <a href="/premium" className="font-semibold text-accent underline">See what’s included</a></p>
           <p className="text-center text-xs text-dim">By continuing you agree to our <a href="/terms" className="underline">Terms</a>, <a href="/privacy" className="underline">Privacy Policy</a> and <a href="/refunds" className="underline">Refund Policy</a>.</p>
