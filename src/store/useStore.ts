@@ -11,7 +11,7 @@ import type { CustomFood, Food, LogEntry, Meal, Profile, ProgressPhoto, SavedMea
 import { dailyGoal } from '@/lib/nutrition';
 import { todayKey } from '@/lib/dates';
 import { deletePhoto } from '@/lib/photos';
-import type { ExerciseEntry } from '@/lib/exercise';
+import type { ExerciseEntry, Routine } from '@/lib/exercise';
 
 interface State {
   profile: Profile | null;
@@ -28,6 +28,9 @@ interface State {
   weights: WeightEntry[];
   exercises: ExerciseEntry[];
   measurements: MeasurementEntry[];
+  routines: Routine[];
+  saveRoutine: (r: Omit<Routine, 'id' | 'createdAt'> & { id?: string }) => void;
+  removeRoutine: (id: string) => void;
   addMeasurement: (m: Omit<MeasurementEntry, 'id' | 'createdAt'>) => void;
   removeMeasurement: (id: string) => void;
   addExercise: (e: Omit<ExerciseEntry, 'id'>) => void;
@@ -106,6 +109,13 @@ export const useStore = create<State>()(
       weights: [],
       exercises: [],
       measurements: [],
+      routines: [],
+      saveRoutine: (r) => set((s) => {
+        const old = r.id ? s.routines.find((x) => x.id === r.id) : undefined;
+        const next: Routine = { ...r, id: old?.id ?? crypto.randomUUID(), createdAt: old?.createdAt ?? Date.now(), updatedAt: Date.now() };
+        return { routines: old ? s.routines.map((x) => (x.id === old.id ? next : x)) : [...s.routines, next] };
+      }),
+      removeRoutine: (id) => set((s) => ({ routines: s.routines.filter((x) => x.id !== id), deleted: { ...s.deleted, [id]: Date.now() } })),
       progressPhotos: [],
       premium: null,
       perks: null,
@@ -270,13 +280,14 @@ export const useStore = create<State>()(
           weights: d.weights ?? [],
           exercises: d.exercises ?? [],
           measurements: (d as { measurements?: MeasurementEntry[] }).measurements ?? [],
+          routines: (d as { routines?: Routine[] }).routines ?? [],
           water: (d as { water?: Record<string, number> }).water ?? {},
           deleted: (d as { deleted?: Record<string, number> }).deleted ?? {},
         });
       },
 
       resetAll: () =>
-        set({ profile: null, settings: defaultSettings, entries: [], customFoods: [], goalHistory: {}, recentFoodIds: [], favoriteFoodIds: [], remoteFoods: {}, savedMeals: [], savedPlans: [], workoutPlan: null, savedRecipes: [], weights: [], exercises: [], measurements: [], progressPhotos: [], premium: null, perks: null, serverTier: null, picks: {}, water: {}, deleted: {} }),
+        set({ profile: null, settings: defaultSettings, entries: [], customFoods: [], goalHistory: {}, recentFoodIds: [], favoriteFoodIds: [], remoteFoods: {}, savedMeals: [], savedPlans: [], workoutPlan: null, savedRecipes: [], weights: [], exercises: [], measurements: [], routines: [], progressPhotos: [], premium: null, perks: null, serverTier: null, picks: {}, water: {}, deleted: {} }),
     }),
     {
       name: 'protein-app',
@@ -311,7 +322,7 @@ export function goalOn(date: string, goalHistory: Record<string, number>, profil
 
 export function exportData() {
   // Premium passes and personal API keys are never written to backup files.
-  const { profile, settings, entries, customFoods, goalHistory, recentFoodIds, favoriteFoodIds, remoteFoods, savedMeals, savedPlans, workoutPlan, savedRecipes, weights, exercises, measurements, water, deleted } = useStore.getState();
+  const { profile, settings, entries, customFoods, goalHistory, recentFoodIds, favoriteFoodIds, remoteFoods, savedMeals, savedPlans, workoutPlan, savedRecipes, weights, exercises, measurements, routines, water, deleted } = useStore.getState();
   const safeSettings = settings;
-  return { app: 'protein-app', exportedAt: new Date().toISOString(), profile, settings: safeSettings, entries, customFoods, goalHistory, recentFoodIds, favoriteFoodIds, remoteFoods, savedMeals, savedPlans, workoutPlan, savedRecipes, weights, exercises, measurements, water, deleted };
+  return { app: 'protein-app', exportedAt: new Date().toISOString(), profile, settings: safeSettings, entries, customFoods, goalHistory, recentFoodIds, favoriteFoodIds, remoteFoods, savedMeals, savedPlans, workoutPlan, savedRecipes, weights, exercises, measurements, routines, water, deleted };
 }

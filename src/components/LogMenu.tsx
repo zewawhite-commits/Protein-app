@@ -46,6 +46,7 @@ export function LogMenu({ open, onClose, date }: { open: boolean; onClose: () =>
 }
 
 export function ExerciseSheet({ open, onClose, date }: { open: boolean; onClose: () => void; date: string }) {
+  const navToRoutines = useNavigate();
   const kg = useStore((s) => (s.weights.length ? s.weights[s.weights.length - 1].kg : s.profile?.bodyWeightKg ?? 0));
   const add = useStore((s) => s.addExercise);
   const addBurned = useStore((s) => s.settings.addBurned ?? false);
@@ -81,6 +82,7 @@ export function ExerciseSheet({ open, onClose, date }: { open: boolean; onClose:
 
   return (
     <Sheet open={open} onClose={onClose} title="Log exercise">
+      <button onClick={() => { onClose(); navToRoutines('/routines'); }} className="mb-4 flex w-full items-center gap-3 rounded-[18px] bg-accent/10 px-4 py-3 text-left font-semibold text-accent"><Dumbbell size={18} /> Use a saved routine (sets, reps, weights)</button>
       <div className="flex flex-wrap gap-2">
         {(Object.keys(EXERCISES) as ExerciseType[]).map((t) => (
           <button key={t} onClick={() => setType(t)} className={cx('chip !h-10', type === t && 'chip-on')}>{EXERCISES[t].label}</button>

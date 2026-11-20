@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { useMemo, useState } from 'react';
 import { Dumbbell, Trash2 } from 'lucide-react';
 import { useStore } from '@/store/useStore';
@@ -47,7 +48,10 @@ export function ActivitySummary() {
 
   return (
     <section className="card p-5">
-      <h2 className="flex items-center gap-2 text-lg font-bold"><Dumbbell size={18} className="text-accent" /> Activity</h2>
+      <div className="flex items-center justify-between gap-2">
+        <h2 className="flex items-center gap-2 text-lg font-bold"><Dumbbell size={18} className="text-accent" /> Activity</h2>
+        <Link to="/routines" className="chip !h-9">My routines</Link>
+      </div>
       <div className="mt-3 grid grid-cols-3 gap-2 text-center">
         <div className="rounded-2xl bg-raised py-3"><p className="num text-[20px] font-extrabold">{s.count}</p><p className="text-xs text-silver">workouts this week</p></div>
         <div className="rounded-2xl bg-raised py-3"><p className="num text-[20px] font-extrabold">{s.minutes}</p><p className="text-xs text-silver">minutes</p></div>
