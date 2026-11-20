@@ -28,14 +28,34 @@ async function find(q: string, square: boolean) {
   return data.results ?? [];
 }
 
+/** Pexels as a fallback source (free, real photos), used only when PEXELS_API_KEY is set. */
+async function fromPexels(key: string, q: string): Promise<Omit<Row, 'tried_at'> | null> {
+  if (!process.env.PEXELS_API_KEY) return null;
+  const res = await fetch(`https://api.pexels.com/v1/search?query=${encodeURIComponent(q)}&per_page=5&orientation=square`, { headers: { authorization: process.env.PEXELS_API_KEY } });
+  if (!res.ok) return null;
+  const data = (await res.json()) as { photos?: { src: { original: string }; photographer: string; photographer_url: string; url: string; avg_color?: string }[] };
+  const best = data.photos?.[0];
+  if (!best) return null;
+  // Pexels images resize with the same w/h/fit query parameters the app adds.
+  return { key, url: `${best.src.original}?auto=compress&cs=tinysrgb`, author: best.photographer, author_url: best.photographer_url, photo_page: best.url, blur_color: best.avg_color ?? null };
+}
+
 async function search(key: string): Promise<Omit<Row, 'tried_at'>> {
+  try { return await searchUnsplash(key); } catch (e) {
+    const alt = await fromPexels(key, PHOTO_QUERIES[key]).catch(() => null);
+    if (alt) return alt;
+    throw e;
+  }
+}
+
+async function searchUnsplash(key: string): Promise<Omit<Row, 'tried_at'>> {
   const q = PHOTO_QUERIES[key];
   // Square photos fit the food tiles best; many dishes only have a few photos, so widen if none.
   let results = await find(q, true);
   if (!results.length) results = await find(q, false);
   // The most liked of the top results tends to be the best-looking photo.
   const best = [...results].sort((a, b) => (b.likes ?? 0) - (a.likes ?? 0))[0];
-  if (!best) return { key, url: null, author: null, author_url: null, photo_page: null, blur_color: null };
+  if (!best) return (await fromPexels(key, q).catch(() => null)) ?? { key, url: null, author: null, author_url: null, photo_page: null, blur_color: null };
   // Unsplash asks apps to report when a photo is used.
   void fetch(best.links.download_location, { headers: { authorization: `Client-ID ${process.env.UNSPLASH_ACCESS_KEY}` } }).catch(() => undefined);
   return { key, url: best.urls.raw, author: best.user.name, author_url: `${best.user.links.html}?${UTM}`, photo_page: `${best.links.html}?${UTM}`, blur_color: best.color ?? null };
@@ -58,7 +78,7 @@ export async function GET(request: Request): Promise<Response> {
   // Find a few missing ones per request (or retry old misses), within Unsplash's hourly limit.
   const missing = keys.filter((k) => { const r = have.get(k); return !r || (!r.url && Date.now() - Date.parse(r.tried_at) > RETRY_MS); }).slice(0, NEW_PER_REQUEST);
   let pending = keys.filter((k) => !have.get(k)).length > missing.length;
-  if (process.env.UNSPLASH_ACCESS_KEY) {
+  if (process.env.UNSPLASH_ACCESS_KEY || process.env.PEXELS_API_KEY) {
     for (const k of missing) {
       try {
         const row = await search(k);
