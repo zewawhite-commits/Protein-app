@@ -16,7 +16,7 @@ import { FoodArt } from './FoodIcon';
 import { cx, fmt } from './ui';
 import { haptic, toast } from './fx';
 
-/** AI recipes (Plus and Pro): AI writes the dish, the database supplies every number. */
+/** AI recipes (Pro): AI writes the dish, the database supplies every number. */
 export function RecipeView() {
   const context = useCoachContext();
   const profile = useStore((s) => s.profile);
@@ -83,7 +83,7 @@ export function RecipeView() {
         </button>
         {state.error && (
           <p className="mt-3 rounded-2xl bg-raised px-3 py-2 text-sm text-silver">
-            {state.error} {state.premium && <Link to="/premium" className="font-semibold text-accent">Get Plus</Link>}
+            {state.error} {state.premium && <Link to="/premium" className="font-semibold text-accent">Get Pro</Link>}
           </p>
         )}
         {state.signIn && <div className="mt-3"><SignInButtons /></div>}

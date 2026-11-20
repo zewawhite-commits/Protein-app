@@ -1,6 +1,6 @@
 /**
  * POST /api/recipe { context, request } → Recipe
- * AI recipe; nutrition is calculated by the app from its database. Plus and Pro.
+ * AI recipe; nutrition is calculated by the app from its database. Pro.
  */
 import Anthropic from '@anthropic-ai/sdk';
 import { contextText } from '../src/lib/coach.js';

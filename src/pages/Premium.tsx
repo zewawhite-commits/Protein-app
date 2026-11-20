@@ -14,14 +14,13 @@ import { Segmented, cx } from '@/components/ui';
 /** Planned prices, shown until live plans load from the payment provider (which sets the real charge). */
 const PREVIEW = [
   { tier: null, name: 'Free', perks: ['Calories, macros & 18,000+ foods', 'Barcode, exercise, progress & feed', '3 AI scans + 5 coach messages a day'], best: false },
-  { tier: 'plus' as Tier, name: 'Plus', perks: ['Unlimited AI food scans', 'Restaurant menu scanning', 'AI nutrition coach', 'Personalized meal plans', 'Daily meal suggestions', 'AI recipes with full nutrition', 'AI workout guides', 'Adjusts to your cuisine & diet'], best: true },
-  { tier: 'pro' as Tier, name: 'Pro', perks: ['Everything in Plus', 'Advanced weekly & monthly meal planning', 'Plans adjust automatically to your progress', 'Advanced micronutrient analysis', 'Detailed nutrition reports', 'Advanced recommendations', 'Smarter, more personal AI coach'], best: false },
+  { tier: 'pro' as Tier, name: 'Pro', perks: ['Unlimited AI food scans', 'Restaurant menus: photo, QR code or link', 'Smarter, personal AI nutrition coach', 'Personalized weekly & monthly meal plans', 'Plans adjust automatically to your progress', 'Daily meal suggestions', 'AI recipes and recipe import', 'AI workout guides', 'Advanced micronutrient analysis', 'Detailed nutrition reports', 'Adjusts to your cuisine & diet'], best: true },
 ];
 
 const TIER_INFO: Record<'free' | Tier, { name: string; perks: string[] }> = {
   free: { name: 'Free', perks: ['18,000+ foods, barcode, exercise & progress', 'Feed and groups', '3 AI scans + 5 coach messages a day'] },
-  plus: { name: 'Plus', perks: ['Unlimited AI food scans', 'Restaurant menu scanning', 'AI nutrition coach', 'Personalized meal plans', 'Daily meal suggestions', 'AI recipes with full nutrition', 'AI workout guides', 'Adjusts to your cuisine & diet'] },
-  pro: { name: 'Pro', perks: ['Everything in Plus', 'Advanced weekly & monthly meal planning', 'Plans adjust automatically to your progress', 'Advanced micronutrient analysis', 'Detailed nutrition reports', 'Advanced recommendations', 'Smarter, more personal AI coach'] },
+  plus: { name: 'Pro', perks: ['Unlimited AI food scans', 'Restaurant menus: photo, QR code or link', 'Smarter, personal AI nutrition coach', 'Personalized weekly & monthly meal plans', 'Plans adjust automatically to your progress', 'Daily meal suggestions', 'AI recipes and recipe import', 'AI workout guides', 'Advanced micronutrient analysis', 'Detailed nutrition reports', 'Adjusts to your cuisine & diet'] },
+  pro: { name: 'Pro', perks: ['Unlimited AI food scans', 'Restaurant menus: photo, QR code or link', 'Smarter, personal AI nutrition coach', 'Personalized weekly & monthly meal plans', 'Plans adjust automatically to your progress', 'Daily meal suggestions', 'AI recipes and recipe import', 'AI workout guides', 'Advanced micronutrient analysis', 'Detailed nutrition reports', 'Adjusts to your cuisine & diet'] },
 };
 
 type Billing = 'monthly' | 'yearly';
@@ -34,12 +33,12 @@ export default function Premium() {
   const active = isPremiumActive(premium);
   const [catalog, setCatalog] = useState<{ plans: PlanInfo[]; accountRequired: boolean } | null | undefined>(undefined);
   const [billing, setBilling] = useState<Billing>(() => (new URLSearchParams(location.search).get('billing') === 'yearly' ? 'yearly' : 'monthly'));
-  const [tier, setTier] = useState<Tier>(() => (new URLSearchParams(location.search).get('tier') === 'pro' ? 'pro' : 'plus'));
+  const [tier, setTier] = useState<Tier>('pro');
   const [email, setEmail] = useState(premium?.email ?? '');
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ tone: 'ok' | 'err'; text: string } | null>(null);
   // After paying: a welcome page (also reachable again at /premium?welcome=1 while subscribed).
-  const [welcome, setWelcome] = useState<Tier | null>(() => (new URLSearchParams(location.search).has('welcome') && active ? (premium!.tier === 'pro' ? 'pro' : 'plus') : null));
+  const [welcome, setWelcome] = useState<Tier | null>(() => (new URLSearchParams(location.search).has('welcome') && active ? 'pro' as Tier : null));
   const [restoring, setRestoring] = useState(() => new URLSearchParams(location.search).get('restore') === '1');
   const [ref, setRef] = useState('');
   const handled = useRef(false);
@@ -58,7 +57,7 @@ export default function Premium() {
     handled.current = true;
     setBusy(true);
     activate({ reference })
-      .then((p) => setWelcome(p.tier === 'pro' ? 'pro' : 'plus'))
+      .then(() => setWelcome('pro'))
       .catch((e: Error) => setMsg({ tone: 'err', text: e.message }))
       .finally(() => {
         setBusy(false);
@@ -111,10 +110,10 @@ export default function Premium() {
 
       {active ? (
         <div className="card mt-5 p-5">
-          <p className="flex items-center gap-2 font-semibold"><Check size={18} className="text-accent" strokeWidth={3} /> You’re on {premium!.tier === 'pro' ? 'Pro' : 'Plus'}</p>
+          <p className="flex items-center gap-2 font-semibold"><Check size={18} className="text-accent" strokeWidth={3} /> You’re on Pro</p>
           <p className="mt-1 text-sm text-silver">
             {premium!.email} · renews or ends around {new Date(premium!.exp).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}
-            {' · '}AI scans, coach, meal plans, recipes & workouts{premium!.tier === 'pro' && ', plus advanced planning, reports & a smarter coach'}
+            {' · '}everything in Pro is on
           </p>
           <div className="mt-4 grid gap-2">
             <Link to="/snap" className="btn-primary"><Camera size={18} /> Snap a meal</Link>
@@ -167,7 +166,7 @@ export default function Premium() {
 
           <div className="mt-4 grid gap-2.5">
             <TierCard tier="free" selected={false} price="Free" sub="forever" />
-            {(['plus', 'pro'] as Tier[]).map((t) => {
+            {(['pro'] as Tier[]).map((t) => {
               const p = planFor(t, billingNow);
               if (!p) return null;
               const monthly = planFor(t, 'monthly');
@@ -259,7 +258,7 @@ function TierCard({ tier, selected, onClick, price, sub, badge, scans }: { tier:
 /** Shown right after subscribing: what's unlocked, then how to share it on the feed. */
 function Welcome({ tier, onDone }: { tier: Tier; onDone: () => void }) {
   const nav = useNavigate();
-  const name = tier === 'pro' ? 'Pro' : 'Plus';
+  const name = 'Pro';
   const perks = TIER_INFO[tier].perks.filter((p) => !p.startsWith('Everything'));
   return (
     <div className="animate-fade-up pb-10 pt-8">
@@ -269,7 +268,6 @@ function Welcome({ tier, onDone }: { tier: Tier; onDone: () => void }) {
         <p className="mx-auto mt-2 max-w-sm text-[15px] text-silver">Everything below is switched on for your account, on every device you sign in to.</p>
       </div>
       <div className="card mt-6 space-y-3 p-5">
-        {tier === 'pro' && <p className="flex items-center gap-3 text-[15px] font-semibold"><Check size={18} className="shrink-0 text-accent" strokeWidth={3} /> Everything in Plus</p>}
         {perks.map((p) => <p key={p} className="flex items-center gap-3 text-[15px] font-semibold"><Check size={18} className="shrink-0 text-accent" strokeWidth={3} /> {p}</p>)}
       </div>
       <div className="card mt-4 p-5">

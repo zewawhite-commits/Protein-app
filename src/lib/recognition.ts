@@ -177,7 +177,9 @@ export async function recognizeWithClient(client: Anthropic, imageBase64: string
         role: 'user',
         content: imageBase64
           ? [
-              { type: 'image', source: { type: 'base64', media_type: mediaType as 'image/jpeg', data: imageBase64 } },
+              mediaType === 'application/pdf'
+                ? { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: imageBase64 } }
+                : { type: 'image', source: { type: 'base64', media_type: mediaType as 'image/jpeg', data: imageBase64 } },
               { type: 'text', text: opts.menu
                 ? 'This is a photo of a restaurant, café or takeaway menu, not a plate. List up to 12 main dishes from it as items, as each would be served: use the dish name as written (English in "name", the menu’s own wording in "localName" if different), a typical restaurant portion in estimatedGrams with a range, the cooking method, ingredients for combined dishes, and hidden extras at restaurant levels (restaurants usually use more oil, butter and salt than home cooking). Skip drinks and sides unless the menu is only drinks. photoQuality = how readable the menu is. If it isn’t a menu or food, set isFood to false and explain in "note".'
                 : 'Identify every food and drink in this photo — the whole plate, not just the main item.' },

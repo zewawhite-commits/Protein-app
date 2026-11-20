@@ -46,8 +46,7 @@ const OBSTACLES = ['Lack of consistency', 'Busy schedule', 'Unhealthy eating hab
 
 const PLAN_CHOICES = [
   { tier: 'free' as const, name: 'Free', badge: '', perks: ['Calories, macros & 18,000+ foods', 'Barcode, exercise, progress & feed', '3 AI scans + 5 coach messages a day'] },
-  { tier: 'plus' as const, name: 'Plus', badge: 'Most popular', perks: ['Unlimited AI food scans', 'Restaurant menu scanning', 'AI nutrition coach', 'Personalized meal plans', 'Daily meal suggestions', 'AI recipes with full nutrition', 'AI workout guides', 'Adjusts to your cuisine & diet'] },
-  { tier: 'pro' as const, name: 'Pro', badge: '', perks: ['Everything in Plus', 'Advanced weekly & monthly meal planning', 'Plans adjust automatically to your progress', 'Advanced micronutrient analysis', 'Detailed nutrition reports', 'Advanced recommendations', 'Smarter, more personal AI coach'] },
+  { tier: 'pro' as const, name: 'Pro', badge: 'Everything included', perks: ['Unlimited AI food scans', 'Restaurant menus: photo, QR code or link', 'Smarter, personal AI nutrition coach', 'Personalized weekly & monthly meal plans', 'Plans adjust automatically to your progress', 'Daily meal suggestions', 'AI recipes and recipe import', 'AI workout guides', 'Advanced micronutrient analysis', 'Detailed nutrition reports', 'Adjusts to your cuisine & diet'] },
 ];
 
 export default function Onboarding() {
@@ -97,7 +96,7 @@ export default function Onboarding() {
   const [goalWeight, setGoalWeight] = useState('');
   const [pace, setPace] = useState(0.5);
   const [training, setTraining] = useState<string[]>([]);
-  const [planChoice, setPlanChoice] = useState<'free' | 'plus' | 'pro'>('plus');
+  const [planChoice, setPlanChoice] = useState<'free' | 'plus' | 'pro'>('pro');
   const [billing, setBilling] = useState<'monthly' | 'yearly'>('monthly');
   const [obstacles, setObstacles] = useState<string[]>([]);
   const [hasCoach, setHasCoach] = useState<boolean>();
@@ -463,7 +462,7 @@ export default function Onboarding() {
               }}
               className="btn-primary mt-6 w-full"
             >
-              {planChoice === 'free' ? 'Start for free' : `Continue with ${planChoice === 'pro' ? 'Pro' : 'Plus'}`}
+              {planChoice === 'free' ? 'Start for free' : 'Continue with Pro'}
             </button>
             {planChoice !== 'free' && (
               <button onClick={() => { haptic(); finish(); }} className="btn-ghost mt-2 w-full">Start free for now</button>
@@ -602,7 +601,7 @@ function Welcome({ signedIn, email, onStart }: { signedIn: boolean; email?: stri
           <p className="text-center text-[15px] text-silver">Already have an account? <button onClick={() => setMode('login')} className="font-semibold text-accent">Log in</button></p>
           <button onClick={onStart} className="mt-1 h-11 text-sm font-semibold text-silver">Skip — use without an account</button>
           <p className="text-center text-xs text-dim">An account saves your data so you can use it on any phone.</p>
-          <p className="mb-2 text-center text-[13px] text-silver">Free to start, no card. Plus $4.99/mo, Pro $7.99/mo, or save 60% yearly · <a href="/premium" className="font-semibold text-accent underline">See what’s included</a></p>
+          <p className="mb-2 text-center text-[13px] text-silver">Free to start, no card. Pro is $7.99/mo, or save 60% yearly · <a href="/premium" className="font-semibold text-accent underline">See what’s included</a></p>
           <p className="text-center text-xs text-dim">By continuing you agree to our <a href="/terms" className="underline">Terms</a>, <a href="/privacy" className="underline">Privacy Policy</a> and <a href="/refunds" className="underline">Refund Policy</a>.</p>
         </div>
       )}

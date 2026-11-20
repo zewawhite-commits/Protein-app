@@ -121,7 +121,7 @@ export function Terms() {
       <H>Plans and payments</H>
       <ul className="list-disc space-y-2 pl-5">
         <li><b>Free</b> costs nothing and includes a limited number of AI scans and coach messages each month.</li>
-        <li><b>Plus</b> costs {money('plus_monthly')} a month or {money('plus_yearly')} a year. <b>Pro</b> costs {money('pro_monthly')} a month or {money('pro_yearly')} a year. The price is shown before you pay.</li>
+        <li><b>Pro</b> costs {money('pro_monthly')} a month or {money('pro_yearly')} a year. The price is shown before you pay.</li>
         <li>Paid plans are billed in advance through Paystack and renew automatically at the end of each month or year until you cancel.</li>
         <li>Prices are shown in US dollars. If you’re charged in another currency, your bank or card provider sets the exchange rate and may add fees.</li>
         <li>We may change prices for future billing periods. We’ll tell you in advance, and you can cancel before the new price applies.</li>
@@ -160,7 +160,7 @@ export function Terms() {
 export function Refunds() {
   return (
     <Page title="Cancellation & Refund Policy">
-      <p>This policy explains how to cancel a {APP_NAME} Plus or Pro subscription and when you can get your money back. Payments are processed by Paystack.</p>
+      <p>This policy explains how to cancel a {APP_NAME} Pro subscription and when you can get your money back. Payments are processed by Paystack.</p>
 
       <H>Who we are</H>
       <WhoWeAre />
@@ -168,7 +168,7 @@ export function Refunds() {
       <H>Cancelling</H>
       <ul className="list-disc space-y-2 pl-5">
         <li>You can cancel at any time: open {APP_NAME} → Profile → Subscription → Manage, change or cancel. This opens Paystack’s page for your subscription. You can also email {contact} and we’ll cancel it for you.</li>
-        <li>When you cancel, you won’t be charged again. You keep Plus or Pro until the end of the month or year you’ve already paid for, then your account moves to the Free plan.</li>
+        <li>When you cancel, you won’t be charged again. You keep Pro until the end of the month or year you’ve already paid for, then your account moves to the Free plan.</li>
         <li>Your food log, history and settings stay yours on Free; nothing is deleted when a plan ends.</li>
         <li>Deleting your account doesn’t cancel a subscription by itself, so please cancel first.</li>
       </ul>

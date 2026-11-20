@@ -38,12 +38,12 @@ export function useFreePro(): { on: boolean; days: number } {
 }
 
 /** Pro features available: a paid plan or free Pro time. */
-export function useHasTier(needs: 'plus' | 'pro'): boolean {
+export function useHasTier(_needs: 'plus' | 'pro'): boolean {
   const premium = useStore((s) => s.premium);
   const free = useFreePro().on;
   const server = useStore((s) => s.serverTier);
-  const paid = isPremiumActive(premium) && (needs === 'plus' || premium?.tier === 'pro');
-  const onServer = server === 'pro' || (needs === 'plus' && server === 'plus');
+  const paid = isPremiumActive(premium); // one paid plan (Pro); older Plus passes count as Pro
+  const onServer = server === 'pro' || server === 'plus';
   return paid || free || onServer;
 }
 

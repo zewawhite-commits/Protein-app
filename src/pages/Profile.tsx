@@ -272,7 +272,7 @@ function PremiumCard() {
       <div className="flex items-center gap-4">
         <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-on-primary/10"><Crown size={22} className="text-accent" /></span>
         <div className="min-w-0 flex-1">
-          <p className="font-semibold">{active ? `${premium!.tier === 'pro' ? 'Pro' : 'Plus'} is active` : 'Upgrade to Plus or Pro'}</p>
+          <p className="font-semibold">{active ? 'Pro is active' : 'Upgrade to Pro'}</p>
           <p className="truncate text-[14px] opacity-70">
             {active ? `${premium!.email} · until ${new Date(premium!.exp).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}` : 'Unlimited AI scans and coach'}
           </p>
@@ -376,7 +376,7 @@ function SubscriptionGroup() {
   return (
     <Group title="Subscription">
       <Row icon={<Crown size={18} />} label="Plan">
-        <span className="text-sm font-semibold text-silver">{active ? `${premium!.tier === 'pro' ? 'Pro' : 'Plus'}${billing?.interval ? ` · ${billing.interval === 'annually' ? 'yearly' : billing.interval}` : ''}` : 'Free'}</span>
+        <span className="text-sm font-semibold text-silver">{active ? `Pro${billing?.interval ? ` · ${billing.interval === 'annually' ? 'yearly' : billing.interval}` : ''}` : 'Free'}</span>
       </Row>
       {active && billing?.status === 'attention' && (
         <div role="alert" className="mx-4 my-2 rounded-2xl bg-warn/10 p-3.5 text-[14px] leading-relaxed">

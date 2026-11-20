@@ -1,6 +1,6 @@
 /**
  * POST /api/workout { context, request } → WorkoutPlan
- * AI workout guide for the week. Plus and Pro.
+ * AI workout guide for the week. Pro.
  */
 import Anthropic from '@anthropic-ai/sdk';
 import { contextText } from '../src/lib/coach.js';

@@ -36,7 +36,7 @@ export function ProfileHero({ onEdit }: { onEdit: () => void }) {
   const days = new Set(entries.map((e) => e.date)).size;
   const freePro = useFreePro();
   const serverTier = useStore((s) => s.serverTier);
-  const plan = isPremiumActive(premium) ? (premium?.tier === 'pro' ? 'Pro' : 'Plus') : freePro.on ? 'Pro (free)' : serverTier === 'pro' ? 'Pro' : serverTier === 'plus' ? 'Plus' : 'Free';
+  const plan = isPremiumActive(premium) ? ('Pro') : freePro.on ? 'Pro (free)' : serverTier === 'pro' ? 'Pro' : serverTier === 'plus' ? 'Pro' : 'Free';
 
   async function pick(f?: File) {
     if (!f) return;

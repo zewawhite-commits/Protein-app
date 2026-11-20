@@ -427,9 +427,9 @@ export default function Snap() {
       {phase === 'premium' && (
         <div className="card mt-5 p-5">
           <p className="flex items-center gap-2 text-[17px] font-bold"><ScanLine size={18} className="text-accent" /> You’re out of AI scans</p>
-          <p className="mt-2 text-sm leading-relaxed text-silver">{error || 'AI scans come with Plus and Pro.'} Picking the food yourself is always free.</p>
+          <p className="mt-2 text-sm leading-relaxed text-silver">{error || 'Unlimited AI scans come with Pro.'} Picking the food yourself is always free.</p>
           <div className="mt-4 grid gap-2">
-            <Link to="/premium" className="btn-primary"><Crown size={17} /> Upgrade to Plus — $4.99/month</Link>
+            <Link to="/premium" className="btn-primary"><Crown size={17} /> Upgrade to Pro — $7.99/month</Link>
             <Link to={manualUrl()} className="btn-ghost">Pick food manually</Link>
           </div>
         </div>
@@ -956,9 +956,9 @@ function usePortionPlan(rows: (PlateRow & { name: string })[] | null, date: stri
 
 /** What the scan is doing right now, so the wait feels short and clear. */
 function ScanSteps({ menu }: { menu: boolean }) {
-  const steps = menu ? ['Reading the menu', 'Finding each dish', 'Matching nutrition records', 'Almost there'] : ['Looking at your photo', 'Spotting each food', 'Estimating portions', 'Matching nutrition records'];
+  const steps = menu ? ['Loading menu', 'Reading the dishes', 'Matching nutrition records', 'Almost there'] : ['Loading photo', 'Spotting each food', 'Estimating portions', 'Matching nutrition records'];
   const [i, setI] = useState(0);
-  useEffect(() => { const t = setInterval(() => setI((n) => Math.min(n + 1, steps.length - 1)), 1800); return () => clearInterval(t); }, [steps.length]);
+  useEffect(() => { const t = setInterval(() => setI((n) => Math.min(n + 1, steps.length - 1)), 1500); return () => clearInterval(t); }, [steps.length]);
   return (
     <div className="flex items-center gap-2 rounded-full bg-black/65 px-4 py-2.5 text-sm font-semibold text-white backdrop-blur-md" role="status">
       <Loader2 size={16} className="animate-spin" /> {steps[i]}…

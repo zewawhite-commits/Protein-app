@@ -31,7 +31,8 @@ export const usageKey = (feature: string, userId: string, tier: PlanTier) => (DA
 
 const DEFAULTS: Record<PlanTier, Record<Feature, number>> = {
   free: { scan: 3, coach: 5, workout: 0, recipe: 0, plan: 0, ideas: 0, menu: 0 },
-  plus: { scan: FAIR_USE, coach: FAIR_USE * 3, workout: FAIR_USE, recipe: FAIR_USE, plan: 30, ideas: FAIR_USE, menu: FAIR_USE },
+  // There is only one paid plan now (Pro); any older Plus subscription gets everything Pro has.
+  plus: { scan: FAIR_USE, coach: FAIR_USE * 3, workout: FAIR_USE, recipe: FAIR_USE, plan: FAIR_USE, ideas: FAIR_USE, menu: FAIR_USE },
   pro: { scan: FAIR_USE, coach: FAIR_USE * 3, workout: FAIR_USE, recipe: FAIR_USE, plan: FAIR_USE, ideas: FAIR_USE, menu: FAIR_USE },
   // The 3-day Pro trial: everything Pro has, unlimited (fair-use cap only).
   trial: { scan: FAIR_USE, coach: FAIR_USE * 3, workout: FAIR_USE, recipe: FAIR_USE, plan: FAIR_USE, ideas: FAIR_USE, menu: FAIR_USE },
@@ -91,7 +92,7 @@ export async function gate(request: Request, feature: Feature, count = 1): Promi
 
   const limit = limitFor(tier, feature);
   if (limit <= 0) {
-    return { ok: false, status: 402, body: { error: `${NAMES[feature][0].toUpperCase()}${NAMES[feature].slice(1)} come with Plus and Pro.`, premium: true, feature, tier, renew: expired } };
+    return { ok: false, status: 402, body: { error: `${NAMES[feature][0].toUpperCase()}${NAMES[feature].slice(1)} come with Pro.`, premium: true, feature, tier, renew: expired } };
   }
   try {
     let left = 0;
@@ -101,7 +102,7 @@ export async function gate(request: Request, feature: Feature, count = 1): Promi
     }
     if (left < 0) {
       if (limit >= UNLIMITED) return { ok: false, status: 429, body: { error: 'You’ve hit the fair-use limit for this month. It resets on the 1st. Contact support if you need more.', limitReached: true, feature, tier } };
-      return { ok: false, status: 402, body: { error: tier === 'plus' ? `You’ve used your ${limit} ${NAMES[feature]} this month. Pro has unlimited.` : `You’ve used your ${limit} free ${NAMES[feature]} for today. They reset tomorrow, or upgrade to Plus for unlimited.`, premium: true, limitReached: true, feature, tier } };
+      return { ok: false, status: 402, body: { error: tier === 'plus' ? `You’ve used your ${limit} ${NAMES[feature]} this month. Pro has unlimited.` : `You’ve used your ${limit} free ${NAMES[feature]} for today. They reset tomorrow, or upgrade to Pro for unlimited.`, premium: true, limitReached: true, feature, tier } };
     }
     return { ok: true, tier, left, limit };
   } catch (e) {

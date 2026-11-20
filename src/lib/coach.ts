@@ -4,7 +4,6 @@
  * suggested food to a database record and calculates the numbers itself.
  */
 import type Anthropic from '@anthropic-ai/sdk';
-import { RECOGNITION_MODEL } from './recognition.js';
 
 export interface ChatTurn { role: 'user' | 'assistant'; content: string }
 export interface ChatImage { data: string; mediaType: 'image/jpeg' | 'image/png' | 'image/webp' }
@@ -122,19 +121,18 @@ export function contextText(c: CoachContext): string {
 /** Model for the coach chat: quick replies matter more here than in photo recognition. */
 export const CHAT_MODEL = 'claude-sonnet-5-5';
 
-/** Pro members get the strongest model with more thinking: deeper, more personal coaching. */
-export const PRO_CHAT_MODEL = RECOGNITION_MODEL;
 const PRO_NOTE = 'This person is on Pro: give deeper, more personalised coaching — connect advice to their logged foods, trends and goal, and explain the why in a sentence.';
 
 /** The request for one coach reply (shared by the normal and the streaming path). */
 function coachParams(turns: ChatTurn[], context: CoachContext, image?: ChatImage, opts: { pro?: boolean } = {}) {
   return {
-    // Chat favours speed: a fast model and low effort keep replies to a few seconds. Pro gets a stronger model.
-    model: opts.pro ? PRO_CHAT_MODEL : CHAT_MODEL,
+    // Chat favours speed: everyone gets the fast model with low effort, so replies start in a few seconds.
+    // Pro gets deeper, more personal coaching through its instructions (PRO_NOTE), not a slower model.
+    model: CHAT_MODEL,
     max_tokens: 3000,
     betas: ['server-side-fallback-2026-07-01'],
     fallbacks: 'default' as const,
-    output_config: { effort: (opts.pro ? 'medium' : 'low') as 'medium' | 'low', format: { type: 'json_schema' as const, schema: SCHEMA as unknown as Record<string, unknown> } },
+    output_config: { effort: 'low' as const, format: { type: 'json_schema' as const, schema: SCHEMA as unknown as Record<string, unknown> } },
     // Stable instructions first (cacheable), then this person's context.
     system: [
       { type: 'text' as const, text: SYSTEM, cache_control: { type: 'ephemeral' as const } },

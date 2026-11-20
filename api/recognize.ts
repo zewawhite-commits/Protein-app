@@ -1,6 +1,6 @@
 /**
  * Serverless endpoint for photo recognition (Vercel Functions, Web-standard handler).
- * Plan limits are enforced by api/_lib/quota.ts (sign-in required; Free/Plus/Pro monthly scans).
+ * Plan limits are enforced by api/_lib/quota.ts (sign-in required; Free daily / Pro limits).
  * Keeps the Anthropic API key on the server: set ANTHROPIC_API_KEY in the Vercel
  * project's Environment Variables.
  *
@@ -23,7 +23,7 @@ export async function POST(request: Request): Promise<Response> {
   let body: { image?: string; mediaType?: string; text?: string; label?: boolean; menu?: boolean; menuUrl?: string } | null;
   body = (await request.json().catch(() => null)) as typeof body;
   if (!body || typeof body !== 'object') return json({ error: 'Invalid JSON body.' }, 400);
-  // Restaurant menus are a Plus feature with their own allowance; plate and label photos are AI scans.
+  // Restaurant menus are a Pro feature with their own allowance; plate and label photos are AI scans.
   const g = await gate(request, (body.menu === true && !body.text) || typeof body.menuUrl === 'string' ? 'menu' : 'scan');
   if (!g.ok) return json(g.body, g.status);
   if (Number.isFinite(g.left)) scansLeft = g.left;
@@ -33,10 +33,18 @@ export async function POST(request: Request): Promise<Response> {
     if (!url) return json({ error: 'That QR code or link doesn’t open a normal web page.' }, 400);
     try {
       const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), 8000);
-      const res = await fetch(url, { signal: ctl.signal, redirect: 'follow', headers: { 'user-agent': 'Mozilla/5.0 (compatible; MenuReader/1.0)', accept: 'text/html,application/pdf' } }).finally(() => clearTimeout(t));
+      const res = await fetch(url, { signal: ctl.signal, redirect: 'follow', headers: { 'user-agent': 'Mozilla/5.0 (compatible; MenuReader/1.0)', accept: 'text/html,application/pdf,image/*' } }).finally(() => clearTimeout(t));
       const type = res.headers.get('content-type') ?? '';
       if (!res.ok || !safeRecipeUrl(res.url)) return json({ error: 'Couldn’t open that menu. Take a photo of it instead.' }, 422);
-      if (!type.includes('html')) return json({ error: 'This menu is a file or image, not a web page. Take a photo of it instead.' }, 422);
+      // Menus that open as a PDF or a picture are read directly.
+      const fileType = type.includes('pdf') ? 'application/pdf' : (['image/jpeg', 'image/png', 'image/webp', 'image/gif'].find((t) => type.includes(t)) ?? '');
+      if (fileType) {
+        const buf = Buffer.from(await res.arrayBuffer());
+        if (buf.length > (fileType === 'application/pdf' ? 15 : 5) * 1024 * 1024) return json({ error: 'That menu file is too big to read. Take a photo of the page you want instead.' }, 413);
+        const recognized = await recognizeWithClient(new Anthropic(), buf.toString('base64'), fileType, undefined, { menu: true });
+        return json(scansLeft != null ? { ...recognized, popular: {}, scansLeft, scanLimit: g.limit } : { ...recognized, popular: {} }, 200);
+      }
+      if (!type.includes('html')) return json({ error: 'Couldn’t read that kind of menu. Take a photo of it instead.' }, 422);
       const text = pageText((await res.text()).slice(0, 2_000_000));
       if (text.length < 40) return json({ error: 'That page has no readable menu (it may load with an app). Take a photo of the menu instead.' }, 422);
       const recognized = await recognizeWithClient(new Anthropic(), null, 'text/plain', text, { menu: true });

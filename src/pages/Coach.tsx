@@ -186,7 +186,7 @@ function Chat() {
         // Errors (and older servers) answer with plain JSON.
         const data = (await res.json()) as CoachReply & { error?: string };
         if (res.status === 401 || res.status === 402) {
-          setMsgs((m) => [...m, { role: 'assistant', content: data.error ?? 'The coach is a Plus and Pro feature.', error: true, premium: res.status === 402, signIn: res.status === 401 }]);
+          setMsgs((m) => [...m, { role: 'assistant', content: data.error ?? 'Unlimited coach chat comes with Pro.', error: true, premium: res.status === 402, signIn: res.status === 401 }]);
           return;
         }
         if (!res.ok) throw new Error(data.error || 'Could not reply.');
@@ -284,8 +284,9 @@ function Chat() {
         )))}
 
         {busy && !msgs[msgs.length - 1]?.streaming && (
-          <div className="inline-flex items-center gap-1.5 rounded-[22px] rounded-bl-md bg-surface px-4 py-3.5" style={{ boxShadow: 'var(--shadow)' }} role="status" aria-label="Coach is typing">
-            {[0, 1, 2].map((d) => <span key={d} className="h-2 w-2 animate-bounce rounded-full bg-silver" style={{ animationDelay: `${d * 0.15}s` }} />)}
+          <div className="inline-flex items-center gap-1.5 rounded-[22px] rounded-bl-md bg-surface px-4 py-3.5" style={{ boxShadow: 'var(--shadow)' }} role="status" aria-label="Coach is thinking">
+            <span className="mr-1 text-sm font-medium text-silver">Thinking</span>
+            {[0, 1, 2].map((d) => <span key={d} className="h-1.5 w-1.5 animate-bounce rounded-full bg-silver" style={{ animationDelay: `${d * 0.15}s` }} />)}
           </div>
         )}
         <div ref={endRef} />
