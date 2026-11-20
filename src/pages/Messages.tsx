@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, ArrowUp, ChefHat, Flag, Loader2, Search, ShieldOff } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 import { useSession } from '@/lib/account';
-import { blockUser, conversations, setFollow, findUser, myUserId, reportMessage, sendDirect, thread, type Conversation, type DirectMessage, type PublicProfile } from '@/lib/social';
+import { acceptChat, blockUser, conversations, setFollow, findUser, myUserId, reportMessage, sendDirect, thread, type Conversation, type DirectMessage, type PublicProfile } from '@/lib/social';
 import { SharedRecipeCard, toShared } from '@/components/SharedRecipeCard';
 import { SignInButtons } from '@/components/SignIn';
 import { Segmented, cx } from '@/components/ui';
@@ -54,9 +54,9 @@ export default function Messages() {
       </div>
       {error && <p className="mt-3 rounded-2xl bg-danger/10 px-4 py-3 text-sm text-danger">{error}</p>}
       {!!list?.some((c) => c.request) && (
-        <div className="mt-4"><Segmented full value={tab} onChange={setTab} options={[{ value: 'chats', label: 'Chats' }, { value: 'requests', label: `Requests (${list.filter((c) => c.request).length})` }]} /></div>
+        <div className="mt-4"><Segmented full value={tab} onChange={setTab} options={[{ value: 'chats', label: 'Inbox' }, { value: 'requests', label: `Requests (${list.filter((c) => c.request).length})` }]} /></div>
       )}
-      {tab === 'requests' && <p className="mt-3 px-1 text-[13px] text-silver">Messages from people you don’t follow wait here. Follow them or reply to move the chat to Chats. They can still like and comment on your posts.</p>}
+      {tab === 'requests' && <p className="mt-3 px-1 text-[13px] text-silver">Messages from people you don’t both follow wait here. Accept one to reply — it moves to your Inbox. They can still like and comment on your posts.</p>}
       {list === null ? <p className="mt-6 flex justify-center text-silver"><Loader2 className="animate-spin" /></p> : shown(list, tab).length === 0 ? (
         <p className="card mt-4 p-5 text-sm text-silver">{tab === 'requests' ? 'No message requests.' : 'No messages yet. Find a friend by their @username above, then share a recipe or say hi.'}</p>
       ) : (
@@ -129,8 +129,9 @@ function Thread({ other, profile, onBack, preRecipe, request }: { other: string;
       {request && !accepted && (
         <div className="card mb-3 p-4">
           <p className="text-[15px] font-semibold">Message request</p>
-          <p className="mt-1 text-sm text-silver">You don’t follow {profile?.display_name ?? 'this person'}. Follow them to move this to your chats — or just reply.</p>
-          <button onClick={async () => { try { await setFollow(other, true); setAccepted(true); haptic(); toast('Following — this chat is in your Chats now'); } catch (e) { toast((e as Error).message); } }} className="btn-primary mt-3 !h-11 w-full">Follow &amp; accept</button>
+          <p className="mt-1 text-sm text-silver">{profile?.display_name ?? 'This person'} wants to message you. You don’t follow each other, so you can’t reply until you accept.</p>
+          <button onClick={async () => { try { await acceptChat(other); setAccepted(true); haptic(); toast('Accepted — this chat is in your Inbox now'); } catch (e) { toast((e as Error).message); } }} className="btn-primary mt-3 !h-11 w-full">Accept</button>
+          <button onClick={async () => { try { await Promise.all([acceptChat(other), setFollow(other, true)]); setAccepted(true); haptic(); toast('Accepted and following'); } catch (e) { toast((e as Error).message); } }} className="btn-ghost mt-2 !h-11 w-full">Accept &amp; follow back</button>
         </div>
       )}
       {error && <p className="mb-3 rounded-2xl bg-danger/10 px-4 py-3 text-sm text-danger">{error}</p>}
@@ -157,11 +158,11 @@ function Thread({ other, profile, onBack, preRecipe, request }: { other: string;
             : <p className="text-sm text-silver">No recipes yet. Create one from Add food → My recipes.</p>}
         </div>
       )}
-      <div className="fixed inset-x-0 bottom-0 z-30 mx-auto flex max-w-lg gap-2 bg-bg/95 px-5 pb-[max(env(safe-area-inset-bottom),1rem)] pt-2 backdrop-blur-xl md:max-w-2xl">
+      {(!request || accepted) && <div className="fixed inset-x-0 bottom-0 z-30 mx-auto flex max-w-lg gap-2 bg-bg/95 px-5 pb-[max(env(safe-area-inset-bottom),1rem)] pt-2 backdrop-blur-xl md:max-w-2xl">
         <button onClick={() => setPicking((v) => !v)} className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-surface" style={{ boxShadow: 'var(--shadow)' }} aria-label="Share a recipe"><ChefHat size={19} /></button>
         <input className="field flex-1" maxLength={2000} placeholder="Message" value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && void send()} aria-label="Message" />
         <button disabled={busy || !text.trim()} onClick={() => void send()} className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-primary text-on-primary" aria-label="Send">{busy ? <Loader2 size={18} className="animate-spin" /> : <ArrowUp size={19} />}</button>
-      </div>
+      </div>}
     </Shell>
   );
 }

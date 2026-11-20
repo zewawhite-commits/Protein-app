@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowDown, ArrowLeft, ArrowUp, BookOpen, Check, Dumbbell, History, Pause, Play, Plus, RefreshCw, Search, SkipForward, Timer, Trash2, Trophy, X } from 'lucide-react';
+import { ArrowDown, ArrowLeft, ArrowUp, BookOpen, Check, Dumbbell, History, Pause, Play, Plus, RefreshCw, Search, SkipForward, Timer, Trash2, Trophy } from 'lucide-react';
 import { useStore } from '@/store/useStore';
-import { EXERCISE_LIBRARY } from '@/lib/exercise';
-import { CATEGORY_LABEL, GUIDES, clock, elapsed, est1rm, type ActiveWorkout, type ExerciseKind, type LiveExercise, type WorkoutLog } from '@/lib/liveWorkout';
+import { CATEGORY_NAMES, LIBRARY, findExercise } from '@/data/exerciseLibrary';
+import { GuideBrowser, GuideSheet } from '@/components/ExerciseGuide';
+import { CATEGORY_LABEL, clock, elapsed, est1rm, type ActiveWorkout, type ExerciseKind, type LiveExercise, type WorkoutLog } from '@/lib/liveWorkout';
 import { fromKey } from '@/lib/dates';
 import { Segmented, Sheet, cx, fmt } from '@/components/ui';
 import { haptic, toast } from '@/components/fx';
@@ -16,8 +17,7 @@ function useCatalogue() {
   const custom = useStore((s) => s.customExercises);
   return useMemo(() => {
     const m = new Map<string, { name: string; muscle: string; kind: ExerciseKind; custom?: boolean; equipment?: string }>();
-    for (const [name, g] of Object.entries(GUIDES)) m.set(name.toLowerCase(), { name, muscle: g.muscles.split(',')[0], kind: g.kind, equipment: g.equipment });
-    for (const e of EXERCISE_LIBRARY) if (!m.has(e.name.toLowerCase())) m.set(e.name.toLowerCase(), { name: e.name, muscle: e.muscle, kind: 'strength' });
+    for (const e of LIBRARY) m.set(e.name.toLowerCase(), { name: e.name, muscle: CATEGORY_NAMES[e.category], kind: e.kind });
     for (const c of custom) m.set(c.name.toLowerCase(), { name: c.name, muscle: c.muscle, kind: c.category, custom: true, equipment: c.equipment });
     return [...m.values()].sort((a, b) => a.name.localeCompare(b.name));
   }, [custom]);
@@ -25,6 +25,25 @@ function useCatalogue() {
 
 export function newExercise(name: string, muscle = '', kind: ExerciseKind = 'strength', sets = 3, reps?: number, weightKg?: number): LiveExercise {
   return { key: key(), name, muscle, kind, sets: kind === 'cardio' ? [] : Array.from({ length: sets }, () => ({ done: false, ...(reps ? { reps } : {}), ...(weightKg ? { weightKg } : {}) })) };
+}
+
+/**
+ * A gentle next-step suggestion from last time (simple double progression): if every set reached
+ * the top of the rep range, try a little more weight; if sets fell short, stay at that weight.
+ */
+function progression(e: LiveExercise, prev: LiveExercise | null): string | null {
+  if (e.kind !== 'strength' || !prev) return null;
+  const done = prev.sets.filter((s) => s.done && s.reps);
+  if (!done.length) return null;
+  const kg = Math.max(...done.map((s) => s.weightKg ?? 0));
+  const lib = findExercise(e.name);
+  const top = Number(lib?.rx.reps.match(/(\d+)\D*$/)?.[1] ?? lib?.rx.reps.match(/(\d+)/)?.[1] ?? 12);
+  const allTop = done.length >= Math.min(prev.sets.length, 3) && done.every((s) => (s.reps ?? 0) >= top);
+  const fell = done.some((s) => (s.reps ?? 0) < Math.max(1, top - 4));
+  if (kg > 0 && allTop) return `Last time you did all sets at ${kg} kg × ${top}+. If it felt comfortable, try ${Math.round((kg + (kg >= 40 ? 2.5 : 1)) * 2) / 2} kg today.`;
+  if (kg === 0 && allTop) return `Last time you hit ${top}+ reps on every set — try a harder version or slower reps.`;
+  if (fell) return `Last time some sets fell short${kg ? ` at ${kg} kg` : ''} — stay there today and aim for clean reps.`;
+  return kg ? `Last time: ${kg} kg. Aim to match or beat your reps.` : null;
 }
 
 /** Live workout: start, track, finish — plus history and personal records. */
@@ -47,7 +66,7 @@ function Start() {
     const r = routines.find((x) => x.id === params.get('routine'));
     if (r) start(r.name, r.exercises.map((e) => newExercise(e.name, e.muscle ?? '', 'strength', e.sets || 3, parseInt(e.reps, 10) || undefined, e.weightKg)));
     const d = params.get('guideDay') != null ? guide?.plan.days[Number(params.get('guideDay'))] : undefined;
-    if (d) start(d.name, d.exercises.map((e) => newExercise(e.name, '', GUIDES[e.name]?.kind ?? 'strength', e.sets || 3, parseInt(String(e.reps), 10) || undefined)));
+    if (d) start(d.name, d.exercises.map((e) => newExercise(e.name, '', findExercise(e.name)?.kind ?? 'strength', e.sets || 3, parseInt(String(e.reps), 10) || undefined)));
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const week = logs.filter((l) => Date.now() - l.startedAt < 7 * 864e5);
@@ -82,7 +101,7 @@ function Start() {
           <p className="mb-2 px-1 font-semibold">From your AI guide</p>
           <div className="card divide-y divide-line p-1">
             {guide.plan.days.map((d, i) => (
-              <button key={i} onClick={() => start(d.name, d.exercises.map((e) => newExercise(e.name, '', GUIDES[e.name]?.kind ?? 'strength', e.sets || 3, parseInt(String(e.reps), 10) || undefined)))} className="flex w-full items-center gap-3 p-3 text-left">
+              <button key={i} onClick={() => start(d.name, d.exercises.map((e) => newExercise(e.name, '', findExercise(e.name)?.kind ?? 'strength', e.sets || 3, parseInt(String(e.reps), 10) || undefined)))} className="flex w-full items-center gap-3 p-3 text-left">
                 <span className="grid h-10 w-10 place-items-center rounded-full bg-accent/10 text-accent"><Timer size={18} /></span>
                 <span className="min-w-0 flex-1"><span className="block truncate font-semibold">{d.name}</span><span className="text-sm text-silver">{d.minutes} min · {d.exercises.length} exercises — change anything as you go</span></span>
                 <Play size={18} className="text-accent" />
@@ -160,8 +179,13 @@ function Active({ w }: { w: ActiveWorkout }) {
   const [, tick] = useState(0);
   useEffect(() => { const t = setInterval(() => tick((n) => n + 1), 1000); return () => clearInterval(t); }, []);
   const [adding, setAdding] = useState<{ replace?: string } | null>(null);
-  const [guideFor, setGuideFor] = useState<string | null>(null);
+  const [guideFor, setGuideFor] = useState<{ name: string; key: string } | null>(null);
   const [rest, setRest] = useState<{ until: number; total: number } | null>(null);
+  // List of all exercises, or one at a time — the person chooses; remembered for next time.
+  const [view, setViewState] = useState<'list' | 'focus'>(() => { try { return localStorage.getItem('nutivili-workout-view') === 'focus' ? 'focus' : 'list'; } catch { return 'list'; } });
+  const setView = (v: 'list' | 'focus') => { setViewState(v); try { localStorage.setItem('nutivili-workout-view', v); } catch { /* storage blocked */ } };
+  const [focusIdx, setFocusIdx] = useState(0);
+  const [hurt, setHurt] = useState<{ name: string; key: string } | null>(null);
   const update = (k: string, f: (e: LiveExercise) => LiveExercise) => set((cur) => ({ ...cur, exercises: cur.exercises.map((e) => (e.key === k ? f(e) : e)) }));
   const move = (i: number, d: number) => set((cur) => { const ex = [...cur.exercises]; const j = i + d; if (j < 0 || j >= ex.length) return cur; [ex[i], ex[j]] = [ex[j], ex[i]]; return { ...cur, exercises: ex }; });
   const previous = (name: string) => { for (let i = logs.length - 1; i >= 0; i--) { const e = logs[i].exercises.find((x) => x.name.toLowerCase() === name.toLowerCase()); if (e) return e; } return null; };
@@ -179,34 +203,34 @@ function Active({ w }: { w: ActiveWorkout }) {
     if (log) { toast(`Workout saved · ${log.minutes} min`, { tone: 'celebrate' }); nav('/workout'); }
   }
 
-  return (
-    <div className="mx-auto min-h-dvh max-w-lg px-5 pb-40 md:max-w-2xl">
-      <header className="pt-safe sticky top-0 z-10 -mx-5 bg-bg/95 px-5 pb-3 backdrop-blur">
-        <div className="flex items-center gap-2">
-          <input value={w.name} onChange={(e) => set((c) => ({ ...c, name: e.target.value.slice(0, 50) }))} aria-label="Workout name" className="min-w-0 flex-1 bg-transparent text-[22px] font-extrabold outline-none" />
-          <button onClick={end} className="btn-primary !h-10 !px-4 text-sm">Finish</button>
-        </div>
-        <div className="mt-1 flex items-center gap-3">
-          <span className={cx('num text-[28px] font-extrabold tabular-nums', paused && 'text-silver')} aria-label="Workout time">{clock(elapsed(w))}</span>
-          <button onClick={() => set((c) => (c.pausedAt ? { ...c, pausedMs: c.pausedMs + (Date.now() - c.pausedAt), pausedAt: undefined } : { ...c, pausedAt: Date.now() }))} className="chip !h-9">{paused ? <><Play size={14} /> Resume</> : <><Pause size={14} /> Pause</>}</button>
-          <span className="num ml-auto text-sm text-silver">{doneSets} set{doneSets === 1 ? '' : 's'} done</span>
-        </div>
-      </header>
-
-      {w.exercises.length === 0 && <p className="card mt-2 p-5 text-sm text-silver">Add your first exercise — pick one or create your own.</p>}
-      <div className="mt-2 space-y-3">
-        {w.exercises.map((e, i) => {
-          const prev = previous(e.name);
-          return (
+  // One exercise's card (used in both views).
+  function card(e: LiveExercise, i: number) {
+    const prev = previous(e.name);
+    const lib = findExercise(e.name);
+    const hint = progression(e, prev);
+    return (
             <section key={e.key} className={cx('card p-4', e.skipped && 'opacity-50')}>
               <div className="flex items-start gap-2">
-                <button onClick={() => setGuideFor(e.name)} className="min-w-0 flex-1 text-left">
+                <button onClick={() => setGuideFor({ name: e.name, key: e.key })} className="min-w-0 flex-1 text-left">
                   <p className="truncate text-[16px] font-bold text-accent">{e.name}</p>
                   <p className="text-xs text-silver">{[e.muscle, CATEGORY_LABEL[e.kind]].filter(Boolean).join(' · ')} · tap for how-to</p>
                 </button>
                 <button onClick={() => move(i, -1)} disabled={i === 0} className="grid h-8 w-8 place-items-center rounded-full bg-raised disabled:opacity-30" aria-label={`Move ${e.name} up`}><ArrowUp size={14} /></button>
                 <button onClick={() => move(i, 1)} disabled={i === w.exercises.length - 1} className="grid h-8 w-8 place-items-center rounded-full bg-raised disabled:opacity-30" aria-label={`Move ${e.name} down`}><ArrowDown size={14} /></button>
               </div>
+              {lib && (
+                <p className="mt-2 text-[13px] text-silver">Suggested: {lib.rx.sets > 1 ? `${lib.rx.sets} × ` : ''}{lib.rx.reps}{lib.rx.rest ? ` · rest ${lib.rx.rest >= 60 ? `${lib.rx.rest / 60} min` : `${lib.rx.rest} s`}` : ''}</p>
+              )}
+              {hint && <p className="mt-1.5 rounded-xl bg-accent/10 px-3 py-2 text-[13px] font-medium text-accent">{hint}</p>}
+              {view === 'focus' && lib && (
+                <details className="mt-2 rounded-2xl bg-raised px-3 py-2 text-[14px]" open>
+                  <summary className="cursor-pointer font-semibold">How to do it</summary>
+                  <p className="mt-1.5 text-silver">{lib.start}</p>
+                  <ol className="mt-1.5 list-decimal space-y-1 pl-5">{lib.steps.map((x) => <li key={x}>{x}</li>)}</ol>
+                  <p className="mt-1.5 text-[13px] text-silver"><span className="font-semibold text-ink">Breathing:</span> {lib.breathing}</p>
+                  <button onClick={() => setGuideFor({ name: e.name, key: e.key })} className="mt-1.5 text-[13px] font-semibold text-accent">Full guide, mistakes & alternatives →</button>
+                </details>
+              )}
               {e.kind === 'cardio' ? (
                 <div className="mt-3 grid grid-cols-2 gap-2">
                   <label className="rounded-2xl bg-raised px-3 py-2"><span className="block text-xs font-semibold text-silver">Minutes</span><input inputMode="decimal" aria-label={`${e.name} minutes`} value={e.minutes ?? ''} onChange={(x) => update(e.key, (y) => ({ ...y, minutes: Number(x.target.value) || undefined }))} className="num w-full bg-transparent text-lg font-bold outline-none" /></label>
@@ -239,11 +263,40 @@ function Active({ w }: { w: ActiveWorkout }) {
                 <button onClick={() => setAdding({ replace: e.key })} className="chip !h-8 !px-3 text-[13px]"><RefreshCw size={13} /> Replace</button>
                 <button onClick={() => update(e.key, (y) => ({ ...y, skipped: !y.skipped }))} className="chip !h-8 !px-3 text-[13px]"><SkipForward size={13} /> {e.skipped ? 'Unskip' : 'Skip'}</button>
                 <button onClick={() => set((c) => ({ ...c, exercises: c.exercises.filter((x) => x.key !== e.key) }))} className="chip !h-8 !px-3 text-[13px]"><Trash2 size={13} /> Remove</button>
+                <button onClick={() => setHurt({ name: e.name, key: e.key })} className="chip !h-8 !px-3 text-[13px] !text-danger">This hurts</button>
               </div>
             </section>
-          );
-        })}
+    );
+  }
+
+  return (
+    <div className="mx-auto min-h-dvh max-w-lg px-5 pb-40 md:max-w-2xl">
+      <header className="pt-safe sticky top-0 z-10 -mx-5 bg-bg/95 px-5 pb-3 backdrop-blur">
+        <div className="flex items-center gap-2">
+          <input value={w.name} onChange={(e) => set((c) => ({ ...c, name: e.target.value.slice(0, 50) }))} aria-label="Workout name" className="min-w-0 flex-1 bg-transparent text-[22px] font-extrabold outline-none" />
+          <button onClick={end} className="btn-primary !h-10 !px-4 text-sm">Finish</button>
+        </div>
+        <div className="mt-1 flex items-center gap-3">
+          <span className={cx('num text-[28px] font-extrabold tabular-nums', paused && 'text-silver')} aria-label="Workout time">{clock(elapsed(w))}</span>
+          <button onClick={() => set((c) => (c.pausedAt ? { ...c, pausedMs: c.pausedMs + (Date.now() - c.pausedAt), pausedAt: undefined } : { ...c, pausedAt: Date.now() }))} className="chip !h-9">{paused ? <><Play size={14} /> Resume</> : <><Pause size={14} /> Pause</>}</button>
+          <span className="num ml-auto text-sm text-silver">{doneSets} set{doneSets === 1 ? '' : 's'} done</span>
+        </div>
+        {w.exercises.length > 1 && (
+          <div className="mt-2"><Segmented<'list' | 'focus'> full value={view} onChange={(v) => { haptic(); setView(v); }} options={[{ value: 'list', label: 'All exercises' }, { value: 'focus', label: 'One at a time' }]} /></div>
+        )}
+      </header>
+
+      {w.exercises.length === 0 && <p className="card mt-2 p-5 text-sm text-silver">Add your first exercise — pick one or create your own.</p>}
+      <div className="mt-2 space-y-3">
+        {(view === 'list' ? w.exercises : w.exercises.slice(Math.max(0, Math.min(focusIdx, w.exercises.length - 1)), Math.max(0, Math.min(focusIdx, w.exercises.length - 1)) + 1)).map((e) => card(e, w.exercises.indexOf(e)))}
       </div>
+      {view === 'focus' && w.exercises.length > 0 && (
+        <div className="mt-3 flex items-center gap-2">
+          <button disabled={focusIdx === 0} onClick={() => setFocusIdx((x) => Math.max(0, x - 1))} className="btn-ghost flex-1 disabled:opacity-40">Previous</button>
+          <span className="num text-sm text-silver">{Math.min(focusIdx, w.exercises.length - 1) + 1} / {w.exercises.length}</span>
+          <button disabled={focusIdx >= w.exercises.length - 1} onClick={() => { haptic(); setFocusIdx((x) => Math.min(w.exercises.length - 1, x + 1)); }} className="btn-primary flex-1 disabled:opacity-40">Next exercise</button>
+        </div>
+      )}
       <button onClick={() => setAdding({})} className="btn-ghost mt-4 w-full"><Plus size={18} /> Add exercise</button>
       <textarea value={w.note ?? ''} onChange={(e) => set((c) => ({ ...c, note: e.target.value.slice(0, 500) }))} rows={2} placeholder="How did it feel? (optional)" className="field mt-3 !h-auto py-3" aria-label="Workout note" />
       <button onClick={() => { if (confirm('Discard this workout? Nothing will be saved.')) set(null); }} className="mt-3 w-full text-sm font-semibold text-danger">Discard workout</button>
@@ -254,7 +307,14 @@ function Active({ w }: { w: ActiveWorkout }) {
         set((c) => ({ ...c, exercises: adding?.replace ? c.exercises.map((e) => (e.key === adding.replace ? ex : e)) : [...c.exercises, ex] }));
         setAdding(null);
       }} />
-      <GuideSheet name={guideFor} onClose={() => setGuideFor(null)} />
+      <Sheet open={!!hurt} onClose={() => setHurt(null)} title="Stop this exercise">
+        <div className="space-y-3 pb-2 text-[15px]">
+          <p>Pain is a signal to stop — don’t push through it. We can’t tell what’s causing it, so if it’s sharp, doesn’t ease with rest, or you notice swelling, numbness or dizziness, get it checked by a doctor or physiotherapist before training it again.</p>
+          <button onClick={() => { if (hurt) { update(hurt.key, (y) => ({ ...y, skipped: true, note: [y.note, 'Stopped: hurt'].filter(Boolean).join(' · ') })); setGuideFor(hurt); } setHurt(null); }} className="btn-primary w-full">Skip it and see gentler alternatives</button>
+          <button onClick={() => { if (hurt) update(hurt.key, (y) => ({ ...y, skipped: true, note: [y.note, 'Stopped: hurt'].filter(Boolean).join(' · ') })); setHurt(null); }} className="btn-ghost w-full">Just skip it</button>
+        </div>
+      </Sheet>
+      <GuideSheet name={guideFor?.name ?? null} onClose={() => setGuideFor(null)} onUse={guideFor ? (alt) => { const k = guideFor.key; set((c) => ({ ...c, exercises: c.exercises.map((x) => (x.key === k ? { ...newExercise(alt.name, CATEGORY_NAMES[alt.category], alt.kind, x.sets.length || alt.rx.sets), key: x.key } : x)) })); setGuideFor(null); toast(`Swapped for ${alt.name}`); } : undefined} />
     </div>
   );
 }
@@ -328,43 +388,5 @@ function AddExercise({ open, onClose, onPick }: { open: boolean; onClose: () => 
         </>
       )}
     </Sheet>
-  );
-}
-
-function GuideSheet({ name, onClose }: { name: string | null; onClose: () => void }) {
-  const custom = useStore((s) => s.customExercises.find((c) => c.name.toLowerCase() === (name ?? '').toLowerCase()));
-  const g = name ? GUIDES[name] ?? Object.entries(GUIDES).find(([k]) => k.toLowerCase() === name.toLowerCase())?.[1] : undefined;
-  return (
-    <Sheet open={!!name} onClose={onClose} title={name ?? ''}>
-      {g ? (
-        <div className="space-y-3 text-[15px]">
-          <p><b>Works:</b> {g.muscles}</p>
-          <p><b>Equipment:</b> {g.equipment}</p>
-          <p><b>Start:</b> {g.start}</p>
-          <div><p className="font-bold">How to</p><ol className="mt-1 list-decimal space-y-1 pl-5">{g.steps.map((s) => <li key={s}>{s}</li>)}</ol></div>
-          {g.mistakes.length > 0 && <div><p className="font-bold">Common mistakes</p><ul className="mt-1 list-disc space-y-1 pl-5 text-silver">{g.mistakes.map((s) => <li key={s}>{s}</li>)}</ul></div>}
-          {g.alternatives.length > 0 && <p><b>Alternatives:</b> {g.alternatives.join(', ')}</p>}
-          <p className="text-xs text-dim">Written guide — demonstration videos may come later. Stop if anything hurts. General fitness guidance, not medical advice.</p>
-        </div>
-      ) : (
-        <p className="text-[15px] text-silver">{custom ? `Your exercise · ${custom.muscle || 'muscles not set'}${custom.equipment ? ` · ${custom.equipment}` : ''}.` : 'No written guide for this exercise yet.'} Record it the way you do it.</p>
-      )}
-    </Sheet>
-  );
-}
-
-function GuideBrowser({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const [name, setName] = useState<string | null>(null);
-  const all = useCatalogue();
-  return (
-    <>
-      <Sheet open={open && !name} onClose={onClose} title="Exercise guides">
-        <div className="max-h-[65dvh] divide-y divide-line overflow-y-auto">
-          {all.map((x) => <button key={x.name} onClick={() => setName(x.name)} className="flex w-full items-center justify-between px-1 py-3 text-left"><span><span className="block font-semibold">{x.name}</span><span className="text-xs text-silver">{x.muscle}</span></span><BookOpen size={16} className="text-dim" /></button>)}
-        </div>
-      </Sheet>
-      <GuideSheet name={name} onClose={() => setName(null)} />
-      {name && <button className="hidden" onClick={() => setName(null)} aria-hidden><X /></button>}
-    </>
   );
 }

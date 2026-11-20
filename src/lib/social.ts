@@ -280,7 +280,7 @@ export async function joinCommunity() {
 // ---------- private messages (needs supabase/recipes-messages.sql) ----------
 
 export interface DirectMessage { id: string; sender: string; recipient: string; body: string | null; recipe: SharedRecipe | null; created_at: string; read_at: string | null }
-/** request: they messaged you, but you don't follow them and haven't replied — it waits under Requests. */
+/** request: you don't follow each other and haven't accepted or written to them — it waits under Requests, and you can't reply until you accept. */
 export interface Conversation { with: string; profile: PublicProfile; last: DirectMessage; unread: number; request: boolean }
 
 const setupHint = (e: { message: string } | null) => { if (e && /direct_messages|find_user|blocks|does not exist/.test(e.message)) throw new Error('Messages need a quick database update (run supabase/recipes-messages.sql in Supabase).'); fail(e); };
@@ -299,8 +299,8 @@ export async function conversations(): Promise<Conversation[]> {
     if (m.sender === me) c.replied = true;
     byOther.set(other, c);
   }
-  const [profiles, follows] = await Promise.all([profilesFor([...byOther.keys()]), following()]);
-  return [...byOther.entries()].map(([w, { replied, ...c }]) => ({ with: w, profile: profiles.get(w) ?? { display_name: 'Member', avatar: '', streak: 0 }, ...c, request: !replied && !follows.has(w) }));
+  const [profiles, mine, theirs, ok] = await Promise.all([profilesFor([...byOther.keys()]), following(), followers(), accepted()]);
+  return [...byOther.entries()].map(([w, { replied, ...c }]) => ({ with: w, profile: profiles.get(w) ?? { display_name: 'Member', avatar: '', streak: 0 }, ...c, request: !replied && !ok.has(w) && !(mine.has(w) && theirs.has(w)) }));
 }
 
 export async function thread(other: string): Promise<DirectMessage[]> {
@@ -338,9 +338,29 @@ export async function unreadCount(): Promise<number> {
 
 /** Who I follow (private — nobody sees follower counts). */
 export async function following(): Promise<Set<string>> {
-  const { data, error } = await db().from('follows').select('followee');
+  const me = await myUserId();
+  if (!me) return new Set();
+  const { data, error } = await db().from('follows').select('followee').eq('follower', me);
   if (error) return new Set();
   return new Set((data ?? []).map((r) => String(r.followee)));
+}
+/** Who follows me (private: only used to decide where messages land). */
+export async function followers(): Promise<Set<string>> {
+  const me = await myUserId();
+  if (!me) return new Set();
+  const { data, error } = await db().from('follows').select('follower').eq('followee', me);
+  if (error) return new Set();
+  return new Set((data ?? []).map((r) => String(r.follower)));
+}
+/** Chats I've accepted from people who aren't mutual follows. */
+async function accepted(): Promise<Set<string>> {
+  const { data, error } = await db().from('dm_accepts').select('other');
+  if (error) return new Set();
+  return new Set((data ?? []).map((r) => String(r.other)));
+}
+export async function acceptChat(other: string): Promise<void> {
+  const { error } = await db().from('dm_accepts').insert({ other });
+  if (error && !/duplicate/i.test(error.message)) throw new Error(error.message);
 }
 export async function setFollow(userId: string, on: boolean): Promise<void> {
   const { error } = on ? await db().from('follows').insert({ followee: userId }) : await db().from('follows').delete().eq('followee', userId);

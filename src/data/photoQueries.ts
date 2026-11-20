@@ -1,4 +1,6 @@
 // What to search Unsplash for, per food photo key (see foodPhotos.ts). Server-side only.
+import { LIBRARY } from './exerciseLibrary.js';
+
 export const PHOTO_QUERIES: Record<string, string> = {
  "chicken_breast": "grilled chicken breast sliced",
  "chicken_wings": "chicken wings",
@@ -183,3 +185,6 @@ export function photoMust(key: string): string[] {
   const words = (PHOTO_QUERIES[key] ?? '').toLowerCase().split(/\s+/).filter((w) => w.length > 2 && !GENERIC.has(w));
   return words.length ? words.map((w) => w.replace(/(es|s)$/, '')) : [];
 }
+
+// Exercise photos (only shown once a person has checked each one shows exactly that exercise).
+for (const e of LIBRARY) PHOTO_QUERIES[`ex_${e.id}`] = `${e.name.toLowerCase()} exercise`;

@@ -1,3 +1,4 @@
+import { CATEGORY_NAMES, LIBRARY } from '@/data/exerciseLibrary';
 /**
  * Calories burned by exercise — an estimate: MET × body weight (kg) × hours.
  * MET values approximate the Compendium of Physical Activities (Ainsworth et al., 2011).
@@ -44,12 +45,5 @@ export function burnedKcal(type: ExerciseType, intensity: Intensity, minutes: nu
 export interface RoutineExercise { name: string; sets: number; reps: string; weightKg?: number; muscle?: string }
 export interface Routine { id: string; name: string; exercises: RoutineExercise[]; createdAt: number; updatedAt?: number }
 
-/** Common exercises to pick from (any other name can be typed). */
-export const EXERCISE_LIBRARY: { name: string; muscle: string }[] = [
-  { name: 'Squat', muscle: 'Legs' }, { name: 'Deadlift', muscle: 'Back & legs' }, { name: 'Bench press', muscle: 'Chest' }, { name: 'Overhead press', muscle: 'Shoulders' },
-  { name: 'Barbell row', muscle: 'Back' }, { name: 'Pull-up', muscle: 'Back' }, { name: 'Push-up', muscle: 'Chest' }, { name: 'Lunge', muscle: 'Legs' },
-  { name: 'Romanian deadlift', muscle: 'Hamstrings' }, { name: 'Hip thrust', muscle: 'Glutes' }, { name: 'Leg press', muscle: 'Legs' }, { name: 'Lat pulldown', muscle: 'Back' },
-  { name: 'Dumbbell curl', muscle: 'Biceps' }, { name: 'Triceps dip', muscle: 'Triceps' }, { name: 'Plank', muscle: 'Core' }, { name: 'Crunch', muscle: 'Core' },
-  { name: 'Calf raise', muscle: 'Calves' }, { name: 'Lateral raise', muscle: 'Shoulders' }, { name: 'Glute bridge', muscle: 'Glutes' }, { name: 'Burpee', muscle: 'Full body' },
-  { name: 'Mountain climber', muscle: 'Core' }, { name: 'Jump squat', muscle: 'Legs' }, { name: 'Kettlebell swing', muscle: 'Full body' }, { name: 'Bicycle crunch', muscle: 'Core' },
-];
+/** Common exercises to pick from (any other name can be typed): the strength moves in the library. */
+export const EXERCISE_LIBRARY: { name: string; muscle: string }[] = LIBRARY.filter((e) => e.kind === 'strength').map((e) => ({ name: e.name, muscle: CATEGORY_NAMES[e.category] }));
