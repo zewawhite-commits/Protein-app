@@ -7,6 +7,7 @@
 export const EXTRA_KEYS = [
   'sugar', 'satFat', 'cholesterol', 'sodium', 'potassium', 'calcium', 'iron',
   'magnesium', 'zinc', 'vitA', 'vitC', 'vitD', 'vitB12', 'folate', 'addedSugar',
+  'vitE', 'vitK', 'thiamin', 'riboflavin', 'niacin', 'vitB6', 'phosphorus', 'monoFat', 'polyFat',
 ] as const;
 export type ExtraKey = (typeof EXTRA_KEYS)[number];
 
@@ -37,6 +38,15 @@ export const NUTRIENTS: Record<ExtraKey, NutrientInfo> = {
   folate: { label: 'Folate', unit: 'µg', dv: 400, group: 'vitamins' },
   // FDA daily value for added sugars is 50 g. Only known for plain foods (none added), pack labels and your own foods.
   addedSugar: { label: 'Added sugar', unit: 'g', dv: 50, limit: true, group: 'carbs' },
+  monoFat: { label: 'Monounsaturated fat', unit: 'g', dv: null, group: 'fat' },
+  polyFat: { label: 'Polyunsaturated fat', unit: 'g', dv: null, group: 'fat' },
+  phosphorus: { label: 'Phosphorus', unit: 'mg', dv: 1250, group: 'minerals' },
+  vitE: { label: 'Vitamin E', unit: 'mg', dv: 15, group: 'vitamins' },
+  vitK: { label: 'Vitamin K', unit: 'µg', dv: 120, group: 'vitamins' },
+  thiamin: { label: 'Thiamin (B1)', unit: 'mg', dv: 1.2, group: 'vitamins' },
+  riboflavin: { label: 'Riboflavin (B2)', unit: 'mg', dv: 1.3, group: 'vitamins' },
+  niacin: { label: 'Niacin (B3)', unit: 'mg', dv: 16, group: 'vitamins' },
+  vitB6: { label: 'Vitamin B6', unit: 'mg', dv: 1.7, group: 'vitamins' },
 };
 
 /**

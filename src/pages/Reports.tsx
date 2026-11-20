@@ -1,3 +1,4 @@
+import { waterGoal } from '@/components/Water';
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, ChevronLeft, ChevronRight, Download } from 'lucide-react';
@@ -8,10 +9,10 @@ import { dailyTargets } from '@/lib/energy';
 import { splitName } from '@/lib/foods';
 import { Segmented, cx, fmt } from '@/components/ui';
 
-type Period = 'week' | 'month' | 'year';
+type Period = 'week' | 'month' | 'year' | 'custom';
 
 /** Start and end (inclusive) of the week (Mon–Sun) or month that is `offset` periods back. */
-function range(period: Period, offset: number): { from: string; to: string; label: string } {
+function range(period: Exclude<Period, 'custom'>, offset: number): { from: string; to: string; label: string } {
   const now = fromKey(todayKey());
   if (period === 'week') {
     const monday = addDays(todayKey(), -((now.getDay() + 6) % 7) - offset * 7);
@@ -37,8 +38,13 @@ export default function Reports() {
   const [period, setPeriod] = useState<Period>('week');
   const [offset, setOffset] = useState(0);
   const st = useStore();
-  const r = range(period, offset);
-  const prev = range(period, offset + 1);
+  // Custom: any dates they pick (defaults to the last 14 days); compared with the same number of days before.
+  const [from, setFrom] = useState(addDays(todayKey(), -13));
+  const [to, setTo] = useState(todayKey());
+  const fmtDay = (k: string) => fromKey(k).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+  const span = Math.max(1, Math.round((fromKey(to).getTime() - fromKey(from).getTime()) / 864e5) + 1);
+  const r = period === 'custom' ? { from, to, label: `${fmtDay(from)} – ${fmtDay(to)}` } : range(period, offset);
+  const prev = period === 'custom' ? { from: addDays(from, -span), to: addDays(from, -1), label: '' } : range(period, offset + 1);
 
   const report = useMemo(() => {
     const stats = (from: string, to: string) => {
@@ -77,10 +83,11 @@ export default function Reports() {
     ['Carbs', now.carbs == null ? '—' : `${fmt(now.carbs)} g`, delta(now.carbs, before.carbs, ' g'), targets?.carbs && now.carbs ? now.carbs / targets.carbs : null],
     ['Fat', now.fat == null ? '—' : `${fmt(now.fat)} g`, delta(now.fat, before.fat, ' g'), targets?.fat && now.fat ? now.fat / targets.fat : null],
     ['Fiber', now.fiber == null ? '—' : `${fmt(now.fiber)} g`, delta(now.fiber, before.fiber, ' g'), now.fiber ? now.fiber / 30 : null],
-    ['Water', now.water == null ? '—' : `${fmt(now.water / 1000, 1)} L`, null, now.water ? now.water / 2000 : null],
+    ['Water', now.water == null ? '—' : `${fmt(now.water / 1000, 1)} L`, null, now.water ? now.water / waterGoal(st.profile?.bodyWeightKg, st.settings.waterGoalMl) : null],
   ];
 
-  const kind = period === 'week' ? 'weekly' : period === 'month' ? 'monthly' : 'yearly';
+  const periodWord = period === 'custom' ? `${span} days` : period;
+  const kind = period === 'week' ? 'weekly' : period === 'month' ? 'monthly' : period === 'year' ? 'yearly' : 'custom';
   /** A real PDF file saved to the phone (share sheet on phones, download on computers). */
   const savePdf = async () => {
     const { jsPDF } = await import('jspdf');
@@ -91,7 +98,7 @@ export default function Reports() {
     line(r.label, 13, false, 26);
     if (now.logged === 0) line('No food logged in this period. Missing days are not counted as zero.');
     else {
-      line(`Daily averages on the ${now.logged} of ${length} days you logged (change vs previous ${period})`, 11, true, 22);
+      line(`Daily averages on the ${now.logged} of ${length} days you logged (change vs previous ${periodWord})`, 11, true, 22);
       for (const [label, value, change] of rows) line(`${label}: ${value}${change ? `   (${change})` : ''}`);
       y += 8;
       line('Highlights', 11, true, 22);
@@ -120,20 +127,26 @@ export default function Reports() {
         <h1 className="flex-1 text-[26px] font-extrabold tracking-tight">Reports</h1>
         <button onClick={() => void savePdf()} className="chip !h-10"><Download size={15} /> PDF</button>
       </header>
-      <div className="print:hidden"><Segmented full value={period} onChange={(p) => { setPeriod(p); setOffset(0); }} options={[{ value: 'week', label: 'Weekly' }, { value: 'month', label: 'Monthly' }, { value: 'year', label: 'Yearly' }]} /></div>
+      <div className="print:hidden"><Segmented full value={period} onChange={(p) => { setPeriod(p); setOffset(0); }} options={[{ value: 'week', label: 'Weekly' }, { value: 'month', label: 'Monthly' }, { value: 'year', label: 'Yearly' }, { value: 'custom', label: 'Custom' }]} /></div>
 
+      {period === 'custom' && (
+        <div className="mt-4 grid grid-cols-2 gap-2 print:hidden">
+          <label className="text-xs font-semibold text-silver">From<input type="date" aria-label="From" className="field mt-1" value={from} max={to} onChange={(e) => e.target.value && setFrom(e.target.value)} /></label>
+          <label className="text-xs font-semibold text-silver">To<input type="date" aria-label="To" className="field mt-1" value={to} min={from} max={todayKey()} onChange={(e) => e.target.value && setTo(e.target.value)} /></label>
+        </div>
+      )}
       <div className="mt-4 flex items-center justify-between">
-        <button onClick={() => setOffset((o) => o + 1)} className="grid h-10 w-10 place-items-center rounded-full bg-surface print:hidden" aria-label="Previous"><ChevronLeft size={18} /></button>
+        <button disabled={period === 'custom'} onClick={() => setOffset((o) => o + 1)} className="grid h-10 w-10 place-items-center rounded-full bg-surface print:hidden" aria-label="Previous"><ChevronLeft size={18} /></button>
         <p className="text-center font-bold">Nutivili AI {kind} report · {r.label}</p>
-        <button disabled={offset === 0} onClick={() => setOffset((o) => Math.max(0, o - 1))} className="grid h-10 w-10 place-items-center rounded-full bg-surface disabled:opacity-30 print:hidden" aria-label="Next"><ChevronRight size={18} /></button>
+        <button disabled={offset === 0 || period === 'custom'} onClick={() => setOffset((o) => Math.max(0, o - 1))} className="grid h-10 w-10 place-items-center rounded-full bg-surface disabled:opacity-30 print:hidden" aria-label="Next"><ChevronRight size={18} /></button>
       </div>
 
       {now.logged === 0 ? (
-        <p className="card mt-4 p-5 text-sm text-silver">No food logged in this {period}. Missing days aren’t counted as zero, so there’s nothing to report yet.</p>
+        <p className="card mt-4 p-5 text-sm text-silver">No food logged in this {periodWord}. Missing days aren’t counted as zero, so there’s nothing to report yet.</p>
       ) : (
         <>
           <section className="card mt-4 p-5">
-            <p className="text-sm text-silver">Daily average on the {now.logged} of {length} days you logged · vs previous {period}</p>
+            <p className="text-sm text-silver">Daily average on the {now.logged} of {length} days you logged · vs previous {periodWord}</p>
             <div className="mt-3 space-y-3">
               {rows.map(([label, value, change, pct]) => (
                 <div key={label}>
@@ -147,12 +160,12 @@ export default function Reports() {
                 </div>
               ))}
             </div>
-            <p className="mt-3 text-xs text-dim">Bars show the average against your daily target (fiber vs 30 g, water vs 2 L).</p>
+            <p className="mt-3 text-xs text-dim">Bars show the average against your daily target (fibre vs 30 g, water vs your water goal).</p>
           </section>
 
           <section className="card mt-4 grid grid-cols-2 gap-3 p-5 text-center">
             <div className="rounded-2xl bg-raised py-3"><p className="num text-[22px] font-extrabold">{now.proteinDays}/{now.logged}</p><p className="text-xs text-silver">days hitting protein</p></div>
-            <div className="rounded-2xl bg-raised py-3"><p className="num text-[22px] font-extrabold">{now.workouts}</p><p className="text-xs text-silver">workouts · {now.minutes} min{now.km ? ` · ${fmt(now.km, 1)} km` : ''}</p></div>
+            <div className="rounded-2xl bg-raised py-3"><p className="num text-[22px] font-extrabold">{now.workouts}</p><p className="text-xs text-silver">workouts · {now.minutes} min{now.km ? ` · ${fmt(now.km, 1)} km` : ''}{st.settings.workoutsPerWeek ? ` · goal ${fmt(st.settings.workoutsPerWeek * length / 7)} days` : ''}</p></div>
             <div className="rounded-2xl bg-raised py-3"><p className="num text-[22px] font-extrabold">{now.lastWeight ? w(now.lastWeight) : '—'}</p><p className="text-xs text-silver">latest weight</p></div>
             <div className="rounded-2xl bg-raised py-3"><p className="num text-[22px] font-extrabold">{now.weightChange == null ? '—' : `${now.weightChange >= 0 ? '+' : '−'}${w(Math.abs(now.weightChange))}`}</p><p className="text-xs text-silver">weight change</p></div>
           </section>

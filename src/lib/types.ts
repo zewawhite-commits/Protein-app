@@ -25,6 +25,15 @@ export interface Per100 {
   folate?: number | null;
   /** Sugar added in making (pack labels, plain foods = 0); null when unknown. Part of `sugar`. */
   addedSugar?: number | null;
+  vitE?: number | null;
+  vitK?: number | null;
+  thiamin?: number | null;
+  riboflavin?: number | null;
+  niacin?: number | null;
+  vitB6?: number | null;
+  phosphorus?: number | null;
+  monoFat?: number | null;
+  polyFat?: number | null;
 }
 
 export interface Portion {
@@ -180,6 +189,10 @@ export interface Settings {
   quietAi?: boolean;
   /** Meal slots per day, 4 (default) to 7. */
   mealsPerDay?: number;
+  /** Daily water goal in ml (unset = worked out from body weight). */
+  waterGoalMl?: number;
+  /** Workouts per week to aim for (unset or 0 = no goal). */
+  workoutsPerWeek?: number;
 }
 
 /** A meal the user saved to log again in one tap (food snapshots + the grams they weighed). */

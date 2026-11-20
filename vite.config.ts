@@ -46,6 +46,7 @@ export default defineConfig({
           { name: 'Snap a meal', short_name: 'Snap', url: `${base}snap`, icons: [{ src: 'icons/icon-192.png', sizes: '192x192' }] },
           { name: 'Add food', short_name: 'Add food', url: `${base}add`, icons: [{ src: 'icons/icon-192.png', sizes: '192x192' }] },
           { name: 'Scan a barcode', short_name: 'Barcode', url: `${base}barcode`, icons: [{ src: 'icons/icon-192.png', sizes: '192x192' }] },
+          { name: 'My progress', short_name: 'Progress', url: `${base}progress`, icons: [{ src: 'icons/icon-192.png', sizes: '192x192' }] },
         ],
         theme_color: '#F9F7F2',
         background_color: '#F9F7F2',

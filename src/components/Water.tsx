@@ -4,14 +4,15 @@ import { haptic } from './fx';
 import { fmt } from './ui';
 
 /** Daily water target: about 35 ml per kg of body weight, kept between 1.5 and 4 litres (a common rule of thumb). */
-export function waterGoal(kg?: number | null): number {
+export function waterGoal(kg?: number | null, chosen?: number): number {
+  if (chosen) return chosen;
   return kg ? Math.round(Math.min(4000, Math.max(1500, kg * 35)) / 250) * 250 : 2000;
 }
 
 /** Quick water tracking: a glass (250 ml) or a bottle (500 ml) at a time. */
 export function WaterCard({ date }: { date: string }) {
   const ml = useStore((s) => s.water?.[date] ?? 0);
-  const goal = waterGoal(useStore((s) => s.profile?.bodyWeightKg));
+  const goal = waterGoal(useStore((s) => s.profile?.bodyWeightKg), useStore((s) => s.settings.waterGoalMl));
   const add = useStore((s) => s.addWater);
   const pct = Math.min(1, ml / goal);
   return (
@@ -33,7 +34,7 @@ export function WaterCard({ date }: { date: string }) {
       <div className="mt-3 h-2 overflow-hidden rounded-full bg-raised">
         <div className="h-full rounded-full bg-[#4AA3DF] transition-all" style={{ width: `${pct * 100}%` }} />
       </div>
-      <p className="mt-2 text-[12px] text-dim">A glass is 250 ml, a bottle 500 ml. Tea, milk and soup count too. The target is a rough guide based on your weight.</p>
+      <p className="mt-2 text-[12px] text-dim">A glass is 250 ml, a bottle 500 ml. Tea, milk and soup count too. The target is a rough guide based on your weight — set your own in Profile → Settings.</p>
     </section>
   );
 }

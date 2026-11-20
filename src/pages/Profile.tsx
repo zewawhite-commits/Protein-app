@@ -5,7 +5,7 @@ import { SignInButtons } from '@/components/SignIn';
 import { useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useEffect } from 'react';
-import { Utensils, ArrowLeft, ChevronRight, Cloud, CreditCard, Crown, Database, Download, FileText, Flame, HeartHandshake, KeyRound, LifeBuoy, Lightbulb, Lock, LogOut, Mail, Moon, Receipt, RotateCcw, Scale, Settings as SettingsIcon, ShieldCheck, SlidersHorizontal, Smartphone, Sun, Table, Trash2, Upload, UserRound, XCircle } from 'lucide-react';
+import { Droplet, Dumbbell, Utensils, ArrowLeft, ChevronRight, Cloud, CreditCard, Crown, Database, Download, FileText, Flame, HeartHandshake, KeyRound, LifeBuoy, Lightbulb, Lock, LogOut, Mail, Moon, Receipt, RotateCcw, Scale, Settings as SettingsIcon, ShieldCheck, SlidersHorizontal, Smartphone, Sun, Table, Trash2, Upload, UserRound, XCircle } from 'lucide-react';
 import { useStore, exportData } from '@/store/useStore';
 import { fetchBilling, isPremiumActive, manageSubscription, type Billing } from '@/lib/premium';
 import { SUPPORT_EMAIL } from '@/pages/Legal';
@@ -157,6 +157,16 @@ export default function Profile({ mode = 'profile' }: { mode?: 'profile' | 'sett
         <div className="px-3 pb-2">
           <Segmented full value={String(settings.mealsPerDay ?? 4)} onChange={(v) => updateSettings({ mealsPerDay: Number(v) })} options={['4', '5', '6', '7'].map((n) => ({ value: n, label: n }))} />
           <p className="mt-2 text-xs leading-relaxed text-dim">4 = breakfast, snack, lunch, dinner. More adds an afternoon snack, an evening snack and a late meal.</p>
+        </div>
+        <Row icon={<Droplet size={18} />} label="Daily water goal" />
+        <div className="px-3 pb-2">
+          <Segmented full value={String(settings.waterGoalMl ?? 0)} onChange={(v) => updateSettings({ waterGoalMl: Number(v) || undefined })} options={[{ value: '0', label: 'Auto' }, ...['1500', '2000', '2500', '3000', '3500'].map((n) => ({ value: n, label: `${Number(n) / 1000} L` }))]} />
+          <p className="mt-2 text-xs leading-relaxed text-dim">Auto works it out from your weight (about 35 ml per kg).</p>
+        </div>
+        <Row icon={<Dumbbell size={18} />} label="Workouts per week goal" />
+        <div className="px-3 pb-2">
+          <Segmented full value={String(settings.workoutsPerWeek ?? 0)} onChange={(v) => updateSettings({ workoutsPerWeek: Number(v) || undefined })} options={[{ value: '0', label: 'None' }, ...['2', '3', '4', '5', '6'].map((n) => ({ value: n, label: n }))]} />
+          <p className="mt-2 text-xs leading-relaxed text-dim">Shown on Progress and in your reports. Rest days count too — this is just a target.</p>
         </div>
         <Row icon={<Lightbulb size={18} />} label="Suggestions on Home">
           <Toggle on={!settings.quietAi} onChange={(v) => updateSettings({ quietAi: !v })} label="Suggestions on Home" />

@@ -17,6 +17,7 @@ export function ActivitySummary() {
   const entries = useStore((s) => s.entries);
   const remove = useStore((s) => s.removeExercise);
   const miles = useStore((s) => s.settings.bodyUnit === 'lb');
+  const goal = useStore((s) => s.settings.workoutsPerWeek ?? 0);
   const [all, setAll] = useState(false);
   const today = todayKey();
 
@@ -35,6 +36,7 @@ export function ActivitySummary() {
     const logged = [...byDay.keys()];
     return {
       count: week.length,
+      days: new Set(week.map((e) => e.date)).size,
       minutes: week.reduce((a, e) => a + e.minutes, 0),
       km: week.reduce((a, e) => a + (e.km ?? 0), 0),
       kcal: week.reduce((a, e) => a + e.kcal, 0),
@@ -52,6 +54,12 @@ export function ActivitySummary() {
         <h2 className="flex items-center gap-2 text-lg font-bold"><Dumbbell size={18} className="text-accent" /> Activity</h2>
         <Link to="/routines" className="chip !h-9">My routines</Link>
       </div>
+      {goal > 0 && (
+        <div className="mt-3 rounded-2xl bg-raised px-4 py-3">
+          <div className="flex items-baseline justify-between text-sm"><span className="font-semibold">Weekly goal</span><span className="num font-bold">{Math.min(s.days, goal)} of {goal} workout days{s.days >= goal ? ' ✓' : ''}</span></div>
+          <div className="mt-2 flex gap-1">{Array.from({ length: goal }, (_, i) => <span key={i} className={cx('h-2 flex-1 rounded-full', i < s.days ? 'bg-accent' : 'bg-surface')} />)}</div>
+        </div>
+      )}
       <div className="mt-3 grid grid-cols-3 gap-2 text-center">
         <div className="rounded-2xl bg-raised py-3"><p className="num text-[20px] font-extrabold">{s.count}</p><p className="text-xs text-silver">workouts this week</p></div>
         <div className="rounded-2xl bg-raised py-3"><p className="num text-[20px] font-extrabold">{s.minutes}</p><p className="text-xs text-silver">minutes</p></div>
