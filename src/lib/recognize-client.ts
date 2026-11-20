@@ -56,7 +56,12 @@ export async function recognizeMenu(photo: Blob, premiumToken?: string): Promise
   return send({ image: await toBase64(photo), mediaType: photo.type || 'image/jpeg', menu: true }, premiumToken);
 }
 
-async function send(payload: { image?: string; mediaType?: string; text?: string; label?: boolean; menu?: boolean }, premiumToken?: string): Promise<RecognitionResult> {
+/** A menu behind a QR code or web link (Plus and Pro). */
+export async function recognizeMenuUrl(url: string): Promise<RecognitionResult> {
+  return send({ menuUrl: url });
+}
+
+async function send(payload: { image?: string; mediaType?: string; text?: string; label?: boolean; menu?: boolean; menuUrl?: string }, premiumToken?: string): Promise<RecognitionResult> {
   void premiumToken;
   let res: Response;
   try {

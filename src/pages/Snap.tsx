@@ -7,7 +7,7 @@ import { ArrowLeft, BookOpen, Check, ChevronRight, CircleCheck, Crown, Focus, Im
 import { useStore } from '@/store/useStore';
 import { useFoodDb, usePhotoUrl } from '@/lib/hooks';
 import { deletePhoto, getPhoto, resizeImage, savePhoto } from '@/lib/photos';
-import { matchItem, matchItems, pickKey, portionConfidence, recognizeMenu, sendFeedback, PremiumRequiredError, SignInRequiredError, readLabelPhoto, recognizePhoto, recognizeText, RecognitionUnavailableError, ScanLimitError, type MatchedItem } from '@/lib/recognize-client';
+import { recognizeMenuUrl, matchItem, matchItems, pickKey, portionConfidence, recognizeMenu, sendFeedback, PremiumRequiredError, SignInRequiredError, readLabelPhoto, recognizePhoto, recognizeText, RecognitionUnavailableError, ScanLimitError, type MatchedItem } from '@/lib/recognize-client';
 import { refreshPremium } from '@/lib/premium';
 import { SOURCE_SHORT, searchFoods, splitName } from '@/lib/foods';
 import { mealForNow, todayKey } from '@/lib/dates';
@@ -87,6 +87,26 @@ export default function Snap() {
   // What was last sent, so a failed scan can be retried without taking the photo again.
   const lastTry = useRef<{ photoId?: string; text?: string } | null>(null);
   const [retryable, setRetryable] = useState(false);
+
+  /** A menu behind a QR code or link: the server opens it and lists the dishes. */
+  async function analyseMenuUrl(url: string) {
+    setRetryable(false);
+    setPhase('analyzing');
+    try {
+      const result = await recognizeMenuUrl(url);
+      setIsMenu(true);
+      await waitForDb();
+      if (!result.isFood || !result.items.length) { setError(result.note || 'No dishes found on that menu. Take a photo of it instead.'); setPhase('error'); return; }
+      setNote(result.note);
+      setQuality(result.photoQuality ?? 'good');
+      setMatches(matchItems(result, custom, useStore.getState().picks));
+      setPhase('results');
+    } catch (e) {
+      if (e instanceof SignInRequiredError) setPhase('signin');
+      else if (e instanceof PremiumRequiredError) { setError(e.message); setPhase('premium'); }
+      else { setError((e as Error).message || 'Couldn’t read that menu.'); setPhase('error'); }
+    }
+  }
 
   async function analyse(file: Blob | null, text?: string, savedId?: string) {
     // Show progress straight away, before any saving or resizing.
@@ -214,7 +234,7 @@ export default function Snap() {
       </div>
     );
   }
-  if (phase === 'camera') return <Camera onClose={back} onCapture={(b) => (photoDiary && !labelMode && !menuMode ? saveToDiary(b) : analyse(b)).catch((e: Error) => { setError(e.message || 'Something went wrong. Try again.'); setRetryable(true); setPhase('error'); })} mode={labelMode ? 'label' : menuMode ? 'menu' : 'food'} onMode={(m) => { haptic(); setLabelMode(m === 'label'); setMenuMode(m === 'menu'); }} onBarcode={() => nav(`/barcode${date !== todayKey() ? `?date=${date}` : ''}`)} />;
+  if (phase === 'camera') return <Camera onClose={back} onCapture={(b) => (photoDiary && !labelMode && !menuMode ? saveToDiary(b) : analyse(b)).catch((e: Error) => { setError(e.message || 'Something went wrong. Try again.'); setRetryable(true); setPhase('error'); })} mode={labelMode ? 'label' : menuMode ? 'menu' : 'food'} onMode={(m) => { haptic(); setLabelMode(m === 'label'); setMenuMode(m === 'menu'); }} onBarcode={() => nav(`/barcode${date !== todayKey() ? `?date=${date}` : ''}`)} onMenuUrl={(u) => void analyseMenuUrl(u)} />;
   if (phase === 'describe') {
     return (
       <div className="mx-auto min-h-dvh max-w-lg animate-fade-up px-5 pb-12 md:max-w-2xl md:px-8">
@@ -551,7 +571,9 @@ function ItemCard({ match, done, quality, onPick, onMethod, manualUrl, onLogIngr
 }
 
 /** Full-screen camera with a live viewfinder. Falls back to the system camera/gallery picker. */
-function Camera({ onClose, onCapture, mode, onMode, onBarcode }: { onClose: () => void; onCapture: (b: Blob) => void; mode: 'food' | 'label' | 'menu'; onMode: (m: 'food' | 'label' | 'menu') => void; onBarcode: () => void }) {
+function Camera({ onClose, onCapture, mode, onMode, onBarcode, onMenuUrl }: { onClose: () => void; onCapture: (b: Blob) => void; mode: 'food' | 'label' | 'menu'; onMode: (m: 'food' | 'label' | 'menu') => void; onBarcode: () => void; onMenuUrl: (url: string) => void }) {
+  const [linkOpen, setLinkOpen] = useState(false);
+  const [link, setLink] = useState('');
   const videoRef = useRef<HTMLVideoElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const captureRef = useRef<HTMLInputElement>(null);
@@ -601,6 +623,24 @@ function Camera({ onClose, onCapture, mode, onMode, onBarcode }: { onClose: () =
     };
   }, []);
 
+  // Menu mode: spot a table QR code in the live picture (where the browser can read QR codes).
+  useEffect(() => {
+    if (mode !== 'menu' || live !== 'on') return;
+    const BD = (window as unknown as { BarcodeDetector?: new (o: { formats: string[] }) => { detect: (v: HTMLVideoElement) => Promise<{ rawValue: string }[]> } }).BarcodeDetector;
+    if (!BD) return;
+    let stop = false; let det: InstanceType<typeof BD>;
+    try { det = new BD({ formats: ['qr_code'] }); } catch { return; }
+    const tick = async () => {
+      if (stop || !videoRef.current?.videoWidth) return;
+      try {
+        const found = (await det.detect(videoRef.current)).map((c) => c.rawValue).find((v) => /^https:\/\//i.test(v));
+        if (found) { stop = true; haptic([10, 30, 10]); onMenuUrl(found); }
+      } catch { /* keep looking */ }
+    };
+    const t = setInterval(() => void tick(), 700);
+    return () => { stop = true; clearInterval(t); };
+  }, [mode, live, onMenuUrl]);
+
   async function toggleTorch() {
     const track = streamRef.current?.getVideoTracks()[0];
     if (!track) return;
@@ -636,7 +676,7 @@ function Camera({ onClose, onCapture, mode, onMode, onBarcode }: { onClose: () =
 
       <div className="absolute inset-x-0 top-0 flex items-center justify-between px-5" style={{ paddingTop: 'max(env(safe-area-inset-top), 1.25rem)' }}>
         <button onClick={onClose} className="grid h-11 w-11 place-items-center rounded-full bg-black/45 backdrop-blur-md" aria-label="Close camera"><X size={20} /></button>
-        <span className="flex items-center gap-1.5 rounded-full bg-black/45 px-3.5 py-2 text-xs font-semibold backdrop-blur-md"><Focus size={13} /> {mode === 'label' ? 'Fit the nutrition table in the frame' : mode === 'menu' ? 'Fit the menu page in the frame' : 'Fit the whole plate in the frame'}</span>
+        <span className="flex items-center gap-1.5 rounded-full bg-black/45 px-3.5 py-2 text-xs font-semibold backdrop-blur-md"><Focus size={13} /> {mode === 'label' ? 'Fit the nutrition table in the frame' : mode === 'menu' ? 'Snap the menu or its QR code' : 'Fit the whole plate in the frame'}</span>
         {torch.supported ? (
           <button onClick={() => void toggleTorch()} className={cx('grid h-11 w-11 place-items-center rounded-full backdrop-blur-md', torch.on ? 'bg-white text-black' : 'bg-black/45')} aria-label={torch.on ? 'Turn flash off' : 'Turn flash on'} aria-pressed={torch.on}><Zap size={19} /></button>
         ) : <span className="w-11" />}
@@ -658,7 +698,21 @@ function Camera({ onClose, onCapture, mode, onMode, onBarcode }: { onClose: () =
         </div>
       )}
 
+      {linkOpen && (
+        <div className="absolute inset-0 z-10 flex items-end bg-black/60" onClick={() => setLinkOpen(false)}>
+          <div className="w-full rounded-t-[28px] bg-bg p-5 text-ink" style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 1.25rem)' }} onClick={(e) => e.stopPropagation()}>
+            <p className="text-lg font-bold">Menu from a QR code or link</p>
+            <p className="mt-1 text-sm text-silver">Point your phone’s camera app at the table QR code, copy the link it opens, and paste it here. Or paste any online menu link.</p>
+            <input type="url" inputMode="url" autoFocus className="field mt-3" placeholder="https://…" value={link} onChange={(e) => setLink(e.target.value)} aria-label="Menu link" />
+            <button disabled={!/^https:\/\/\S+\.\S+/.test(link.trim())} onClick={() => { setLinkOpen(false); onMenuUrl(link.trim()); }} className="btn-primary mt-3 w-full">Read this menu</button>
+          </div>
+        </div>
+      )}
+
       <div className="absolute inset-x-0 bottom-0" style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 2rem)' }}>
+      {mode === 'menu' && (
+        <div className="mb-3 flex justify-center"><button onClick={() => setLinkOpen(true)} className="rounded-full bg-white/15 px-4 py-2 text-sm font-semibold backdrop-blur-md">QR code or menu link</button></div>
+      )}
       <div className="mx-auto mb-5 grid max-w-md grid-cols-5 gap-1.5 px-3">
         {([['food', 'Food', ScanLine], ['barcode', 'Barcode', ScanBarcode], ['label', 'Label', ScanText], ['menu', 'Menu', BookOpen], ['library', 'Library', ImagePlus]] as const).map(([m, label, Icon]) => {
           const on = m === mode;
