@@ -21,6 +21,7 @@ export function EmailAuth({ start = 'signup', onBack }: { start?: 'signup' | 'lo
   const [phone, setPhone] = useState('');
   const tel = cleanPhone(phone);
   const phoneOk = !phone.trim() || validPhone(tel);
+  const [agreed, setAgreed] = useState(false);
   const [show, setShow] = useState(false);
   const [code, setCode] = useState('');
   const [showCode, setShowCode] = useState(false);
@@ -80,7 +81,7 @@ export function EmailAuth({ start = 'signup', onBack }: { start?: 'signup' | 'lo
   return (
     <form className="grid gap-2.5" onSubmit={(e) => {
       e.preventDefault();
-      if (busy || !validEmail(addr) || !pwOk || (signup && !phoneOk)) return;
+      if (busy || !validEmail(addr) || !pwOk || (signup && (!phoneOk || !agreed))) return;
       if (signup) void run(() => signUpWithPassword(addr, pw, phone.trim() ? tel : undefined), (r) => { if (r === 'confirm') go('confirm'); });
       else void run(() => signInWithPassword(addr, pw));
     }}>
@@ -95,13 +96,17 @@ export function EmailAuth({ start = 'signup', onBack }: { start?: 'signup' | 'lo
       {signup && pw.length > 0 && pw.length < MIN_PW && <p className="px-1 text-[13px] text-silver">{MIN_PW - pw.length} more character{MIN_PW - pw.length === 1 ? '' : 's'} to go</p>}
       {signup && (
         <>
-          <input type="tel" inputMode="tel" autoComplete="tel" aria-label="Phone number (optional)" className={cx('field', !phoneOk && '!ring-2 !ring-danger')} placeholder="Phone (optional), e.g. +234 801 234 5678" value={phone} onChange={(e) => setPhone(e.target.value)} />
-          {!phoneOk && <p className="px-1 text-[13px] text-danger">Start with + and your country code, e.g. +234 801 234 5678.</p>}
-          <p className="px-1 text-[13px] text-silver">We’ll email you a code to confirm your email.</p>
+          <input type="tel" inputMode="tel" autoComplete="tel" aria-label="Phone number (optional)" className={cx('field', !phoneOk && '!ring-2 !ring-danger')} placeholder="Phone number (optional)" value={phone} onChange={(e) => setPhone(e.target.value)} />
+          {!phoneOk && <p className="px-1 text-[13px] text-danger">Add your country code with + at the start.</p>}
+          <label className="flex items-start gap-3 px-1 py-1 text-[13px] leading-relaxed text-silver">
+            <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} className="mt-0.5 h-5 w-5 shrink-0 accent-[rgb(var(--accent))]" aria-label="I agree to the Terms and Privacy Policy" />
+            <span>I agree to the <a href="/terms" target="_blank" className="font-semibold text-accent underline">Terms</a> and <a href="/privacy" target="_blank" className="font-semibold text-accent underline">Privacy Policy</a>. Nutivili AI gives general wellness guidance, not medical advice.</span>
+          </label>
+          <p className="px-1 text-[13px] text-silver">We’ll email you a link to confirm your email.</p>
         </>
       )}
       {messages}
-      <button type="submit" disabled={busy || !validEmail(addr) || !pwOk || (signup && !phoneOk)} className="btn-primary">{Spinner} {signup ? 'Create account' : 'Log in'}</button>
+      <button type="submit" disabled={busy || !validEmail(addr) || !pwOk || (signup && (!phoneOk || !agreed))} className="btn-primary">{Spinner} {signup ? 'Create account' : 'Log in'}</button>
       {!signup && (
         <button type="button" disabled={busy} onClick={() => (validEmail(addr) ? run(() => signInWithEmail(addr), () => go('code')) : setErr('Type your email above first, then tap this again.'))} className="h-10 text-sm font-semibold text-accent">
           Forgot password? Email me a login link

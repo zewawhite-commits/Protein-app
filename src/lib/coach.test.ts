@@ -6,7 +6,9 @@ describe('coach', () => {
   it('accepts only alternating conversations that end with the user', () => {
     expect(cleanTurns([{ role: 'user', content: 'hi' }])).toHaveLength(1);
     expect(cleanTurns([{ role: 'assistant', content: 'x' }, { role: 'user', content: 'hi' }])).toHaveLength(1);
-    expect(cleanTurns([{ role: 'user', content: 'a' }, { role: 'user', content: 'b' }])).toBeNull();
+    // Two questions in a row (after a failed reply) are merged, never rejected.
+    expect(cleanTurns([{ role: 'user', content: 'a' }, { role: 'user', content: 'b' }])).toEqual([{ role: 'user', content: 'a\n\nb' }]);
+    expect(cleanTurns([{ role: 'user', content: 'a' }, { role: 'assistant', content: '' }, { role: 'user', content: 'b' }])).toHaveLength(1);
     expect(cleanTurns([{ role: 'user', content: 'a' }, { role: 'assistant', content: 'b' }])).toBeNull();
     expect(cleanTurns([{ role: 'system', content: 'evil' }])).toBeNull();
     expect(cleanTurns('nope')).toBeNull();

@@ -1,3 +1,4 @@
+import { PHOTOS } from '@/data/foodPhotos.gen';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { APP_NAME } from '@/components/fx';
@@ -196,6 +197,24 @@ export function Refunds() {
 
       <H>Changes and contact</H>
       <p>If we change this policy, we’ll update the date above; changes don’t affect payments made before them. Questions: {contact}.</p>
+    </Page>
+  );
+}
+
+/** Who took the food photos and under which licence (required by Creative Commons). */
+export function Credits() {
+  const list = Object.entries(PHOTOS).sort(([a], [b]) => a.localeCompare(b));
+  return (
+    <Page title="Photo credits">
+      <p>Food photos come from Wikimedia Commons under free licences. Thank you to the photographers below. Photos are cropped and resized for the app; any changes are shared under the same licence.</p>
+      <p>Food illustrations: Microsoft Fluent Emoji (MIT licence).</p>
+      <ul className="space-y-2">
+        {list.map(([key, c]) => (
+          <li key={key} className="text-sm">
+            <b className="text-ink">{key.replace(/_/g, ' ')}</b> — {c.artist || 'Unknown'}, <a className="text-accent underline" href={c.page} target="_blank" rel="noreferrer">{c.license}</a>
+          </li>
+        ))}
+      </ul>
     </Page>
   );
 }

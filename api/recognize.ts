@@ -19,15 +19,13 @@ const TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
 export async function POST(request: Request): Promise<Response> {
   let scansLeft: number | undefined;
   if (!process.env.ANTHROPIC_API_KEY) return json({ error: 'Recognition is not configured on this server.' }, 501);
-  const g = await gate(request, 'scan');
+  // Check the account and read the photo at the same time (both wait on the network).
+  let body: { image?: string; mediaType?: string; text?: string; label?: boolean; menu?: boolean } | null;
+  const [g, parsed] = await Promise.all([gate(request, 'scan'), request.json().catch(() => null)]);
   if (!g.ok) return json(g.body, g.status);
   if (Number.isFinite(g.left)) scansLeft = g.left;
-  let body: { image?: string; mediaType?: string; text?: string; label?: boolean; menu?: boolean };
-  try {
-    body = await request.json();
-  } catch {
-    return json({ error: 'Invalid JSON body.' }, 400);
-  }
+  body = parsed as typeof body;
+  if (!body || typeof body !== 'object') return json({ error: 'Invalid JSON body.' }, 400);
   const { image, mediaType = 'image/jpeg' } = body;
   const text = typeof body.text === 'string' ? body.text.trim().slice(0, 500) : '';
   if (!text) {
@@ -43,7 +41,8 @@ export async function POST(request: Request): Promise<Response> {
     }
     const recognized = await recognizeWithClient(new Anthropic(), text ? null : image!, mediaType, text || undefined, { menu: body.menu === true && !text });
     // What most people chose for these names before, so the right record can go first.
-    const popular = await popularPicks(recognized.items.flatMap((i) => [i.name, i.localName]));
+    // Never let this optional lookup slow the answer down.
+    const popular = await Promise.race([popularPicks(recognized.items.flatMap((i) => [i.name, i.localName])), new Promise<Record<string, string>>((r) => setTimeout(() => r({}), 700))]);
     const result = { ...recognized, popular };
     return json(scansLeft != null ? { ...result, scansLeft, scanLimit: g.limit } : result, 200);
   } catch (e) {

@@ -78,3 +78,7 @@
 
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { scrollbar-width: none; }
+
+/* Scan progress: a soft line sweeping over the photo while it's analysed. */
+@keyframes scanline { 0% { transform: translateY(-10%); } 100% { transform: translateY(1000%); } }
+.scanline { animation: scanline 1.6s ease-in-out infinite alternate; }

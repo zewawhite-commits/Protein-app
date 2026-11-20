@@ -28,6 +28,7 @@ const RecipeBuilder = lazy(() => import('./pages/RecipeBuilder'));
 const Privacy = lazy(() => import('./pages/Legal').then((m) => ({ default: m.Privacy })));
 const Terms = lazy(() => import('./pages/Legal').then((m) => ({ default: m.Terms })));
 const Refunds = lazy(() => import('./pages/Legal').then((m) => ({ default: m.Refunds })));
+const Credits = lazy(() => import('./pages/Legal').then((m) => ({ default: m.Credits })));
 const Help = lazy(() => import('./pages/Help'));
 const Feed = lazy(() => import('./pages/Groups').then((m) => ({ default: m.CommunityFeedPage })));
 
@@ -69,6 +70,7 @@ export default function App() {
         <Route path="privacy" element={<Privacy />} />
         <Route path="terms" element={<Terms />} />
         <Route path="refunds" element={<Refunds />} />
+        <Route path="credits" element={<Credits />} />
         <Route path="help" element={<Help />} />
         <Route path="add" element={<div className="mx-auto max-w-lg px-5 pb-16 md:max-w-2xl md:px-8 lg:max-w-3xl"><AddFood /></div>} />
         <Route path="*" element={<Navigate to="/" replace />} />

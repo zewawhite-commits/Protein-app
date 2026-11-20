@@ -128,7 +128,7 @@ export default function Premium() {
           <TrialCard className="mb-4" />
           {accountsEnabled && !session && (
             <div className="card mb-4 p-5">
-              <p className="text-[16px] font-bold">Try Pro free for 7 days</p>
+              <p className="text-[16px] font-bold">Try Pro free for 3 days</p>
               <p className="mb-3 mt-1 text-sm text-silver">Create a free account to start — no card needed.</p>
               <SignInButtons />
             </div>

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowUp, ChevronRight, ImagePlus, Loader2, MessageCircle, RotateCcw, X } from 'lucide-react';
+import { ArrowUp, ChevronRight, ImagePlus, MessageCircle, RotateCcw, X } from 'lucide-react';
 import { blobToBase64, resizeImage } from '@/lib/photos';
 import { aiHeaders } from '@/lib/premium';
 import { WorkoutView } from '@/components/WorkoutView';
@@ -13,15 +13,37 @@ import { confidentMatch, splitName } from '@/lib/foods';
 import { dailyTargets } from '@/lib/energy';
 import { nutrientsFor } from '@/lib/nutrition';
 import { todayKey, addDays } from '@/lib/dates';
-import type { CoachContext, CoachFood, CoachReply, ChatTurn } from '@/lib/coach';
+import type { CoachContext, CoachFood, CoachReply, ChatTurn, ProfileUpdate } from '@/lib/coach';
 import type { Food } from '@/lib/types';
 import { FoodSheet } from '@/components/FoodSheet';
 import { Segmented, cx, fmt } from '@/components/ui';
 import { PlanView } from '@/components/PlanView';
-import { APP_NAME, haptic } from '@/components/fx';
+import { APP_NAME, haptic, toast } from '@/components/fx';
 
-interface Msg extends ChatTurn { foods?: CoachFood[]; error?: boolean; premium?: boolean; signIn?: boolean; thumb?: string; fromPhoto?: boolean }
+interface Msg extends ChatTurn { updates?: ProfileUpdate[]; applied?: boolean; foods?: CoachFood[]; error?: boolean; premium?: boolean; signIn?: boolean; thumb?: string; fromPhoto?: boolean }
 interface Pending { data: string; mediaType: 'image/jpeg'; thumb: string }
+
+/** Apply changes the person confirmed in the chat to their profile. */
+function applyUpdates(updates: ProfileUpdate[]) {
+  const st = useStore.getState();
+  const p = st.profile;
+  if (!p) return;
+  const num = (v: string) => Number(v.replace(/[^\d.]/g, ''));
+  const add = (list: string[] | undefined, v: string) => (list?.some((x) => x.toLowerCase() === v.toLowerCase()) ? list : [...(list ?? []), v]);
+  const next = { ...p };
+  for (const u of updates) {
+    if (u.field === 'calorieGoal') { next.calorieMode = 'fixed'; next.calorieGoal = Math.round(num(u.value)); }
+    else if (u.field === 'proteinGoal') { next.goalMode = 'fixed'; next.goalGrams = Math.round(num(u.value)); }
+    else if (u.field === 'goalWeightKg') next.goalWeightKg = Math.round(num(u.value) * 10) / 10;
+    else if (u.field === 'avoidAdd') next.avoid = add(next.avoid, u.value);
+    else if (u.field === 'cuisinesAdd') next.cuisines = add(next.cuisines, u.value);
+    else if (u.field === 'dietPrefsAdd') next.dietPrefs = add(next.dietPrefs, u.value);
+    else if (u.field === 'obstaclesAdd') next.obstacles = add(next.obstacles, u.value);
+    else if (u.field === 'trainingAdd') next.training = add(next.training, u.value);
+  }
+  st.saveProfile(next);
+  toast('Profile updated');
+}
 
 const PHOTO_PROMPT = 'What’s in this photo, and how does it fit my goals?';
 
@@ -151,7 +173,8 @@ function Chat() {
         return;
       }
       if (!res.ok) throw new Error(data.error || 'Could not reply.');
-      setMsgs((m) => [...m, { role: 'assistant', content: data.reply, foods: data.foods, fromPhoto: !!photo }]);
+      // A reply with only food suggestions still needs words, so the history stays valid.
+      setMsgs((m) => [...m, { role: 'assistant', content: data.reply || (data.foods?.length ? `Suggestions: ${data.foods.map((f) => f.name).join(', ')}` : 'Done.'), foods: data.foods, updates: data.profileUpdates, fromPhoto: !!photo }]);
     } catch (e) {
       setMsgs((m) => [...m, { role: 'assistant', content: (e as Error).message, error: true }]);
     } finally {
@@ -199,11 +222,24 @@ function Chat() {
               {m.signIn && <div className="mt-3"><SignInButtons /></div>}
             </div>
             {!!m.foods?.length && <FoodCards foods={m.foods} estimate={m.fromPhoto} onOpen={(food, grams) => setOpen({ food, grams })} />}
+            {!!m.updates?.length && (
+              <div className="mt-2 rounded-[20px] bg-accent/10 p-4">
+                <p className="text-sm font-bold text-accent">Update your profile?</p>
+                <ul className="mt-1.5 space-y-1 text-sm">{m.updates.map((u) => <li key={u.field + u.value}>• {u.label}</li>)}</ul>
+                {m.applied ? (
+                  <p className="mt-3 text-sm font-semibold text-accent">Saved to your profile ✓</p>
+                ) : (
+                  <button onClick={() => { applyUpdates(m.updates!); haptic(); setMsgs((all) => all.map((x, j) => (j === i ? { ...x, applied: true } : x))); }} className="btn-primary mt-3 !h-11 w-full">Save to profile</button>
+                )}
+              </div>
+            )}
           </div>
         )))}
 
         {busy && (
-          <div className="flex items-center gap-2 px-2 text-sm text-silver"><Loader2 size={16} className="animate-spin" /> Thinking…</div>
+          <div className="inline-flex items-center gap-1.5 rounded-[22px] rounded-bl-md bg-surface px-4 py-3.5" style={{ boxShadow: 'var(--shadow)' }} role="status" aria-label="Coach is typing">
+            {[0, 1, 2].map((d) => <span key={d} className="h-2 w-2 animate-bounce rounded-full bg-silver" style={{ animationDelay: `${d * 0.15}s` }} />)}
+          </div>
         )}
         <div ref={endRef} />
       </div>

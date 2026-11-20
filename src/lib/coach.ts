@@ -38,7 +38,9 @@ export interface CoachContext {
 }
 
 export interface CoachFood { name: string; localName: string; searchQueries: string[]; portionGrams: number }
-export interface CoachReply { reply: string; foods: CoachFood[] }
+/** Changes the person agreed to in the chat; the app asks them to confirm before saving. */
+export interface ProfileUpdate { field: 'calorieGoal' | 'proteinGoal' | 'goalWeightKg' | 'avoidAdd' | 'cuisinesAdd' | 'dietPrefsAdd' | 'obstaclesAdd' | 'trainingAdd'; value: string; label: string }
+export interface CoachReply { reply: string; foods: CoachFood[]; profileUpdates?: ProfileUpdate[] }
 
 const SCHEMA = {
   type: 'object',
@@ -58,8 +60,21 @@ const SCHEMA = {
         additionalProperties: false,
       },
     },
+    profileUpdates: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          field: { type: 'string', enum: ['calorieGoal', 'proteinGoal', 'goalWeightKg', 'avoidAdd', 'cuisinesAdd', 'dietPrefsAdd', 'obstaclesAdd', 'trainingAdd'] },
+          value: { type: 'string' },
+          label: { type: 'string' },
+        },
+        required: ['field', 'value', 'label'],
+        additionalProperties: false,
+      },
+    },
   },
-  required: ['reply', 'foods'],
+  required: ['reply', 'foods', 'profileUpdates'],
   additionalProperties: false,
 } as const;
 
@@ -76,6 +91,8 @@ How to answer:
 - Mix cuisines: combine foods available in their country with the cuisines they enjoy, and vary them — don't default to one region's food unless they ask. Respect their diet strictly and never suggest anything they avoid or are allergic to (check ingredients, e.g. peanut sauces, fish sauce, egg in batter).
 - Safety: you are not a doctor. For medical conditions, medicines, allergies, pregnancy complications, or symptoms, give general information only and suggest a doctor or registered dietitian. Never recommend eating below about 1,200 kcal a day, fasting for many days, or extreme restriction. If someone mentions disordered eating, self-harm or feeling unsafe, respond with care, don't give weight-loss advice, and encourage them to reach out to a professional or local helpline.
 - Stay on food, nutrition, eating habits, training nutrition, hydration and using the app. Politely steer other topics back.
+- Profile updates: only when the person clearly agrees to or asks for a change to their own settings (e.g. "yes, set my calories to 1,900", "add shellfish to my allergies", "I also like Thai food"), put it in "profileUpdates": field = calorieGoal (kcal) | proteinGoal (g a day) | goalWeightKg (kg) | avoidAdd (a food or allergy to avoid) | cuisinesAdd | dietPrefsAdd (e.g. halal, low-sugar) | obstaclesAdd | trainingAdd; "value" = the number or word; "label" = a short sentence describing the change. The app asks them to confirm before saving, so say "tap Save to update your profile". Never add updates they didn't agree to; otherwise leave it empty. Keep targets safe (calories at least 1,200).
+- Respect their goal: if they're trying to gain weight or build muscle, eating above maintenance is the plan — never scold them for going over a calorie number.
 - Format "reply" as plain text; you may use short "- " bullet lines. No markdown headings, no tables.`;
 
 export function contextText(c: CoachContext): string {
@@ -147,17 +164,39 @@ export function sanitizeReply(raw: unknown): CoachReply {
       searchQueries: (Array.isArray(f?.searchQueries) ? f.searchQueries : []).map((q) => String(q).slice(0, 60)).filter(Boolean).slice(0, 3),
       portionGrams: Number.isFinite(f?.portionGrams) && f.portionGrams > 0 && f.portionGrams <= 1500 ? Math.round(f.portionGrams) : 0,
     })).filter((f) => f.name),
+    profileUpdates: cleanUpdates(r.profileUpdates),
   };
+}
+
+const UPDATE_FIELDS = new Set(['calorieGoal', 'proteinGoal', 'goalWeightKg', 'avoidAdd', 'cuisinesAdd', 'dietPrefsAdd', 'obstaclesAdd', 'trainingAdd']);
+/** Keep only safe, well-formed profile changes (the person still confirms each one in the app). */
+export function cleanUpdates(raw: unknown): ProfileUpdate[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.slice(0, 4).flatMap((u) => {
+    const field = String(u?.field ?? ''); const value = String(u?.value ?? '').trim().slice(0, 40); const label = String(u?.label ?? '').trim().slice(0, 120);
+    if (!UPDATE_FIELDS.has(field) || !value || !label) return [];
+    if (field === 'calorieGoal') { const n = Number(value.replace(/[^\d.]/g, '')); if (!(n >= 1200 && n <= 6000)) return []; }
+    if (field === 'proteinGoal') { const n = Number(value.replace(/[^\d.]/g, '')); if (!(n >= 20 && n <= 400)) return []; }
+    if (field === 'goalWeightKg') { const n = Number(value.replace(/[^\d.]/g, '')); if (!(n >= 30 && n <= 300)) return []; }
+    return [{ field: field as ProfileUpdate['field'], value, label }];
+  });
 }
 
 /** Validate turns from the client: alternating, starting and ending with the user, bounded. */
 export function cleanTurns(raw: unknown): ChatTurn[] | null {
   if (!Array.isArray(raw) || !raw.length) return null;
-  const turns = raw.slice(-20).map((t) => ({ role: t?.role, content: typeof t?.content === 'string' ? t.content.trim().slice(0, 2000) : '' }));
+  // Be forgiving: a failed reply or an empty one shouldn't break the whole chat. Drop empty
+  // or unknown turns, and merge back-to-back turns from the same side (e.g. two questions in a row).
+  const turns: ChatTurn[] = [];
+  for (const t of raw.slice(-30)) {
+    const role = t?.role === 'assistant' ? 'assistant' : t?.role === 'user' ? 'user' : null;
+    const content = typeof t?.content === 'string' ? t.content.trim().slice(0, 2000) : '';
+    if (!role || !content) continue;
+    const last = turns[turns.length - 1];
+    if (last?.role === role) last.content = `${last.content}\n\n${content}`.slice(-4000);
+    else turns.push({ role, content });
+  }
   while (turns.length && turns[0].role !== 'user') turns.shift();
   if (!turns.length || turns[turns.length - 1].role !== 'user') return null;
-  for (let i = 0; i < turns.length; i++) {
-    if (turns[i].role !== (i % 2 === 0 ? 'user' : 'assistant') || !turns[i].content) return null;
-  }
-  return turns as ChatTurn[];
+  return turns.slice(-20);
 }

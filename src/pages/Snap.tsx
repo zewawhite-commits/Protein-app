@@ -6,7 +6,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, BookOpen, Check, ChevronRight, CircleCheck, Crown, Focus, ImagePlus, Loader2, Mic, RotateCcw, ScanBarcode, ScanLine, ScanSearch, ScanText, Search, X, Zap } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 import { useFoodDb, usePhotoUrl } from '@/lib/hooks';
-import { deletePhoto, getPhoto, savePhoto } from '@/lib/photos';
+import { deletePhoto, getPhoto, resizeImage, savePhoto } from '@/lib/photos';
 import { matchItem, matchItems, pickKey, portionConfidence, recognizeMenu, sendFeedback, PremiumRequiredError, SignInRequiredError, readLabelPhoto, recognizePhoto, recognizeText, RecognitionUnavailableError, ScanLimitError, type MatchedItem } from '@/lib/recognize-client';
 import { refreshPremium } from '@/lib/premium';
 import { SOURCE_SHORT, searchFoods, splitName } from '@/lib/foods';
@@ -71,7 +71,8 @@ export default function Snap() {
   // Photo-diary mode: keep the photo without numbers; it can still be analysed afterwards.
   const photoDiary = useStore((s) => s.settings.tracking === 'photo');
   async function saveToDiary(file: Blob) {
-    const id = await savePhoto(file);
+    let id: string;
+    try { id = await savePhoto(file); } catch { toast('Couldn’t save the photo on this phone, so scanning it instead.'); return analyse(file); }
     setPhotoId(id);
     addEntry({ date, meal: mealForNow(), food: PHOTO_ONLY, grams: 1, photoId: id, note: 'Photo diary' });
     lastTry.current = { photoId: id };
@@ -88,18 +89,26 @@ export default function Snap() {
   const [retryable, setRetryable] = useState(false);
 
   async function analyse(file: Blob | null, text?: string, savedId?: string) {
-    let small: Blob | undefined;
-    let id = savedId;
-    if (savedId) {
-      small = (await getPhoto(savedId)) ?? undefined;
-    } else if (file) {
-      id = await savePhoto(file);
-      setPhotoId(id);
-      small = (await getPhoto(id)) ?? file;
-    }
-    lastTry.current = { photoId: id, text };
+    // Show progress straight away, before any saving or resizing.
     setRetryable(false);
     setPhase('analyzing');
+    let small: Blob | undefined;
+    let id = savedId;
+    // Saving the photo on the phone is a nice-to-have (retry, diary thumbnails). If storage is
+    // blocked or full (e.g. private browsing), scan the photo anyway instead of silently stopping.
+    try {
+      if (savedId) {
+        small = (await getPhoto(savedId)) ?? undefined;
+      } else if (file) {
+        id = await savePhoto(file);
+        setPhotoId(id);
+        small = (await getPhoto(id)) ?? file;
+      }
+    } catch {
+      id = undefined;
+      small = file ? await resizeImage(file).catch(() => file) : undefined;
+    }
+    lastTry.current = { photoId: id, text };
     try {
       await refreshPremium();
       const token = useStore.getState().premium?.token ?? premiumToken;
@@ -205,7 +214,7 @@ export default function Snap() {
       </div>
     );
   }
-  if (phase === 'camera') return <Camera onClose={back} onCapture={(b) => void (photoDiary && !labelMode && !menuMode ? saveToDiary(b) : analyse(b))} mode={labelMode ? 'label' : menuMode ? 'menu' : 'food'} onMode={(m) => { haptic(); setLabelMode(m === 'label'); setMenuMode(m === 'menu'); }} onBarcode={() => nav(`/barcode${date !== todayKey() ? `?date=${date}` : ''}`)} />;
+  if (phase === 'camera') return <Camera onClose={back} onCapture={(b) => (photoDiary && !labelMode && !menuMode ? saveToDiary(b) : analyse(b)).catch((e: Error) => { setError(e.message || 'Something went wrong. Try again.'); setRetryable(true); setPhase('error'); })} mode={labelMode ? 'label' : menuMode ? 'menu' : 'food'} onMode={(m) => { haptic(); setLabelMode(m === 'label'); setMenuMode(m === 'menu'); }} onBarcode={() => nav(`/barcode${date !== todayKey() ? `?date=${date}` : ''}`)} />;
   if (phase === 'describe') {
     return (
       <div className="mx-auto min-h-dvh max-w-lg animate-fade-up px-5 pb-12 md:max-w-2xl md:px-8">
@@ -247,9 +256,10 @@ export default function Snap() {
       <div className={cx('relative overflow-hidden rounded-[28px] bg-raised', !photoUrl && 'h-16')} style={photoUrl ? { aspectRatio: '4 / 3' } : undefined}>
         {photoUrl && <img src={photoUrl} alt="Your meal" className="h-full w-full object-cover" />}
         {phase === 'analyzing' && (
-          <div className="absolute inset-0 grid place-items-center bg-black/35 backdrop-blur-[1px]">
-            <div className="flex items-center gap-2 rounded-full bg-black/60 px-4 py-2.5 text-sm font-semibold text-white backdrop-blur-md">
-              <Loader2 size={16} className="animate-spin" /> Identifying food…
+          <div className="absolute inset-0 overflow-hidden bg-black/30">
+            <div className="scanline absolute inset-x-0 top-0 h-[10%] bg-gradient-to-b from-transparent via-white/45 to-transparent" />
+            <div className="absolute inset-x-0 bottom-4 grid place-items-center">
+              <ScanSteps menu={menuMode} />
             </div>
           </div>
         )}
@@ -887,4 +897,16 @@ function usePortionPlan(rows: (PlateRow & { name: string })[] | null, date: stri
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key, profile, goal, date]);
+}
+
+/** What the scan is doing right now, so the wait feels short and clear. */
+function ScanSteps({ menu }: { menu: boolean }) {
+  const steps = menu ? ['Reading the menu', 'Finding each dish', 'Matching nutrition records', 'Almost there'] : ['Looking at your photo', 'Spotting each food', 'Estimating portions', 'Matching nutrition records'];
+  const [i, setI] = useState(0);
+  useEffect(() => { const t = setInterval(() => setI((n) => Math.min(n + 1, steps.length - 1)), 1800); return () => clearInterval(t); }, [steps.length]);
+  return (
+    <div className="flex items-center gap-2 rounded-full bg-black/65 px-4 py-2.5 text-sm font-semibold text-white backdrop-blur-md" role="status">
+      <Loader2 size={16} className="animate-spin" /> {steps[i]}…
+    </div>
+  );
 }

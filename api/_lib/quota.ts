@@ -66,9 +66,20 @@ export async function gate(request: Request, feature: Feature, count = 1): Promi
   if (!accountsConfigured()) {
     return { ok: false, status: 503, body: { error: 'Accounts aren’t set up on the server yet, so AI features are off.' } };
   }
-  const { user, tier, expired } = await whoIs(request);
+  const who = await whoIs(request);
+  const { user, expired } = who;
+  let { tier } = who;
   if (!user) return { ok: false, status: 401, body: { error: `Sign in to use ${NAMES[feature]}.`, signIn: true } };
   if (isAdmin(user.email)) return { ok: true, tier: 'pro', left: Infinity, limit: Infinity };
+  // New accounts get their free Pro trial automatically on their first AI use, so every
+  // feature works straight away (once per account; afterwards the Free limits apply).
+  if (tier === 'free' && !user.perks.trialUsed && process.env.AUTO_TRIAL !== 'off') {
+    try {
+      const { startTrial } = await import('./perks.js');
+      const r = await startTrial(user);
+      if (r.ok) { tier = 'trial'; user.perks.trialUsed = true; user.perks.proUntil = r.proUntil; }
+    } catch { /* keep the Free limits */ }
+  }
 
   const limit = limitFor(tier, feature);
   if (limit <= 0) {

@@ -228,11 +228,11 @@ export async function setPassword(password: string) {
 /** Plain-English versions of the auth errors people actually hit. */
 function friendly(message: string): string {
   if (/rate limit|too many/i.test(message)) return 'Too many emails were sent in the last hour. Please try again a bit later, or continue with Google.';
-  if (/invalid login/i.test(message)) return 'Wrong email or password. Forgot it? Get a code by email instead.';
-  if (/email not confirmed/i.test(message)) return 'Please confirm your email first: enter the code (or tap the link) we emailed you.';
+  if (/invalid login/i.test(message)) return 'Wrong email or password. Forgot it? Tap “Forgot password” to get a login link by email.';
+  if (/email not confirmed/i.test(message)) return 'Please confirm your email first: tap the link in the email we sent you.';
   if (/already registered|already been registered|already exists/i.test(message)) return 'An account with this email already exists. Log in instead.';
   if (/password should be|weak password|at least/i.test(message)) return 'Choose a stronger password: at least 8 characters.';
-  if (/expired|invalid.*(token|otp)|token.*invalid/i.test(message)) return 'That code has expired or is wrong. Ask for a new one.';
+  if (/expired|invalid.*(token|otp)|token.*invalid/i.test(message)) return 'That link or code has expired. Ask for a new email.';
   return message;
 }
 

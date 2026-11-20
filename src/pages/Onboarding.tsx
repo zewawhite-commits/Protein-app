@@ -106,7 +106,8 @@ export default function Onboarding() {
   // Lose, gain or stay: asked after height and weight so we can show their healthy range.
   const [direction, setDirection] = useState<'lose' | 'gain' | 'maintain'>();
   const wantsChange = direction ? direction !== 'maintain' : goals.includes('fatloss') || goals.includes('muscle');
-  const flow = ['welcome', 'goals', 'activity', 'training', 'diet', 'cuisines', 'about', 'direction', ...(wantsChange ? ['goalweight'] : []), 'obstacles', 'coach', 'notify', 'plan', 'choose'];
+  // Only what's needed for a good first plan. Training type, challenges and reminders can be set later in Profile.
+  const flow = ['welcome', 'goals', 'about', 'direction', ...(wantsChange ? ['goalweight'] : []), 'activity', 'diet', 'cuisines', 'plan', 'choose'];
   const at = flow[step];
   const STEPS = flow.length;
   const next = () => setStep((s) => Math.min(STEPS - 1, s + 1));
@@ -404,7 +405,7 @@ export default function Onboarding() {
             <button onClick={next} className="mt-2 h-12 w-full font-bold text-silver">Not now</button>
           </Question>
         )}
-        {at === 'plan' && goal && activity && (
+        {at === 'plan' && (
           <div className="flex flex-1 flex-col">
             <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-primary text-on-primary"><Check size={28} strokeWidth={3} /></div>
             <h1 className="mt-4 text-center text-[28px] font-extrabold leading-tight tracking-tight">
@@ -428,7 +429,7 @@ export default function Onboarding() {
                 <EditTile icon={Wheat} tone="text-[rgb(var(--carbs))]" label="Carbs" unit="g" value={targets?.carbs} />
                 <EditTile icon={Droplet} tone="text-[rgb(var(--fat))]" label="Fat" unit="g" value={targets?.fat} />
               </div>
-              <p className="mt-3 text-sm leading-relaxed text-silver">{suggestionReason(goal, activity, suggestGramsPerKg(goal, activity, person), person)}</p>
+              <p className="mt-3 text-sm leading-relaxed text-silver">{suggestionReason(goal ?? 'health', activity ?? 'light', suggestGramsPerKg(goal ?? 'health', activity ?? 'light', person), person)}</p>
               
             </div>
             <p className="mt-3 text-center text-xs text-dim">Calories estimated with the Mifflin–St Jeor equation. A starting point, not medical advice.</p>

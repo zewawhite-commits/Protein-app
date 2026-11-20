@@ -148,9 +148,10 @@ export default function Profile({ mode = 'profile' }: { mode?: 'profile' | 'sett
         <Row icon={<Scale size={18} />} label="Weight unit">
           <Segmented value={settings.bodyUnit} onChange={(u) => updateSettings({ bodyUnit: u })} options={[{ value: 'kg', label: 'kg' }, { value: 'lb', label: 'lb' }]} />
         </Row>
-        <Row icon={<SlidersHorizontal size={18} />} label="Tracking style">
-          <Segmented value={settings.tracking ?? 'detailed'} onChange={(t) => updateSettings({ tracking: t })} options={[{ value: 'photo', label: 'Photo diary' }, { value: 'simple', label: 'Simple' }, { value: 'detailed', label: 'Detailed' }]} />
-        </Row>
+        <Row icon={<SlidersHorizontal size={18} />} label="Tracking style" />
+        <div className="px-3 pb-2">
+          <Segmented full value={settings.tracking ?? 'detailed'} onChange={(t) => updateSettings({ tracking: t })} options={[{ value: 'photo', label: 'Photo diary' }, { value: 'simple', label: 'Simple' }, { value: 'detailed', label: 'Detailed' }]} />
+        </div>
         <p className="px-4 pb-2 text-xs leading-relaxed text-dim">Photo diary: snap your meals with no numbers — analyse any photo later if you want. Simple shows just calories and protein on Home. Detailed adds carbs, fat and every nutrient. Nothing is lost either way.</p>
         <Row icon={<Lightbulb size={18} />} label="Suggestions on Home">
           <Toggle on={!settings.quietAi} onChange={(v) => updateSettings({ quietAi: !v })} label="Suggestions on Home" />
@@ -190,6 +191,7 @@ export default function Profile({ mode = 'profile' }: { mode?: 'profile' | 'sett
         <Link to="/privacy" className="block"><Row icon={<Lock size={18} />} label="Privacy policy" chevron /></Link>
         <Link to="/terms" className="block"><Row icon={<FileText size={18} />} label="Terms & Conditions" chevron /></Link>
             <Link to="/refunds" className="block"><Row icon={<FileText size={18} />} label="Cancellation & refunds" chevron /></Link>
+            <Link to="/credits" className="block"><Row icon={<FileText size={18} />} label="Photo credits" chevron /></Link>
       </Group>
 
       {(settings.adminMode || adminTaps >= 7) && (
@@ -470,13 +472,13 @@ function PhoneRow({ saved }: { saved: string }) {
       {open && (
         <div className="px-3 pb-3">
           <div className="flex gap-2">
-            <input type="tel" inputMode="tel" autoComplete="tel" aria-label="Phone number" className={cx('field flex-1', !ok && '!ring-2 !ring-danger')} placeholder="+234 801 234 5678" value={value} onChange={(e) => setValue(e.target.value)} />
+            <input type="tel" inputMode="tel" autoComplete="tel" aria-label="Phone number" className={cx('field flex-1', !ok && '!ring-2 !ring-danger')} placeholder="Phone number" value={value} onChange={(e) => setValue(e.target.value)} />
             <button disabled={busy || !ok} onClick={async () => {
               setBusy(true);
               try { const v = value.trim() ? tel : ''; await setPhoneNumber(v); setCurrent(v); setOpen(false); toast(v ? 'Phone number saved' : 'Phone number removed'); } catch (e) { toast((e as Error).message); } finally { setBusy(false); }
             }} className="btn-primary !px-5">Save</button>
           </div>
-          {!ok && <p className="mt-1.5 px-1 text-[13px] text-danger">Start with + and your country code.</p>}
+          {!ok && <p className="mt-1.5 px-1 text-[13px] text-danger">Add your country code with + at the start.</p>}
         </div>
       )}
     </>
