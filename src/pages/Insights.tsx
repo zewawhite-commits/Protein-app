@@ -1,3 +1,6 @@
+import { ActivitySummary } from '@/components/ActivitySummary';
+import { WeightHistory } from '@/components/WeightHistory';
+import { Measurements } from '@/components/Measurements';
 import { ProOnly } from '@/components/ProOnly';
 import { EatingPatterns, NutrientGaps, TargetCheck } from '@/components/NutritionInsights';
 import { useMemo, useState } from 'react';
@@ -79,8 +82,11 @@ export default function Insights() {
       <div className="mb-6 space-y-4">
         <WeightAndStreak />
         <WeightChart />
+        <WeightHistory />
         <ProOnly what="Targets that adjust automatically to your progress"><SmartTarget /></ProOnly>
         <BeyondTheScale />
+        <Measurements />
+        <ActivitySummary />
         <TargetCheck />
         <ProOnly what="Advanced micronutrient analysis"><NutrientGaps /></ProOnly>
         <ProOnly what="Detailed eating-pattern reports"><EatingPatterns /></ProOnly>

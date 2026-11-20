@@ -59,6 +59,8 @@ export function ExerciseSheet({ open, onClose, date }: { open: boolean; onClose:
   const [reps, setReps] = useState('');
   const [load, setLoad] = useState('');
   const [secs, setSecs] = useState('');
+  const [dist, setDist] = useState('');
+  const [exNote, setExNote] = useState('');
   const unit = useStore((s) => s.settings.bodyUnit);
   const mins = Number(minutes) || 0;
   const estimate = burnedKcal(type, intensity, mins, kg);
@@ -67,7 +69,9 @@ export function ExerciseSheet({ open, onClose, date }: { open: boolean; onClose:
   function save() {
     const num = (v: string) => (Number(v) > 0 ? Number(v) : undefined);
     const detail = name.trim() ? { name: name.trim().slice(0, 40), sets: num(sets), reps: num(reps), weightKg: num(load) ? Math.round((unit === 'lb' ? num(load)! / 2.20462 : num(load)!) * 10) / 10 : undefined, seconds: num(secs) } : undefined;
-    add({ date, type, intensity, minutes: mins, kcal, manual: !!own, ...(detail && { detail }) });
+    const d = Number(dist.replace(',', '.'));
+    const km = d > 0 ? Math.round((unit === 'lb' ? d * 1.609344 : d) * 100) / 100 : undefined;
+    add({ date, type, intensity, minutes: mins, kcal, manual: !!own, ...(detail && { detail }), ...(km && { km }), ...(exNote.trim() && { note: exNote.trim().slice(0, 120) }) });
     setName(''); setSets(''); setReps(''); setLoad(''); setSecs('');
     haptic([10, 30, 10]);
     toast(`${EXERCISES[type].label} logged · ${fmt(kcal)} kcal`);
@@ -95,6 +99,13 @@ export function ExerciseSheet({ open, onClose, date }: { open: boolean; onClose:
         </div>
       </div>
       <p className="mt-2 text-xs text-dim">{own ? 'Using your number (e.g. from your watch).' : kg ? `Estimated from your weight and the activity. Type your own if your watch shows a number.` : 'Add your weight in Profile for an estimate.'}</p>
+      {['run', 'walk', 'cycle', 'swim'].includes(type) && (
+        <div className="mt-4">
+          <label className="label" htmlFor="ex-dist">Distance <span className="font-normal text-dim">(optional, {unit === 'lb' ? 'miles' : 'km'})</span></label>
+          <input id="ex-dist" inputMode="decimal" className="field" value={dist} onChange={(e) => setDist(e.target.value.replace(/[^\d.,]/g, '').slice(0, 6))} placeholder="0" />
+        </div>
+      )}
+      <input className="field mt-3" maxLength={120} placeholder="Note (optional), e.g. felt strong" value={exNote} onChange={(e) => setExNote(e.target.value)} aria-label="Workout note" />
       <p className="label mt-5">Exercise detail <span className="font-normal text-dim">(optional)</span></p>
       <input className="field" maxLength={40} placeholder="e.g. Bench press, weighted plank, farmer’s carry" value={name} onChange={(e) => setName(e.target.value)} />
       {name.trim() && (
@@ -134,7 +145,8 @@ export function ExerciseList({ date }: { date: string }) {
             <div className="min-w-0 flex-1">
               <p className="font-bold">{e.detail?.name ?? EXERCISES[e.type].label}</p>
               {e.detail && <p className="num text-sm font-semibold">{describeDetail(e.detail, unit)}</p>}
-              <p className="text-sm text-silver">{e.minutes} min · {e.intensity === 'low' ? 'light' : e.intensity === 'medium' ? 'moderate' : 'hard'}{e.manual ? '' : ' · estimate'}</p>
+              <p className="text-sm text-silver">{e.minutes} min{e.km ? ` · ${unit === 'lb' ? `${(e.km / 1.609344).toFixed(1)} mi` : `${e.km} km`}` : ''} · {e.intensity === 'low' ? 'light' : e.intensity === 'medium' ? 'moderate' : 'hard'}{e.manual ? '' : ' · estimate'}</p>
+              {e.note && <p className="text-xs text-silver">{e.note}</p>}
             </div>
             <p className="num text-right"><span className="block text-lg font-bold text-accent">+{fmt(e.kcal)}</span><span className="text-xs text-silver">kcal</span></p>
             <button onClick={() => remove(e.id)} className="grid h-9 w-9 place-items-center rounded-full text-dim" aria-label="Delete workout"><Trash2 size={16} /></button>

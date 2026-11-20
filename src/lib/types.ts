@@ -195,7 +195,10 @@ export interface SavedPlan {
 }
 
 /** A body-weight log entry (kg), one per day. */
-export interface WeightEntry { date: string; kg: number }
+export interface WeightEntry { date: string; kg: number; note?: string }
+
+/** A body measurement (always stored in cm). */
+export interface MeasurementEntry { id: string; date: string; site: string; cm: number; note?: string; createdAt: number }
 
 /** A progress photo (image kept on this device in IndexedDB). */
 export interface ProgressPhoto { id: string; photoId: string; date: string; kg?: number }

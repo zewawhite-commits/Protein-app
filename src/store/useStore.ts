@@ -7,7 +7,7 @@ import type { WorkoutPlan } from '@/lib/workout';
 import type { Recipe } from '@/lib/recipe';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { CustomFood, Food, LogEntry, Meal, Profile, ProgressPhoto, SavedMeal, SavedPlan, Settings, WeightEntry } from '@/lib/types';
+import type { CustomFood, Food, LogEntry, Meal, Profile, ProgressPhoto, SavedMeal, SavedPlan, Settings, WeightEntry, MeasurementEntry } from '@/lib/types';
 import { dailyGoal } from '@/lib/nutrition';
 import { todayKey } from '@/lib/dates';
 import { deletePhoto } from '@/lib/photos';
@@ -27,10 +27,13 @@ interface State {
   savedMeals: SavedMeal[];
   weights: WeightEntry[];
   exercises: ExerciseEntry[];
+  measurements: MeasurementEntry[];
+  addMeasurement: (m: Omit<MeasurementEntry, 'id' | 'createdAt'>) => void;
+  removeMeasurement: (id: string) => void;
   addExercise: (e: Omit<ExerciseEntry, 'id'>) => void;
   removeExercise: (id: string) => void;
   progressPhotos: ProgressPhoto[];
-  logWeight: (kg: number, date?: string) => void;
+  logWeight: (kg: number, date?: string, note?: string) => void;
   removeWeight: (date: string) => void;
   addProgressPhoto: (p: Omit<ProgressPhoto, 'id'>) => void;
   removeProgressPhoto: (id: string) => void;
@@ -102,6 +105,7 @@ export const useStore = create<State>()(
       savedPlans: [],
       weights: [],
       exercises: [],
+      measurements: [],
       progressPhotos: [],
       premium: null,
       perks: null,
@@ -110,12 +114,15 @@ export const useStore = create<State>()(
       water: {},
       deleted: {},
 
+      addMeasurement: (m) => set((s) => ({ measurements: [...s.measurements, { ...m, id: crypto.randomUUID(), createdAt: Date.now() }] })),
+      removeMeasurement: (id) => set((s) => ({ measurements: s.measurements.filter((x) => x.id !== id), deleted: { ...s.deleted, [id]: Date.now() } })),
       addExercise: (e) => set((s) => ({ exercises: [...s.exercises, { ...e, id: crypto.randomUUID() }] })),
       removeExercise: (id) => set((s) => ({ exercises: s.exercises.filter((x) => x.id !== id), deleted: { ...s.deleted, [id]: Date.now() } })),
 
-      logWeight: (kg, date = todayKey()) =>
+      logWeight: (kg, date = todayKey(), note) =>
         set((s) => {
-          const weights = [...s.weights.filter((w) => w.date !== date), { date, kg: Math.round(kg * 10) / 10 }].sort((a, b) => a.date.localeCompare(b.date));
+          const keep = note ?? s.weights.find((w) => w.date === date)?.note;
+          const weights = [...s.weights.filter((w) => w.date !== date), { date, kg: Math.round(kg * 10) / 10, ...(keep ? { note: keep } : {}) }].sort((a, b) => a.date.localeCompare(b.date));
           const latest = weights[weights.length - 1];
           // The newest weigh-in becomes the profile weight (targets follow it).
           const profile = s.profile && latest ? { ...s.profile, bodyWeightKg: latest.kg } : s.profile;
@@ -262,13 +269,14 @@ export const useStore = create<State>()(
           savedRecipes: d.savedRecipes ?? [],
           weights: d.weights ?? [],
           exercises: d.exercises ?? [],
+          measurements: (d as { measurements?: MeasurementEntry[] }).measurements ?? [],
           water: (d as { water?: Record<string, number> }).water ?? {},
           deleted: (d as { deleted?: Record<string, number> }).deleted ?? {},
         });
       },
 
       resetAll: () =>
-        set({ profile: null, settings: defaultSettings, entries: [], customFoods: [], goalHistory: {}, recentFoodIds: [], favoriteFoodIds: [], remoteFoods: {}, savedMeals: [], savedPlans: [], workoutPlan: null, savedRecipes: [], weights: [], exercises: [], progressPhotos: [], premium: null, perks: null, serverTier: null, picks: {}, water: {}, deleted: {} }),
+        set({ profile: null, settings: defaultSettings, entries: [], customFoods: [], goalHistory: {}, recentFoodIds: [], favoriteFoodIds: [], remoteFoods: {}, savedMeals: [], savedPlans: [], workoutPlan: null, savedRecipes: [], weights: [], exercises: [], measurements: [], progressPhotos: [], premium: null, perks: null, serverTier: null, picks: {}, water: {}, deleted: {} }),
     }),
     {
       name: 'protein-app',
@@ -303,7 +311,7 @@ export function goalOn(date: string, goalHistory: Record<string, number>, profil
 
 export function exportData() {
   // Premium passes and personal API keys are never written to backup files.
-  const { profile, settings, entries, customFoods, goalHistory, recentFoodIds, favoriteFoodIds, remoteFoods, savedMeals, savedPlans, workoutPlan, savedRecipes, weights, exercises, water, deleted } = useStore.getState();
+  const { profile, settings, entries, customFoods, goalHistory, recentFoodIds, favoriteFoodIds, remoteFoods, savedMeals, savedPlans, workoutPlan, savedRecipes, weights, exercises, measurements, water, deleted } = useStore.getState();
   const safeSettings = settings;
-  return { app: 'protein-app', exportedAt: new Date().toISOString(), profile, settings: safeSettings, entries, customFoods, goalHistory, recentFoodIds, favoriteFoodIds, remoteFoods, savedMeals, savedPlans, workoutPlan, savedRecipes, weights, exercises, water, deleted };
+  return { app: 'protein-app', exportedAt: new Date().toISOString(), profile, settings: safeSettings, entries, customFoods, goalHistory, recentFoodIds, favoriteFoodIds, remoteFoods, savedMeals, savedPlans, workoutPlan, savedRecipes, weights, exercises, measurements, water, deleted };
 }

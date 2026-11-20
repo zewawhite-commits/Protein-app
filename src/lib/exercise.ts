@@ -28,6 +28,9 @@ export interface ExerciseEntry {
   manual?: boolean;
   /** Optional detail for strength or timed work: any exercise, with sets, reps, weight and/or hold time. */
   detail?: { name: string; sets?: number; reps?: number; weightKg?: number; seconds?: number };
+  /** Distance in km (runs, walks, rides, swims). */
+  km?: number;
+  note?: string;
 }
 
 export function burnedKcal(type: ExerciseType, intensity: Intensity, minutes: number, kg: number): number {

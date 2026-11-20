@@ -14,6 +14,7 @@ export interface SyncSnapshot {
   settings?: unknown;
   entries?: (Stamped & { loggedAt?: number; updatedAt?: number })[];
   exercises?: (Stamped & { updatedAt?: number })[];
+  measurements?: (Stamped & { createdAt?: number })[];
   customFoods?: (Stamped & { updatedAt?: number; createdAt?: number })[];
   savedMeals?: (Stamped & { createdAt?: number })[];
   savedPlans?: (Stamped & { createdAt?: number })[];
@@ -59,6 +60,7 @@ export function mergeSnapshots(local: SyncSnapshot, remote: SyncSnapshot, localT
     ...newer,
     entries: mergeList(local.entries, remote.entries, deleted),
     exercises: mergeList(local.exercises, remote.exercises, deleted),
+    measurements: mergeList(local.measurements, remote.measurements, deleted),
     customFoods: mergeList(local.customFoods, remote.customFoods, deleted),
     savedMeals: mergeList(local.savedMeals, remote.savedMeals, deleted),
     savedPlans: mergeList(local.savedPlans, remote.savedPlans, deleted),
