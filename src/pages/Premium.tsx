@@ -13,13 +13,13 @@ import { Segmented, cx } from '@/components/ui';
 
 /** Planned prices, shown until live plans load from the payment provider (which sets the real charge). */
 const PREVIEW = [
-  { tier: null, name: 'Free', perks: ['Calories, macros & 18,000+ foods', 'Barcode, exercise, progress & feed', '3 AI scans + 5 coach messages a month'], best: false },
+  { tier: null, name: 'Free', perks: ['Calories, macros & 18,000+ foods', 'Barcode, exercise, progress & feed', '3 AI scans + 5 coach messages a day'], best: false },
   { tier: 'plus' as Tier, name: 'Plus', perks: ['Unlimited AI food scans', 'AI nutrition coach', 'Personalized meal plans', 'Daily meal suggestions', 'AI recipes with full nutrition', 'AI workout guides', 'Adjusts to your cuisine & diet'], best: true },
   { tier: 'pro' as Tier, name: 'Pro', perks: ['Everything in Plus', 'Advanced weekly & monthly meal planning', 'Plans adjust automatically to your progress', 'Advanced micronutrient analysis', 'Detailed nutrition reports', 'Advanced recommendations', 'Smarter, more personal AI coach'], best: false },
 ];
 
 const TIER_INFO: Record<'free' | Tier, { name: string; perks: string[] }> = {
-  free: { name: 'Free', perks: ['18,000+ foods, barcode, exercise & progress', 'Feed and groups', '3 AI scans + 5 coach messages a month'] },
+  free: { name: 'Free', perks: ['18,000+ foods, barcode, exercise & progress', 'Feed and groups', '3 AI scans + 5 coach messages a day'] },
   plus: { name: 'Plus', perks: ['Unlimited AI food scans', 'AI nutrition coach', 'Personalized meal plans', 'Daily meal suggestions', 'AI recipes with full nutrition', 'AI workout guides', 'Adjusts to your cuisine & diet'] },
   pro: { name: 'Pro', perks: ['Everything in Plus', 'Advanced weekly & monthly meal planning', 'Plans adjust automatically to your progress', 'Advanced micronutrient analysis', 'Detailed nutrition reports', 'Advanced recommendations', 'Smarter, more personal AI coach'] },
 };

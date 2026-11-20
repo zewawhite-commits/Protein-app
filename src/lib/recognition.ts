@@ -161,13 +161,14 @@ Do not provide any nutrient values. If the photo contains no food (or only a men
 export async function recognizeWithClient(client: Anthropic, imageBase64: string | null, mediaType: string, description?: string, opts: { menu?: boolean } = {}): Promise<RecognitionResult> {
   const response = await client.beta.messages.create({
     model: RECOGNITION_MODEL,
-    max_tokens: 16000,
+    max_tokens: 8000,
     // If the model declines, the API retries on a fallback model it picks for the refusal category.
     betas: ['server-side-fallback-2026-07-01'],
     fallbacks: 'default',
     output_config: {
-      // Higher effort: careful look at every part of the plate (accuracy matters more than speed here).
-      effort: 'high',
+      // Medium effort: a careful look at the plate in a few seconds. ('high' was noticeably slower
+      // for little gain; nutrition numbers always come from the food database either way.)
+      effort: 'medium',
       format: { type: 'json_schema', schema: SCHEMA as unknown as Record<string, unknown> },
     },
     system: SYSTEM,

@@ -1,3 +1,4 @@
+process.env.AUTO_TRIAL = 'off'; // these tests check the plain Free limits
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { activeSubscription, readPass, signPass } from '../_lib/premium.js';
 import { POST as activate } from '../_premium/activate.js';
@@ -215,8 +216,8 @@ describe('plan limits (quota)', () => {
     expect(await res.json()).toMatchObject({ signIn: true });
   });
 
-  it('gives free users 3 scans, then asks them to upgrade', async () => {
-    fakeSupabase({ [`scan:${U}`]: 3 });
+  it('gives free users 3 scans a day, then asks them to upgrade', async () => {
+    fakeSupabase({ [`scan:${U}:${new Date().toISOString().slice(0, 10)}`]: 3 });
     const res = await recognize(call({ image: 'abc' }, 'jwt'));
     expect(res.status).toBe(402);
     expect(await res.json()).toMatchObject({ limitReached: true, premium: true, tier: 'free' });

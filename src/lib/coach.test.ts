@@ -50,3 +50,14 @@ describe('eating plan', () => {
     expect(p.tips[0]).not.toMatch(/30 g/);
   });
 });
+
+import { partialReply } from './coach';
+describe('streaming reply', () => {
+  it('reads the reply text from partial JSON as it arrives', () => {
+    expect(partialReply('{"rep')).toBe('');
+    expect(partialReply('{"reply":"Hi Ada, try')).toBe('Hi Ada, try');
+    expect(partialReply('{"reply":"Line one\\nLine \\"two\\"","foods":[]')).toBe('Line one\nLine "two"');
+    expect(partialReply('{"reply":"caf\\u00e9 and')).toBe('café and');
+    expect(partialReply('{"reply":"ends with \\')).toBe('ends with ');
+  });
+});

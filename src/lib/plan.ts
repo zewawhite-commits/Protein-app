@@ -63,7 +63,7 @@ export async function planWithClient(client: Anthropic, context: CoachContext, r
     max_tokens: 12000,
     betas: ['server-side-fallback-2026-07-01'],
     fallbacks: 'default',
-    output_config: { effort: 'high', format: { type: 'json_schema', schema: SCHEMA as unknown as Record<string, unknown> } },
+    output_config: { effort: 'medium', format: { type: 'json_schema', schema: SCHEMA as unknown as Record<string, unknown> } },
     system: [
       { type: 'text', text: SYSTEM, cache_control: { type: 'ephemeral' } },
       { type: 'text', text: contextText(context) },

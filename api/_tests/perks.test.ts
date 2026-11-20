@@ -38,10 +38,9 @@ describe('free Pro time', () => {
     expect(checkReferral({ userId: me, createdAt: now, perks: perksFrom({}), code: 'garbage', now }).ok).toBe(false);
   });
 
-  it('free Pro time has every Pro feature, capped', () => {
+  it('the Pro trial has every Pro feature, unlimited (fair use only)', () => {
     for (const f of ['scan', 'coach', 'workout', 'recipe', 'plan', 'ideas'] as const) {
-      expect(limitFor('trial', f)).toBeGreaterThan(0);
-      expect(limitFor('trial', f)).toBeLessThan(900);
+      expect(limitFor('trial', f)).toBeGreaterThanOrEqual(900);
     }
   });
 });

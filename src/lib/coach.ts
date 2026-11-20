@@ -126,18 +126,19 @@ export const CHAT_MODEL = 'claude-sonnet-5-5';
 export const PRO_CHAT_MODEL = RECOGNITION_MODEL;
 const PRO_NOTE = 'This person is on Pro: give deeper, more personalised coaching — connect advice to their logged foods, trends and goal, and explain the why in a sentence.';
 
-export async function coachWithClient(client: Anthropic, turns: ChatTurn[], context: CoachContext, image?: ChatImage, opts: { pro?: boolean } = {}): Promise<CoachReply> {
-  const response = await client.beta.messages.create({
+/** The request for one coach reply (shared by the normal and the streaming path). */
+function coachParams(turns: ChatTurn[], context: CoachContext, image?: ChatImage, opts: { pro?: boolean } = {}) {
+  return {
     // Chat favours speed: a fast model and low effort keep replies to a few seconds. Pro gets a stronger model.
     model: opts.pro ? PRO_CHAT_MODEL : CHAT_MODEL,
     max_tokens: 3000,
     betas: ['server-side-fallback-2026-07-01'],
-    fallbacks: 'default',
-    output_config: { effort: opts.pro ? 'medium' : 'low', format: { type: 'json_schema', schema: SCHEMA as unknown as Record<string, unknown> } },
+    fallbacks: 'default' as const,
+    output_config: { effort: (opts.pro ? 'medium' : 'low') as 'medium' | 'low', format: { type: 'json_schema' as const, schema: SCHEMA as unknown as Record<string, unknown> } },
     // Stable instructions first (cacheable), then this person's context.
     system: [
-      { type: 'text', text: SYSTEM, cache_control: { type: 'ephemeral' } },
-      { type: 'text', text: opts.pro ? `${contextText(context)}\n${PRO_NOTE}` : contextText(context) },
+      { type: 'text' as const, text: SYSTEM, cache_control: { type: 'ephemeral' as const } },
+      { type: 'text' as const, text: opts.pro ? `${contextText(context)}\n${PRO_NOTE}` : contextText(context) },
     ],
     // A photo goes with the latest user message only (earlier photos are not re-sent).
     messages: turns.map((t, i) =>
@@ -145,12 +146,51 @@ export async function coachWithClient(client: Anthropic, turns: ChatTurn[], cont
         ? { role: t.role, content: [{ type: 'image' as const, source: { type: 'base64' as const, media_type: image.mediaType, data: image.data } }, { type: 'text' as const, text: t.content }] }
         : { role: t.role, content: t.content },
     ),
-  });
-  if (response.stop_reason === 'refusal') return { reply: 'Sorry — I can’t help with that one. Ask me anything about food and your goals.', foods: [] };
-  if (response.stop_reason === 'max_tokens') throw new Error('The answer was too long — try a narrower question.');
+  };
+}
+
+function finish(stop: string | null | undefined, text: string | undefined): CoachReply {
+  if (stop === 'refusal') return { reply: 'Sorry, I can’t help with that one. Ask me anything about food and your goals.', foods: [] };
+  if (stop === 'max_tokens') throw new Error('The answer was too long. Try a narrower question.');
+  if (!text) throw new Error('No reply returned.');
+  return sanitizeReply(JSON.parse(text));
+}
+
+export async function coachWithClient(client: Anthropic, turns: ChatTurn[], context: CoachContext, image?: ChatImage, opts: { pro?: boolean } = {}): Promise<CoachReply> {
+  const response = await client.beta.messages.create(coachParams(turns, context, image, opts) as never) as Anthropic.Beta.BetaMessage;
   const text = response.content.find((b) => b.type === 'text');
-  if (!text || text.type !== 'text') throw new Error('No reply returned.');
-  return sanitizeReply(JSON.parse(text.text));
+  return finish(response.stop_reason, text && text.type === 'text' ? text.text : undefined);
+}
+
+/**
+ * Same as coachWithClient, but calls onText with each piece of the raw JSON as it is
+ * written, so the app can show the reply word by word.
+ */
+export async function coachStream(client: Anthropic, turns: ChatTurn[], context: CoachContext, image: ChatImage | undefined, opts: { pro?: boolean }, onText: (piece: string) => void): Promise<CoachReply> {
+  const stream = client.beta.messages.stream(coachParams(turns, context, image, opts) as never);
+  stream.on('text', (piece: string) => onText(piece));
+  const msg = await stream.finalMessage();
+  const text = msg.content.find((b) => b.type === 'text');
+  return finish(msg.stop_reason, text && text.type === 'text' ? text.text : undefined);
+}
+
+/** The "reply" text so far, from partial JSON like {"reply":"Hi Ada, try a…  (for live display). */
+export function partialReply(raw: string): string {
+  const m = /"reply"\s*:\s*"/.exec(raw);
+  if (!m) return '';
+  let out = '';
+  for (let i = m.index + m[0].length; i < raw.length; i++) {
+    const c = raw[i];
+    if (c === '"') return out;
+    if (c === '\\') {
+      const n = raw[i + 1];
+      if (n === undefined) return out;
+      if (n === 'u') { const hex = raw.slice(i + 2, i + 6); if (hex.length < 4) return out; out += String.fromCharCode(parseInt(hex, 16)); i += 5; continue; }
+      out += n === 'n' ? '\n' : n === 't' ? '\t' : n; i++; continue;
+    }
+    out += c;
+  }
+  return out;
 }
 
 /** Keep the shape tight and strip any per-food numbers that slipped into names. */

@@ -208,7 +208,7 @@ export default function Snap() {
           <button onClick={back} className="grid h-11 w-11 place-items-center rounded-full bg-surface" style={{ boxShadow: 'var(--shadow)' }} aria-label="Back"><ArrowLeft size={20} /></button>
         </header>
         <h1 className="text-[30px] font-extrabold leading-tight tracking-tight">Sign in to use AI</h1>
-        <p className="mt-2 text-[15px] leading-relaxed text-silver">A free account gets 3 AI scans and 5 coach messages a month, and keeps your log safe on any phone.</p>
+        <p className="mt-2 text-[15px] leading-relaxed text-silver">A free account gets 3 AI scans and 5 coach messages a day, and keeps your log safe on any phone.</p>
         <div className="card mt-6 p-5"><SignInButtons /></div>
         <Link to={manualUrl()} className="btn-ghost mt-3 w-full">Search foods instead — always free</Link>
       </div>
@@ -287,7 +287,7 @@ export default function Snap() {
           </p>
           {left && (
             <Link to="/premium" className="mt-3 flex items-center justify-between rounded-2xl bg-accent/10 px-4 py-3 text-[14px] font-semibold text-accent">
-              <span>{left.left} of {left.limit} free AI scans left this month</span>
+              <span>{left.left} of {left.limit} free AI scans left today</span>
               <span>Unlimited →</span>
             </Link>
           )}
@@ -397,7 +397,7 @@ export default function Snap() {
       {phase === 'signin' && (
         <div className="card mt-5 p-5">
           <p className="text-[17px] font-bold">Sign in to use AI scans</p>
-          <p className="mt-1 text-sm text-silver">Free accounts get 3 AI scans a month. Your photo is saved — or pick the food yourself, always free.</p>
+          <p className="mt-1 text-sm text-silver">Free accounts get 3 AI scans a day. Your photo is saved — or pick the food yourself, always free.</p>
           <div className="mt-4"><SignInButtons /></div>
           <Link to={manualUrl()} className="btn-ghost mt-2 w-full">Pick food manually</Link>
         </div>

@@ -14,13 +14,14 @@ import { dailyTargets } from '@/lib/energy';
 import { nutrientsFor } from '@/lib/nutrition';
 import { todayKey, addDays } from '@/lib/dates';
 import type { CoachContext, CoachFood, CoachReply, ChatTurn, ProfileUpdate } from '@/lib/coach';
+import { partialReply } from '@/lib/coach';
 import type { Food } from '@/lib/types';
 import { FoodSheet } from '@/components/FoodSheet';
 import { Segmented, cx, fmt } from '@/components/ui';
 import { PlanView } from '@/components/PlanView';
 import { APP_NAME, haptic, toast } from '@/components/fx';
 
-interface Msg extends ChatTurn { updates?: ProfileUpdate[]; applied?: boolean; foods?: CoachFood[]; error?: boolean; premium?: boolean; signIn?: boolean; thumb?: string; fromPhoto?: boolean }
+interface Msg extends ChatTurn { streaming?: boolean; updates?: ProfileUpdate[]; applied?: boolean; foods?: CoachFood[]; error?: boolean; premium?: boolean; signIn?: boolean; thumb?: string; fromPhoto?: boolean }
 interface Pending { data: string; mediaType: 'image/jpeg'; thumb: string }
 
 /** Apply changes the person confirmed in the chat to their profile. */
@@ -160,21 +161,53 @@ function Chat() {
     setPending(null);
     setBusy(true);
     try {
-      const res = await fetch('/api/chat', {
+      const res = await fetch('/api/chat?stream=1', {
         method: 'POST',
         headers: await aiHeaders(),
         body: JSON.stringify({ turns: history.map(({ role, content }) => ({ role, content })), context, ...(photo && { image: { data: photo.data, mediaType: photo.mediaType } }) }),
       });
-      const isJson = res.headers.get('content-type')?.includes('application/json');
-      if (!isJson || res.status === 404 || res.status === 501) throw new Error('The coach isn’t switched on yet. It will work once the AI key is added on the server.');
-      const data = (await res.json()) as CoachReply & { error?: string; premium?: boolean; signIn?: boolean };
-      if (res.status === 401 || res.status === 402) {
-        setMsgs((m) => [...m, { role: 'assistant', content: data.error ?? 'The coach is a Plus and Pro feature.', error: true, premium: res.status === 402, signIn: res.status === 401 }]);
+      const type = res.headers.get('content-type') ?? '';
+      if (res.status === 404 || res.status === 501 || (!type.includes('json'))) throw new Error('The coach isn’t switched on yet. It will work once the AI key is added on the server.');
+      if (!type.includes('ndjson')) {
+        // Errors (and older servers) answer with plain JSON.
+        const data = (await res.json()) as CoachReply & { error?: string };
+        if (res.status === 401 || res.status === 402) {
+          setMsgs((m) => [...m, { role: 'assistant', content: data.error ?? 'The coach is a Plus and Pro feature.', error: true, premium: res.status === 402, signIn: res.status === 401 }]);
+          return;
+        }
+        if (!res.ok) throw new Error(data.error || 'Could not reply.');
+        setMsgs((m) => [...m, { role: 'assistant', content: data.reply || 'Done.', foods: data.foods, updates: data.profileUpdates, fromPhoto: !!photo }]);
         return;
       }
-      if (!res.ok) throw new Error(data.error || 'Could not reply.');
-      // A reply with only food suggestions still needs words, so the history stays valid.
-      setMsgs((m) => [...m, { role: 'assistant', content: data.reply || (data.foods?.length ? `Suggestions: ${data.foods.map((f) => f.name).join(', ')}` : 'Done.'), foods: data.foods, updates: data.profileUpdates, fromPhoto: !!photo }]);
+      // Live reply: show the words as they're written.
+      const reader = res.body!.getReader();
+      const dec = new TextDecoder();
+      let buf = '', raw = '', started = false;
+      let final: CoachReply | null = null;
+      const show = (content: string) => setMsgs((m) => {
+        const next = [...m];
+        if (!started) { started = true; return [...next, { role: 'assistant' as const, content, streaming: true }]; }
+        next[next.length - 1] = { ...next[next.length - 1], content };
+        return next;
+      });
+      for (;;) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buf += dec.decode(value, { stream: true });
+        let nl: number;
+        while ((nl = buf.indexOf('\n')) >= 0) {
+          const line = buf.slice(0, nl); buf = buf.slice(nl + 1);
+          if (!line.trim()) continue;
+          const ev = JSON.parse(line) as { t?: string; done?: CoachReply; error?: string };
+          if (ev.error) throw new Error(ev.error);
+          if (ev.t) { raw += ev.t; const r = partialReply(raw); if (r) show(r); }
+          if (ev.done) final = ev.done;
+        }
+      }
+      if (!final) throw new Error('The reply was cut off. Try again.');
+      const done = final;
+      const msg: Msg = { role: 'assistant', content: done.reply || (done.foods?.length ? `Suggestions: ${done.foods.map((f) => f.name).join(', ')}` : 'Done.'), foods: done.foods, updates: done.profileUpdates, fromPhoto: !!photo };
+      setMsgs((m) => (started ? [...m.slice(0, -1), msg] : [...m, msg]));
     } catch (e) {
       setMsgs((m) => [...m, { role: 'assistant', content: (e as Error).message, error: true }]);
     } finally {
@@ -236,7 +269,7 @@ function Chat() {
           </div>
         )))}
 
-        {busy && (
+        {busy && !msgs[msgs.length - 1]?.streaming && (
           <div className="inline-flex items-center gap-1.5 rounded-[22px] rounded-bl-md bg-surface px-4 py-3.5" style={{ boxShadow: 'var(--shadow)' }} role="status" aria-label="Coach is typing">
             {[0, 1, 2].map((d) => <span key={d} className="h-2 w-2 animate-bounce rounded-full bg-silver" style={{ animationDelay: `${d * 0.15}s` }} />)}
           </div>

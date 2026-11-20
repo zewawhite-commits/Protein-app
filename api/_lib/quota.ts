@@ -5,7 +5,8 @@
  *   free       3      5      0        0      0     0
  *   plus      ∞      ∞      ∞        ∞     30     ∞     ∞ = unlimited (with a hidden fair-use cap against abuse)
  *   pro       ∞      ∞      ∞        ∞      ∞     ∞     Pro: unlimited plans, smarter coach, advanced analysis & reports
- *   trial    60    100      4       15      3    30     free Pro time (trial, invite rewards): every Pro feature, capped
+ *   trial     ∞      ∞      ∞        ∞      ∞     ∞     3-day Pro trial and invite rewards: everything unlimited
+ *   (Free limits are per day; the others per month.)
  *
  * Rules:
  *  - AI features need a signed-in account (x-user-token: Supabase access token).
@@ -22,11 +23,18 @@ export type PlanTier = 'free' | 'plus' | 'pro' | 'trial';
 
 const FAIR_USE = 900;
 
+/** Free limits reset every day (UTC); paid plans count per month. */
+const DAILY: Record<PlanTier, boolean> = { free: true, plus: false, pro: false, trial: false };
+const today = () => new Date().toISOString().slice(0, 10);
+/** The counter for this feature: per day on Free, per month otherwise. */
+export const usageKey = (feature: string, userId: string, tier: PlanTier) => (DAILY[tier] ? `${feature}:${userId}:${today()}` : `${feature}:${userId}`);
+
 const DEFAULTS: Record<PlanTier, Record<Feature, number>> = {
   free: { scan: 3, coach: 5, workout: 0, recipe: 0, plan: 0, ideas: 0 },
   plus: { scan: FAIR_USE, coach: FAIR_USE * 3, workout: FAIR_USE, recipe: FAIR_USE, plan: 30, ideas: FAIR_USE },
   pro: { scan: FAIR_USE, coach: FAIR_USE * 3, workout: FAIR_USE, recipe: FAIR_USE, plan: FAIR_USE, ideas: FAIR_USE },
-  trial: { scan: 60, coach: 100, workout: 4, recipe: 15, plan: 3, ideas: 30 },
+  // The 3-day Pro trial: everything Pro has, unlimited (fair-use cap only).
+  trial: { scan: FAIR_USE, coach: FAIR_USE * 3, workout: FAIR_USE, recipe: FAIR_USE, plan: FAIR_USE, ideas: FAIR_USE },
 };
 
 /** Limits at or above this are shown as "Unlimited" (a fair-use cap, ~30 a day). */
@@ -88,12 +96,12 @@ export async function gate(request: Request, feature: Feature, count = 1): Promi
   try {
     let left = 0;
     for (let i = 0; i < count; i++) {
-      left = await useScan(`${feature}:${user.id}`, limit);
+      left = await useScan(usageKey(feature, user.id, tier), limit);
       if (left < 0) break;
     }
     if (left < 0) {
-      if (limit >= UNLIMITED) return { ok: false, status: 429, body: { error: 'You’ve hit the fair-use limit for this month. It resets on the 1st — contact support if you need more.', limitReached: true, feature, tier } };
-      return { ok: false, status: 402, body: { error: tier === 'plus' ? `You’ve used your ${limit} ${NAMES[feature]} this month. Pro has unlimited.` : `You’ve used your ${limit} free ${NAMES[feature]} this month. Upgrade to Plus for unlimited.`, premium: true, limitReached: true, feature, tier } };
+      if (limit >= UNLIMITED) return { ok: false, status: 429, body: { error: 'You’ve hit the fair-use limit for this month. It resets on the 1st. Contact support if you need more.', limitReached: true, feature, tier } };
+      return { ok: false, status: 402, body: { error: tier === 'plus' ? `You’ve used your ${limit} ${NAMES[feature]} this month. Pro has unlimited.` : `You’ve used your ${limit} free ${NAMES[feature]} for today. They reset tomorrow, or upgrade to Plus for unlimited.`, premium: true, limitReached: true, feature, tier } };
     }
     return { ok: true, tier, left, limit };
   } catch (e) {
@@ -111,7 +119,7 @@ export async function usage(request: Request) {
   const db = admin();
   const used: Record<string, number> = {};
   if (db) {
-    const { data } = await db.from('scan_usage').select('subscriber, scans').eq('month', month).in('subscriber', features.map((f) => `${f}:${user.id}`));
+    const { data } = await db.from('scan_usage').select('subscriber, scans').eq('month', month).in('subscriber', features.map((f) => usageKey(f, user.id, tier)));
     for (const r of data ?? []) used[String(r.subscriber).split(':')[0]] = r.scans as number;
   }
   const unlimited = isAdmin(user.email);
