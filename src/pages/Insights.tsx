@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { ActivitySummary } from '@/components/ActivitySummary';
 import { WeightHistory } from '@/components/WeightHistory';
 import { Measurements } from '@/components/Measurements';
@@ -77,7 +78,7 @@ export default function Insights() {
 
   return (
     <div className="animate-fade-up">
-      <PageHeader title="Progress" />
+      <PageHeader title="Progress" right={<Link to="/reports" className="chip !h-10">Reports</Link>} />
 
       <div className="mb-6 space-y-4">
         <WeightAndStreak />

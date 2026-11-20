@@ -82,3 +82,10 @@
 /* Scan progress: a soft line sweeping over the photo while it's analysed. */
 @keyframes scanline { 0% { transform: translateY(-10%); } 100% { transform: translateY(1000%); } }
 .scanline { animation: scanline 1.6s ease-in-out infinite alternate; }
+
+/* Reports print as a clean PDF: no navigation or floating buttons. */
+@media print {
+  nav, .fixed, header button { display: none !important; }
+  body { background: #fff !important; }
+  .card { box-shadow: none !important; border: 1px solid #ddd; break-inside: avoid; }
+}

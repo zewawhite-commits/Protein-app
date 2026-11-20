@@ -1,0 +1,134 @@
+import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { ArrowLeft, ChevronLeft, ChevronRight, Download } from 'lucide-react';
+import { useStore } from '@/store/useStore';
+import { addDays, fromKey, toKey, todayKey } from '@/lib/dates';
+import { sumEntries, dailyGoal } from '@/lib/nutrition';
+import { dailyTargets } from '@/lib/energy';
+import { splitName } from '@/lib/foods';
+import { Segmented, cx, fmt } from '@/components/ui';
+
+type Period = 'week' | 'month';
+
+/** Start and end (inclusive) of the week (Mon–Sun) or month that is `offset` periods back. */
+function range(period: Period, offset: number): { from: string; to: string; label: string } {
+  const now = fromKey(todayKey());
+  if (period === 'week') {
+    const monday = addDays(todayKey(), -((now.getDay() + 6) % 7) - offset * 7);
+    const to = addDays(monday, 6);
+    const f = (k: string) => fromKey(k).toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
+    return { from: monday, to, label: `${f(monday)} – ${f(to)}` };
+  }
+  const first = new Date(now.getFullYear(), now.getMonth() - offset, 1);
+  const last = new Date(first.getFullYear(), first.getMonth() + 1, 0);
+  return { from: toKey(first), to: toKey(last), label: first.toLocaleDateString(undefined, { month: 'long', year: 'numeric' }) };
+}
+
+/**
+ * Weekly and monthly reports, worked out from your own logs (any past period, so they are
+ * always there to revisit). Averages use only days with food logged; missing days are not zero.
+ */
+export default function Reports() {
+  const nav = useNavigate();
+  const [period, setPeriod] = useState<Period>('week');
+  const [offset, setOffset] = useState(0);
+  const st = useStore();
+  const r = range(period, offset);
+  const prev = range(period, offset + 1);
+
+  const report = useMemo(() => {
+    const stats = (from: string, to: string) => {
+      const days = new Map<string, typeof st.entries>();
+      for (const e of st.entries) if (e.date >= from && e.date <= to && !e.planned) days.set(e.date, [...(days.get(e.date) ?? []), e]);
+      const totals = [...days.values()].map(sumEntries);
+      const n = totals.length;
+      const avg = (k: 'kcal' | 'protein' | 'carbs' | 'fat' | 'fiber') => (n ? totals.reduce((a, t) => a + (t[k] ?? 0), 0) / n : null);
+      const water = Object.entries(st.water ?? {}).filter(([d]) => d >= from && d <= to).map(([, ml]) => ml).filter((ml) => ml > 0);
+      const workouts = st.exercises.filter((e) => e.date >= from && e.date <= to);
+      const w = st.weights.filter((x) => x.date >= from && x.date <= to);
+      const foods = new Map<string, number>();
+      for (const list of days.values()) for (const e of list) foods.set(splitName(e.food.name).title, (foods.get(splitName(e.food.name).title) ?? 0) + 1);
+      return {
+        logged: n, kcal: avg('kcal'), protein: avg('protein'), carbs: avg('carbs'), fat: avg('fat'), fiber: avg('fiber'),
+        water: water.length ? water.reduce((a, b) => a + b, 0) / water.length : null,
+        workouts: workouts.length, minutes: workouts.reduce((a, e) => a + e.minutes, 0), km: workouts.reduce((a, e) => a + (e.km ?? 0), 0),
+        weightChange: w.length >= 2 ? w[w.length - 1].kg - w[0].kg : null, lastWeight: w.length ? w[w.length - 1].kg : null,
+        top: [...foods.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5),
+        proteinDays: st.profile ? totals.filter((t) => t.protein >= dailyGoal(st.profile!) * 0.9).length : 0,
+      };
+    };
+    return { now: stats(r.from, r.to), before: stats(prev.from, prev.to) };
+  }, [st.entries, st.water, st.exercises, st.weights, st.profile, r.from, r.to, prev.from, prev.to]);
+
+  const targets = st.profile ? dailyTargets(st.profile, dailyGoal(st.profile)) : null;
+  const length = Math.round((fromKey(r.to).getTime() - fromKey(r.from).getTime()) / 864e5) + 1;
+  const lb = st.settings.bodyUnit === 'lb';
+  const w = (kg: number) => `${fmt(lb ? kg * 2.20462 : kg, 1)} ${lb ? 'lb' : 'kg'}`;
+  const { now, before } = report;
+  const delta = (a: number | null, b: number | null, unit = '') => (a == null || b == null ? null : `${a - b >= 0 ? '+' : '−'}${fmt(Math.abs(a - b))}${unit}`);
+
+  const rows: [string, string, string | null, number | null][] = [
+    ['Calories', now.kcal == null ? '—' : `${fmt(now.kcal)} kcal`, delta(now.kcal, before.kcal), targets?.kcal && now.kcal ? now.kcal / targets.kcal : null],
+    ['Protein', now.protein == null ? '—' : `${fmt(now.protein)} g`, delta(now.protein, before.protein, ' g'), st.profile && now.protein ? now.protein / dailyGoal(st.profile) : null],
+    ['Carbs', now.carbs == null ? '—' : `${fmt(now.carbs)} g`, delta(now.carbs, before.carbs, ' g'), targets?.carbs && now.carbs ? now.carbs / targets.carbs : null],
+    ['Fat', now.fat == null ? '—' : `${fmt(now.fat)} g`, delta(now.fat, before.fat, ' g'), targets?.fat && now.fat ? now.fat / targets.fat : null],
+    ['Fiber', now.fiber == null ? '—' : `${fmt(now.fiber)} g`, delta(now.fiber, before.fiber, ' g'), now.fiber ? now.fiber / 30 : null],
+    ['Water', now.water == null ? '—' : `${fmt(now.water / 1000, 1)} L`, null, now.water ? now.water / 2000 : null],
+  ];
+
+  return (
+    <div className="mx-auto min-h-dvh max-w-lg animate-fade-up px-5 pb-16 md:max-w-2xl md:px-8 print:max-w-none">
+      <header className="pt-safe flex items-center gap-3 pb-4 print:hidden">
+        <button onClick={() => nav(-1)} className="grid h-11 w-11 place-items-center rounded-full bg-surface" style={{ boxShadow: 'var(--shadow)' }} aria-label="Back"><ArrowLeft size={20} /></button>
+        <h1 className="flex-1 text-[26px] font-extrabold tracking-tight">Reports</h1>
+        <button onClick={() => window.print()} className="chip !h-10"><Download size={15} /> PDF</button>
+      </header>
+      <div className="print:hidden"><Segmented full value={period} onChange={(p) => { setPeriod(p); setOffset(0); }} options={[{ value: 'week', label: 'Weekly' }, { value: 'month', label: 'Monthly' }]} /></div>
+
+      <div className="mt-4 flex items-center justify-between">
+        <button onClick={() => setOffset((o) => o + 1)} className="grid h-10 w-10 place-items-center rounded-full bg-surface print:hidden" aria-label="Previous"><ChevronLeft size={18} /></button>
+        <p className="text-center font-bold">Nutivili AI {period === 'week' ? 'weekly' : 'monthly'} report · {r.label}</p>
+        <button disabled={offset === 0} onClick={() => setOffset((o) => Math.max(0, o - 1))} className="grid h-10 w-10 place-items-center rounded-full bg-surface disabled:opacity-30 print:hidden" aria-label="Next"><ChevronRight size={18} /></button>
+      </div>
+
+      {now.logged === 0 ? (
+        <p className="card mt-4 p-5 text-sm text-silver">No food logged in this {period}. Missing days aren’t counted as zero, so there’s nothing to report yet.</p>
+      ) : (
+        <>
+          <section className="card mt-4 p-5">
+            <p className="text-sm text-silver">Daily average on the {now.logged} of {length} days you logged · vs previous {period}</p>
+            <div className="mt-3 space-y-3">
+              {rows.map(([label, value, change, pct]) => (
+                <div key={label}>
+                  <div className="flex items-baseline justify-between gap-2">
+                    <span className="font-semibold">{label}</span>
+                    <span className="num font-bold">{value} {change && <span className="ml-1 text-xs font-semibold text-silver">{change}</span>}</span>
+                  </div>
+                  {pct != null && (
+                    <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-raised"><div className={cx('h-full rounded-full', pct > 1.15 ? 'bg-warn' : 'bg-accent')} style={{ width: `${Math.min(100, pct * 100)}%` }} /></div>
+                  )}
+                </div>
+              ))}
+            </div>
+            <p className="mt-3 text-xs text-dim">Bars show the average against your daily target (fiber vs 30 g, water vs 2 L).</p>
+          </section>
+
+          <section className="card mt-4 grid grid-cols-2 gap-3 p-5 text-center">
+            <div className="rounded-2xl bg-raised py-3"><p className="num text-[22px] font-extrabold">{now.proteinDays}/{now.logged}</p><p className="text-xs text-silver">days hitting protein</p></div>
+            <div className="rounded-2xl bg-raised py-3"><p className="num text-[22px] font-extrabold">{now.workouts}</p><p className="text-xs text-silver">workouts · {now.minutes} min{now.km ? ` · ${fmt(now.km, 1)} km` : ''}</p></div>
+            <div className="rounded-2xl bg-raised py-3"><p className="num text-[22px] font-extrabold">{now.lastWeight ? w(now.lastWeight) : '—'}</p><p className="text-xs text-silver">latest weight</p></div>
+            <div className="rounded-2xl bg-raised py-3"><p className="num text-[22px] font-extrabold">{now.weightChange == null ? '—' : `${now.weightChange >= 0 ? '+' : '−'}${w(Math.abs(now.weightChange))}`}</p><p className="text-xs text-silver">weight change</p></div>
+          </section>
+
+          {now.top.length > 0 && (
+            <section className="card mt-4 p-5">
+              <p className="font-bold">Most logged foods</p>
+              <ol className="mt-2 space-y-1 text-sm">{now.top.map(([f, n], i) => <li key={f} className="flex justify-between"><span>{i + 1}. {f}</span><span className="text-silver">{n}×</span></li>)}</ol>
+            </section>
+          )}
+          <p className="mt-4 text-xs text-dim">General wellness information from your own logs, not medical advice. Nutrition values come from food-composition databases; scanned portions are estimates.</p>
+        </>
+      )}
+    </div>
+  );
+}
