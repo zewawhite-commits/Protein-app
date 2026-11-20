@@ -8,6 +8,7 @@ import { EXTRA_KEYS } from '@/lib/nutrients';
 import type { Food, Per100, RecipeDef } from '@/lib/types';
 import { cx, fmt } from '@/components/ui';
 import { haptic, toast } from '@/components/fx';
+import { RecipeImport, type ImportResult } from '@/components/RecipeImport';
 
 const KEYS = ['protein', 'kcal', 'fat', 'carbs', 'fiber', ...EXTRA_KEYS] as (keyof Per100)[];
 
@@ -46,6 +47,14 @@ export default function RecipeBuilder() {
   const [cooked, setCooked] = useState(existing?.recipe ? String(existing.recipe.cookedGrams) : '');
   const [servings, setServings] = useState(String(existing?.recipe?.servings ?? 2));
   const [q, setQ] = useState('');
+  const [check, setCheck] = useState<ImportResult | null>(null);
+  const imported = (r: ImportResult) => {
+    if (r.title && !name.trim()) setName(r.title);
+    if (r.servings) setServings(String(r.servings));
+    setItems((cur) => [...cur, ...r.items]);
+    setCheck(r);
+    toast(`${r.items.length} ingredient${r.items.length === 1 ? '' : 's'} added`);
+  };
 
   const results = useMemo(() => (db && q.trim().length >= 2 ? searchFoods(q, { limit: 6, custom: custom.filter((c) => !c.recipe) }) : []), [db, q, custom]);
   const rawTotal = items.reduce((s, i) => s + i.grams, 0);
@@ -84,6 +93,16 @@ export default function RecipeBuilder() {
         <h1 className="text-[26px] font-extrabold tracking-tight">{existing ? 'Edit recipe' : 'New recipe'}</h1>
       </header>
 
+      {!existing && <div className="mb-5"><RecipeImport onImported={imported} /></div>}
+      {check && (check.unmatched.length > 0 || check.guessed.length > 0 || check.note) && (
+        <div className="mb-5 rounded-[20px] bg-warn/15 p-4 text-sm">
+          <p className="font-bold">Please check</p>
+          {check.unmatched.length > 0 && <p className="mt-1">Not found, add these yourself below: {check.unmatched.join('; ')}</p>}
+          {check.guessed.length > 0 && <p className="mt-1">Amounts guessed (no quantity in the recipe): {check.guessed.join('; ')}</p>}
+          {check.note && <p className="mt-1 text-silver">{check.note}</p>}
+          <p className="mt-1 text-silver">Weigh the finished pot and enter the cooked weight for the most accurate numbers.</p>
+        </div>
+      )}
       <label className="label" htmlFor="rb-name">Recipe name</label>
       <input id="rb-name" className="field" maxLength={60} placeholder="e.g. Mum’s chicken stew" value={name} onChange={(e) => setName(e.target.value)} />
 

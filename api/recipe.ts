@@ -5,6 +5,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { contextText } from '../src/lib/coach.js';
 import { recipeWithClient } from '../src/lib/recipe.js';
+import { importRecipeWithClient, pageText, safeRecipeUrl } from '../src/lib/recipeImport.js';
 import { json } from './_lib/premium.js';
 import { allergensInAll, avoidSet } from '../src/lib/allergens.js';
 import { gate } from './_lib/quota.js';
@@ -12,9 +13,11 @@ import { cleanContext } from './_lib/context.js';
 
 export async function POST(request: Request): Promise<Response> {
   if (!process.env.ANTHROPIC_API_KEY) return json({ error: 'Recipes aren’t switched on yet.' }, 501);
+  const body = (await request.json().catch(() => null)) as { context?: unknown; request?: unknown; import?: { text?: unknown; url?: unknown; image?: { data?: unknown; mediaType?: unknown } } } | null;
+  // Importing a recipe (pasted text, a link or a photo) counts as one AI scan.
+  if (body?.import) return importRecipe(request, body.import);
   const g = await gate(request, 'recipe');
   if (!g.ok) return json(g.body, g.status);
-  const body = (await request.json().catch(() => null)) as { context?: unknown; request?: unknown } | null;
   const ask = typeof body?.request === 'string' ? body.request.trim().slice(0, 300) : '';
   try {
     const context = cleanContext(body?.context);
@@ -30,5 +33,32 @@ export async function POST(request: Request): Promise<Response> {
     if (e instanceof Anthropic.APIError) return json({ error: `Recipe service error (${e.status ?? 'network'}).` }, 502);
     console.error('[recipe]', (e as Error)?.message ?? e);
     return json({ error: (e as Error).message || 'Could not make a recipe.' }, 500);
+  }
+}
+
+async function importRecipe(request: Request, input: { text?: unknown; url?: unknown; image?: { data?: unknown; mediaType?: unknown } }): Promise<Response> {
+  const g = await gate(request, 'scan');
+  if (!g.ok) return json(g.body, g.status);
+  try {
+    let text = typeof input.text === 'string' ? input.text.trim() : '';
+    if (!text && typeof input.url === 'string') {
+      const url = safeRecipeUrl(input.url);
+      if (!url) return json({ error: 'That link doesn’t look right. Use a normal https:// recipe page.' }, 400);
+      const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), 8000);
+      const res = await fetch(url, { signal: ctl.signal, redirect: 'follow', headers: { 'user-agent': 'Mozilla/5.0 (compatible; RecipeReader/1.0)', accept: 'text/html' } }).finally(() => clearTimeout(t));
+      if (!res.ok || !(res.headers.get('content-type') ?? '').includes('html')) return json({ error: 'Couldn’t open that page. Copy the recipe text and paste it instead.' }, 422);
+      if (!safeRecipeUrl(res.url)) return json({ error: 'That page redirected somewhere we can’t open.' }, 422);
+      text = pageText((await res.text()).slice(0, 2_000_000));
+    }
+    const img = input.image;
+    const image = img && typeof img.data === 'string' && ['image/jpeg', 'image/png', 'image/webp'].includes(String(img.mediaType)) && img.data.length < 7_000_000
+      ? { data: img.data, mediaType: img.mediaType as 'image/jpeg' } : undefined;
+    if (!text && !image) return json({ error: 'Paste a recipe, add a link or a photo.' }, 400);
+    return json(await importRecipeWithClient(new Anthropic(), { text, image }));
+  } catch (e) {
+    if (e instanceof Anthropic.RateLimitError) return json({ error: 'Busy, try again in a moment.' }, 429);
+    if (e instanceof Anthropic.APIError) return json({ error: `Recipe service error (${e.status ?? 'network'}).` }, 502);
+    if ((e as Error).name === 'AbortError') return json({ error: 'That page took too long. Paste the recipe text instead.' }, 504);
+    return json({ error: (e as Error).message || 'Couldn’t read that recipe.' }, 500);
   }
 }
