@@ -40,9 +40,35 @@ async function fromPexels(key: string, q: string): Promise<Omit<Row, 'tried_at'>
   return { key, url: `${best.src.original}?auto=compress&cs=tinysrgb`, author: best.photographer, author_url: best.photographer_url, photo_page: best.url, blur_color: best.avg_color ?? null };
 }
 
+/**
+ * Wikimedia Commons as a further fallback (no key needed; strong on traditional dishes).
+ * Only large photos (JPEG, at least 1200 px) under free licences (CC0, public domain, CC BY,
+ * CC BY-SA), credited to the author with the licence. Shown as Wikimedia's own 640 px thumbnail.
+ */
+const FREE = /^(cc0|public domain|pd|cc by(-sa)? [0-9.]+)/i;
+const strip = (h?: string) => (h ?? '').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim().slice(0, 80) || null;
+async function fromWikimedia(key: string, q: string): Promise<Omit<Row, 'tried_at'> | null> {
+  const url = `https://commons.wikimedia.org/w/api.php?action=query&format=json&origin=*&generator=search&gsrnamespace=6&gsrlimit=8&gsrsearch=${encodeURIComponent(`${q} filetype:bitmap`)}&prop=imageinfo&iiprop=url|size|mime|extmetadata&iiurlwidth=640`;
+  const res = await fetch(url, { headers: { 'user-agent': 'NutiviliAI/1.0 (food photos; https://nutiviliai.vercel.app)' } });
+  if (!res.ok) return null;
+  type Info = { url: string; thumburl?: string; width: number; height: number; mime: string; descriptionurl: string; extmetadata?: Record<string, { value?: string }> };
+  const data = (await res.json()) as { query?: { pages?: Record<string, { index: number; imageinfo?: Info[] }> } };
+  const pages = Object.values(data.query?.pages ?? {}).sort((a, b) => a.index - b.index);
+  for (const pg of pages) {
+    const i = pg.imageinfo?.[0];
+    if (!i?.thumburl || i.mime !== 'image/jpeg' || Math.min(i.width, i.height) < 1200) continue;
+    const ratio = i.width / i.height;
+    if (ratio < 0.66 || ratio > 1.6) continue;
+    const lic = strip(i.extmetadata?.LicenseShortName?.value) ?? '';
+    if (!FREE.test(lic)) continue;
+    return { key, url: i.thumburl, author: `${strip(i.extmetadata?.Artist?.value) ?? 'Unknown'} (${lic})`, author_url: i.descriptionurl, photo_page: i.descriptionurl, blur_color: null };
+  }
+  return null;
+}
+
 async function search(key: string): Promise<Omit<Row, 'tried_at'>> {
   try { return await searchUnsplash(key); } catch (e) {
-    const alt = await fromPexels(key, PHOTO_QUERIES[key]).catch(() => null);
+    const alt = (await fromPexels(key, PHOTO_QUERIES[key]).catch(() => null)) ?? (await fromWikimedia(key, PHOTO_QUERIES[key]).catch(() => null));
     if (alt) return alt;
     throw e;
   }
@@ -55,7 +81,7 @@ async function searchUnsplash(key: string): Promise<Omit<Row, 'tried_at'>> {
   if (!results.length) results = await find(q, false);
   // The most liked of the top results tends to be the best-looking photo.
   const best = [...results].sort((a, b) => (b.likes ?? 0) - (a.likes ?? 0))[0];
-  if (!best) return (await fromPexels(key, q).catch(() => null)) ?? { key, url: null, author: null, author_url: null, photo_page: null, blur_color: null };
+  if (!best) return (await fromPexels(key, q).catch(() => null)) ?? (await fromWikimedia(key, q).catch(() => null)) ?? { key, url: null, author: null, author_url: null, photo_page: null, blur_color: null };
   // Unsplash asks apps to report when a photo is used.
   void fetch(best.links.download_location, { headers: { authorization: `Client-ID ${process.env.UNSPLASH_ACCESS_KEY}` } }).catch(() => undefined);
   return { key, url: best.urls.raw, author: best.user.name, author_url: `${best.user.links.html}?${UTM}`, photo_page: `${best.links.html}?${UTM}`, blur_color: best.color ?? null };
@@ -78,7 +104,7 @@ export async function GET(request: Request): Promise<Response> {
   // Find a few missing ones per request (or retry old misses), within Unsplash's hourly limit.
   const missing = keys.filter((k) => { const r = have.get(k); return !r || (!r.url && Date.now() - Date.parse(r.tried_at) > RETRY_MS); }).slice(0, NEW_PER_REQUEST);
   let pending = keys.filter((k) => !have.get(k)).length > missing.length;
-  if (process.env.UNSPLASH_ACCESS_KEY || process.env.PEXELS_API_KEY) {
+  {
     for (const k of missing) {
       try {
         const row = await search(k);

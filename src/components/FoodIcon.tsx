@@ -16,7 +16,7 @@ export function FoodVisual({ name, category, photoId, size = 52, className }: { 
   return (
     <div className={cx('relative grid shrink-0 place-items-center overflow-hidden bg-raised', photo === undefined && key && 'animate-pulse', className)} style={{ width: size, height: size, borderRadius: size * 0.3 }}>
       {own ? <img src={own} alt="" className="h-full w-full object-cover" />
-        : photo ? <img src={sizedPhoto(photo.url, Math.round(size * 2))} alt="" title={photo.author ? `Photo by ${photo.author} on ${photo.url.includes('pexels') ? 'Pexels' : 'Unsplash'}` : undefined} width={size} height={size} loading="lazy" decoding="async" draggable={false} className="h-full w-full select-none object-cover" style={{ backgroundColor: photo.color ?? undefined }} />
+        : photo ? <img src={sizedPhoto(photo.url, Math.round(size * 2))} alt="" title={photo.author ? `Photo by ${photo.author} on ${photo.url.includes('pexels') ? 'Pexels' : photo.url.includes('wikimedia') ? 'Wikimedia Commons' : 'Unsplash'}` : undefined} width={size} height={size} loading="lazy" decoding="async" draggable={false} className="h-full w-full select-none object-cover" style={{ backgroundColor: photo.color ?? undefined }} />
         : photo === null || !key ? <UtensilsCrossed size={Math.max(12, Math.round(size * 0.34))} className="text-dim" strokeWidth={1.75} aria-hidden /> : null}
     </div>
   );
