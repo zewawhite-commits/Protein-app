@@ -19,13 +19,13 @@ const TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
 export async function POST(request: Request): Promise<Response> {
   let scansLeft: number | undefined;
   if (!process.env.ANTHROPIC_API_KEY) return json({ error: 'Recognition is not configured on this server.' }, 501);
-  // Check the account and read the photo at the same time (both wait on the network).
   let body: { image?: string; mediaType?: string; text?: string; label?: boolean; menu?: boolean } | null;
-  const [g, parsed] = await Promise.all([gate(request, 'scan'), request.json().catch(() => null)]);
+  body = (await request.json().catch(() => null)) as typeof body;
+  if (!body || typeof body !== 'object') return json({ error: 'Invalid JSON body.' }, 400);
+  // Restaurant menus are a Plus feature with their own allowance; plate and label photos are AI scans.
+  const g = await gate(request, body.menu === true && !body.text ? 'menu' : 'scan');
   if (!g.ok) return json(g.body, g.status);
   if (Number.isFinite(g.left)) scansLeft = g.left;
-  body = parsed as typeof body;
-  if (!body || typeof body !== 'object') return json({ error: 'Invalid JSON body.' }, 400);
   const { image, mediaType = 'image/jpeg' } = body;
   const text = typeof body.text === 'string' ? body.text.trim().slice(0, 500) : '';
   if (!text) {

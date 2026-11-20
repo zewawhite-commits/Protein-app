@@ -46,7 +46,7 @@ const OBSTACLES = ['Lack of consistency', 'Busy schedule', 'Unhealthy eating hab
 
 const PLAN_CHOICES = [
   { tier: 'free' as const, name: 'Free', badge: '', perks: ['Calories, macros & 18,000+ foods', 'Barcode, exercise, progress & feed', '3 AI scans + 5 coach messages a day'] },
-  { tier: 'plus' as const, name: 'Plus', badge: 'Most popular', perks: ['Unlimited AI food scans', 'AI nutrition coach', 'Personalized meal plans', 'Daily meal suggestions', 'AI recipes with full nutrition', 'AI workout guides', 'Adjusts to your cuisine & diet'] },
+  { tier: 'plus' as const, name: 'Plus', badge: 'Most popular', perks: ['Unlimited AI food scans', 'Restaurant menu scanning', 'AI nutrition coach', 'Personalized meal plans', 'Daily meal suggestions', 'AI recipes with full nutrition', 'AI workout guides', 'Adjusts to your cuisine & diet'] },
   { tier: 'pro' as const, name: 'Pro', badge: '', perks: ['Everything in Plus', 'Advanced weekly & monthly meal planning', 'Plans adjust automatically to your progress', 'Advanced micronutrient analysis', 'Detailed nutrition reports', 'Advanced recommendations', 'Smarter, more personal AI coach'] },
 ];
 

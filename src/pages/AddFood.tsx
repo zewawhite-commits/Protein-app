@@ -2,7 +2,7 @@ import { sendMessage } from '@/lib/feedback';
 import { useDeferredValue, useEffect, useMemo, useState } from 'react';
 import { AllergyTag } from '@/components/Allergy';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Camera, ChevronRight, Globe2, Heart, Loader2, Search, X, ChefHat, Plus } from 'lucide-react';
+import { ArrowLeft, Camera, ChevronRight, Globe2, Heart, Loader2, Mic, Search, X, ChefHat, Plus } from 'lucide-react';
 import { haptic, toast } from '@/components/fx';
 import { useFoodDb, useFoodLookup, usePhotoUrl } from '@/lib/hooks';
 import { SOURCE_SHORT, searchFoods, splitName, groupDuplicates, hasCoreNutrition } from '@/lib/foods';
@@ -15,6 +15,7 @@ import type { CustomFood, Food, PrepState } from '@/lib/types';
 import { FoodSheet } from '@/components/FoodSheet';
 import { FoodArt, FoodVisual } from '@/components/FoodIcon';
 import { WorldFoods } from '@/components/WorldFoods';
+import { VoiceSheet, canUseVoice } from '@/components/VoiceSheet';
 import { SavedMealsList } from '@/components/SavedMeals';
 import { StateBadge, cx, fmt } from '@/components/ui';
 
@@ -32,6 +33,7 @@ export default function AddFood() {
   const nav = useNavigate();
   const [params] = useSearchParams();
   const date = params.get('date') ?? todayKey();
+  const [voice, setVoice] = useState(false);
   const photoId = params.get('photo') ?? undefined;
   const photoUrl = usePhotoUrl(photoId);
   const { db, error } = useFoodDb();
@@ -73,6 +75,7 @@ export default function AddFood() {
 
   return (
     <div className="animate-fade-up">
+      {voice && <VoiceSheet date={date} onClose={() => setVoice(false)} onSearch={(t) => setQ(t)} />}
       <header className="pt-safe flex items-center justify-between pb-5">
         <button onClick={back} className="grid h-11 w-11 place-items-center rounded-full bg-surface" style={{ boxShadow: 'var(--shadow)' }} aria-label="Back">
           <ArrowLeft size={20} strokeWidth={2.2} />
@@ -108,6 +111,9 @@ export default function AddFood() {
               </button>
             )}
           </div>
+          {canUseVoice && !photoId && (
+            <button onClick={() => { haptic(); setVoice(true); }} className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-surface text-ink" style={{ boxShadow: 'var(--shadow)' }} aria-label="Say what you ate"><Mic size={21} /></button>
+          )}
           {!photoId && (
             <Link to={snapUrl} className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-primary text-on-primary" aria-label="Snap a photo">
               <Camera size={22} />

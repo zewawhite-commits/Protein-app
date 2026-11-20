@@ -18,7 +18,7 @@
 import { bearer, readPass } from './premium.js';
 import { accountsConfigured, useScan, userFromToken } from './accounts.js';
 
-export type Feature = 'scan' | 'coach' | 'workout' | 'recipe' | 'plan' | 'ideas';
+export type Feature = 'scan' | 'coach' | 'workout' | 'recipe' | 'plan' | 'ideas' | 'menu';
 export type PlanTier = 'free' | 'plus' | 'pro' | 'trial';
 
 const FAIR_USE = 900;
@@ -30,17 +30,17 @@ const today = () => new Date().toISOString().slice(0, 10);
 export const usageKey = (feature: string, userId: string, tier: PlanTier) => (DAILY[tier] ? `${feature}:${userId}:${today()}` : `${feature}:${userId}`);
 
 const DEFAULTS: Record<PlanTier, Record<Feature, number>> = {
-  free: { scan: 3, coach: 5, workout: 0, recipe: 0, plan: 0, ideas: 0 },
-  plus: { scan: FAIR_USE, coach: FAIR_USE * 3, workout: FAIR_USE, recipe: FAIR_USE, plan: 30, ideas: FAIR_USE },
-  pro: { scan: FAIR_USE, coach: FAIR_USE * 3, workout: FAIR_USE, recipe: FAIR_USE, plan: FAIR_USE, ideas: FAIR_USE },
+  free: { scan: 3, coach: 5, workout: 0, recipe: 0, plan: 0, ideas: 0, menu: 0 },
+  plus: { scan: FAIR_USE, coach: FAIR_USE * 3, workout: FAIR_USE, recipe: FAIR_USE, plan: 30, ideas: FAIR_USE, menu: FAIR_USE },
+  pro: { scan: FAIR_USE, coach: FAIR_USE * 3, workout: FAIR_USE, recipe: FAIR_USE, plan: FAIR_USE, ideas: FAIR_USE, menu: FAIR_USE },
   // The 3-day Pro trial: everything Pro has, unlimited (fair-use cap only).
-  trial: { scan: FAIR_USE, coach: FAIR_USE * 3, workout: FAIR_USE, recipe: FAIR_USE, plan: FAIR_USE, ideas: FAIR_USE },
+  trial: { scan: FAIR_USE, coach: FAIR_USE * 3, workout: FAIR_USE, recipe: FAIR_USE, plan: FAIR_USE, ideas: FAIR_USE, menu: FAIR_USE },
 };
 
 /** Limits at or above this are shown as "Unlimited" (a fair-use cap, ~30 a day). */
 export const UNLIMITED = 900;
 
-const NAMES: Record<Feature, string> = { scan: 'AI scans', coach: 'coach messages', workout: 'workout guides', recipe: 'AI recipes', plan: 'eating plans', ideas: 'AI meal ideas' };
+const NAMES: Record<Feature, string> = { scan: 'AI scans', coach: 'coach messages', workout: 'workout guides', recipe: 'AI recipes', plan: 'eating plans', ideas: 'AI meal ideas', menu: 'Restaurant menu scans' };
 
 export function limitFor(tier: PlanTier, feature: Feature): number {
   const v = Number(process.env[`LIMIT_${tier.toUpperCase()}_${feature.toUpperCase()}`]);
