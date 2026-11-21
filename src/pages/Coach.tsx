@@ -4,9 +4,11 @@ import { archiveChat, pastChats, removeChat, type PastChat } from '@/lib/chats';
 import { mealLabel } from '@/lib/meals';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowUp, ChevronRight, History, ImagePlus, MessageCircle, RotateCcw, Trash2, X } from 'lucide-react';
+import { ArrowUp, ChevronRight, History, ImagePlus, MessageCircle, Mic, RotateCcw, Trash2, Volume2, VolumeX, X } from 'lucide-react';
+import { SR, type Recognizer } from '@/components/VoiceSheet';
+import { useFreePro } from '@/lib/perks';
 import { blobToBase64, resizeImage } from '@/lib/photos';
-import { aiHeaders } from '@/lib/premium';
+import { aiHeaders, isPremiumActive } from '@/lib/premium';
 import { WorkoutView } from '@/components/WorkoutView';
 import { RecipeView } from '@/components/RecipeView';
 import { SignInButtons } from '@/components/SignIn';
@@ -179,6 +181,51 @@ function Chat() {
   const endRef = useRef<HTMLDivElement>(null);
   const profile = useStore((s) => s.profile);
 
+  // Voice: anyone can speak a question; Pro members can have the coach answer out loud.
+  const paid = useStore((s) => isPremiumActive(s.premium) || s.serverTier === 'pro' || s.serverTier === 'plus');
+  const freePro = useFreePro().on;
+  const isPro = paid || freePro;
+  const sendRef = useRef<(t: string) => Promise<void>>(async () => undefined);
+  const [talk, setTalk] = useState(() => { try { return localStorage.getItem('nutivili-coach-talk') === 'on'; } catch { return false; } });
+  const [listening, setListening] = useState(false);
+  const rec = useRef<Recognizer | null>(null);
+  const spokeLast = useRef(false);
+  const speaking = isPro && talk;
+  const stopVoice = () => { try { rec.current?.abort ? rec.current.abort() : rec.current?.stop(); } catch { /* stopped */ } rec.current = null; setListening(false); try { window.speechSynthesis?.cancel(); } catch { /* none */ } };
+  useEffect(() => {
+    const hide = () => { if (document.visibilityState === 'hidden') stopVoice(); };
+    document.addEventListener('visibilitychange', hide);
+    return () => { document.removeEventListener('visibilitychange', hide); stopVoice(); };
+  }, []);
+  function listen(auto = false) {
+    if (!SR) { toast('Voice isn’t available in this browser — try Chrome or Safari.'); return; }
+    if (!auto && rec.current) { stopVoice(); return; }
+    stopVoice();
+    const r = new SR();
+    r.lang = navigator.language || 'en-GB';
+    r.interimResults = true;
+    r.continuous = false;
+    let last = '';
+    r.onresult = (e) => { last = Array.from(e.results).map((x) => x[0].transcript).join(' ').trim(); setText(last); };
+    r.onend = () => { setListening(false); rec.current = null; if (last) { spokeLast.current = true; void sendRef.current(last); } };
+    r.onerror = (e) => { setListening(false); if (!auto && e?.error === 'not-allowed') toast('Microphone access is off — allow it in your browser settings.'); };
+    rec.current = r;
+    setListening(true);
+    haptic();
+    try { r.start(); } catch { setListening(false); }
+  }
+  function sayReply(text: string) {
+    if (!('speechSynthesis' in window)) return;
+    try {
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text.replace(/[*_#`>]/g, '').replace(/\s+/g, ' ').slice(0, 1200));
+      u.lang = navigator.language || 'en-GB';
+      // A spoken conversation keeps going: listen for the next question once the answer ends.
+      u.onend = () => { if (spokeLast.current && document.visibilityState === 'visible') listen(true); };
+      window.speechSynthesis.speak(u);
+    } catch { /* no voice */ }
+  }
+
   // Only scroll to the newest message once there's a conversation — an empty chat stays at the top.
   useEffect(() => { save(msgs); if (!busy) archiveChat(msgs, chatId); if (msgs.length) endRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' }); }, [msgs, busy]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { try { localStorage.setItem(CHAT_ID, chatId); } catch { /* storage blocked */ } }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -213,6 +260,7 @@ function Chat() {
         }
         if (!res.ok) throw new Error(data.error || 'Could not reply.');
         setMsgs((m) => [...m, { role: 'assistant', content: data.reply || 'Done.', foods: data.foods, updates: data.profileUpdates, fromPhoto: !!photo }]);
+        if (speaking) sayReply(data.reply || 'Done.');
         return;
       }
       // Live reply: show the words as they're written.
@@ -244,6 +292,7 @@ function Chat() {
       const done = final;
       const msg: Msg = { role: 'assistant', content: done.reply || (done.foods?.length ? `Suggestions: ${done.foods.map((f) => f.name).join(', ')}` : 'Done.'), foods: done.foods, updates: done.profileUpdates, fromPhoto: !!photo };
       setMsgs((m) => (started ? [...m.slice(0, -1), msg] : [...m, msg]));
+      if (speaking) sayReply(msg.content);
     } catch (e) {
       setMsgs((m) => [...m, { role: 'assistant', content: (e as Error).message, error: true }]);
     } finally {
@@ -251,9 +300,23 @@ function Chat() {
     }
   }
 
+  sendRef.current = send;
+
   return (
     <div className="flex min-h-[calc(100dvh-14rem)] flex-col">
       <div className="mb-2 flex justify-end gap-2">
+        <button
+          onClick={() => {
+            haptic();
+            if (!isPro) { toast('Spoken replies come with Pro — the coach talks back to you.'); return; }
+            const v = !talk; setTalk(v); if (!v) window.speechSynthesis?.cancel();
+            try { localStorage.setItem('nutivili-coach-talk', v ? 'on' : 'off'); } catch { /* storage blocked */ }
+          }}
+          className={cx('chip !h-9', speaking && 'chip-on')}
+          aria-label={speaking ? 'Stop spoken replies' : 'Coach talks back'}
+        >
+          {speaking ? <Volume2 size={14} /> : <VolumeX size={14} />} {speaking ? 'Talking' : 'Talk back'}{!isPro && <span className="text-[11px] font-bold text-accent">PRO</span>}
+        </button>
         {pastChats().some((c) => c.id !== chatId) && <button onClick={() => { haptic(); setShowPast(true); }} className="chip !h-9"><History size={14} /> Past chats</button>}
         {msgs.length > 0 && <button onClick={() => { haptic(); setChatId(crypto.randomUUID()); setMsgs([]); }} className="chip !h-9" aria-label="New chat"><RotateCcw size={14} /> New chat</button>}
       </div>
@@ -324,7 +387,7 @@ function Chat() {
         </div>
       )}
       <form
-        onSubmit={(e) => { e.preventDefault(); void send(text); }}
+        onSubmit={(e) => { e.preventDefault(); spokeLast.current = false; void send(text); }}
         className="sticky bottom-[calc(env(safe-area-inset-bottom)+6.5rem)] z-20 flex items-end gap-2 pt-6 lg:bottom-6"
         // Messages scroll behind the box: fade them out so the box always sits on a clean background.
         style={{ background: 'linear-gradient(to top, rgb(var(--bg)) 0%, rgb(var(--bg)) 72%, rgb(var(--bg) / 0) 100%)' }}
@@ -344,7 +407,7 @@ function Chat() {
         <textarea
           value={text}
           onChange={(e) => setText(e.target.value)}
-          onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); void send(text); } }}
+          onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); spokeLast.current = false; void send(text); } }}
           rows={1}
           maxLength={2000}
           placeholder={pending ? 'Ask about this photo…' : 'Ask your coach…'}
@@ -352,9 +415,15 @@ function Chat() {
           style={{ boxShadow: 'var(--shadow)' }}
           aria-label="Message"
         />
+        {!text.trim() && !pending ? (
+          <button type="button" onClick={() => listen()} disabled={busy} className={cx('grid h-[52px] w-[52px] shrink-0 place-items-center rounded-full transition active:scale-95 disabled:opacity-40', listening ? 'animate-pulse bg-primary text-on-primary' : 'bg-primary text-on-primary')} aria-label={listening ? 'Stop listening' : 'Ask by voice'}>
+            <Mic size={22} />
+          </button>
+        ) : (
         <button type="submit" disabled={(!text.trim() && !pending) || busy} className="grid h-[52px] w-[52px] shrink-0 place-items-center rounded-full bg-primary text-on-primary transition active:scale-95 disabled:opacity-40" aria-label="Send">
           <ArrowUp size={22} strokeWidth={2.5} />
         </button>
+        )}
       </form>
       <p className="mt-2 text-center text-[12px] text-dim">AI Coach gives general fitness and nutrition guidance, not medical advice.</p>
 

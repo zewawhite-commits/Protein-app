@@ -13,8 +13,8 @@ import { FoodVisual } from './FoodIcon';
 import { cx, fmt } from './ui';
 import { haptic, toast } from './fx';
 
-type Recognizer = { lang: string; interimResults: boolean; continuous: boolean; start: () => void; stop: () => void; abort?: () => void; onresult: ((e: { results: ArrayLike<ArrayLike<{ transcript: string }> & { isFinal?: boolean }> }) => void) | null; onend: (() => void) | null; onerror: ((e: { error?: string }) => void) | null };
-const SR = typeof window !== 'undefined' ? ((window as unknown as Record<string, unknown>).SpeechRecognition ?? (window as unknown as Record<string, unknown>).webkitSpeechRecognition) as (new () => Recognizer) | undefined : undefined;
+export type Recognizer = { lang: string; interimResults: boolean; continuous: boolean; start: () => void; stop: () => void; abort?: () => void; onresult: ((e: { results: ArrayLike<ArrayLike<{ transcript: string }> & { isFinal?: boolean }> }) => void) | null; onend: (() => void) | null; onerror: ((e: { error?: string }) => void) | null };
+export const SR = typeof window !== 'undefined' ? ((window as unknown as Record<string, unknown>).SpeechRecognition ?? (window as unknown as Record<string, unknown>).webkitSpeechRecognition) as (new () => Recognizer) | undefined : undefined;
 export const canUseVoice = !!SR;
 
 interface Line { key: string; said: SaidFood; food: Food | null; options: Food[]; grams: number | null; how: string }
