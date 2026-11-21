@@ -175,7 +175,7 @@ export default function AddFood() {
         <p className="flex items-center justify-center gap-2 py-12 font-medium text-silver"><Loader2 className="animate-spin" size={18} /> Loading foods…</p>
       )}
 
-      {db && !searching && tab === 'picks' && <PhotoCards foods={list} onPick={setSelected} />}
+      {/* (The same picks are listed below with + buttons; the extra card row only repeated them.) */}
 
       {!searching && tab === 'saved' && <SavedMealsList date={date} />}
  {!searching && tab === 'custom' && custom.filter((c) => !c.archived).length > 1 && (
@@ -367,30 +367,6 @@ function FoodRow({ food, onClick }: { food: Food; onClick: () => void }) {
   );
 }
 
-/** Big illustrated cards for popular high-protein foods. */
-function PhotoCards({ foods, onPick }: { foods: Food[]; onPick: (f: Food) => void }) {
-  if (!foods.length) return null;
-  return (
-    <div className="-mx-5 mb-5 flex snap-x gap-3 overflow-x-auto px-5 pb-1 no-scrollbar">
-      {foods.slice(0, 10).map((f) => {
-        const { title } = splitName(f.name);
-        return (
-          <button key={f.id} onClick={() => { haptic(); onPick(f); }} className="flex h-48 w-40 shrink-0 snap-start flex-col justify-between rounded-[26px] bg-surface p-4 text-left transition active:scale-[.97]" style={{ boxShadow: 'var(--shadow)' }}>
-            <div className="flex items-start justify-between">
-              <FoodVisual name={f.name} category={f.category} size={56} />
-              {f.state !== 'na' && <StateBadge state={f.state} />}
-            </div>
-            <div>
-              <p className="line-clamp-2 text-[15px] font-bold leading-snug">{title}</p>
-              <p className="num mt-1 text-sm font-semibold text-accent">{fmt(f.per100.protein, 1)} g protein</p>
-              <p className="text-xs font-medium text-silver">per 100 g</p>
-            </div>
-          </button>
-        );
-      })}
-    </div>
-  );
-}
 
 /**
  * Meal memory: what this person usually eats at this time of day (from the last 30 days),

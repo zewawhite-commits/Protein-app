@@ -15,6 +15,7 @@ describe('African foods', () => {
     ['egusi soup', /Egusi/], ['pounded yam', /Pounded yam/], ['suya', /Suya/], ['moi moi', /Moi moi/], ['akara', /Akara/], ['masa', /Masa/],
     ['nigerian fried rice', /fried rice/i], ['eba', /Eba/], ['amala', /Amala/], ['fufu', /Fufu/], ['pepper soup', /pepper soup/i], ['boiled rice', /Rice, white/],
     ['ofada rice', /Rice, brown.*cook/], ['efo riro', /Efo riro/], ['ogbono soup', /Ogbono/], ['banga soup', /Banga/], ['puff puff', /Puff puff/],
+    ['beans porridge', /beans/i], ['fried plantain', /plantain/i], ['waakye', /Waakye/i], ['kelewele', /Kelewele/i],
   ])('"%s" finds the right food', (q, re) => {
     expect(searchFoods(q, {})[0]?.name).toMatch(re);
   });

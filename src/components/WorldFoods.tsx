@@ -36,10 +36,26 @@ const WORLD: { label: string; q: string; cuisine: string }[] = [
   { label: 'Adobo', q: 'adobo', cuisine: 'Filipino' },
 ];
 
+/** West African everyday dishes, shown first for people there (or who chose these cuisines). */
+const WEST_AFRICA: { label: string; q: string; cuisine: string }[] = [
+  { label: 'Jollof rice', q: 'jollof rice', cuisine: 'Nigerian' }, { label: 'Egusi soup', q: 'egusi soup', cuisine: 'Nigerian' },
+  { label: 'Pounded yam', q: 'pounded yam', cuisine: 'Nigerian' }, { label: 'Suya', q: 'suya', cuisine: 'Nigerian' },
+  { label: 'Moi moi', q: 'moi moi', cuisine: 'Nigerian' }, { label: 'Akara', q: 'akara', cuisine: 'Nigerian' },
+  { label: 'Fried rice', q: 'nigerian fried rice', cuisine: 'Nigerian' }, { label: 'Beans porridge', q: 'beans porridge', cuisine: 'Nigerian' },
+  { label: 'Eba', q: 'eba', cuisine: 'Nigerian' }, { label: 'Dodo', q: 'fried plantain', cuisine: 'Nigerian' },
+  { label: 'Efo riro', q: 'efo riro', cuisine: 'Nigerian' }, { label: 'Amala', q: 'amala', cuisine: 'Nigerian' },
+  { label: 'Waakye', q: 'waakye', cuisine: 'Ghanaian' }, { label: 'Kelewele', q: 'kelewele', cuisine: 'Ghanaian' },
+];
+const WA_COUNTRIES = /nigeria|ghana|benin|togo|cameroon|sierra leone|liberia|senegal|gambia|ivory|côte|cote|burkina|niger\b|mali/i;
+
 export function WorldFoods({ onSearch }: { onSearch: (q: string) => void }) {
   const liked = useStore((s) => s.profile?.cuisines);
+  const country = useStore((s) => s.profile?.country ?? '');
+  const local = WA_COUNTRIES.test(country) || !!liked?.some((c) => /nigerian|ghanaian|west african/i.test(c));
   // Cuisines the person likes come first, but the row always stays mixed.
   const items = useMemo(() => {
+    // Local dishes first for West Africa, then the rest of the world.
+    if (local) return [...WEST_AFRICA, ...WORLD.filter((w) => !WEST_AFRICA.some((x) => x.label === w.label))];
     if (!liked?.length) return WORLD;
     const fav = WORLD.filter((w) => liked.includes(w.cuisine));
     const rest = WORLD.filter((w) => !liked.includes(w.cuisine));
@@ -50,11 +66,11 @@ export function WorldFoods({ onSearch }: { onSearch: (q: string) => void }) {
       if (rest.length) out.push(rest.shift()!);
     }
     return out;
-  }, [liked]);
+  }, [liked, local]);
 
   return (
     <section className="mb-5">
-      <p className="mb-2.5 px-1 text-[15px] font-semibold">Popular around the world</p>
+      <p className="mb-2.5 px-1 text-[15px] font-semibold">{local ? 'Popular near you' : 'Popular around the world'}</p>
       <div className="-mx-5 flex gap-3 overflow-x-auto px-5 pb-1 no-scrollbar">
         {items.map((w) => {
           return (
