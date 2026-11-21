@@ -23,6 +23,7 @@
   --warn: 204 124 30;
   --carbs: 232 148 36;      /* amber */
   --fat: 226 96 84;         /* coral */
+  --hero-a: 52 199 137; --hero-b: 18 158 108; --hero-c: 12 140 104;
   --shadow: 0 1px 2px rgb(30 40 30 / 0.04), 0 8px 22px -8px rgb(30 40 30 / 0.09), 0 0 0 1px rgb(30 40 30 / 0.03);
   color-scheme: light;
 }
@@ -43,8 +44,24 @@
   --warn: 236 176 90;
   --carbs: 246 172 76;
   --fat: 250 130 116;
+  --hero-a: 52 199 137; --hero-b: 18 158 108; --hero-c: 12 140 104;
   --shadow: 0 0 0 1px rgb(255 255 255 / 0.04), 0 12px 32px -12px rgb(0 0 0 / 0.6);
   color-scheme: dark;
+}
+
+/* Pink accent (optional, works in light and dark). Only the accent colours change. */
+[data-accent='pink'][data-theme='light'], :root[data-accent='pink']:not([data-theme='dark']) {
+  --primary: 214 51 132;
+  --accent: 196 38 118;
+  --glow: 255 190 220;
+  --hero-a: 240 98 166; --hero-b: 214 51 132; --hero-c: 186 34 110;
+}
+[data-accent='pink'][data-theme='dark'] {
+  --primary: 255 160 206;
+  --on-primary: 44 10 28;
+  --accent: 250 128 186;
+  --glow: 255 190 220;
+  --hero-a: 240 98 166; --hero-b: 214 51 132; --hero-c: 186 34 110;
 }
 
 @layer base {

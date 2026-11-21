@@ -5,7 +5,7 @@ import { SignInButtons } from '@/components/SignIn';
 import { useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useEffect } from 'react';
-import { Droplet, Dumbbell, Utensils, ArrowLeft, CalendarDays, ChevronRight, Cloud, CreditCard, Crown, Database, Download, FileText, Flame, HeartHandshake, LifeBuoy, Lightbulb, Lock, LogOut, Mail, Moon, Receipt, RotateCcw, Scale, Settings as SettingsIcon, ShieldCheck, SlidersHorizontal, Smartphone, Sun, Table, Trash2, Upload, UserRound, XCircle } from 'lucide-react';
+import { Droplet, Dumbbell, Utensils, ArrowLeft, CalendarDays, Palette, ChevronRight, Cloud, CreditCard, Crown, Database, Download, FileText, Flame, HeartHandshake, LifeBuoy, Lightbulb, Lock, LogOut, Mail, Moon, Receipt, RotateCcw, Scale, Settings as SettingsIcon, ShieldCheck, SlidersHorizontal, Smartphone, Sun, Table, Trash2, Upload, UserRound, XCircle } from 'lucide-react';
 import { useStore, exportData } from '@/store/useStore';
 import { fetchBilling, isPremiumActive, manageSubscription, type Billing } from '@/lib/premium';
 import { SUPPORT_EMAIL } from '@/pages/Legal';
@@ -111,6 +111,9 @@ export default function Profile({ mode = 'profile' }: { mode?: 'profile' | 'sett
           <Group title="Appearance">
             <Row icon={settings.theme === 'light' ? <Sun size={18} /> : <Moon size={18} />} label="Theme">
               <Segmented<Theme> value={settings.theme} onChange={(t) => updateSettings({ theme: t })} options={[{ value: 'dark', label: 'Dark' }, { value: 'light', label: 'Light' }, { value: 'system', label: 'Auto' }]} />
+            </Row>
+            <Row icon={<Palette size={18} />} label="Colour">
+              <Segmented<'green' | 'pink'> value={settings.accent ?? 'green'} onChange={(a) => updateSettings({ accent: a })} options={[{ value: 'green', label: 'Green' }, { value: 'pink', label: 'Pink' }]} />
             </Row>
           </Group>
           <Group title="More">

@@ -59,6 +59,8 @@ export function useDay(date: string) {
 /** Apply the theme setting to <html data-theme>. */
 export function useThemeSync() {
   const theme = useStore((s) => s.settings.theme);
+  const accent = useStore((s) => s.settings.accent ?? 'green');
+  useEffect(() => { document.documentElement.dataset.accent = accent; }, [accent]);
   useEffect(() => {
     const mq = matchMedia('(prefers-color-scheme: dark)');
     const apply = () => {

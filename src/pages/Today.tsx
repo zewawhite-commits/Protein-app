@@ -187,7 +187,7 @@ function HeroCard({ totals, goal, targets, entries, burned = 0, addBurned }: { t
   // Nutivili AI's signature: an evergreen "fuel gauge" for the day.
   const pct = Math.max(0, Math.min(1, kcalPct));
   return (
-    <section className="mt-4 overflow-hidden rounded-[28px] px-5 pb-4 pt-4 text-white" style={{ background: 'linear-gradient(140deg, rgb(52 199 137) 0%, rgb(18 158 108) 60%, rgb(12 140 104) 100%)', boxShadow: '0 14px 30px -14px rgb(18 152 104 / 0.55)' }}>
+    <section className="mt-4 overflow-hidden rounded-[28px] px-5 pb-4 pt-4 text-white" style={{ background: 'linear-gradient(140deg, rgb(var(--hero-a)) 0%, rgb(var(--hero-b)) 60%, rgb(var(--hero-c)) 100%)', boxShadow: '0 14px 30px -14px rgb(var(--hero-b) / 0.55)' }}>
       <div className="relative mx-auto w-[200px]">
         <Gauge pct={pct} over={!!over} hasGoal={!!targets} />
         <div className="absolute inset-x-0 bottom-0 text-center">

@@ -178,6 +178,8 @@ export interface Reminders {
 
 export interface Settings {
   theme: Theme;
+  /** Accent colour (green by default); works with light and dark. */
+  accent?: 'green' | 'pink';
   bodyUnit: BodyUnit;
   adminMode: boolean;
   reminders?: Reminders;
