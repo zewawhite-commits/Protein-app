@@ -30,3 +30,11 @@ export function useMealOptions(current?: Meal) {
     return list.map((value) => ({ value, label: MEAL_LABELS[value] }));
   }, [perDay, current]);
 }
+
+const LAST = 'nutivili-last-meal';
+/** The meal to start with: the one just picked (within 45 minutes), so adding several foods keeps it; otherwise by the time of day. */
+export function defaultMeal(byTime: Meal): Meal {
+  try { const v = JSON.parse(localStorage.getItem(LAST) ?? 'null') as { meal: Meal; at: number } | null; if (v && Date.now() - v.at < 45 * 60e3) return v.meal; } catch { /* storage blocked */ }
+  return byTime;
+}
+export function rememberMeal(meal: Meal) { try { localStorage.setItem(LAST, JSON.stringify({ meal, at: Date.now() })); } catch { /* storage blocked */ } }

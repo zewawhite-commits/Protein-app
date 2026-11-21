@@ -7,7 +7,7 @@ import { matchItems } from '@/lib/recognize-client';
 import { lastAmount, asRecognition, gramsFor, parseAmount, parseSaid, type SaidFood } from '@/lib/describe';
 import { splitName } from '@/lib/foods';
 import { mealForNow, todayKey } from '@/lib/dates';
-import { MEAL_LABELS, useMealOptions } from '@/lib/meals';
+import { MEAL_LABELS, defaultMeal, rememberMeal, useMealOptions } from '@/lib/meals';
 import type { Food, Meal } from '@/lib/types';
 import { FoodVisual } from './FoodIcon';
 import { cx, fmt } from './ui';
@@ -40,7 +40,7 @@ export function VoiceSheet({ onClose, onSearch, date }: { onClose: () => void; o
   const [speak, setSpeak] = useState(() => { try { return localStorage.getItem('nutivili-voice-replies') !== 'off'; } catch { return true; } });
   const rec = useRef<Recognizer | null>(null);
   const closed = useRef(false);
-  const [meal, setMeal] = useState<Meal>(mealForNow());
+  const [meal, setMeal] = useState<Meal>(defaultMeal(mealForNow()));
   const meals = useMealOptions(meal);
   // What the mic is waiting for: a new meal, or the answer to a question ("How many wings?").
   const handler = useRef<(text: string) => void>(() => undefined);
@@ -167,6 +167,7 @@ export function VoiceSheet({ onClose, onSearch, date }: { onClose: () => void; o
   function addAll() {
     const d = date ?? todayKey();
     const ids = lines.map((l) => addEntry({ date: d, meal, food: l.food!, grams: l.grams!, note: 'Logged by voice' }).id);
+    rememberMeal(meal);
     haptic();
     toast(`Added ${lines.length} food${lines.length > 1 ? 's' : ''} · ${fmt(kcal)} kcal`, { action: { label: 'Undo', run: () => ids.forEach((id) => useStore.getState().removeEntry(id)) } });
     close();

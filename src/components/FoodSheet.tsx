@@ -1,6 +1,7 @@
 import { CreateFood } from './CreateFood';
 import { useMealOptions } from '@/lib/meals';
 import { MealPicker } from './MealPicker';
+import { defaultMeal, rememberMeal } from '@/lib/meals';
 import { aiHeaders } from '@/lib/premium';
 import { Link } from 'react-router-dom';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -30,7 +31,7 @@ interface Props {
   date: string;
   entry?: LogEntry;
   onClose: () => void;
-  onSaved?: () => void;
+  onSaved?: (meal?: Meal) => void;
   onSwitchFood?: (f: Food) => void;
   /** Starting values from the photo flow: the meal photo and an AI portion estimate (a suggestion only). */
   /** From the photo flow: the meal photo and the AI's rough portion guess (never pre-filled as the weight). */
@@ -76,7 +77,7 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
   // What they had last time is their own number, so a new entry starts there (they can change it).
   const [usual] = useState(() => (entry ? null : lastAmount(useStore.getState().entries, food)));
   const [grams, setGrams] = useState(entry ? toUnit(entry.grams, unit) : usual ? toUnit(usual, unit) : '');
-  const [meal, setMeal] = useState<Meal>(entry?.meal ?? preset?.meal ?? mealForNow());
+  const [meal, setMeal] = useState<Meal>(entry?.meal ?? preset?.meal ?? defaultMeal(mealForNow()));
   const MEALS = useMealOptions(meal);
   const [photoId, setPhotoId] = useState<string | undefined>(entry?.photoId ?? preset?.photoId);
   const [busy, setBusy] = useState(false);
@@ -159,7 +160,7 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
     addEntry({ date, meal, food, grams: round1(g), photoId, planned: true });
     haptic(12);
     toast(isFuture ? `Planned for ${fromKey(date).toLocaleDateString(undefined, { weekday: 'long' })} — mark it eaten on the day` : 'Planned — it counts once you mark it eaten');
-    onSaved?.();
+    onSaved?.(meal);
     onClose();
   }
 
@@ -178,6 +179,7 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
       // Same food on the same day in the last 2 minutes: probably a double tap, so say so and offer undo.
       const dup = useStore.getState().entries.some((e) => e.date === date && e.foodId === food.id && Date.now() - e.loggedAt < 120_000);
       const added = addEntry({ date, meal, food, grams: round1(g), photoId });
+      rememberMeal(meal);
       haptic(12);
       if (dup) toast('You logged this a moment ago too — tap Undo if it was a mistake', { action: { label: 'Undo', run: () => useStore.getState().removeEntry(added.id) }, ms: 6000 });
       else if (!crossesGoal)
@@ -187,7 +189,7 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
       haptic([20, 60, 20]);
       toast(`Goal hit! ${fmt(after)} g of protein${date === todayKey() ? ' today' : ''}`, { tone: 'celebrate', ms: 4500 });
     }
-    onSaved?.();
+    onSaved?.(meal);
     onClose();
   }
 
