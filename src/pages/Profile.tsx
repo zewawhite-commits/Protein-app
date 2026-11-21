@@ -1,11 +1,10 @@
 import { InstallRow } from '@/components/InstallApp';
 import { AutoBackups, ShareReportRow } from '@/components/DataTools';
-import { TargetCheck } from '@/components/NutritionInsights';
 import { SignInButtons } from '@/components/SignIn';
 import { useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useEffect } from 'react';
-import { Target, Utensils, ArrowLeft, CalendarDays, Palette, ChevronRight, Cloud, CreditCard, Crown, Database, Download, FileText, Flame, HeartHandshake, LifeBuoy, Lightbulb, Lock, LogOut, Mail, Moon, Receipt, RotateCcw, Scale, Settings as SettingsIcon, ShieldCheck, SlidersHorizontal, Smartphone, Sun, Table, Trash2, Upload, UserRound, XCircle } from 'lucide-react';
+import { Bell, Target, Utensils, ArrowLeft, CalendarDays, Palette, ChevronRight, Cloud, CreditCard, Crown, Database, Download, FileText, Flame, HeartHandshake, LifeBuoy, Lightbulb, Lock, LogOut, Mail, Moon, Receipt, RotateCcw, Scale, Settings as SettingsIcon, ShieldCheck, SlidersHorizontal, Smartphone, Sun, Table, Trash2, Upload, UserRound, XCircle } from 'lucide-react';
 import { useStore, exportData } from '@/store/useStore';
 import { fetchBilling, isPremiumActive, manageSubscription, type Billing } from '@/lib/premium';
 import { SUPPORT_EMAIL } from '@/pages/Legal';
@@ -25,6 +24,8 @@ import { OwnerStats } from '@/components/OwnerStats';
 import { calorieGoal } from '@/lib/energy';
 
 export default function Profile({ mode = 'profile' }: { mode?: 'profile' | 'settings' }) {
+  // Links like /settings#notifications open at that section.
+  useEffect(() => { const id = location.hash.slice(1); if (id) setTimeout(() => document.getElementById(id)?.scrollIntoView({ block: 'start' }), 50); }, [mode]);
   const isSettings = mode === 'settings';
   const navigate = useNavigate();
   const profile = useStore((s) => s.profile)!;
@@ -102,19 +103,20 @@ export default function Profile({ mode = 'profile' }: { mode?: 'profile' | 'sett
       {!isSettings && (
         <>
           <ProfileHero onEdit={() => setEditing(true)} />
-          <UsageCard />
-          <TargetCheck />
-          <TrialCard className="mt-5" />
-          <InviteCard className="mt-5" />
+          {/* The things people look for most, first. */}
+          <Group title="Quick access">
+            <Link to="/history" className="block"><Row icon={<CalendarDays size={18} />} label="Diary" chevron><span className="text-sm text-silver">Every meal, by date</span></Row></Link>
+            <Link to="/goals" className="block"><Row icon={<Target size={18} />} label="My goals" chevron><span className="text-sm text-silver">{goalCount ? `${goalCount} active` : 'Weight, protein, water, workouts'}</span></Row></Link>
+            <Link to="/settings#notifications" className="block"><Row icon={<Bell size={18} />} label="Reminders" chevron><span className="text-sm text-silver">{settings.reminders?.enabled ? `Meals at ${settings.reminders.breakfast} · ${settings.reminders.lunch} · ${settings.reminders.dinner}` : 'Off'}</span></Row></Link>
+          </Group>
+          <PersonalDetails profile={profile} unit={settings.bodyUnit} dailyKcal={dailyKcal} onEdit={() => setEditing(true)} />
           <PreferencesCard onEdit={() => setEditing(true)} />
           <SubscriptionGroup />
-          <PersonalDetails profile={profile} unit={settings.bodyUnit} dailyKcal={dailyKcal} onEdit={() => setEditing(true)} />
-          <Group title="Goals">
-            <Link to="/goals" className="block"><Row icon={<Target size={18} />} label="My goals" chevron><span className="text-sm text-silver">{goalCount ? `${goalCount} active` : 'Set goals'}</span></Row></Link>
-          </Group>
+          <UsageCard />
+          <TrialCard className="mt-5" />
+          <InviteCard className="mt-5" />
           <Group title="More">
-            <Link to="/history" className="block"><Row icon={<CalendarDays size={18} />} label="Diary" chevron><span className="text-sm text-silver">Every meal, by date</span></Row></Link>
-            <Link to="/settings" className="block"><Row icon={<SettingsIcon size={18} />} label="Settings" chevron /></Link>
+            <Link to="/settings" className="block"><Row icon={<SettingsIcon size={18} />} label="Settings" chevron><span className="text-sm text-silver">Theme, units, notifications, data</span></Row></Link>
           </Group>
         </>
       )}
@@ -165,8 +167,8 @@ export default function Profile({ mode = 'profile' }: { mode?: 'profile' | 'sett
         <p className="px-4 pb-2 text-xs leading-relaxed text-dim">Shows “What to eat next”. The coach only replies when you ask.</p>
       </Group>
 
-      <section className="mt-6">
-        <p className="mb-3 px-1 text-sm font-semibold text-silver">Notifications</p>
+      <section id="notifications" className="mt-6 scroll-mt-6">
+        <p className="mb-3 px-1 text-sm font-semibold text-silver">Notifications and reminders</p>
         <div className="card px-5 pb-5 [&>section]:mt-0 [&>section]:pt-5"><ReminderSettings /></div>
         <div className="card mt-2.5 p-1.5"><MarketingRow /></div>
       </section>
@@ -249,6 +251,7 @@ function PersonalDetails({ profile, unit, dailyKcal, onEdit }: { profile: import
           <Row icon={<UserRound size={18} />} label={label} chevron><span className="max-w-[50%] truncate text-sm font-semibold text-silver">{value}</span></Row>
         </button>
       ))}
+      <p className="px-4 pb-3 pt-1 text-xs leading-relaxed text-dim">Your age, sex, height and weight give the calories your body uses at rest (Mifflin–St Jeor equation). Your activity level adds what you burn moving, and your weight goal and pace raise or lower it. Your protein target comes from your weight. Change any of these and your targets update from today; past days keep theirs.</p>
     </Group>
   );
 }
@@ -351,7 +354,7 @@ function SubscriptionGroup() {
   return (
     <Group title="Subscription">
       <Row icon={<Crown size={18} />} label="Plan">
-        <span className="text-sm font-semibold text-silver">{active ? `Pro${billing?.interval ? ` · ${billing.interval === 'annually' ? 'yearly' : billing.interval}` : ''}` : 'Free'}</span>
+        <span className="text-sm font-semibold text-silver">{active ? `Plus${billing?.interval ? ` · ${billing.interval === 'annually' ? 'yearly' : billing.interval}` : ''}` : 'Free'}</span>
       </Row>
       {active && billing?.status === 'attention' && (
         <div role="alert" className="mx-4 my-2 rounded-2xl bg-warn/10 p-3.5 text-[14px] leading-relaxed">
@@ -377,7 +380,17 @@ function SubscriptionGroup() {
         </>
       ) : (
         <>
-          <Link to="/premium" className="block"><Row icon={<CreditCard size={18} />} label="Upgrade" chevron><span className="text-sm font-semibold text-accent">$7.99/mo</span></Row></Link>
+          <div className="mx-3 my-2 grid grid-cols-2 gap-2 text-[13px] leading-snug">
+            <div className="rounded-2xl bg-raised p-3">
+              <p className="font-bold">Free <span className="font-medium text-silver">· your plan</span></p>
+              <ul className="mt-1.5 space-y-1 text-silver"><li>Food search, barcode and diary</li><li>Voice logging</li><li>3 AI scans a day</li><li>5 coach messages a day</li></ul>
+            </div>
+            <div className="rounded-2xl bg-accent/10 p-3">
+              <p className="font-bold">Plus <span className="font-medium text-silver">· $7.99/mo</span></p>
+              <ul className="mt-1.5 space-y-1 text-silver"><li>Unlimited AI scans and coach</li><li>Coach talks back</li><li>Meal plans, recipes, workouts</li><li>Vitamin and eating-pattern reports</li></ul>
+            </div>
+          </div>
+          <Link to="/premium" className="block"><Row icon={<CreditCard size={18} />} label="See Plus" chevron><span className="text-sm font-semibold text-accent">$7.99/mo or $47.94/yr</span></Row></Link>
           <Link to="/premium?restore=1" className="block"><Row icon={<RotateCcw size={18} />} label="Restore purchase" chevron /></Link>
         </>
       )}
@@ -387,34 +400,24 @@ function SubscriptionGroup() {
   );
 }
 
-const GOAL_LABEL: Record<string, string> = { muscle: 'Build muscle', fatloss: 'Lose fat', performance: 'Sports performance', maintain: 'Maintain', health: 'Eat healthier' };
 const DIET_LABEL: Record<string, string> = { all: 'Eats everything', pescatarian: 'Pescatarian', vegetarian: 'Vegetarian', vegan: 'Vegan' };
 const ACTIVITY_LABEL: Record<string, string> = { sedentary: '0 workouts a week', light: '1–2 workouts a week', active: '3–5 workouts a week', athlete: '6+ workouts a week' };
 
 /** Everything they picked in onboarding, visible and editable. */
 function PreferencesCard({ onEdit }: { onEdit: () => void }) {
   const p = useStore((s) => s.profile);
-  const unit = useStore((s) => s.settings.bodyUnit);
-  const reminders = useStore((s) => s.settings.reminders);
   if (!p) return null;
-  const w = (kg: number) => `${fmt(unit === 'lb' ? kg * 2.20462 : kg, 1)} ${unit === 'lb' ? 'lb' : 'kg'}`;
-  const target = p.goalWeightKg && p.bodyWeightKg && Math.abs(p.goalWeightKg - p.bodyWeightKg) >= 0.5
-    ? [`${p.goalWeightKg < p.bodyWeightKg ? 'Lose' : 'Gain'} weight to ${w(p.goalWeightKg)}`, ...(p.paceKgPerWeek ? [`${w(p.paceKgPerWeek)} a week`] : [])]
-    : ['Maintain weight'];
   const rows: [string, string[], string?][] = [
-    ['Goals', (p.goals ?? (p.goal ? [p.goal] : [])).map((g) => GOAL_LABEL[g] ?? g)],
-    ['Weight goal', target],
     ['Exercise', [...(p.activity ? [ACTIVITY_LABEL[p.activity]] : []), ...(p.training ?? [])]],
     ['How you eat', [...(p.diet ? [DIET_LABEL[p.diet]] : []), ...(p.dietPrefs ?? [])]],
     ['Cuisines', p.cuisines ?? []],
     ['Avoids', p.avoid ?? [], 'danger'],
     ['Challenges', p.obstacles ?? []],
-    ['Reminders', [reminders?.enabled ? `Meals at ${reminders.breakfast} · ${reminders.lunch} · ${reminders.dinner}` : 'Off']],
   ];
   return (
     <section className="mt-6">
       <div className="mb-3 flex items-center justify-between px-1">
-        <p className="text-sm font-semibold text-silver">Your preferences</p>
+        <p className="text-sm font-semibold text-silver">How you eat and train</p>
         <button onClick={onEdit} className="text-sm font-semibold text-accent">Edit</button>
       </div>
       <div className="card space-y-4 p-5">
@@ -430,7 +433,7 @@ function PreferencesCard({ onEdit }: { onEdit: () => void }) {
             )}
           </div>
         ))}
-        <p className="text-xs text-dim">Used for your food suggestions, AI coach, recipes, workouts and plans.</p>
+        <p className="text-xs text-dim">Used for food suggestions, the coach, recipes, workouts and plans. Weight and other goals are in My goals.</p>
       </div>
     </section>
   );

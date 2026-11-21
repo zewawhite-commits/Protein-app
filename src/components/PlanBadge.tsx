@@ -6,7 +6,7 @@ import { useHasTier } from '@/lib/perks';
 export function PlanBadge({ needs, what }: { needs: 'plus' | 'pro'; what: string }) {
   const has = useHasTier(needs);
   if (has) return null;
-  const name = 'Pro';
+  const name = 'Plus';
   return (
     <Link to={`/premium?tier=${needs}`} className="flex items-center gap-3 rounded-[22px] bg-accent/10 px-4 py-3 text-accent transition active:scale-[.99]">
       <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-accent/15"><Lock size={16} /></span>

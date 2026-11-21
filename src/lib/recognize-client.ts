@@ -66,7 +66,7 @@ export async function recognizeMenu(photo: Blob, premiumToken?: string): Promise
   return send({ image: await toBase64(photo), mediaType: photo.type || 'image/jpeg', menu: true }, premiumToken);
 }
 
-/** A menu behind a QR code or web link (Pro). */
+/** A menu behind a QR code or web link (Plus). */
 export async function recognizeMenuUrl(url: string): Promise<RecognitionResult> {
   return send({ menuUrl: url });
 }

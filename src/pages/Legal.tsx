@@ -64,7 +64,7 @@ export function Privacy() {
         <li><b>Payments:</b> handled by Paystack. We receive your plan, payment status, and the card brand and last four digits — never your full card number.</li>
         <li><b>Usage counts:</b> how many AI features you used this month, to apply plan limits.</li>
         <li><b>Scan corrections:</b> when you choose a different food than the one the app suggested after a scan, we record the AI’s name for the food and the food you chose, without your name or email, to improve suggestions for everyone.</li>
-        <li><b>Free Pro time and invites:</b> whether you used the free trial, and if you joined with a friend’s invite link, who invited you so we can give you both free Pro time. Your friend only sees how many people joined, not who.</li>
+        <li><b>Free Plus time and invites:</b> whether you used the free trial, and if you joined with a friend’s invite link, who invited you so we can give you both free Plus time. Your friend only sees how many people joined, not who.</li>
         <li><b>Crash reports:</b> if the app hits an error, it sends the error message and the page it happened on so we can fix it. It doesn’t include your food log or account details.</li>
       </ul>
 
@@ -73,7 +73,7 @@ export function Privacy() {
         <li>To run the app: calculate your targets, show your progress, warn you about foods on your avoid list, and keep your data in sync across devices.</li>
         <li>To send occasional tips, recipes and offers by email. You can turn these off at sign-up, any time in Settings → Tips &amp; offers by email, or by asking us. Account emails (like confirming your email or resetting your password) are always sent.</li>
         <li>To provide AI features: when you scan a meal or label, describe food, chat with the coach or ask for a workout, recipe, plan or meal ideas, the photo or text and the relevant parts of your profile and recent log are sent to our AI provider, Anthropic, to produce a reply. Your first name may be included so the coach can address you; your email address and account details are not sent. Under Anthropic’s commercial terms, this data isn’t used to train their models.</li>
-        <li>To take payments, manage your subscription and give free Pro time.</li>
+        <li>To take payments, manage your subscription and give free Plus time.</li>
         <li>To keep the service safe, prevent abuse and fix problems.</li>
         <li>To understand how the app is used, from totals only (for example how many people logged food this week), never to profile you for advertising.</li>
       </ul>
@@ -123,7 +123,7 @@ export function Terms() {
       <H>Plans and payments</H>
       <ul className="list-disc space-y-2 pl-5">
         <li><b>Free</b> costs nothing and includes a limited number of AI scans and coach messages each month.</li>
-        <li><b>Pro</b> costs {money('pro_monthly')} a month or {money('pro_yearly')} a year. The price is shown before you pay.</li>
+        <li><b>Plus</b> costs {money('pro_monthly')} a month or {money('pro_yearly')} a year. The price is shown before you pay.</li>
         <li>Paid plans are billed in advance through Paystack and renew automatically at the end of each month or year until you cancel.</li>
         <li>Prices are shown in US dollars. If you’re charged in another currency, your bank or card provider sets the exchange rate and may add fees.</li>
         <li>We may change prices for future billing periods. We’ll tell you in advance, and you can cancel before the new price applies.</li>
@@ -133,9 +133,9 @@ export function Terms() {
 
       <H>Free trial and invites</H>
       <ul className="list-disc space-y-2 pl-5">
-        <li>Each person can have one free 3-day Pro trial. No card is needed and it ends on its own; nothing is charged when it ends.</li>
-        <li>Friends who join with your invite link get 14 days of Pro free, and you get 7 days of Pro for each friend who joins, up to 10 friends. Invites are for real people; we may remove free time earned with fake or duplicate accounts.</li>
-        <li>Free Pro time includes every Pro feature with monthly limits, has no cash value and can’t be exchanged or transferred.</li>
+        <li>Each person can have one free 3-day Plus trial. No card is needed and it ends on its own; nothing is charged when it ends.</li>
+        <li>Friends who join with your invite link get 14 days of Plus free, and you get 7 days of Plus for each friend who joins, up to 10 friends. Invites are for real people; we may remove free time earned with fake or duplicate accounts.</li>
+        <li>Free Plus time includes every Plus feature with monthly limits, has no cash value and can’t be exchanged or transferred.</li>
       </ul>
 
       <H>Acceptable use and community rules</H>
@@ -162,7 +162,7 @@ export function Terms() {
 export function Refunds() {
   return (
     <Page title="Cancellation & Refund Policy">
-      <p>This policy explains how to cancel a {APP_NAME} Pro subscription and when you can get your money back. Payments are processed by Paystack.</p>
+      <p>This policy explains how to cancel a {APP_NAME} Plus subscription and when you can get your money back. Payments are processed by Paystack.</p>
 
       <H>Who we are</H>
       <WhoWeAre />
@@ -170,13 +170,13 @@ export function Refunds() {
       <H>Cancelling</H>
       <ul className="list-disc space-y-2 pl-5">
         <li>You can cancel at any time: open {APP_NAME} → Profile → Subscription → Manage, change or cancel. This opens Paystack’s page for your subscription. You can also email {contact} and we’ll cancel it for you.</li>
-        <li>When you cancel, you won’t be charged again. You keep Pro until the end of the month or year you’ve already paid for, then your account moves to the Free plan.</li>
+        <li>When you cancel, you won’t be charged again. You keep Plus until the end of the month or year you’ve already paid for, then your account moves to the Free plan.</li>
         <li>Your food log, history and settings stay yours on Free; nothing is deleted when a plan ends.</li>
         <li>Deleting your account doesn’t cancel a subscription by itself, so please cancel first.</li>
       </ul>
 
-      <H>Free trial and free Pro time</H>
-      <p>The 3-day Pro trial and Pro time from invites are free and need no card. They end automatically, so there’s nothing to cancel and nothing to refund.</p>
+      <H>Free trial and free Plus time</H>
+      <p>The 3-day Plus trial and Plus time from invites are free and need no card. They end automatically, so there’s nothing to cancel and nothing to refund.</p>
 
       <H>Refunds</H>
       <ul className="list-disc space-y-2 pl-5">

@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bookmark, Camera, ChefHat, ScanText, Dumbbell, PenLine, ScanBarcode, Search, Trash2, PlusSquare } from 'lucide-react';
+import { Bookmark, Camera, Mic, ChefHat, ScanText, Dumbbell, PenLine, ScanBarcode, Search, Trash2, PlusSquare } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 import { todayKey } from '@/lib/dates';
-import { EXERCISES, burnedKcal, type ExerciseType, type Intensity } from '@/lib/exercise';
+import { EXERCISES, burnedKcal, parseExercise, type ExerciseType, type Intensity, type SaidExercise } from '@/lib/exercise';
+import { SR } from './VoiceSheet';
 import { Segmented, Sheet, cx, fmt } from './ui';
 import { haptic, toast } from './fx';
 
@@ -94,6 +95,8 @@ export function ExerciseSheet({ open, onClose, date }: { open: boolean; onClose:
 
   return (
     <Sheet open={open} onClose={onClose} title="Log exercise">
+      <SayExercise date={date} kg={kg} onDone={onClose} />
+      <p className="mb-2 mt-5 text-xs font-bold uppercase tracking-wide text-dim">Or fill it in</p>
       <button onClick={() => { onClose(); navToRoutines('/workout'); }} className="btn-primary mb-2 w-full"><Dumbbell size={18} /> Start a live workout (timer, sets, rest)</button>
       <button onClick={() => { onClose(); navToRoutines('/routines'); }} className="mb-4 flex w-full items-center gap-3 rounded-[18px] bg-accent/10 px-4 py-3 text-left font-semibold text-accent"><Dumbbell size={18} /> Use a saved routine (sets, reps, weights)</button>
       <div className="flex flex-wrap gap-2">
@@ -187,4 +190,58 @@ export function describeDetail(d: NonNullable<import('@/lib/exercise').ExerciseE
   const w = d.weightKg ? `${fmt(unit === 'lb' ? d.weightKg * 2.20462 : d.weightKg, 1)} ${unit}` : '';
   const sr = d.sets && d.reps ? `${d.sets} × ${d.reps}` : d.reps ? `${d.reps} reps` : d.sets ? `${d.sets} sets` : '';
   return [sr, w, d.seconds ? `${d.seconds} s` : ''].filter(Boolean).join(' · ');
+}
+
+/** "I walked 30 minutes and did 40 minutes of weights" → logged. Times are never guessed: missing ones are asked for. */
+function SayExercise({ date, kg, onDone }: { date: string; kg: number; onDone: () => void }) {
+  const add = useStore((s) => s.addExercise);
+  const [text, setText] = useState('');
+  const [items, setItems] = useState<SaidExercise[] | null>(null);
+  const [listening, setListening] = useState(false);
+  const read = (t: string) => { const r = parseExercise(t); setItems(r); if (!r.length) toast('Say what you did and for how long — e.g. “walked 30 minutes”.'); };
+  function mic() {
+    if (!SR) { toast('Voice isn’t available in this browser — type it instead.'); return; }
+    const r = new SR(); r.lang = navigator.language || 'en-GB'; r.interimResults = true; r.continuous = false;
+    let last = '';
+    r.onresult = (e) => { last = Array.from(e.results).map((x) => x[0].transcript).join(' '); setText(last); };
+    r.onend = () => { setListening(false); if (last) read(last); };
+    r.onerror = () => setListening(false);
+    setListening(true); haptic();
+    try { r.start(); } catch { setListening(false); }
+  }
+  const ready = !!items?.length && items.every((i) => i.type && i.minutes);
+  function save() {
+    for (const i of items!) add({ date, type: i.type!, intensity: i.intensity, minutes: i.minutes!, kcal: burnedKcal(i.type!, i.intensity, i.minutes!, kg), manual: false, note: i.text.slice(0, 120), ...(i.km && { km: i.km }) });
+    haptic([10, 30, 10]);
+    toast(`${items!.length === 1 ? EXERCISES[items![0].type!].label : `${items!.length} activities`} logged`);
+    setItems(null); setText(''); onDone();
+  }
+  const set = (k: number, patch: Partial<SaidExercise>) => setItems((cur) => cur!.map((x, i) => (i === k ? { ...x, ...patch } : x)));
+  return (
+    <div>
+      <p className="mb-2 text-[15px] font-semibold">Just tell us what you did</p>
+      <form onSubmit={(e) => { e.preventDefault(); if (text.trim()) read(text); }} className="flex gap-2">
+        <input className="field flex-1" placeholder="e.g. walked 30 min, then 45 min of weights" value={text} onChange={(e) => setText(e.target.value)} aria-label="What exercise did you do?" />
+        <button type="button" onClick={mic} className={cx('grid h-[52px] w-[52px] shrink-0 place-items-center rounded-full bg-raised', listening && 'animate-pulse bg-primary text-on-primary')} aria-label="Say what you did"><Mic size={19} /></button>
+      </form>
+      {items && items.length > 0 && (
+        <div className="mt-3 space-y-2">
+          {items.map((i, k) => (
+            <div key={k} className="rounded-2xl bg-raised p-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <select value={i.type ?? ''} onChange={(e) => set(k, { type: (e.target.value || null) as ExerciseType | null })} className="rounded-xl bg-surface px-2 py-1.5 text-sm font-semibold" aria-label="Activity">
+                  {!i.type && <option value="">Which activity?</option>}
+                  {(Object.keys(EXERCISES) as ExerciseType[]).map((t) => <option key={t} value={t}>{EXERCISES[t].label}</option>)}
+                </select>
+                <label className="flex items-center gap-1 text-sm"><input inputMode="numeric" value={i.minutes ?? ''} placeholder="?" onChange={(e) => set(k, { minutes: Number(e.target.value.replace(/\D/g, '').slice(0, 3)) || null })} className="w-14 rounded-xl bg-surface px-2 py-1.5 text-center font-semibold" aria-label="Minutes" /> min</label>
+                <select value={i.intensity} onChange={(e) => set(k, { intensity: e.target.value as Intensity })} className="rounded-xl bg-surface px-2 py-1.5 text-sm" aria-label="How hard"><option value="low">Light</option><option value="medium">Moderate</option><option value="high">Hard</option></select>
+              </div>
+              <p className="mt-1.5 text-xs text-silver">{!i.minutes ? 'How many minutes? We don’t guess.' : !i.type ? 'Pick the activity.' : kg ? `About ${fmt(burnedKcal(i.type, i.intensity, i.minutes, kg))} kcal (estimate)${i.km ? ` · ${fmt(i.km, 1)} km` : ''}` : 'Add your weight in Profile for a calorie estimate.'}</p>
+            </div>
+          ))}
+          <button onClick={save} disabled={!ready} className="btn-primary w-full">Add {items.length === 1 ? 'it' : `all ${items.length}`}</button>
+        </div>
+      )}
+    </div>
+  );
 }

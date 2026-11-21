@@ -1,5 +1,5 @@
 /**
- * Free Pro time on the app side: the one-off 3-day trial and invite-a-friend rewards.
+ * Free Plus time on the app side: the one-off 3-day trial and invite-a-friend rewards.
  * The server decides (api/_lib/perks.ts); this just asks, remembers and shows.
  */
 import { useEffect } from 'react';
@@ -30,19 +30,19 @@ export const inviteLink = (userId: string) => `${location.origin}/?ref=${inviteC
 
 export const daysLeft = (until: number) => Math.max(0, Math.ceil((until - Date.now()) / DAY));
 
-/** True while the person has free Pro time. */
+/** True while the person has free Plus time. */
 export function useFreePro(): { on: boolean; days: number } {
   const p = useStore((s) => s.perks);
   const on = !!p?.freePro && p.until > Date.now();
   return { on, days: on ? daysLeft(p!.until) : 0 };
 }
 
-/** Pro features available: a paid plan or free Pro time. */
+/** Plus features available: a paid plan or free Plus time. */
 export function useHasTier(_needs: 'plus' | 'pro'): boolean {
   const premium = useStore((s) => s.premium);
   const free = useFreePro().on;
   const server = useStore((s) => s.serverTier);
-  const paid = isPremiumActive(premium); // one paid plan (Pro); older Plus passes count as Pro
+  const paid = isPremiumActive(premium); // one paid plan (Plus); older Plus passes count as Plus
   const onServer = server === 'pro' || server === 'plus';
   return paid || free || onServer;
 }
@@ -68,7 +68,7 @@ export async function startTrial() {
   return d;
 }
 
-/** After sign-in: accept a saved invite, then load the person's free Pro time. */
+/** After sign-in: accept a saved invite, then load the person's free Plus time. */
 export function usePerksSync() {
   const session = useSession();
   const id = session?.user.id;
@@ -80,7 +80,7 @@ export function usePerksSync() {
       if (code) {
         try {
           const d = await post('invite', { code });
-          toast(d.days ? `Invite accepted — enjoy ${d.days} days of Pro, free` : 'Invite accepted — your friend gets free Pro time');
+          toast(d.days ? `Invite accepted — enjoy ${d.days} days of Plus, free` : 'Invite accepted — your friend gets free Plus time');
           try { localStorage.removeItem(KEY); } catch { /* ignore */ }
         } catch (e) {
           // Keep the code to retry only when the server had a problem; a refused invite is final.

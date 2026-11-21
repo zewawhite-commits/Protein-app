@@ -121,13 +121,13 @@ export function contextText(c: CoachContext): string {
 /** Model for the coach chat: quick replies matter more here than in photo recognition. */
 export const CHAT_MODEL = 'claude-sonnet-5-5';
 
-const PRO_NOTE = 'This person is on Pro: give deeper, more personalised coaching — connect advice to their logged foods, trends and goal, and explain the why in a sentence.';
+const PRO_NOTE = 'This person is on Plus: give deeper, more personalised coaching — connect advice to their logged foods, trends and goal, and explain the why in a sentence.';
 
 /** The request for one coach reply (shared by the normal and the streaming path). */
 function coachParams(turns: ChatTurn[], context: CoachContext, image?: ChatImage, opts: { pro?: boolean } = {}) {
   return {
     // Chat favours speed: everyone gets the fast model with low effort, so replies start in a few seconds.
-    // Pro gets deeper, more personal coaching through its instructions (PRO_NOTE), not a slower model.
+    // Plus gets deeper, more personal coaching through its instructions (PRO_NOTE), not a slower model.
     model: CHAT_MODEL,
     max_tokens: 3000,
     betas: ['server-side-fallback-2026-07-01'],

@@ -1,5 +1,5 @@
 /**
- * POST /api/premium/trial            → start the one-off free Pro trial  { proUntil, days }
+ * POST /api/premium/trial            → start the one-off free Plus trial  { proUntil, days }
  * POST /api/premium/invite {code}    → accept a friend's invite link     { proUntil, days }
  * Both need a signed-in account (x-user-token).
  */

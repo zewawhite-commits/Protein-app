@@ -14,13 +14,13 @@ import { Segmented, cx } from '@/components/ui';
 /** Planned prices, shown until live plans load from the payment provider (which sets the real charge). */
 const PREVIEW = [
   { tier: null, name: 'Free', perks: ['Calories, macros & 18,000+ foods', 'Barcode, exercise, progress & feed', '3 AI scans + 5 coach messages a day'], best: false },
-  { tier: 'pro' as Tier, name: 'Pro', perks: ['Unlimited AI food scans', 'Restaurant menus: photo, QR code or link', 'Smarter, personal AI nutrition coach', 'Personalized weekly & monthly meal plans', 'Plans adjust automatically to your progress', 'Daily meal suggestions', 'AI recipes and recipe import', 'AI workout guides', 'Advanced micronutrient analysis', 'Detailed nutrition reports', 'Adjusts to your cuisine & diet'], best: true },
+  { tier: 'pro' as Tier, name: 'Plus', perks: ['Unlimited AI food scans', 'Restaurant menus: photo, QR code or link', 'Smarter, personal AI nutrition coach', 'Personalized weekly & monthly meal plans', 'Plans adjust automatically to your progress', 'Daily meal suggestions', 'AI recipes and recipe import', 'AI workout guides', 'Advanced micronutrient analysis', 'Detailed nutrition reports', 'Adjusts to your cuisine & diet'], best: true },
 ];
 
 const TIER_INFO: Record<'free' | Tier, { name: string; perks: string[] }> = {
   free: { name: 'Free', perks: ['18,000+ foods, barcode, exercise & progress', 'Feed and groups', '3 AI scans + 5 coach messages a day'] },
-  plus: { name: 'Pro', perks: ['Unlimited AI food scans', 'Restaurant menus: photo, QR code or link', 'Smarter, personal AI nutrition coach', 'Personalized weekly & monthly meal plans', 'Plans adjust automatically to your progress', 'Daily meal suggestions', 'AI recipes and recipe import', 'AI workout guides', 'Advanced micronutrient analysis', 'Detailed nutrition reports', 'Adjusts to your cuisine & diet'] },
-  pro: { name: 'Pro', perks: ['Unlimited AI food scans', 'Restaurant menus: photo, QR code or link', 'Smarter, personal AI nutrition coach', 'Personalized weekly & monthly meal plans', 'Plans adjust automatically to your progress', 'Daily meal suggestions', 'AI recipes and recipe import', 'AI workout guides', 'Advanced micronutrient analysis', 'Detailed nutrition reports', 'Adjusts to your cuisine & diet'] },
+  plus: { name: 'Plus', perks: ['Unlimited AI food scans', 'Restaurant menus: photo, QR code or link', 'Smarter, personal AI nutrition coach', 'Personalized weekly & monthly meal plans', 'Plans adjust automatically to your progress', 'Daily meal suggestions', 'AI recipes and recipe import', 'AI workout guides', 'Advanced micronutrient analysis', 'Detailed nutrition reports', 'Adjusts to your cuisine & diet'] },
+  pro: { name: 'Plus', perks: ['Unlimited AI food scans', 'Restaurant menus: photo, QR code or link', 'Smarter, personal AI nutrition coach', 'Personalized weekly & monthly meal plans', 'Plans adjust automatically to your progress', 'Daily meal suggestions', 'AI recipes and recipe import', 'AI workout guides', 'Advanced micronutrient analysis', 'Detailed nutrition reports', 'Adjusts to your cuisine & diet'] },
 };
 
 type Billing = 'monthly' | 'yearly';
@@ -110,10 +110,10 @@ export default function Premium() {
 
       {active ? (
         <div className="card mt-5 p-5">
-          <p className="flex items-center gap-2 font-semibold"><Check size={18} className="text-accent" strokeWidth={3} /> You’re on Pro</p>
+          <p className="flex items-center gap-2 font-semibold"><Check size={18} className="text-accent" strokeWidth={3} /> You’re on Plus</p>
           <p className="mt-1 text-sm text-silver">
             {premium!.email} · renews or ends around {new Date(premium!.exp).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}
-            {' · '}everything in Pro is on
+            {' · '}everything in Plus is on
           </p>
           <div className="mt-4 grid gap-2">
             <Link to="/snap" className="btn-primary"><Camera size={18} /> Snap a meal</Link>
@@ -127,7 +127,7 @@ export default function Premium() {
           <TrialCard className="mb-4" />
           {accountsEnabled && !session && (
             <div className="card mb-4 p-5">
-              <p className="text-[16px] font-bold">Try Pro free for 3 days</p>
+              <p className="text-[16px] font-bold">Try Plus free for 3 days</p>
               <p className="mb-3 mt-1 text-sm text-silver">Create a free account to start — no card needed.</p>
               <SignInButtons />
             </div>
@@ -258,7 +258,7 @@ function TierCard({ tier, selected, onClick, price, sub, badge, scans }: { tier:
 /** Shown right after subscribing: what's unlocked, then how to share it on the feed. */
 function Welcome({ tier, onDone }: { tier: Tier; onDone: () => void }) {
   const nav = useNavigate();
-  const name = 'Pro';
+  const name = 'Plus';
   const perks = TIER_INFO[tier].perks.filter((p) => !p.startsWith('Everything'));
   return (
     <div className="animate-fade-up pb-10 pt-8">

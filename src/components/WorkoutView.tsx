@@ -38,7 +38,7 @@ function recentTraining(): string[] {
   });
 }
 
-/** AI workout guide for the week (Pro). */
+/** AI workout guide for the week (Plus). */
 export function WorkoutView() {
   const context = useCoachContext();
   const profile = useStore((s) => s.profile);
@@ -122,7 +122,7 @@ export function WorkoutView() {
           {saved && !state.busy && <button onClick={() => setEditing(false)} className="mt-2 w-full text-sm font-semibold text-silver">Keep my current guide</button>}
           {state.error && (
             <p className="mt-3 rounded-2xl bg-raised px-3 py-2 text-sm text-silver">
-              {state.error} {state.premium && <Link to="/premium" className="font-semibold text-accent">Get Pro</Link>}
+              {state.error} {state.premium && <Link to="/premium" className="font-semibold text-accent">Get Plus</Link>}
             </p>
           )}
           {state.signIn && <div className="mt-3"><SignInButtons /></div>}
@@ -146,7 +146,7 @@ export function WorkoutView() {
               ))}
             </div>
             {state.busy && <p className="mt-2 flex items-center gap-2 text-sm text-silver"><Loader2 size={15} className="animate-spin" /> Rebuilding your week…</p>}
-            {state.error && <p className="mt-2 text-sm text-silver">{state.error} {state.premium && <Link to="/premium" className="font-semibold text-accent">Get Pro</Link>}</p>}
+            {state.error && <p className="mt-2 text-sm text-silver">{state.error} {state.premium && <Link to="/premium" className="font-semibold text-accent">Get Plus</Link>}</p>}
           </section>
           {saved.plan.days.map((d, i) => <DayCard key={i} day={d} index={i} defaultOpen={i === 0} />)}
           {saved.plan.tips.length > 0 && (

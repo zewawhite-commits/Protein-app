@@ -4,8 +4,8 @@
  *            scan  coach  workout  recipe  plan  ideas   (per calendar month, UTC)
  *   free       3      5      0        0      0     0
  *   plus      ∞      ∞      ∞        ∞     30     ∞     ∞ = unlimited (with a hidden fair-use cap against abuse)
- *   pro       ∞      ∞      ∞        ∞      ∞     ∞     Pro: unlimited plans, smarter coach, advanced analysis & reports
- *   trial     ∞      ∞      ∞        ∞      ∞     ∞     3-day Pro trial and invite rewards: everything unlimited
+ *   pro       ∞      ∞      ∞        ∞      ∞     ∞     Plus: unlimited plans, smarter coach, advanced analysis & reports
+ *   trial     ∞      ∞      ∞        ∞      ∞     ∞     3-day Plus trial and invite rewards: everything unlimited
  *   (Free limits are per day; the others per month.)
  *
  * Rules:
@@ -31,10 +31,10 @@ export const usageKey = (feature: string, userId: string, tier: PlanTier) => (DA
 
 const DEFAULTS: Record<PlanTier, Record<Feature, number>> = {
   free: { scan: 3, coach: 5, workout: 0, recipe: 0, plan: 0, ideas: 0, menu: 0 },
-  // There is only one paid plan now (Pro); any older Plus subscription gets everything Pro has.
+  // There is only one paid plan now (Plus); any older Plus subscription gets everything Plus has.
   plus: { scan: FAIR_USE, coach: FAIR_USE * 3, workout: FAIR_USE, recipe: FAIR_USE, plan: FAIR_USE, ideas: FAIR_USE, menu: FAIR_USE },
   pro: { scan: FAIR_USE, coach: FAIR_USE * 3, workout: FAIR_USE, recipe: FAIR_USE, plan: FAIR_USE, ideas: FAIR_USE, menu: FAIR_USE },
-  // The 3-day Pro trial: everything Pro has, unlimited (fair-use cap only).
+  // The 3-day Plus trial: everything Plus has, unlimited (fair-use cap only).
   trial: { scan: FAIR_USE, coach: FAIR_USE * 3, workout: FAIR_USE, recipe: FAIR_USE, plan: FAIR_USE, ideas: FAIR_USE, menu: FAIR_USE },
 };
 
@@ -80,7 +80,7 @@ export async function gate(request: Request, feature: Feature, count = 1): Promi
   let { tier } = who;
   if (!user) return { ok: false, status: 401, body: { error: `Sign in to use ${NAMES[feature]}.`, signIn: true } };
   if (isAdmin(user.email)) return { ok: true, tier: 'pro', left: Infinity, limit: Infinity };
-  // New accounts get their free Pro trial automatically on their first AI use, so every
+  // New accounts get their free Plus trial automatically on their first AI use, so every
   // feature works straight away (once per account; afterwards the Free limits apply).
   if (tier === 'free' && !user.perks.trialUsed && process.env.AUTO_TRIAL !== 'off') {
     try {
@@ -92,7 +92,7 @@ export async function gate(request: Request, feature: Feature, count = 1): Promi
 
   const limit = limitFor(tier, feature);
   if (limit <= 0) {
-    return { ok: false, status: 402, body: { error: `${NAMES[feature][0].toUpperCase()}${NAMES[feature].slice(1)} come with Pro.`, premium: true, feature, tier, renew: expired } };
+    return { ok: false, status: 402, body: { error: `${NAMES[feature][0].toUpperCase()}${NAMES[feature].slice(1)} come with Plus.`, premium: true, feature, tier, renew: expired } };
   }
   try {
     let left = 0;
@@ -102,7 +102,7 @@ export async function gate(request: Request, feature: Feature, count = 1): Promi
     }
     if (left < 0) {
       if (limit >= UNLIMITED) return { ok: false, status: 429, body: { error: 'You’ve hit the fair-use limit for this month. It resets on the 1st. Contact support if you need more.', limitReached: true, feature, tier } };
-      return { ok: false, status: 402, body: { error: tier === 'plus' ? `You’ve used your ${limit} ${NAMES[feature]} this month. Pro has unlimited.` : `You’ve used your ${limit} free ${NAMES[feature]} for today. They reset tomorrow, or upgrade to Pro for unlimited.`, premium: true, limitReached: true, feature, tier } };
+      return { ok: false, status: 402, body: { error: tier === 'plus' ? `You’ve used your ${limit} ${NAMES[feature]} this month. Plus has unlimited.` : `You’ve used your ${limit} free ${NAMES[feature]} for today. They reset tomorrow, or upgrade to Plus for unlimited.`, premium: true, limitReached: true, feature, tier } };
     }
     return { ok: true, tier, left, limit };
   } catch (e) {
@@ -128,7 +128,7 @@ export async function usage(request: Request) {
   return {
     tier: unlimited || tier === 'trial' ? 'pro' : tier,
     admin: unlimited,
-    // Free Pro time (trial or invite rewards), and what the invite card needs.
+    // Free Plus time (trial or invite rewards), and what the invite card needs.
     perks: { proUntil: user.perks.proUntil, freePro: tier === 'trial', trialUsed: user.perks.trialUsed, referrals: user.perks.referrals, maxReferrals: MAX_REFERRALS, referralDays: REFERRAL_DAYS, code: inviteCode(user.id) },
     // null = unlimited (admins, or a fair-use cap on paid plans).
     features: Object.fromEntries(features.map((f) => { const l = limitFor(tier, f); return [f, { used: used[f] ?? 0, limit: unlimited || l >= UNLIMITED ? null : l }]; })),

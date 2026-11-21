@@ -49,7 +49,7 @@ export function weeklyReport(): string {
 export function ShareReportRow({ Row }: { Row: (p: { icon: React.ReactNode; label: string; chevron?: boolean; children?: React.ReactNode }) => React.ReactElement }) {
   const pro = useHasTier('pro');
   const nav = useNavigate();
-  if (!pro) return <button className="w-full" onClick={() => nav('/premium?tier=pro')}><Row icon={<Share2 size={18} />} label="Weekly nutrition report" chevron><span className="rounded-full bg-accent/10 px-2 py-0.5 text-[11px] font-bold text-accent">PRO</span></Row></button>;
+  if (!pro) return <button className="w-full" onClick={() => nav('/premium?tier=pro')}><Row icon={<Share2 size={18} />} label="Weekly nutrition report" chevron><span className="rounded-full bg-accent/10 px-2 py-0.5 text-[11px] font-bold text-accent">PLUS</span></Row></button>;
   return (
     <button
       className="w-full"

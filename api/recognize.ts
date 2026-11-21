@@ -1,6 +1,6 @@
 /**
  * Serverless endpoint for photo recognition (Vercel Functions, Web-standard handler).
- * Plan limits are enforced by api/_lib/quota.ts (sign-in required; Free daily / Pro limits).
+ * Plan limits are enforced by api/_lib/quota.ts (sign-in required; Free daily / Plus limits).
  * Keeps the Anthropic API key on the server: set ANTHROPIC_API_KEY in the Vercel
  * project's Environment Variables.
  *
@@ -25,7 +25,7 @@ export async function POST(request: Request): Promise<Response> {
   let body: { image?: string; mediaType?: string; text?: string; label?: boolean; menu?: boolean; menuUrl?: string; leftovers?: unknown } | null;
   body = (await request.json().catch(() => null)) as typeof body;
   if (!body || typeof body !== 'object') return json({ error: 'Invalid JSON body.' }, 400);
-  // Restaurant menus are a Pro feature with their own allowance; plate and label photos are AI scans.
+  // Restaurant menus are a Plus feature with their own allowance; plate and label photos are AI scans.
   const g = await gate(request, (body.menu === true && !body.text) || typeof body.menuUrl === 'string' ? 'menu' : 'scan');
   if (!g.ok) return json(g.body, g.status);
   if (Number.isFinite(g.left)) scansLeft = g.left;

@@ -181,7 +181,7 @@ function Chat() {
   const endRef = useRef<HTMLDivElement>(null);
   const profile = useStore((s) => s.profile);
 
-  // Voice: anyone can speak a question; Pro members can have the coach answer out loud.
+  // Voice: anyone can speak a question; Plus members can have the coach answer out loud.
   const paid = useStore((s) => isPremiumActive(s.premium) || s.serverTier === 'pro' || s.serverTier === 'plus');
   const freePro = useFreePro().on;
   const isPro = paid || freePro;
@@ -255,7 +255,7 @@ function Chat() {
         // Errors (and older servers) answer with plain JSON.
         const data = (await res.json()) as CoachReply & { error?: string };
         if (res.status === 401 || res.status === 402) {
-          setMsgs((m) => [...m, { role: 'assistant', content: data.error ?? 'Unlimited coach chat comes with Pro.', error: true, premium: res.status === 402, signIn: res.status === 401 }]);
+          setMsgs((m) => [...m, { role: 'assistant', content: data.error ?? 'Unlimited coach chat comes with Plus.', error: true, premium: res.status === 402, signIn: res.status === 401 }]);
           return;
         }
         if (!res.ok) throw new Error(data.error || 'Could not reply.');
@@ -308,14 +308,14 @@ function Chat() {
         <button
           onClick={() => {
             haptic();
-            if (!isPro) { toast('Spoken replies come with Pro — the coach talks back to you.'); return; }
+            if (!isPro) { toast('Spoken replies come with Plus — the coach talks back to you.'); return; }
             const v = !talk; setTalk(v); if (!v) window.speechSynthesis?.cancel();
             try { localStorage.setItem('nutivili-coach-talk', v ? 'on' : 'off'); } catch { /* storage blocked */ }
           }}
           className={cx('chip !h-9', speaking && 'chip-on')}
           aria-label={speaking ? 'Stop spoken replies' : 'Coach talks back'}
         >
-          {speaking ? <Volume2 size={14} /> : <VolumeX size={14} />} {speaking ? 'Talking' : 'Talk back'}{!isPro && <span className="text-[11px] font-bold text-accent">PRO</span>}
+          {speaking ? <Volume2 size={14} /> : <VolumeX size={14} />} {speaking ? 'Talking' : 'Talk back'}{!isPro && <span className="text-[11px] font-bold text-accent">PLUS</span>}
         </button>
         {pastChats().some((c) => c.id !== chatId) && <button onClick={() => { haptic(); setShowPast(true); }} className="chip !h-9"><History size={14} /> Past chats</button>}
         {msgs.length > 0 && <button onClick={() => { haptic(); setChatId(crypto.randomUUID()); setMsgs([]); }} className="chip !h-9" aria-label="New chat"><RotateCcw size={14} /> New chat</button>}

@@ -1,11 +1,11 @@
 /**
- * Free Pro time: a one-off 3-day trial, and invite rewards. Kept in the user's Supabase
+ * Free Plus time: a one-off 3-day trial, and invite rewards. Kept in the user's Supabase
  * app_metadata (only the server can write it), so no extra table is needed.
  *
- *  - Trial: once per account, 3 days of Pro, no card. Invited friends get 14 days.
+ *  - Trial: once per account, 3 days of Plus, no card. Invited friends get 14 days.
  *  - Invites: when a new account (under 14 days old) joins with someone's link, the
- *    inviter gets 7 more days of Pro, up to 10 friends (70 days). Not your own link.
- *  - Free Pro time uses the "trial" limits in quota.ts — generous, but capped, so
+ *    inviter gets 7 more days of Plus, up to 10 friends (70 days). Not your own link.
+ *  - Free Plus time uses the "trial" limits in quota.ts — generous, but capped, so
  *    AI costs stay predictable.
  */
 import { admin } from './accounts.js';
@@ -25,7 +25,7 @@ export function perksFrom(meta: Record<string, unknown> | undefined | null): Per
   return { proUntil: n(m.pro_until), trialUsed: m.trial_used === true, referredBy: typeof m.referred_by === 'string' ? m.referred_by : null, referrals: n(m.referrals) };
 }
 
-/** Add days of Pro, starting from now or from the end of the time already given. */
+/** Add days of Plus, starting from now or from the end of the time already given. */
 export const extend = (proUntil: number, days: number, now: number) => Math.max(now, proUntil) + days * DAY;
 
 /** Short invite code for a user id (the UUID's 16 bytes, base64url: 22 characters). */
@@ -45,7 +45,7 @@ export type TrialResult = { ok: true; proUntil: number; days: number } | { ok: f
 
 /** What starting the trial does (pure, for tests). */
 export function planTrial(p: Perks, now: number): TrialResult {
-  if (p.trialUsed) return { ok: false, status: 409, error: 'You’ve already had your free Pro trial on this account.' };
+  if (p.trialUsed) return { ok: false, status: 409, error: 'You’ve already had your free Plus trial on this account.' };
   const days = p.referredBy ? INVITED_TRIAL_DAYS : TRIAL_DAYS;
   return { ok: true, proUntil: extend(p.proUntil, days, now), days };
 }

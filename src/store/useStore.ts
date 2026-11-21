@@ -73,11 +73,11 @@ interface State {
   /** Account whose data is on this device (so one person's log never syncs into another's account). */
   ownerId?: string;
   setPremium: (p: State['premium']) => void;
-  /** Free Pro time from the server (trial or invite rewards); the server stays the authority. */
+  /** Free Plus time from the server (trial or invite rewards); the server stays the authority. */
   perks: { until: number; freePro: boolean; trialUsed: boolean; referrals: number; maxReferrals: number; referralDays: number } | null;
   setPerks: (p: State['perks']) => void;
   /**
-   * The plan the server says this account has (admins and free Pro time count as Pro). Lets a
+   * The plan the server says this account has (admins and free Plus time count as Plus). Lets a
    * paid plan bought on another phone, or the owner's account, unlock features here too.
    */
   serverTier: 'free' | 'plus' | 'pro' | null;

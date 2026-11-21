@@ -52,7 +52,7 @@ export function PlanView() {
     }).then(async (res) => {
       const data = (await res.json().catch(() => ({}))) as DayPlan & { error?: string };
       if (res.status === 401) throw Object.assign(new Error(data.error || 'Sign in first.'), { signIn: true });
-      if (res.status === 402) throw Object.assign(new Error(data.error || 'Weekly plans are part of Pro.'), { premium: true });
+      if (res.status === 402) throw Object.assign(new Error(data.error || 'Weekly plans are part of Plus.'), { premium: true });
       if (!res.ok) throw new Error(data.error || 'Could not make that day.');
       return { date: d, plan: data };
     })));

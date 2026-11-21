@@ -14,7 +14,7 @@ const FAQ: [string, React.ReactNode][] = [
   ['Is my food log saved if I use two phones?', <>Yes. Sign in on both; changes from each phone are combined, and a deleted item stays deleted. The app also keeps a daily backup on each phone (Profile → Your data → Automatic backups).</>],
   ['A food is missing or its numbers look wrong', <>Use “Request this food” at the bottom of a search, or open the food and tap “Report it”. For packaged food, scan the nutrition label to save the right numbers.</>],
   ['How do allergy warnings work?', <>Foods are checked against your allergies and diet by name and recipe. It can miss ingredients, so always check labels and ask how food was made.</>],
-  ['What do Free and Pro include?', <><Link to="/premium" className="font-semibold text-accent">See the plans</Link>. Free includes the food database, barcode, progress and a few AI scans each month. Everyone can try Pro free for 3 days, no card needed.</>],
+  ['What do Free and Plus include?', <><Link to="/premium" className="font-semibold text-accent">See the plans</Link>. Free includes the food database, barcode, progress and a few AI scans each month. Everyone can try Plus free for 3 days, no card needed.</>],
   ['How do I cancel or get a refund?', <>Profile → Subscription → Manage, change or cancel. You keep your plan until the end of the period you paid for. See the <Link to="/refunds" className="font-semibold text-accent">Cancellation & Refund Policy</Link>.</>],
   ['What happens to my photos and data?', <>Photos stay on your phone unless you post them. Read the <Link to="/privacy" className="font-semibold text-accent">Privacy Policy</Link>; you can export or delete everything from Profile.</>],
 ];

@@ -1,6 +1,6 @@
 /**
  * POST /api/workout { context, request } → WorkoutPlan
- * AI workout guide for the week. Pro.
+ * AI workout guide for the week. Plus.
  */
 export const maxDuration = 60;
 import { logAiError } from './_lib/aiErrors.js';

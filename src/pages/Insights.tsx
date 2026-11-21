@@ -72,6 +72,7 @@ export default function Insights() {
       avg: logged.length ? total / logged.length : 0,
       hit: logged.filter((s) => s.goal > 0 && s.protein >= s.goal).length,
       within: logged.filter((s) => s.goal > 0 && Math.abs(s.protein - s.goal) <= s.goal * 0.1).length,
+      goalNow: goalFor(todayKey()),
       best: logged.reduce<(typeof series)[number] | null>((b, s) => (!b || s.protein > b.protein ? s : b), null),
       top: [...perFood.values()].sort((a, b) => b.protein - a.protein).slice(0, 5),
       perMeal,
@@ -93,11 +94,12 @@ export default function Insights() {
       </div>
 
       <div className="mb-3 flex items-center justify-between px-1">
-        <h2 className="text-xl font-bold">Nutrition trends</h2>
+        <h2 className="text-xl font-bold">What you ate</h2>
         <Segmented value={range} onChange={setRange} options={[{ value: '7', label: '7D' }, { value: '30', label: '30D' }, { value: '90', label: '90D' }]} />
       </div>
       {/* Calories and macros are separate: one switch for which, then which macro. */}
       <div className="mb-2"><Segmented full value={metric === 'kcal' ? 'kcal' : 'macros'} onChange={(v) => setMetric(v === 'kcal' ? 'kcal' : 'protein')} options={[{ value: 'kcal', label: 'Calories' }, { value: 'macros', label: 'Macros' }]} /></div>
+      {metric !== 'kcal' && <MacroAverages range={Number(range)} />}
       {metric !== 'kcal' && <div className="mb-4 flex justify-center"><Segmented value={metric} onChange={setMetric} options={METRICS.filter((m) => m.value !== 'kcal').map(({ value, label }) => ({ value, label }))} /></div>}
       {metric === 'kcal' && <div className="mb-4" />}
 
@@ -108,18 +110,26 @@ export default function Insights() {
             <span className="text-xs font-semibold text-silver">no food logged yet</span>
           </div>
           <BarChart series={data.series} unit={unit} highlight={false} />
-          <p className="mt-3 text-sm text-silver">Your chart fills in as you log food. Days you don’t log stay empty — they’re not counted as zero.</p>
+          <p className="mt-3 text-sm text-silver">Nothing logged in the last {range} days yet. Add a meal and a bar appears for that day. Averages and the other numbers show up once there’s real food logged.</p>
+          <Link to="/add" className="btn-primary mt-4 w-full">Log a meal</Link>
         </section>
       ) : (
         <div className="space-y-4">
+          {/* Never let a few logged days look like a full record: say what the numbers are based on. */}
+          {data.loggedDays < Number(range) && (
+            <p className="rounded-2xl bg-raised px-4 py-3 text-[14px] leading-snug text-silver">
+              You logged food on <b className="text-ink">{data.loggedDays} of the last {range} days</b>. These numbers only use those days — days you didn’t log aren’t counted as zero.
+              {data.loggedDays < 3 && ' Log a few more days for a fair picture.'}
+            </p>
+          )}
           <div className="grid grid-cols-2 gap-3">
-            <Kpi label={`Average ${label.toLowerCase()}`} value={fmt(data.avg)} unit={unit} sub={`over ${data.loggedDays} logged ${data.loggedDays === 1 ? 'day' : 'days'}`} />
+            <Kpi label="Average per logged day" value={fmt(data.avg)} unit={unit} sub={`${label} · ${data.loggedDays} ${data.loggedDays === 1 ? 'day' : 'days'} logged`} />
             {metric === 'protein' ? (
-              <Kpi label="Goal hit" value={`${data.hit}`} unit={`/ ${data.loggedDays}`} sub="logged days at goal" />
+              <Kpi label="Days you hit your goal" value={`${data.hit}`} unit={`of ${data.loggedDays}`} sub={data.goalNow ? `reached ${fmt(data.goalNow)} g protein` : 'set a protein goal in Goals'} />
             ) : (
-              <Kpi label="Within target" value={`${data.within}`} unit={`/ ${data.loggedDays}`} sub={data.series.some((s) => s.goal) ? 'days within ±10%' : 'set a calorie goal in Profile'} />
+              <Kpi label="Days on target" value={`${data.within}`} unit={`of ${data.loggedDays}`} sub={data.goalNow ? `ate ${fmt(data.goalNow * 0.9)}–${fmt(data.goalNow * 1.1)} ${unit} (within 10% of your ${fmt(data.goalNow)} ${unit} target)` : `set a ${label.toLowerCase()} target in Goals`} />
             )}
-            <Kpi label="Protein streak" value={`${streak}`} unit={streak === 1 ? 'day' : 'days'} sub="in a row at goal" />
+            {metric === 'protein' && <Kpi label="Protein goal streak" value={`${streak}`} unit={streak === 1 ? 'day' : 'days'} sub={streak ? 'days in a row you reached your protein goal' : 'starts the first day you reach your protein goal'} />}
             <Kpi label="Highest day" value={fmt(data.best?.protein)} unit={unit} sub={data.best ? formatDay(data.best.date, { day: 'numeric', month: 'short' }) : ''} />
           </div>
 
@@ -183,7 +193,7 @@ export default function Insights() {
         <ProgressPhotos />
       </div>
 
-      {/* Pro extras: one quiet line instead of a teaser card in every section. */}
+      {/* Plus extras: one quiet line instead of a teaser card in every section. */}
       <ProMore />
 
       {/* Everything they've ever logged or saved, kept for every plan — one tap from the graphs. */}
@@ -254,5 +264,47 @@ function BarChart({ series, unit, highlight }: { series: { date: string; protein
         ))}
       </div>
     </div>
+  );
+}
+
+/** Protein, carbs and fat side by side: average per logged day against each target. */
+function MacroAverages({ range }: { range: number }) {
+  const entries = useStore((s) => s.entries);
+  const goalHistory = useStore((s) => s.goalHistory);
+  const profile = useStore((s) => s.profile);
+  const v = useMemo(() => {
+    const set = new Set(lastNDays(todayKey(), range));
+    const days = new Map<string, { protein: number; carbs: number; fat: number }>();
+    for (const e of entries) {
+      if (!set.has(e.date) || e.planned) continue;
+      const n = nutrientsFor(e.food.per100, e.grams);
+      const d = days.get(e.date) ?? { protein: 0, carbs: 0, fat: 0 };
+      d.protein += n.protein ?? 0; d.carbs += n.carbs ?? 0; d.fat += n.fat ?? 0;
+      days.set(e.date, d);
+    }
+    const k = days.size;
+    if (!k) return null;
+    const sum = [...days.values()].reduce((a, d) => ({ protein: a.protein + d.protein, carbs: a.carbs + d.carbs, fat: a.fat + d.fat }), { protein: 0, carbs: 0, fat: 0 });
+    const pg = goalOn(todayKey(), goalHistory, profile);
+    const t = profile ? dailyTargets(profile, pg) : null;
+    return { days: k, rows: [
+      { name: 'Protein', avg: sum.protein / k, target: pg, color: 'rgb(var(--accent))' },
+      { name: 'Carbs', avg: sum.carbs / k, target: t?.carbs ?? 0, color: 'rgb(var(--carbs))' },
+      { name: 'Fat', avg: sum.fat / k, target: t?.fat ?? 0, color: 'rgb(var(--fat))' },
+    ] };
+  }, [entries, goalHistory, profile, range]);
+  if (!v) return null;
+  return (
+    <section className="card mb-4 p-5" aria-label="Average macros">
+      <p className="text-sm font-semibold text-silver">Average per logged day · {v.days} {v.days === 1 ? 'day' : 'days'}</p>
+      <div className="mt-3 space-y-3">
+        {v.rows.map((r) => (
+          <div key={r.name}>
+            <div className="flex justify-between text-sm"><span className="font-semibold">{r.name}</span><span className="num">{fmt(r.avg)} g{r.target ? <span className="text-silver"> of {fmt(r.target)} g</span> : ''}</span></div>
+            <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-raised"><div className="h-full rounded-full" style={{ width: `${r.target ? Math.min(100, (r.avg / r.target) * 100) : 0}%`, background: r.color }} /></div>
+          </div>
+        ))}
+      </div>
+    </section>
   );
 }

@@ -49,7 +49,7 @@ const OBSTACLES = ['Lack of consistency', 'Busy schedule', 'Unhealthy eating hab
 
 const PLAN_CHOICES = [
   { tier: 'free' as const, name: 'Free', badge: '', perks: ['Calories, macros & 18,000+ foods', 'Barcode, exercise, progress & feed', '3 AI scans + 5 coach messages a day'] },
-  { tier: 'pro' as const, name: 'Pro', badge: 'Everything included', perks: ['Unlimited AI food scans', 'Restaurant menus: photo, QR code or link', 'Smarter, personal AI nutrition coach', 'Personalized weekly & monthly meal plans', 'Plans adjust automatically to your progress', 'Daily meal suggestions', 'AI recipes and recipe import', 'AI workout guides', 'Advanced micronutrient analysis', 'Detailed nutrition reports', 'Adjusts to your cuisine & diet'] },
+  { tier: 'pro' as const, name: 'Plus', badge: 'Everything included', perks: ['Unlimited AI food scans', 'Restaurant menus: photo, QR code or link', 'Smarter, personal AI nutrition coach', 'Personalized weekly & monthly meal plans', 'Plans adjust automatically to your progress', 'Daily meal suggestions', 'AI recipes and recipe import', 'AI workout guides', 'Advanced micronutrient analysis', 'Detailed nutrition reports', 'Adjusts to your cuisine & diet'] },
 ];
 
 export default function Onboarding() {
@@ -474,7 +474,7 @@ export default function Onboarding() {
               }}
               className="btn-primary mt-6 w-full"
             >
-              {planChoice === 'free' ? 'Start for free' : 'Continue with Pro'}
+              {planChoice === 'free' ? 'Start for free' : 'Continue with Plus'}
             </button>
             {planChoice !== 'free' && (
               <button onClick={() => { haptic(); finish(); }} className="btn-ghost mt-2 w-full">Start free for now</button>
@@ -615,7 +615,7 @@ function Welcome({ signedIn, email, onStart }: { signedIn: boolean; email?: stri
           </button>
           <p className="text-center text-[15px] text-silver">Already have an account? <button onClick={() => setMode('login')} className="font-semibold text-accent">Log in</button></p>
           <p className="text-center text-xs text-dim">An account saves your data so you can use it on any phone.</p>
-          <p className="mb-2 text-center text-[13px] text-silver">Free to start, no card. Pro is $7.99/mo, or save 60% yearly · <a href="/premium" className="font-semibold text-accent underline">See what’s included</a></p>
+          <p className="mb-2 text-center text-[13px] text-silver">Free to start, no card. Plus is $7.99/mo, or save 60% yearly · <a href="/premium" className="font-semibold text-accent underline">See what’s included</a></p>
           <p className="text-center text-xs text-dim">By continuing you agree to our <a href="/terms" className="underline">Terms</a>, <a href="/privacy" className="underline">Privacy Policy</a> and <a href="/refunds" className="underline">Refund Policy</a>.</p>
         </div>
       )}

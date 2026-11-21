@@ -45,7 +45,8 @@ export function WeightAndStreak() {
                 <div className="mx-2 mt-2 h-1.5 overflow-hidden rounded-full bg-raised"><div className="h-full rounded-full bg-ink" style={{ width: `${pct * 100}%` }} /></div>
                 <p className="num mt-1.5 text-sm text-silver">Goal {fmt(fromKg(goal, unit), 1)} {unit}</p>
               </>
-            ) : <p className="mt-2 text-sm text-silver">Set a goal in Profile</p>}
+            ) : <p className="mt-2 text-sm text-silver">Set a goal in Goals</p>}
+            {current && !weights.length && <p className="mt-1 text-xs text-dim">From your profile — log today’s weight below</p>}
           </div>
           <button onClick={() => { haptic(); setOpen(true); }} className="flex h-12 items-center justify-between bg-primary px-4 text-sm font-bold text-on-primary transition active:opacity-90">
             Log weight <ArrowRight size={17} />
@@ -104,6 +105,7 @@ export function WeightChart() {
   const goalKg = useStore((s) => s.profile?.goalWeightKg);
   const [range, setRange] = useState<WRange>('90');
   const [active, setActive] = useState<number | null>(null);
+  const [logOpen, setLogOpen] = useState(false);
   const pts = useMemo(() => {
     if (range === 'all') return weights;
     const from = addDays(todayKey(), -Number(range));
@@ -138,7 +140,10 @@ export function WeightChart() {
         {pct != null && <span className="flex items-center gap-1 rounded-full bg-raised px-2.5 py-1 text-xs font-bold"><Flag size={12} /> {pct}% of goal</span>}
       </div>
       {pts.length === 0 ? (
-        <p className="mt-3 rounded-2xl bg-raised p-4 text-sm text-silver">Log your weight to see your trend here.</p>
+        <div className="mt-3 rounded-2xl bg-raised p-4 text-center">
+          <p className="text-sm text-silver">{weights.length ? 'No weigh-ins in this period.' : 'No weigh-ins yet. Your trend line starts after two.'} Weigh yourself at the same time of day for a fair comparison.</p>
+          <button onClick={() => { haptic(); setLogOpen(true); }} className="btn-primary mt-3 w-full">{weights.length ? 'Log weight' : 'Log your first weight'}</button>
+        </div>
       ) : (
         <div className="relative mt-3">
           {a && (
@@ -181,6 +186,7 @@ export function WeightChart() {
           {Math.abs((last ?? 0) - (first ?? 0)) < 0.2 ? 'Steady — consistency is key.' : `${(last ?? 0) < (first ?? 0) ? 'Down' : 'Up'} ${fmt(Math.abs(fromKg((last ?? 0) - (first ?? 0), unit)), 1)} ${unit} since ${formatDay(weights[0].date, { day: 'numeric', month: 'short' })}. Keep going!`}
         </p>
       )}
+      <LogWeightSheet open={logOpen} onClose={() => setLogOpen(false)} current={weights.length ? weights[weights.length - 1].kg : null} />
     </section>
   );
 }

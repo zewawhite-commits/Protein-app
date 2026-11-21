@@ -523,7 +523,7 @@ function ShareSheet({ open, groupId, onClose, onShared, initialTitle = '', initi
   const [busy, setBusy] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const titleRef = useRef<HTMLInputElement>(null);
-  // A ready-made post (e.g. "Just joined Pro"), still editable before posting.
+  // A ready-made post (e.g. "Just joined Plus"), still editable before posting.
   useEffect(() => {
     if (!open) return;
     if (initialTitle) setTitle((t) => t || initialTitle);

@@ -13,7 +13,7 @@ export function UsageCard() {
     if (session) fetchUsage().then(setU);
   }, [session]);
   if (!u) return null;
-  const name = u.perks?.freePro ? 'Free Pro' : u.tier === 'pro' ? 'Pro' : u.tier === 'plus' ? 'Pro' : 'Free';
+  const name = u.perks?.freePro ? 'Free Plus' : u.tier === 'pro' ? 'Plus' : u.tier === 'plus' ? 'Plus' : 'Free';
   return (
     <div className="card mt-5 p-5">
       <div className="flex items-center justify-between">
@@ -23,7 +23,7 @@ export function UsageCard() {
       <div className="mt-3 space-y-2.5">
         {(Object.keys(LABELS) as (keyof typeof LABELS)[]).map((f) => {
           const { used, limit } = u.features[f] ?? { used: 0, limit: 0 };
-          const text = limit === null ? 'Unlimited' : limit === 0 ? 'Pro' : `${Math.max(0, limit - used)} of ${limit} left`;
+          const text = limit === null ? 'Unlimited' : limit === 0 ? 'Plus' : `${Math.max(0, limit - used)} of ${limit} left`;
           return (
             <div key={f}>
               <div className="flex justify-between text-[14px]"><span className="font-medium">{LABELS[f]}</span><span className="text-silver">{text}</span></div>
@@ -35,7 +35,7 @@ export function UsageCard() {
         })}
       </div>
       {u.tier !== 'pro' && !u.admin && (
-        <Link to="/premium" className="btn-primary mt-4 w-full">Go unlimited with Pro — $7.99/month</Link>
+        <Link to="/premium" className="btn-primary mt-4 w-full">Go unlimited with Plus — $7.99/month</Link>
       )}
     </div>
   );

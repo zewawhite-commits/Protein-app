@@ -1,6 +1,6 @@
 /**
  * POST /api/recipe { context, request } → Recipe
- * AI recipe; nutrition is calculated by the app from its database. Pro.
+ * AI recipe; nutrition is calculated by the app from its database. Plus.
  */
 export const maxDuration = 60;
 import { logAiError } from './_lib/aiErrors.js';
