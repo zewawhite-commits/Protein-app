@@ -16,7 +16,7 @@ import { cleanContext } from './_lib/context.js';
 export async function POST(request: Request): Promise<Response> {
   if (!process.env.ANTHROPIC_API_KEY) return json({ error: 'Recipes aren’t switched on yet.' }, 501);
   const body = (await request.json().catch(() => null)) as { context?: unknown; request?: unknown; import?: { text?: unknown; url?: unknown; image?: { data?: unknown; mediaType?: unknown } } } | null;
-  // Importing a recipe (pasted text, a link or a photo) counts as one AI scan.
+  // Importing a recipe (pasted text, a link or a photo) is part of Plus, like AI recipes.
   if (body?.import) return importRecipe(request, body.import);
   const g = await gate(request, 'recipe');
   if (!g.ok) return json(g.body, g.status);
@@ -40,7 +40,7 @@ export async function POST(request: Request): Promise<Response> {
 }
 
 async function importRecipe(request: Request, input: { text?: unknown; url?: unknown; image?: { data?: unknown; mediaType?: unknown } }): Promise<Response> {
-  const g = await gate(request, 'scan');
+  const g = await gate(request, 'recipe'); // Recipe import is a Plus feature.
   if (!g.ok) return json(g.body, g.status);
   try {
     let text = typeof input.text === 'string' ? input.text.trim() : '';
