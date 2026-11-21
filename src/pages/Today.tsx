@@ -13,6 +13,8 @@ import { dailyTargets, type Targets } from '@/lib/energy';
 import { DV_NOTE, MacroBar, NutrientList } from '@/components/Nutrients';
 import type { Food, LogEntry } from '@/lib/types';
 import { SleepCard } from '@/components/Sleep';
+import type { HomeNutrient } from '@/lib/types';
+import { HomeInsights } from '@/components/HomeInsights';
 import { Pill, Ring, Sheet, cx, fmt } from '@/components/ui';
 import { BrandName, CountUp, haptic, toast } from '@/components/fx';
 import { EntryRow } from '@/components/EntryRow';
@@ -116,6 +118,7 @@ export default function Today() {
         <>
           <HeroCard totals={totals} goal={goal} targets={targets} entries={entries} burned={burned} addBurned={addBurned} />
           <MacroCards totals={totals} goal={goal} targets={targets} simple={simple} />
+          {isToday && <HomeInsights />}
           <div className="mt-2 flex justify-end px-1"><Link to="/settings?edit=1" className="text-sm font-semibold text-accent">Edit targets</Link></div>
         </>
       )}
@@ -334,14 +337,36 @@ export const useStreak = () => useGoalStats().streak;
 /** Protein, carbs and fat as three bars in one card (grams left). */
 function MacroCards({ totals, goal, targets, simple }: { totals: Totals; goal: number; targets: Targets | null; simple?: boolean }) {
   const eatenView = useStore((s) => s.settings.dashView) === 'eaten';
-  const all = [
-    { label: 'Protein', eaten: totals.protein, target: goal, color: 'rgb(var(--accent))', icon: Drumstick },
-    { label: 'Carbs', eaten: totals.carbs, target: targets?.carbs ?? 0, color: 'rgb(var(--carbs))', icon: Wheat },
-    { label: 'Fat', eaten: totals.fat, target: targets?.fat ?? 0, color: 'rgb(var(--fat))', icon: Droplet },
-  ];
-  const items = simple ? all.slice(0, 1) : all;
+  const chosen = useStore((s) => s.settings.homeNutrients) ?? ['protein', 'carbs', 'fat'];
+  const updateSettings = useStore((s) => s.updateSettings);
+  const [picking, setPicking] = useState(false);
+  const t = totals as unknown as Record<string, number>;
+  const catalogue: Record<HomeNutrient, { label: string; eaten: number; target: number; color: string; icon: typeof Drumstick; unit: string }> = {
+    protein: { label: 'Protein', eaten: totals.protein, target: goal, color: 'rgb(var(--accent))', icon: Drumstick, unit: 'g' },
+    carbs: { label: 'Carbs', eaten: totals.carbs, target: targets?.carbs ?? 0, color: 'rgb(var(--carbs))', icon: Wheat, unit: 'g' },
+    fat: { label: 'Fat', eaten: totals.fat, target: targets?.fat ?? 0, color: 'rgb(var(--fat))', icon: Droplet, unit: 'g' },
+    fiber: { label: 'Fibre', eaten: totals.fiber, target: targets?.fiber ?? 0, color: '#4E9F6B', icon: Wheat, unit: 'g' },
+    sugar: { label: 'Sugar', eaten: t.sugar ?? 0, target: 0, color: '#D9822B', icon: Droplet, unit: 'g' },
+    sodium: { label: 'Sodium', eaten: t.sodium ?? 0, target: 2300, color: '#5B8DEF', icon: Droplet, unit: 'mg' },
+  };
+  const all = chosen.map((k) => catalogue[k]).filter(Boolean);
+  const items = simple ? [catalogue.protein] : all;
   return (
     <div className="card mt-3 space-y-4 p-5">
+      {!simple && (
+        <>
+          <button onClick={() => setPicking(true)} className="-mb-2 ml-auto block text-[13px] font-semibold text-accent">Choose what shows</button>
+          <Sheet open={picking} onClose={() => setPicking(false)} title="Nutrients on Home">
+            <p className="text-sm text-silver">Pick up to 4. Everything else stays in “Vitamins, minerals & more”.</p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {(Object.keys(catalogue) as HomeNutrient[]).map((k) => {
+                const on = chosen.includes(k);
+                return <button key={k} aria-pressed={on} disabled={!on && chosen.length >= 4} onClick={() => updateSettings({ homeNutrients: on ? (chosen.length > 1 ? chosen.filter((x) => x !== k) : chosen) : [...chosen, k] })} className={cx('chip !h-10', on && 'chip-on')}>{on && <Check size={14} strokeWidth={3} />}{catalogue[k].label}</button>;
+              })}
+            </div>
+          </Sheet>
+        </>
+      )}
       {items.map((m) => {
         const left = m.target - m.eaten;
         return (
@@ -350,8 +375,8 @@ function MacroCards({ totals, goal, targets, simple }: { totals: Totals; goal: n
               <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full" style={{ background: `color-mix(in srgb, ${m.color} 14%, transparent)`, color: m.color }}><m.icon size={16} /></span>
               <p className="flex-1 text-[15px] font-semibold">{m.label}</p>
               {m.target && eatenView
-                ? <p className="num text-[15px] font-bold">{fmt(m.eaten)}<span className="text-[13px] font-medium text-silver"> / {fmt(m.target)}g</span></p>
-                : <p className="num text-[15px] font-bold">{m.target ? `${fmt(Math.abs(left))}g` : `${fmt(m.eaten)}g`}<span className="ml-1 text-[13px] font-medium text-silver">{m.target ? (left < 0 ? 'over' : 'left') : 'eaten'}</span></p>}
+                ? <p className="num text-[15px] font-bold">{fmt(m.eaten)}<span className="text-[13px] font-medium text-silver"> / {fmt(m.target)}{m.unit}</span></p>
+                : <p className="num text-[15px] font-bold">{m.target ? `${fmt(Math.abs(left))}${m.unit}` : `${fmt(m.eaten)}${m.unit}`}<span className="ml-1 text-[13px] font-medium text-silver">{m.target ? (left < 0 ? 'over' : 'left') : 'eaten'}</span></p>}
             </div>
             <div className="mt-2 h-2.5 overflow-hidden rounded-full bg-raised">
               <div className="h-full rounded-full transition-all duration-500" style={{ width: `${Math.min(100, m.target ? (m.eaten / m.target) * 100 : 0)}%`, backgroundColor: m.color }} />

@@ -83,6 +83,8 @@ export interface CustomFood extends Food {
   createdAt: number;
   updatedAt: number;
   archived?: boolean;
+  /** Earlier values, newest first (up to 10), kept when the numbers are corrected. */
+  changes?: { at: number; per100: Food['per100']; portions?: Food['portions'] }[];
 }
 
 export type Meal = 'breakfast' | 'lunch' | 'dinner' | 'snack' | 'snack2' | 'snack3' | 'extra';
@@ -207,6 +209,8 @@ export interface Settings {
   workoutsPerWeek?: number;
   /** Home shows what's left (default) or what's been eaten. */
   dashView?: 'left' | 'eaten';
+  /** Nutrients shown as bars on Home (default protein, carbs, fat). */
+  homeNutrients?: HomeNutrient[];
   /** Hours of sleep to aim for (default 8). */
   sleepGoalH?: number;
 }
@@ -243,3 +247,5 @@ export type GoalSettings = Partial<Record<GoalKind, GoalSetting>>;
 
 /** A night's sleep, logged for the day you woke up. */
 export interface SleepEntry { hours: number; quality?: 'poor' | 'ok' | 'good'; updatedAt: number }
+
+export type HomeNutrient = 'protein' | 'carbs' | 'fat' | 'fiber' | 'sugar' | 'sodium';

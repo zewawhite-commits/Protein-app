@@ -384,6 +384,9 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
         <button onClick={() => setShowMore((s) => !s)} className="mt-3 flex w-full items-center justify-center gap-1 text-xs font-semibold text-accent">
           {showMore ? 'Hide' : 'Show'} vitamins, minerals & sugar <ChevronDown size={14} className={cx('transition', showMore && 'rotate-180')} />
         </button>
+        {food.source === 'custom' && !entry && !(food as { recipe?: unknown }).recipe && (
+          <button onClick={() => setFixing(true)} className="mt-1 flex w-full items-center justify-center gap-1 text-xs font-semibold text-silver">Your food · <span className="text-accent underline">Edit its numbers</span></button>
+        )}
         {food.source !== 'custom' && !entry && (
           <button onClick={() => setFixing(true)} className="mt-1 flex w-full items-center justify-center gap-1 text-xs font-semibold text-silver">Numbers don’t match your pack? <span className="text-accent underline">Fix them</span></button>
         )}

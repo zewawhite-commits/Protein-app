@@ -1,3 +1,4 @@
+import { CreateFood } from '@/components/CreateFood';
 import { useStore } from '@/store/useStore';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
@@ -22,6 +23,7 @@ export default function Barcode() {
   const [code, setCode] = useState('');
   const [state, setState] = useState<{ busy: boolean; error?: string }>({ busy: false });
   const [food, setFood] = useState<Food | null>(null);
+  const [creating, setCreating] = useState(false);
   const busyRef = useRef(false);
 
   async function lookup(raw: string) {
@@ -108,11 +110,14 @@ export default function Barcode() {
             <Link to="/add" className="btn-primary !h-11 text-sm">Search by name</Link>
             <Link to="/snap?mode=describe" className="btn-ghost !h-11 !bg-surface text-sm">Describe it</Link>
           </div>
+          <button onClick={() => setCreating(true)} className="btn-ghost mt-2 w-full !h-11 !bg-surface text-sm">Add this product yourself</button>
+          <p className="mt-1 text-center text-[12px] text-dim">Type the numbers from the pack once; it’s saved in My foods for next time.</p>
         </div>
       )}
       <p className="mt-4 text-xs text-dim">Product data from Open Food Facts (label values per 100 g).</p>
 
       <FoodSheet food={food} date={date} onClose={() => setFood(null)} onSaved={back} />
+      <CreateFood open={creating} onClose={() => setCreating(false)} onSaved={(f) => setFood(f)} />
     </div>
   );
 }

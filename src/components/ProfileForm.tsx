@@ -125,6 +125,16 @@ export function ProfileForm({ initial, submitLabel, onSaved }: { initial?: Profi
       </div>
       {(!ageOk || !heightOk) && <p className="-mt-4 text-sm text-danger">{!ageOk ? 'Age must be 13–110.' : 'Height must be 100–250 cm.'}</p>}
 
+      <details className="-mt-2 rounded-2xl bg-raised px-4 py-3 text-[14px] leading-relaxed text-silver">
+        <summary className="cursor-pointer font-semibold text-ink">How these details set your targets</summary>
+        <ul className="mt-2 list-disc space-y-1 pl-5">
+          <li><b className="text-ink">Weight</b> sets your protein goal (grams per kg) and, with height, age and sex, the calories your body burns at rest (Mifflin–St Jeor).</li>
+          <li><b className="text-ink">Activity</b> adds the calories you burn moving about and training on top of that.</li>
+          <li><b className="text-ink">Goal and pace</b> (lose, gain or stay) take calories off or add them, never below a safe minimum.</li>
+          <li>Carbs and fat fill the rest of your calories (fat about 30%). After two weeks of logging and weigh-ins, the smart target can adjust this from what you really burn.</li>
+        </ul>
+      </details>
+
       <div>
         <span className="label">Daily protein goal</span>
         <div className="grid grid-cols-2 gap-2">

@@ -309,6 +309,10 @@ export const useStore = create<State>()(
           source: 'custom',
           createdAt: existing?.createdAt ?? now,
           updatedAt: now,
+          // Correction history: keep the old numbers whenever they change.
+          ...(existing && JSON.stringify(existing.per100) !== JSON.stringify(input.per100)
+            ? { changes: [{ at: existing.updatedAt, per100: existing.per100, portions: existing.portions }, ...(existing.changes ?? [])].slice(0, 10) }
+            : existing?.changes ? { changes: existing.changes } : {}),
         };
         set((s) => ({
           customFoods: existing ? s.customFoods.map((f) => (f.id === food.id ? food : f)) : [food, ...s.customFoods],

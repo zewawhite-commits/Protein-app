@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useStore } from '@/store/useStore';
-import type { Food, Per100, PrepState } from '@/lib/types';
+import type { CustomFood, Food, Per100, PrepState } from '@/lib/types';
 import { Segmented, Sheet, fmt } from './ui';
 import { haptic, toast } from './fx';
 
@@ -24,7 +24,8 @@ export function CreateFood({ open, onClose, from, onSaved }: { open: boolean; on
 function Form({ from, onDone }: { from?: Food; onDone: (f?: Food) => void }) {
   const upsert = useStore((s) => s.upsertCustomFood);
   const firstServing = from?.portions?.[0];
-  const [name, setName] = useState(from ? `${from.name} (my version)` : '');
+  const mine = from?.source === 'custom' ? (from as CustomFood) : undefined;
+  const [name, setName] = useState(mine ? from!.name : from ? `${from.name} (my version)` : '');
   const [state, setState] = useState<PrepState>(from?.state ?? 'na');
   const [basis, setBasis] = useState<'serving' | '100'>(from ? '100' : 'serving');
   const [servingLabel, setServingLabel] = useState(firstServing?.label ?? '1 serving');
@@ -48,8 +49,9 @@ function Form({ from, onDone }: { from?: Food; onDone: (f?: Food) => void }) {
     if (errors.length) return;
     const portions = sg && sg > 0 ? [{ label: servingLabel.trim() || '1 serving', grams: Math.round(sg * 10) / 10 }] : (from?.portions ?? []);
     const food = upsert({
+      ...(mine ? { id: mine.id } : {}),
       name: name.trim().slice(0, 80), category: 'My foods', state, per100: { ...per100, protein: per100.protein ?? 0 }, portions,
-      sourceNote: from ? `Your corrected version of “${from.name}”` : basis === 'serving' ? `Your numbers, per ${servingLabel} (${sg} g)` : 'Your numbers, per 100 g',
+      sourceNote: mine ? mine.sourceNote : from ? `Your corrected version of “${from.name}”` : basis === 'serving' ? `Your numbers, per ${servingLabel} (${sg} g)` : 'Your numbers, per 100 g',
     });
     haptic();
     toast(`Saved to My foods: ${food.name}`);
@@ -75,6 +77,14 @@ function Form({ from, onDone }: { from?: Food; onDone: (f?: Food) => void }) {
       </div>
       <p className="text-xs text-dim">Empty boxes stay “unknown”, not zero. {basis === 'serving' ? 'We work out per 100 g from your serving size.' : ''}</p>
       {errors.length > 0 && name && <p className="text-sm text-danger">{errors[0]}</p>}
+      {mine?.changes?.length ? (
+        <details className="rounded-2xl bg-raised px-4 py-3 text-[13px] text-silver">
+          <summary className="cursor-pointer font-semibold text-ink">Earlier values ({mine.changes.length})</summary>
+          <ul className="mt-2 space-y-1">
+            {mine.changes.map((c) => <li key={c.at} className="num">{new Date(c.at).toLocaleDateString()}: {c.per100.kcal ?? '–'} kcal · P {c.per100.protein ?? '–'} · C {c.per100.carbs ?? '–'} · F {c.per100.fat ?? '–'} g per 100 g</li>)}
+          </ul>
+        </details>
+      ) : null}
       <button disabled={errors.length > 0} onClick={save} className="btn-primary w-full">Save to My foods</button>
     </div>
   );
