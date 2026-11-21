@@ -38,6 +38,14 @@ export async function signInWithEmail(email: string) {
 }
 
 /** Sends a one-time code by SMS. `phone` in international format, e.g. +2348012345678. */
+/** Email a 6-digit code (creates the account the first time). New accounts carry their sign-up choices. */
+export async function sendEmailCode(email: string, signup?: { phone?: string; marketing: boolean }) {
+  if (!supabase) throw new Error('Accounts aren’t set up yet.');
+  const { error } = await supabase.auth.signInWithOtp({ email, options: { shouldCreateUser: true, ...(signup ? { data: { ...(signup.phone ? { phone_number: signup.phone } : {}), marketing_opt_in: signup.marketing } } : {}) } });
+  // Keep Supabase's own wording for the resend wait ("after 16 seconds"): the form turns it into a countdown.
+  if (error) throw new Error(/after \d+ seconds?/i.test(error.message) ? error.message : friendly(error.message));
+}
+
 /** Signs in with the 6-digit code from the email. */
 export async function verifyEmailCode(email: string, token: string) {
   if (!supabase) return;
@@ -241,7 +249,7 @@ function friendly(message: string): string {
   if (/email not confirmed/i.test(message)) return 'Please confirm your email first: tap the link in the email we sent you.';
   if (/already registered|already been registered|already exists/i.test(message)) return 'An account with this email already exists. Log in instead.';
   if (/password should be|weak password|at least/i.test(message)) return 'Choose a stronger password: at least 8 characters.';
-  if (/expired|invalid.*(token|otp)|token.*invalid/i.test(message)) return 'That link or code has expired. Ask for a new email.';
+  if (/expired|invalid.*(token|otp)|token.*invalid/i.test(message)) return 'That code is wrong or has expired. Check it, or tap Resend code.';
   return message;
 }
 

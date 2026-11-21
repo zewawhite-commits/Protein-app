@@ -5,12 +5,12 @@ import { SignInButtons } from '@/components/SignIn';
 import { useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useEffect } from 'react';
-import { Droplet, Dumbbell, Utensils, ArrowLeft, CalendarDays, ChevronRight, Cloud, CreditCard, Crown, Database, Download, FileText, Flame, HeartHandshake, KeyRound, LifeBuoy, Lightbulb, Lock, LogOut, Mail, Moon, Receipt, RotateCcw, Scale, Settings as SettingsIcon, ShieldCheck, SlidersHorizontal, Smartphone, Sun, Table, Trash2, Upload, UserRound, XCircle } from 'lucide-react';
+import { Droplet, Dumbbell, Utensils, ArrowLeft, CalendarDays, ChevronRight, Cloud, CreditCard, Crown, Database, Download, FileText, Flame, HeartHandshake, LifeBuoy, Lightbulb, Lock, LogOut, Mail, Moon, Receipt, RotateCcw, Scale, Settings as SettingsIcon, ShieldCheck, SlidersHorizontal, Smartphone, Sun, Table, Trash2, Upload, UserRound, XCircle } from 'lucide-react';
 import { useStore, exportData } from '@/store/useStore';
 import { fetchBilling, isPremiumActive, manageSubscription, type Billing } from '@/lib/premium';
 import { SUPPORT_EMAIL } from '@/pages/Legal';
 import { setMarketingOptIn } from '@/lib/account';
-import { accountsEnabled, changeEmail, cleanPhone, deleteAccount, setPassword, setPhoneNumber, signOut, useSession, validPhone } from '@/lib/account';
+import { accountsEnabled, cleanPhone, deleteAccount, setPhoneNumber, signOut, useSession, validPhone } from '@/lib/account';
 import { toast } from '@/components/fx';
 
 import { allPhotoIds, deletePhoto } from '@/lib/photos';
@@ -299,10 +299,6 @@ function PremiumCard() {
 function AccountCard() {
   const session = useSession();
   const premiumActive = useStore((s) => isPremiumActive(s.premium));
-  const [changing, setChanging] = useState(false);
-  const [pwOpen, setPwOpen] = useState(false);
-  const [pw, setPw] = useState('');
-  const [email, setEmail] = useState('');
   const [note, setNote] = useState('');
   const [busy, setBusy] = useState(false);
   if (!accountsEnabled) return null;
@@ -329,29 +325,9 @@ function AccountCard() {
         <span className="max-w-[55%] truncate text-sm font-semibold text-silver">{session.user.email}</span>
       </Row>
       <Row icon={<ShieldCheck size={18} />} label="Sign-in method">
-        <span className="text-sm font-semibold text-silver">{viaGoogle ? 'Google' : 'Email'}</span>
+        <span className="text-sm font-semibold text-silver">{viaGoogle ? 'Google' : 'Email code'}</span>
       </Row>
       <PhoneRow saved={(session.user.user_metadata?.phone_number as string | undefined) ?? ''} />
-      {!viaGoogle && (
-        <button onClick={() => setChanging((v) => !v)} className="w-full"><Row icon={<Mail size={18} />} label="Change email" chevron /></button>
-      )}
-      {changing && (
-        <div className="px-3 pb-3">
-          <div className="flex gap-2">
-            <input type="email" inputMode="email" autoComplete="email" className="field !h-12 flex-1" placeholder="new@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
-            <button disabled={busy || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())} onClick={() => run(() => changeEmail(email.trim()), 'Check your new inbox and confirm to finish the change.')} className="btn-primary !h-12 !px-4 text-sm">Save</button>
-          </div>
-        </div>
-      )}
-      <button onClick={() => setPwOpen((v) => !v)} className="w-full"><Row icon={<KeyRound size={18} />} label="Set or change password" chevron /></button>
-      {pwOpen && (
-        <div className="px-3 pb-3">
-          <div className="flex gap-2">
-            <input type="password" autoComplete="new-password" className="field !h-12 flex-1" placeholder="New password (8+ characters)" value={pw} onChange={(e) => setPw(e.target.value)} />
-            <button disabled={busy || pw.length < 8} onClick={() => run(async () => { await setPassword(pw); setPw(''); setPwOpen(false); }, 'Password saved. You can sign in with it, or keep using Google or an email code.')} className="btn-primary !h-12 !px-4 text-sm">Save</button>
-          </div>
-        </div>
-      )}
       <button onClick={() => { if (confirm('Sign out? Your log is saved to your account and removed from this phone.')) void signOut(); }} className="w-full"><Row icon={<LogOut size={18} />} label="Sign out" chevron /></button>
       <button
         disabled={busy}
