@@ -152,7 +152,9 @@ export default function Coach() {
           </div>
         </div>
       </header>
-      <div className="mb-4"><Segmented full value={view} onChange={(v) => { haptic(); setView(v); }} options={[{ value: 'chat', label: 'Chat' }, { value: 'workout', label: 'Workouts' }, { value: 'recipe', label: 'Recipes' }, { value: 'plan', label: 'Meal plan' }]} /></div>
+      <div className="mb-4"><Segmented full value={view === 'recipe' ? 'plan' : view} onChange={(v) => { haptic(); setView(v); }} options={[{ value: 'chat', label: 'Chat' }, { value: 'plan', label: 'Meal plans' }, { value: 'workout', label: 'Workouts' }]} /></div>
+      {/* Recipes live with meal plans: plan the week, or find and save recipes, in one place. */}
+      {(view === 'plan' || view === 'recipe') && <div className="mb-4"><Segmented full value={view} onChange={(v) => { haptic(); setView(v); }} options={[{ value: 'plan', label: 'Meal plan' }, { value: 'recipe', label: 'Recipes' }]} /></div>}
       {view === 'chat' ? <Chat /> : view === 'workout' ? <WorkoutView /> : view === 'recipe' ? <RecipeView /> : <PlanView />}
     </div>
   );

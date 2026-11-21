@@ -5,9 +5,11 @@ import { useStore } from '@/store/useStore';
 import { aiHeaders } from '@/lib/premium';
 import { todayKey } from '@/lib/dates';
 import { burnedKcal } from '@/lib/exercise';
-import type { WorkoutDay, WorkoutPlan, WorkoutRequest } from '@/lib/workout';
+import type { Goal, WorkoutDay, WorkoutPlan, WorkoutRequest } from '@/lib/workout';
+import { findExercise, CATEGORY_NAMES } from '@/data/exerciseLibrary';
 import { useCoachContext } from '@/pages/Coach';
 import { SignInButtons } from './SignIn';
+import { GuideSheet } from './ExerciseGuide';
 import { PlanBadge } from './PlanBadge';
 import { cx } from './ui';
 import { haptic, toast } from './fx';
@@ -20,7 +22,21 @@ const ADJUST: [string, Partial<WorkoutRequest>][] = [
   ['Only 20 minutes', { minutes: 20, focus: 'very short on time, keep the most effective moves' }],
   ['Lighter week', { focus: 'tired or sore — make this a lighter recovery week with lower volume and intensity' }],
 ];
+const GOALS: [Goal, string][] = [['muscle', 'Build muscle'], ['strength', 'Get stronger'], ['fat_loss', 'Lose fat'], ['endurance', 'Endurance'], ['general', 'General fitness'], ['flexibility', 'Flexibility']];
+const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+const KIT: [string, string][] = [['dumbbells', 'Dumbbells'], ['barbell', 'Barbell'], ['bench', 'Bench'], ['kettlebell', 'Kettlebell'], ['band', 'Bands'], ['bar', 'Pull-up bar'], ['cable', 'Cable machine'], ['machine', 'Gym machines'], ['bike', 'Bike'], ['rower', 'Rower'], ['rope', 'Skipping rope']];
 const LEVELS: [WorkoutRequest['level'], string][] = [['beginner', 'Beginner'], ['intermediate', 'Intermediate'], ['advanced', 'Advanced']];
+
+/** The last two weeks of training, briefly, so the plan avoids tired muscles and repeats. */
+function recentTraining(): string[] {
+  const st = useStore.getState();
+  const since = Date.now() - 14 * 864e5;
+  return st.workoutLogs.filter((w) => w.startedAt >= since).sort((a, b) => b.startedAt - a.startedAt).slice(0, 14).map((w) => {
+    const muscles = [...new Set(w.exercises.map((e) => findExercise(e.name)).filter(Boolean).map((e) => CATEGORY_NAMES[e!.category].toLowerCase()))];
+    const day = new Date(w.startedAt).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+    return `${day}: ${w.name} — ${w.exercises.map((e) => e.name).slice(0, 8).join(', ')}${muscles.length ? ` (${muscles.join(', ')})` : ''}${w.feel ? `; felt ${w.feel === 'right' ? 'about right' : `too ${w.feel}`}` : ''}`;
+  });
+}
 
 /** AI workout guide for the week (Pro). */
 export function WorkoutView() {
@@ -44,7 +60,7 @@ export function WorkoutView() {
     haptic();
     setState({ busy: true });
     try {
-      const res = await fetch('/api/workout', { method: 'POST', headers: await aiHeaders(), body: JSON.stringify({ context, request: r }) });
+      const res = await fetch('/api/workout', { method: 'POST', headers: await aiHeaders(), body: JSON.stringify({ context, request: { ...r, recent: recentTraining() } }) });
       const isJson = res.headers.get('content-type')?.includes('application/json');
       if (!isJson || res.status === 404 || res.status === 501) throw new Error('Workout guides aren’t switched on yet. They work once the AI key is added on the server.');
       const data = (await res.json()) as WorkoutPlan & { error?: string };
@@ -83,7 +99,22 @@ export function WorkoutView() {
           <div className="flex gap-2">
             {LEVELS.map(([v, l]) => <button key={v} onClick={() => setReq({ ...req, level: v })} className={cx('chip !h-11 flex-1 justify-center !px-2 text-[14px]', req.level === v && 'chip-on')}>{l}</button>)}
           </div>
-          <input value={req.focus} onChange={(e) => setReq({ ...req, focus: e.target.value })} maxLength={200} placeholder="Injuries, limits or exercises to avoid, equipment you have, goals — e.g. ‘bad knee, no jumping; dumbbells only’" className="field mt-4" />
+          <p className="label mt-4">Main goal <span className="font-normal text-dim">(optional)</span></p>
+          <div className="flex flex-wrap gap-2">
+            {GOALS.map(([v, l]) => <button key={v} onClick={() => setReq({ ...req, goal: req.goal === v ? undefined : v })} className={cx('chip !h-10', req.goal === v && 'chip-on')}>{l}</button>)}
+          </div>
+          <p className="label mt-4">Days you can train <span className="font-normal text-dim">(optional)</span></p>
+          <div className="flex gap-1.5">
+            {WEEKDAYS.map((d) => { const on = req.weekdays?.includes(d); return <button key={d} onClick={() => { const w = on ? (req.weekdays ?? []).filter((x) => x !== d) : [...(req.weekdays ?? []), d].sort((a, b) => WEEKDAYS.indexOf(a) - WEEKDAYS.indexOf(b)); setReq({ ...req, weekdays: w, ...(w.length >= 2 ? { daysPerWeek: w.length } : {}) }); }} className={cx('chip !h-10 flex-1 justify-center !px-0 text-[13px]', on && 'chip-on')}>{d}</button>; })}
+          </div>
+          <p className="label mt-4">Equipment you have <span className="font-normal text-dim">(optional)</span></p>
+          <div className="flex flex-wrap gap-2">
+            {KIT.map(([v, l]) => { const on = req.equipment?.includes(v); return <button key={v} onClick={() => setReq({ ...req, equipment: on ? (req.equipment ?? []).filter((x) => x !== v) : [...(req.equipment ?? []), v] })} className={cx('chip !h-10', on && 'chip-on')}>{l}</button>; })}
+          </div>
+          <input value={req.likes ?? ''} onChange={(e) => setReq({ ...req, likes: e.target.value })} maxLength={200} placeholder="Exercises you enjoy (optional)" className="field mt-4" aria-label="Exercises you enjoy" />
+          <input value={req.dislikes ?? ''} onChange={(e) => setReq({ ...req, dislikes: e.target.value })} maxLength={200} placeholder="Exercises to leave out (optional)" className="field mt-2" aria-label="Exercises to leave out" />
+          <input value={req.limits ?? ''} onChange={(e) => setReq({ ...req, limits: e.target.value })} maxLength={300} placeholder="Injuries or limits, e.g. ‘bad knee, no jumping’ (optional)" className="field mt-2" aria-label="Injuries or limits" />
+          <input value={req.focus} onChange={(e) => setReq({ ...req, focus: e.target.value })} maxLength={200} placeholder="Anything else? (optional)" className="field mt-2" aria-label="Anything else" />
 
           <button onClick={() => void make()} disabled={state.busy} className="btn-primary mt-4 w-full">
             {state.busy ? <><Loader2 size={18} className="animate-spin" /> Building your week…</> : 'Build my workout guide'}
@@ -136,6 +167,7 @@ function DayCard({ day, defaultOpen, index }: { day: WorkoutDay; defaultOpen: bo
   const addExercise = useStore((s) => s.addExercise);
   const kg = useStore((s) => s.profile?.bodyWeightKg ?? 0);
   const [done, setDone] = useState(false);
+  const [guide, setGuide] = useState<string | null>(null);
 
   function logDone() {
     haptic();
@@ -150,7 +182,7 @@ function DayCard({ day, defaultOpen, index }: { day: WorkoutDay; defaultOpen: bo
       <button onClick={() => setOpen(!open)} className="flex w-full items-center gap-3 p-5 text-left">
         <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-accent/10 text-accent"><Dumbbell size={19} /></span>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-[16px] font-bold">{day.name}</p>
+          <p className="truncate text-[16px] font-bold">{day.weekday ? `${day.weekday} · ` : ''}{day.name}</p>
           <p className="flex items-center gap-1.5 text-sm text-silver"><Timer size={14} /> {day.minutes} min · {day.exercises.length} exercises</p>
         </div>
         <ChevronDown size={18} className={cx('shrink-0 text-dim transition', open && 'rotate-180')} />
@@ -163,13 +195,14 @@ function DayCard({ day, defaultOpen, index }: { day: WorkoutDay; defaultOpen: bo
               <li key={i} className="flex gap-3">
                 <span className="num grid h-7 w-7 shrink-0 place-items-center rounded-full bg-raised text-xs font-bold">{i + 1}</span>
                 <div className="min-w-0">
-                  <p className="text-[15px] font-semibold">{e.name}</p>
+                  <button onClick={() => setGuide(e.name)} className="text-left text-[15px] font-semibold">{e.name}{findExercise(e.name) && <span className="ml-1.5 text-xs font-semibold text-accent">How to</span>}</button>
                   <p className="num text-sm text-silver">{e.sets} × {e.reps}{e.restSeconds ? ` · rest ${e.restSeconds >= 60 ? `${Math.round(e.restSeconds / 6) / 10} min` : `${e.restSeconds} s`}` : ''}</p>
                   {e.how && <p className="text-sm text-dim">{e.how}</p>}
                 </div>
               </li>
             ))}
           </ol>
+          <GuideSheet name={guide} onClose={() => setGuide(null)} />
           <Link to={`/workout?guideDay=${index}`} className="btn-primary mt-5 w-full">Start it live — change anything as you go</Link>
           <button onClick={logDone} disabled={done} className="btn-ghost mt-2 w-full">
             {done ? <><Check size={18} /> Logged for today</> : 'Already did it? Log it'}

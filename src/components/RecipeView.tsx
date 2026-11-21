@@ -1,7 +1,7 @@
 import { AllergyTextBanner } from './Allergy';
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Bookmark, BookmarkCheck, Check, Clock, Lightbulb, Loader2, Search, Trash2, Users } from 'lucide-react';
+import { Bookmark, BookmarkCheck, Check, ChefHat, ChevronRight, Clock, Lightbulb, Loader2, Search, Trash2, Users } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 import { useFoodDb } from '@/lib/hooks';
 import { confidentMatch, splitName } from '@/lib/foods';
@@ -113,6 +113,8 @@ export function RecipeView() {
         </section>
       )}
 
+      <MyRecipes />
+
       {recipe && (
         <RecipeCard
           recipe={recipe}
@@ -220,6 +222,36 @@ function RecipeCard({ recipe, savedId, onSave, onDelete }: { recipe: Recipe; sav
         </ol>
         {recipe.tip && <p className="mt-4 flex gap-2 rounded-2xl bg-raised px-4 py-3 text-sm"><Lightbulb size={16} className="mt-0.5 shrink-0 text-accent" /> {recipe.tip}</p>}
       </div>
+    </section>
+  );
+}
+
+/** Recipes you made or imported (with ingredients): open one to log a portion, or add another. */
+function MyRecipes() {
+  const custom = useStore((s) => s.customFoods);
+  const mine = useMemo(() => custom.filter((c) => c.recipe && !c.archived), [custom]);
+  return (
+    <section>
+      <div className="mb-2 flex items-center justify-between px-1">
+        <p className="text-[15px] font-semibold">My recipes {mine.length > 0 && <span className="font-normal text-silver">· made or imported</span>}</p>
+        <Link to="/recipe" className="text-sm font-semibold text-accent">+ New or import</Link>
+      </div>
+      {mine.length === 0 ? (
+        <Link to="/recipe" className="card block p-4 text-sm text-silver">No recipes yet. Build one from ingredients, or import from a link, a photo or pasted text — then log a portion any time.</Link>
+      ) : (
+        <div className="card divide-y divide-line p-1.5">
+          {mine.map((r) => (
+            <Link key={r.id} to={`/recipe?id=${r.id}`} className="flex items-center gap-3 px-3 py-2.5">
+              <ChefHat size={18} className="shrink-0 text-accent" />
+              <span className="min-w-0 flex-1">
+                <span className="block truncate font-semibold">{r.name}</span>
+                <span className="block truncate text-xs text-silver">{r.recipe!.ingredients.length} ingredients{r.recipe!.servings ? ` · ${r.recipe!.servings} servings` : ''}{/import|from /i.test(r.sourceNote ?? '') ? ' · imported' : ''}</span>
+              </span>
+              <ChevronRight size={16} className="shrink-0 text-dim" />
+            </Link>
+          ))}
+        </div>
+      )}
     </section>
   );
 }
