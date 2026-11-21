@@ -1,3 +1,4 @@
+import { busyMessage } from './_lib/aiErrors.js';
 /**
  * POST /api/recommend { country?, diet?, remainingGrams, eatenToday? } → { ideas: [...] }
  * AI meal ideas (food names only). Requires a Premium pass when payments are configured.
@@ -38,14 +39,14 @@ export async function POST(request: Request): Promise<Response> {
   try {
     // The prompt asks the AI to respect the avoid list; this checks it did.
     const avoid = avoidSet({ avoid: req.avoid });
-    const ideas = (await ideasWithClient(new Anthropic(), req))
+    const ideas = (await ideasWithClient(new Anthropic({ maxRetries: 3 }), req))
       .filter((i) => !allergensIn(`${i.name} ${i.localName}`, avoid).length)
       .map((i) => (allergensIn(i.swap, avoid).length ? { ...i, swap: '' } : i));
     return json({ ideas });
   } catch (e) {
     if (e instanceof Anthropic.RateLimitError) return json({ error: 'Busy — try again in a moment.' }, 429);
     if (e instanceof Anthropic.APIError) console.error('[ai]', e.status, e.message);
-    if (e instanceof Anthropic.APIError) return json({ error: `Suggestion service error (${e.status ?? 'network'}).` }, 502);
+    if (e instanceof Anthropic.APIError) return json({ error: busyMessage(e) }, 502);
     console.error('[recommend]', (e as Error)?.message ?? e);
     return json({ error: (e as Error).message || 'Could not get suggestions.' }, 500);
   }

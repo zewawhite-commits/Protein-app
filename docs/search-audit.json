@@ -1,7 +1,7 @@
 {
  "total": 176,
- "firstOk": 164,
- "top3Ok": 164,
+ "firstOk": 175,
+ "top3Ok": 175,
  "rows": [
   {
    "region": "Nigeria",
@@ -192,7 +192,7 @@
    "top": [
     "Red red",
     "Red pea loaf",
-    "Red snapper, flesh only, raw"
+    "Red snapper, flesh only, fried in sunflower oil"
    ]
   },
   {
@@ -387,10 +387,12 @@
   {
    "region": "Egypt",
    "q": "molokhia",
-   "first": null,
-   "ok": false,
-   "inTop3": false,
-   "top": []
+   "first": "Molokhia",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Molokhia"
+   ]
   },
   {
    "region": "UK",
@@ -512,10 +514,12 @@
   {
    "region": "France",
    "q": "baguette",
-   "first": null,
-   "ok": false,
-   "inTop3": false,
-   "top": []
+   "first": "Baguette",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Baguette"
+   ]
   },
   {
    "region": "France",
@@ -841,8 +845,8 @@
    "inTop3": true,
    "top": [
     "Samosa",
-    "Samosas, vegetable, retail",
-    "Samosas, lamb, baked, homemade"
+    "Samosas, lamb, baked, homemade",
+    "Samosas, vegetable, retail"
    ]
   },
   {
@@ -892,12 +896,12 @@
   {
    "region": "India",
    "q": "ghee",
-   "first": "Ghee, clarified butter",
+   "first": "Ghee, butter",
    "ok": true,
    "inTop3": true,
    "top": [
-    "Ghee, clarified butter",
     "Ghee, butter",
+    "Ghee, clarified butter",
     "Ghee, clarified butter"
    ]
   },
@@ -1147,7 +1151,8 @@
    "inTop3": true,
    "top": [
     "Spring rolls, meat, takeaway",
-    "Spring roll, meat & vegetable filling, commercial, deep fried"
+    "Spring roll, meat & vegetable filling, commercial, deep fried",
+    "Goi cuon"
    ]
   },
   {
@@ -1169,7 +1174,8 @@
    "inTop3": true,
    "top": [
     "Spring rolls, meat, takeaway",
-    "Spring roll, meat & vegetable filling, commercial, deep fried"
+    "Spring roll, meat & vegetable filling, commercial, deep fried",
+    "Goi cuon"
    ]
   },
   {
@@ -1257,18 +1263,22 @@
   {
    "region": "Turkey",
    "q": "lahmacun",
-   "first": null,
-   "ok": false,
-   "inTop3": false,
-   "top": []
+   "first": "Lahmacun",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Lahmacun"
+   ]
   },
   {
    "region": "Turkey",
    "q": "ayran",
-   "first": null,
-   "ok": false,
-   "inTop3": false,
-   "top": []
+   "first": "Ayran",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Ayran"
+   ]
   },
   {
    "region": "Saudi",
@@ -1295,34 +1305,42 @@
   {
    "region": "Saudi",
    "q": "mandi",
-   "first": null,
-   "ok": false,
-   "inTop3": false,
-   "top": []
+   "first": "Mandi",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Mandi"
+   ]
   },
   {
    "region": "Iran",
    "q": "tahdig",
-   "first": null,
-   "ok": false,
-   "inTop3": false,
-   "top": []
+   "first": "Tahdig",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Tahdig"
+   ]
   },
   {
    "region": "Iran",
    "q": "kebab koobideh",
-   "first": null,
-   "ok": false,
-   "inTop3": false,
-   "top": []
+   "first": "Kebab koobideh",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Kebab koobideh"
+   ]
   },
   {
    "region": "Iran",
    "q": "ghormeh sabzi",
-   "first": null,
-   "ok": false,
-   "inTop3": false,
-   "top": []
+   "first": "Ghormeh sabzi",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Ghormeh sabzi"
+   ]
   },
   {
    "region": "US",
@@ -1381,7 +1399,7 @@
    "top": [
     "Peanut butter",
     "Peanut butter, smooth style, without salt",
-    "Peanut butter and jelly"
+    "Peanut butter, smooth"
    ]
   },
   {
@@ -1446,10 +1464,12 @@
   {
    "region": "Canada",
    "q": "poutine",
-   "first": null,
-   "ok": false,
-   "inTop3": false,
-   "top": []
+   "first": "Poutine",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Poutine"
+   ]
   },
   {
    "region": "Canada",
@@ -1466,10 +1486,12 @@
   {
    "region": "Canada",
    "q": "butter tart",
-   "first": null,
-   "ok": false,
-   "inTop3": false,
-   "top": []
+   "first": "Butter tart",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Butter tart"
+   ]
   },
   {
    "region": "Mexico",
@@ -1644,10 +1666,12 @@
   {
    "region": "Brazil",
    "q": "coxinha",
-   "first": null,
-   "ok": false,
-   "inTop3": false,
-   "top": []
+   "first": "Coxinha",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Coxinha"
+   ]
   },
   {
    "region": "Colombia",
@@ -1735,7 +1759,7 @@
    "top": [
     "Egg, whole, cooked, hard-boiled",
     "Egg, whole, boiled or poached",
-    "Egg, duck, boiled* (without salt)"
+    "Egg, chicken, boiled* (without salt)"
    ]
   },
   {
@@ -1770,8 +1794,8 @@
    "inTop3": true,
    "top": [
     "Fish, salmon, Atlantic, farmed, cooked, dry heat",
-    "Salmon, Pacific King, fillet, skinless, grilled, no added fat",
-    "Salmon, wild, baked"
+    "Salmon, wild, baked",
+    "Salmon, wild, grilled"
    ]
   },
   {
@@ -1783,7 +1807,7 @@
    "top": [
     "Banana, raw",
     "Banana, cavendish, peeled, raw",
-    "Banana, baked"
+    "Banana, white flesh, ripe, raw"
    ]
   },
   {
@@ -1843,7 +1867,7 @@
    "top": [
     "Broccoli, raw",
     "Broccoli, raw",
-    "Broccoli, stalks, raw"
+    "Broccoli, fresh, raw"
    ]
   },
   {
@@ -1897,13 +1921,13 @@
   {
    "region": "Spelling",
    "q": "courgette",
-   "first": "Squash, winter, acorn, raw",
+   "first": "Squash, acorn, raw",
    "ok": true,
    "inTop3": true,
    "top": [
-    "Squash, winter, acorn, raw",
-    "Squash, zucchini, baby, raw",
-    "Squash, summer, scallop, raw"
+    "Squash, acorn, raw",
+    "Squash, butternut, raw",
+    "Squash, winter, acorn, raw"
    ]
   },
   {
@@ -1927,7 +1951,7 @@
    "top": [
     "Broccoli, raw",
     "Broccoli, raw",
-    "Broccoli, stalks, raw"
+    "Broccoli, fresh, raw"
    ]
   },
   {

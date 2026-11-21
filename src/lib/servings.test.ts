@@ -27,7 +27,7 @@ describe('questions fit the food', () => {
     ['coca cola', /drink/],
     ['peanut butter', /How many spoons of peanut butter: teaspoons or tablespoons/],
     ['olive oil', /spoons/],
-    ['apple', /How many apple\? You can say small, medium or large/],
+    ['apple', /How many apples\? You can say small, medium or large/],
     ['egg', /How many egg/],
     ['yogurt', /How many pots of yogurt/],
     ['indomie', /How many packs of indomie/],

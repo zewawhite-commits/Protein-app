@@ -30,9 +30,15 @@ file.foods = file.foods.filter((row) => row[10] !== 'r');
 const byName = new Map();
 for (const row of file.foods) if (!byName.has(row[1])) byName.set(row[1], row);
 
+// Permanent ids (scripts/recipe-ids.json): a dish keeps its id forever, wherever it sits in the list.
+const REG_FILE = 'scripts/recipe-ids.json';
+const reg = JSON.parse(readFileSync(REG_FILE, 'utf8'));
+let nextId = Math.max(0, ...Object.values(reg.ids).map((id) => Number(id.slice(1)))) + 1;
+const idFor = (name) => (reg.ids[name] ??= `r${String(nextId++).padStart(3, '0')}`);
+
 const round = (v, d) => (v == null ? null : Math.round(v * 10 ** d) / 10 ** d);
 const out = [];
-for (const [i, r] of RECIPES.entries()) {
+for (const r of RECIPES) {
   const parts = r.ingredients.map(([name, grams]) => {
     const row = byName.get(name);
     if (!row) throw new Error(`${r.name}: no record named "${name}"`);
@@ -54,12 +60,13 @@ for (const [i, r] of RECIPES.entries()) {
   const name = `${r.name}${r.aliases?.length ? ` (${r.aliases.join(', ')})` : ''}`;
   const note = `${r.cuisine} standard recipe, per ${r.yield} g cooked: ${parts.map((p) => `${p.grams} g ${p.row[1]} [${p.row[10] === 'w' ? 'FAO' : 'USDA'} ${p.row[0]}]`).join('; ')}`;
   out.push([
-    `r${String(i + 1).padStart(3, '0')}`, name, Number(RECIPE_CAT), 'cooked',
+    idFor(r.name), name, Number(RECIPE_CAT), 'cooked',
     round(base[0], 2), round(base[1], 0), round(base[2], 2), round(base[3], 2), round(base[4], 2),
     r.portions, 'r', extra.map((v) => round(v, 2)), note,
   ]);
 }
 file.foods.push(...out);
 writeFileSync(dest, JSON.stringify(file));
+writeFileSync(REG_FILE, `${JSON.stringify(reg, null, 1)}\n`);
 console.log(`Added ${out.length} standard-recipe dishes.`);
 for (const row of out) console.log(`  ${row[1].split(' (')[0].padEnd(24)} ${row[5]} kcal  ${row[4]} g protein  ${row[7]} g carbs  ${row[6]} g fat /100 g`);

@@ -11,6 +11,8 @@ interface SourceInfo { name: string; release: string; citation: string }
 
 interface FoodsFile {
   version: number;
+  /** Reviewed notes on foods whose published values need a caveat (scripts/corrections.json). */
+  checkNotes?: Record<string, string>;
   sources: Record<SourceCode, SourceInfo>;
   basis: string;
   generatedAt: string;
@@ -114,6 +116,7 @@ export function loadFoodDb(): Promise<FoodDb> {
             per100: { protein, kcal, fat, carbs, fiber, ...extras, addedSugar: added },
             portions: portions.map(([label, grams]) => ({ label, grams })),
             source: SOURCE_OF[src],
+            ...(file.checkNotes?.[`${src}:${key}`] && { checkNote: file.checkNotes[`${src}:${key}`] }),
           };
         });
         const byId = new Map(foods.map((f) => [f.id, f]));
@@ -207,6 +210,21 @@ const COOKED: [RegExp, string][] = [
   [/^peppered chicken$/, 'chicken thigh stewed skin eaten'],
   [/^(fish|catfish) pepper ?soup$/, 'ofe nsala'],
   [/^goat( meat)? pepper ?soup$/, 'goat pepper soup'],
+  // Everyday words the voice sweep found landing on an odd record (docs/voice-sweep.md).
+  [/^(burgers?|hamburgers?|beef burgers?)$/, 'hamburger nfs'],
+  [/^(crisps|potato crisps|potato chips|packet of crisps)$/, 'potato chips nfs'],
+  [/^cheese$/, 'cheese nfs'],
+  [/^(chicken wings?|wings)$/, 'chicken wing baked broiled roasted from raw'],
+  [/^(chocolate|chocolate bar|milk chocolate|bar of chocolate)$/, 'candies milk chocolate'],
+  [/^(tuna|canned tuna|tinned tuna|tuna in water)$/, 'tuna light canned water drained solids'],
+  [/^(salad|green salad|side salad|garden salad)$/, 'lettuce salad assorted vegetables including tomatoes carrots no dressing'],
+  [/^(omelett?e|omelet|plain omelett?e)$/, 'egg omelet scrambled egg made with butter'],
+  [/^(pancakes?)$/, 'pancakes plain'],
+  [/^(bacon|bacon rashers?|streaky bacon)$/, 'pork cured bacon cooked baked'],
+  [/^(chicken noodle soup)$/, 'soup chicken noodle'],
+  [/^(french fries|fries)$/, 'potato french fries nfs'],
+  [/^(cereal|breakfast cereal|cornflakes|corn flakes)$/, 'cereal corn flakes plain'],
+  [/^(dumplings?)$/, 'wonton dumpling pot sticker fried'],
 ];
 
 export function searchFoods(query: string, opts: SearchOptions = {}): Food[] {
@@ -303,7 +321,7 @@ function searchTerms(terms: string[], opts: SearchOptions): Food[] {
     if (terms.length > 1 && it.lower.includes(phrase)) score += 10;
     // Food tables name things the other way round: "brown rice" is "Rice, brown", "whole milk" is "Milk, whole".
     // The food's name is exactly what was typed: best of all.
-    if (it.lower === phrase || it.lower.startsWith(`${phrase} (`)) score += 20;
+    if (it.lower === phrase || (it.food.source === 'recipe' && it.lower.startsWith(`${phrase} (`))) score += 20;
     // Equally good matches: prefer the one people can measure in servings (spoons, cups, slices).
     if (it.food.portions.length) score += 2;
     if (terms.length === 2 && new RegExp(`^${terms[1]}s?, ${terms[0]}\\b`).test(it.lower)) score += 16;
@@ -318,6 +336,8 @@ function searchTerms(terms: string[], opts: SearchOptions): Food[] {
       }
       if (new RegExp(`^${t}(es|s)? (juice|dip|sauce|soup|chips|flour|powder|paste|rings|cake|pie|bread|oil|salad|casserole|pudding|patty|ketchup|puree|drink|flavou?red)\\b`).test(it.lower)) score -= 6;
     }
+    // Meat-free versions only when asked for ("bacon" is bacon).
+    if (/\b(meatless|imitation|substitute|meat-free|soy-based)\b/.test(it.lower) && !terms.some((t) => /^(meatless|imitation|substitute|vegetarian|vegan|soy|plant)/.test(t))) score -= 12;
     if (PROCESSED_CATEGORIES.has(it.food.category)) score -= 10;
     if (PROCESSED_WORDS.test(it.lower)) score -= 5;
     if (/\b(meat only|skinless|boneless|lean)\b/.test(it.lower)) score += 3;

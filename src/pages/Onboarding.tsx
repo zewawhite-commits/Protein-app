@@ -116,7 +116,7 @@ export default function Onboarding() {
   const [goalWeight, setGoalWeight] = useSaved('goalWeight', '');
   const [pace, setPace] = useSaved('pace', 0.5);
   const [training, setTraining] = useSaved<string[]>('training', []);
-  const [planChoice, setPlanChoice] = useSaved<'free' | 'plus' | 'pro'>('planChoice', 'pro');
+  const [planChoice, setPlanChoice] = useSaved<'free' | 'plus' | 'pro'>('planChoice', 'free');
   const [billing, setBilling] = useSaved<'monthly' | 'yearly'>('billing', 'monthly');
   const [obstacles, setObstacles] = useSaved<string[]>('obstacles', []);
   const [hasCoach, setHasCoach] = useSaved<boolean | undefined>('hasCoach', undefined);
@@ -492,7 +492,7 @@ export default function Onboarding() {
         {at === 'choose' && (
           <Question title="Choose your plan" sub="Start free and upgrade any time. Cancel whenever you like.">
             <div className="mb-3 flex justify-center">
-              <Segmented<'monthly' | 'yearly'> value={billing} onChange={(v) => { haptic(); setBilling(v); }} options={[{ value: 'monthly', label: 'Monthly' }, { value: 'yearly', label: 'Yearly · save 60%' }]} />
+              <Segmented<'monthly' | 'yearly'> value={billing} onChange={(v) => { haptic(); setBilling(v); }} options={[{ value: 'monthly', label: 'Monthly' }, { value: 'yearly', label: 'Yearly · save 50%' }]} />
             </div>
             <div className="space-y-3">
               {PLAN_CHOICES.map((p) => { const pr = p.tier === 'free' ? { price: '$0', sub: 'forever', save: 0 } : plannedPrice(p.tier, billing); return (
@@ -656,7 +656,7 @@ function Welcome({ signedIn, email, onStart }: { signedIn: boolean; email?: stri
           </button>
           <p className="text-center text-[15px] text-silver">Already have an account? <button onClick={() => setMode('login')} className="font-semibold text-accent">Log in</button></p>
           <p className="text-center text-xs text-dim">An account saves your data so you can use it on any phone.</p>
-          <p className="mb-2 text-center text-[13px] text-silver">Free to start, no card. Plus is $7.99/mo, or save 60% yearly · <a href="/premium" className="font-semibold text-accent underline">See what’s included</a></p>
+          <p className="mb-2 text-center text-[13px] text-silver">Free to start, no card. Plus is $7.99/mo, or save 50% yearly · <a href="/premium" className="font-semibold text-accent underline">See what’s included</a></p>
           <p className="text-center text-xs text-dim">By continuing you agree to our <a href="/terms" className="underline">Terms</a>, <a href="/privacy" className="underline">Privacy Policy</a> and <a href="/refunds" className="underline">Refund Policy</a>.</p>
         </div>
       )}

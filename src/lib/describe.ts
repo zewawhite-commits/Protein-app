@@ -84,7 +84,9 @@ export function gramsFor(food: Pick<Food, 'portions' | 'name'>, qty: number | nu
   const direct: Record<string, number> = { g: 1, gram: 1, kg: 1000, kilo: 1000, kilogram: 1000, oz: 28.35, ounce: 28.35, lb: 453.6, pound: 453.6, ml: 1, millilitre: 1, milliliter: 1, l: 1000, litre: 1000, liter: 1000 };
   if (direct[u] != null) return { grams: Math.round(n * direct[u]), how: `${n} ${u}` };
   const portions = food.portions ?? [];
-  const find = (re: RegExp) => portions.find((p) => re.test(p.label.toLowerCase()));
+  // "one" cheese is a slice, not a cracker-size slice; "one" chocolate is a bar, not a miniature.
+  const MINI = /miniature|\bmini\b|fun size|cracker-size|cocktail|bite size|snack size|^1 (fry|chip|shoestring|crisp)\b|cubic inch/;
+  const find = (re: RegExp) => portions.find((p) => re.test(p.label.toLowerCase()) && !MINI.test(p.label.toLowerCase())) ?? portions.find((p) => re.test(p.label.toLowerCase()));
   let p;
   if (/^cup/.test(u)) p = find(/\bcup\b/);
   else if (/^(tbsp|tablespoon)/.test(u)) p = find(/tbsp|tablespoon/);
@@ -96,7 +98,7 @@ export function gramsFor(food: Pick<Food, 'portions' | 'name'>, qty: number | nu
   else if (/^(piece|pc)/.test(u)) p = find(/\b(piece|medium|whole|1 (?!cup|tbsp|tsp|oz|plate|bowl|wrap|ladle)\w+)\b/);
   else if (PIECE.test(u) || /^(stick|skewer|ladle)/.test(u)) p = find(new RegExp(`\\b${u}`)) ?? SAME_AS[u]?.map((x) => find(new RegExp(`\\b${x}`))).find(Boolean);
   // A named piece comes in its medium size ("2" thighs → 2 medium thighs); plain sizes keep the record's own order (eggs: large).
-  else if (!u && qty != null) p = find(/^1 medium \w/) ?? find(/\b(piece|medium|whole|large|fruit)\b/) ?? find(/^1 (?!cup|tbsp|tsp|tablespoon|teaspoon|oz|fl|linear|cubic|slice|inch)\w+/);
+  else if (!u && qty != null) p = find(new RegExp(`^1 ${food.name.toLowerCase().split(/[ ,]/).map((w) => w.replace(/[^a-z]/g, '')).filter(Boolean).pop()?.replace(/s$/, '') || '-'}s?$`)) ?? find(/^1 medium \w/) ?? portions.find((x) => /\b(piece|medium|whole|large|fruit)\b/.test(x.label.toLowerCase()) && !/^1 (cup|tbsp|tsp|oz)\b/.test(x.label.toLowerCase()) && !MINI.test(x.label.toLowerCase())) ?? find(/^1 (?!cup|tbsp|tsp|tablespoon|teaspoon|oz|fl|linear|cubic|slice|inch)\w+/);
   else if (!u) p = find(/serving|medium|piece/) ?? portions.find((x) => x.grams >= 25 && x.grams <= 400);
   if (!p) return null;
   // "2 tbsp = 32 g" means one tablespoon is 16 g; "0.5 fillet = 178 g" means a fillet is 356 g.
@@ -150,6 +152,11 @@ export function lastAmount(entries: { foodId: string; food: { name: string }; gr
  * rice and porridge by the plate or cooking spoon, moi moi / akara / puff puff counted.
  * `unit` is what a bare number in the answer counts.
  */
+/** "muffin" → "muffins", "boiled egg" → "boiled eggs"; names already plural or uncountable stay. */
+export function pluralOf(name: string): string {
+  return name.replace(/(\w+)$/, (w) => (/(s|puff|chin|moi|akara|sushi|rice|bread|meat|fish|tofu)$/.test(w) ? w : /(ch|sh|x)$/.test(w) ? `${w}es` : /[^aeiou]y$/.test(w) ? `${w.slice(0, -1)}ies` : `${w}s`));
+}
+
 export function questionFor(food: Pick<Food, 'portions'>, name: string): { q: string; many: string; unit: string | null } {
   const labels = (food.portions ?? []).map((p) => p.label.toLowerCase());
   const has = (re: RegExp) => labels.some((l) => re.test(l));
@@ -170,10 +177,14 @@ export function questionFor(food: Pick<Food, 'portions'>, name: string): { q: st
     return { q: `${many} Or say how many cooking spoons.`, many, unit: 'plate' };
   }
   if (sized('bowl')) { const many = `How much ${name}: a small, medium or large bowl?`; return { q: many, many, unit: 'bowl' }; }
+  // Dishes made from eggs: by how many eggs went in.
+  if (has(/^1 egg$/) && !/\beggs?\b/.test(name)) { const many = `How many eggs went into your ${name}?`; return { q: many, many, unit: null }; }
+  // Counted things: burgers, tacos, dumplings, sandwiches.
+  if (has(/^1 (item|hamburger|burger|cheeseburger|sandwich|taco|dumpling|wrap sandwich|spring roll|kebab)\b/)) { const many = `How many ${pluralOf(name)}?`; return { q: many, many, unit: null }; }
   // Drinks: by the glass or cup, or ml.
   if (DRINK.test(name) && has(/\b(glass|cup|fl oz|can|bottle)\b/)) {
     const many = `How much ${name} did you drink: a glass, a cup, or how many ml?`;
-    return { q: many, many, unit: has(/\bglass\b/) ? 'glass' : 'cup' };
+    return { q: many, many, unit: has(/\bglass\b/) ? 'glass' : has(/\bcup\b/) ? 'cup' : has(/\bcan\b/) ? 'can' : has(/\bbottle\b/) ? 'bottle' : null };
   }
   // Spreads, oils, sugar, sauces: by the spoon.
   if (SPOONED.test(name) && has(/\b(tbsp|tablespoon|tsp|teaspoon)\b/)) {
@@ -187,10 +198,10 @@ export function questionFor(food: Pick<Food, 'portions'>, name: string): { q: st
   }
   // Packaged things: pots, bars, bags, packs; baked goods by the piece.
   const packWord = ['pot', 'container', 'bar', 'bag', 'pack', 'biscuit', 'muffin', 'cookie', 'cracker'].find((w) => has(new RegExp(`^1 (small |medium |large |super |individual )?${w}\\b`)))?.replace('container', 'pot');
-  if (packWord) { const many = `How many ${packWord === 'bag' ? 'bags' : packWord + 's'} of ${name}?`; return { q: many, many, unit: packWord }; }
+  if (packWord) { const many = new RegExp(`\\b${packWord}s?$`).test(name) ? `How many ${pluralOf(name)}?` : `How many ${packWord === 'bag' ? 'bags' : packWord + 's'} of ${name}?`; return { q: many, many, unit: packWord }; }
   // Fruit, eggs, potatoes...: counted, in their size.
   if (has(/^1 (small|medium|large|extra large)$/)) {
-    const many = `How many ${name}?`;
+    const many = `How many ${pluralOf(name)}?`;
     return { q: `${many} You can say small, medium or large.`, many, unit: null };
   }
   // Counted by name: "1 banana", "1 fruit", "1 medium thigh" → "How many bananas?", "How many chicken thighs?"
@@ -219,7 +230,7 @@ const SLICED = /\b(cake|bread|toast|pizza|loaf|cheesecake|gateau|pie|ham|cheese|
 /** A serving label read naturally ("1 cup, chopped" → "1 cup", "0.5 fillet" → "half a fillet"), or null if odd. */
 function spokenServing(label: string): string | null {
   const l = label.toLowerCase().replace(/\s*\(.*?\)/g, '').replace(/,.*$/, '').trim();
-  if (/guideline|cubic|nlea|yield|any size|unit|container\b.*oz/.test(l) || !l) return null;
+  if (/guideline|cubic|nlea|yield|any size|unit|container\b.*oz|miniature|cocktail|^1 (fry|shoestring|chip|straight cut|crisp)\b/.test(l) || !l) return null;
   return l.replace(/^0\.5 /, 'half a ').replace(/^0\.25 /, 'a quarter ');
 }
 

@@ -8,7 +8,7 @@
  *   → { isFood, items: [...], note }
  */
 export const maxDuration = 60;
-import { logAiError } from './_lib/aiErrors.js';
+import { busyMessage, logAiError } from './_lib/aiErrors.js';
 import Anthropic from '@anthropic-ai/sdk';
 import { recognizeWithClient } from '../src/lib/recognition.js';
 import { gate } from './_lib/quota.js';
@@ -43,18 +43,18 @@ export async function POST(request: Request): Promise<Response> {
       if (fileType) {
         const buf = Buffer.from(await res.arrayBuffer());
         if (buf.length > (fileType === 'application/pdf' ? 15 : 5) * 1024 * 1024) return json({ error: 'That menu file is too big to read. Take a photo of the page you want instead.' }, 413);
-        const recognized = await recognizeWithClient(new Anthropic(), buf.toString('base64'), fileType, undefined, { menu: true });
+        const recognized = await recognizeWithClient(new Anthropic({ maxRetries: 3 }), buf.toString('base64'), fileType, undefined, { menu: true });
         return json(scansLeft != null ? { ...recognized, popular: {}, scansLeft, scanLimit: g.limit } : { ...recognized, popular: {} }, 200);
       }
       if (!type.includes('html')) return json({ error: 'Couldn’t read that kind of menu. Take a photo of it instead.' }, 422);
       const text = pageText((await res.text()).slice(0, 2_000_000));
       if (text.length < 40) return json({ error: 'That page has no readable menu (it may load with an app). Take a photo of the menu instead.' }, 422);
-      const recognized = await recognizeWithClient(new Anthropic(), null, 'text/plain', text, { menu: true });
+      const recognized = await recognizeWithClient(new Anthropic({ maxRetries: 3 }), null, 'text/plain', text, { menu: true });
       return json(scansLeft != null ? { ...recognized, popular: {}, scansLeft, scanLimit: g.limit } : { ...recognized, popular: {} }, 200);
     } catch (e) {
     await logAiError('recognize', e);
       if ((e as Error).name === 'AbortError') return json({ error: 'That menu took too long to open. Take a photo of it instead.' }, 504);
-      if (e instanceof Anthropic.APIError) return json({ error: `Recognition service error (${e.status ?? 'network'}).` }, 502);
+      if (e instanceof Anthropic.APIError) return json({ error: busyMessage(e) }, 502);
       return json({ error: (e as Error).message || 'Couldn’t read that menu.' }, 500);
     }
   }
@@ -68,10 +68,10 @@ export async function POST(request: Request): Promise<Response> {
 
   try {
     if (body.label === true && !text) {
-      const label = await readLabelWithClient(new Anthropic(), image!, mediaType);
+      const label = await readLabelWithClient(new Anthropic({ maxRetries: 3 }), image!, mediaType);
       return json(scansLeft != null ? { ...label, scansLeft, scanLimit: g.limit } : label, 200);
     }
-    const recognized = await recognizeWithClient(new Anthropic(), text ? null : image!, mediaType, text || undefined, { menu: body.menu === true && !text, leftovers: !text && Array.isArray(body.leftovers) ? body.leftovers.slice(0, 14).map((x) => String(x).slice(0, 100)) : undefined });
+    const recognized = await recognizeWithClient(new Anthropic({ maxRetries: 3 }), text ? null : image!, mediaType, text || undefined, { menu: body.menu === true && !text, leftovers: !text && Array.isArray(body.leftovers) ? body.leftovers.slice(0, 14).map((x) => String(x).slice(0, 100)) : undefined });
     // What most people chose for these names before, so the right record can go first.
     // Never let this optional lookup slow the answer down.
     const popular = await Promise.race([popularPicks(recognized.items.flatMap((i) => [i.name, i.localName])), new Promise<Record<string, string>>((r) => setTimeout(() => r({}), 700))]);
@@ -81,7 +81,7 @@ export async function POST(request: Request): Promise<Response> {
     await logAiError('recognize', e);
     if (e instanceof Anthropic.RateLimitError) return json({ error: 'Busy — try again in a moment.' }, 429);
     if (e instanceof Anthropic.APIError) console.error('[ai]', e.status, e.message);
-    if (e instanceof Anthropic.APIError) return json({ error: `Recognition service error (${e.status ?? 'network'}).` }, 502);
+    if (e instanceof Anthropic.APIError) return json({ error: busyMessage(e) }, 502);
     console.error('[recognize]', (e as Error)?.message ?? e);
     return json({ error: (e as Error).message || 'Recognition failed.' }, 500);
   }

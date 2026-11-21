@@ -3,7 +3,7 @@
  * AI nutrition coach. Requires a Premium pass when payments are configured.
  */
 export const maxDuration = 60;
-import { logAiError } from './_lib/aiErrors.js';
+import { busyMessage, logAiError } from './_lib/aiErrors.js';
 import Anthropic from '@anthropic-ai/sdk';
 import { cleanTurns, coachStream, coachWithClient, type ChatImage } from '../src/lib/coach.js';
 import { json } from './_lib/premium.js';
@@ -45,18 +45,18 @@ export async function POST(request: Request): Promise<Response> {
         try {
           let reply;
           try {
-            reply = await coachStream(new Anthropic(), turns, ctx, image, { pro }, (t) => { sentAny = true; send({ t }); });
+            reply = await coachStream(new Anthropic({ maxRetries: 3 }), turns, ctx, image, { pro }, (t) => { sentAny = true; send({ t }); });
           } catch (e) {
     await logAiError('chat', e);
             // Nothing shown yet: answer the normal way instead of failing.
             if (sentAny) throw e;
-            reply = await coachWithClient(new Anthropic(), turns, ctx, image, { pro });
+            reply = await coachWithClient(new Anthropic({ maxRetries: 3 }), turns, ctx, image, { pro });
           }
           send({ done: { ...reply, quota } });
         } catch (e) {
     await logAiError('chat', e);
           if (e instanceof Anthropic.APIError) console.error('[ai]', e.status, e.message);
-          send({ error: e instanceof Anthropic.RateLimitError ? 'Busy, try again in a moment.' : e instanceof Anthropic.APIError ? `Coach service error (${e.status ?? 'network'}).` : (e as Error).message || 'Could not reply.' });
+          send({ error: e instanceof Anthropic.RateLimitError ? 'Busy, try again in a moment.' : e instanceof Anthropic.APIError ? busyMessage(e) : (e as Error).message || 'Could not reply.' });
         } finally {
           controller.close();
         }
@@ -65,12 +65,12 @@ export async function POST(request: Request): Promise<Response> {
     return new Response(out, { headers: { 'content-type': 'application/x-ndjson; charset=utf-8', 'cache-control': 'no-store', 'x-accel-buffering': 'no' } });
   }
   try {
-    return json({ ...(await coachWithClient(new Anthropic(), turns, cleanContext(body?.context), image, { pro })), quota });
+    return json({ ...(await coachWithClient(new Anthropic({ maxRetries: 3 }), turns, cleanContext(body?.context), image, { pro })), quota });
   } catch (e) {
     await logAiError('chat', e);
     if (e instanceof Anthropic.RateLimitError) return json({ error: 'Busy — try again in a moment.' }, 429);
     if (e instanceof Anthropic.APIError) console.error('[ai]', e.status, e.message);
-    if (e instanceof Anthropic.APIError) return json({ error: `Coach service error (${e.status ?? 'network'}).` }, 502);
+    if (e instanceof Anthropic.APIError) return json({ error: busyMessage(e) }, 502);
     console.error('[chat]', (e as Error)?.message ?? e);
     return json({ error: (e as Error).message || 'Could not reply.' }, 500);
   }

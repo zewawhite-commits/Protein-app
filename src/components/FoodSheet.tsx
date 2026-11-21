@@ -441,6 +441,9 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
             {q.text}{q.missing > 0 ? ` · ${q.missing} nutrient${q.missing > 1 ? 's' : ''} not listed` : ''}
           </p>
         ); })()}
+        {food.checkNote && (
+          <p className="mb-2 rounded-xl bg-[#B7791F]/10 px-3 py-2 text-xs leading-snug text-[#8a5a12] dark:text-[#E9B44C]">{food.checkNote}</p>
+        )}
         {food.source === 'off' && labelAge(food.sourceNote) && (
           <p className="mb-2 rounded-xl bg-[#B7791F]/10 px-3 py-2 text-xs leading-snug text-[#8a5a12] dark:text-[#E9B44C]">This product’s label data was last updated {labelAge(food.sourceNote)}. Recipes and packs change, so check the numbers against your pack.</p>
         )}

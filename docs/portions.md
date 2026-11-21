@@ -64,7 +64,7 @@ wine a 175 ml glass, spirits a 25 ml measure (UK standard servings), a whole egg
 "(typical)". Mixed dishes with no matching source keep grams only rather than a guessed serving.
 Rebuild with:
 
-    node scripts/build-recipes.mjs && node scripts/build-typical-portions.mjs && node scripts/build-dedupe.mjs
+    node scripts/build-recipes.mjs && node scripts/build-typical-portions.mjs && node scripts/build-dedupe.mjs && node scripts/build-corrections.mjs
 
 Every voice item can be corrected before it's added. Tap a serving button in that food's own
 units, use − / + for how many, type the grams, or tap "Wrong food? Change it" to search for the

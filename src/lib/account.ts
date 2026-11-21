@@ -220,26 +220,40 @@ export function useCloudSync() {
   useEffect(() => {
     if (!userId) return;
     let cancelled = false;
-    const run = () => { if (!cancelled) void syncNow(userId).catch((e) => console.warn('Sync failed', e)); };
+    // A failed sync (server busy, bad signal) retries with growing gaps — 5 s, 15 s, 45 s… up to
+    // 10 minutes — plus a little randomness, so a busy server isn't hit by everyone at once.
+    let failures = 0;
+    let retry: ReturnType<typeof setTimeout> | undefined;
+    const run = () => {
+      if (cancelled) return;
+      clearTimeout(retry);
+      void syncNow(userId).then(() => { failures = 0; }).catch((e) => {
+        console.warn('Sync failed', e);
+        failures++;
+        const wait = Math.min(600_000, 5000 * 3 ** (failures - 1)) * (0.75 + Math.random() * 0.5);
+        retry = setTimeout(run, wait);
+      });
+    };
     run();
     // Local changes: sync shortly after (debounced).
     const unsub = useStore.subscribe((s, prev) => {
       if (cancelled || s.lastModified === prev.lastModified) return;
       if (fingerprint(exportData() as SyncSnapshot) === lastPushed) return;
       clearTimeout(timer);
-      timer = setTimeout(run, 1500);
+      timer = setTimeout(run, 3000);
     });
-    // Changes from other devices: check when the app comes back into view, and every 2 minutes while open.
+    // Changes from other devices: check when the app comes back into view, and every 10 minutes while open.
     const onVisible = () => { if (document.visibilityState === 'visible') run(); };
     document.addEventListener('visibilitychange', onVisible);
     window.addEventListener('online', run);
-    const every = setInterval(() => { if (document.visibilityState === 'visible') run(); }, 120_000);
+    const every = setInterval(() => { if (document.visibilityState === 'visible') run(); }, 600_000);
     return () => {
       cancelled = true;
       unsub();
       document.removeEventListener('visibilitychange', onVisible);
       window.removeEventListener('online', run);
       clearInterval(every);
+      clearTimeout(retry);
     };
   }, [userId]);
   return session;

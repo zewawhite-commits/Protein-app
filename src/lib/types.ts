@@ -62,6 +62,8 @@ export interface Food {
   source: FoodSource;
   /** For custom records: where the numbers came from (label, database, lab report…). For recipes: the ingredient list. */
   sourceNote?: string;
+  /** A reviewed caveat about this food's published values. */
+  checkNote?: string;
   /** Other names and spellings (searchable, e.g. "egushi" for egusi soup). */
   aliases?: string[];
 }

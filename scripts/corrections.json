@@ -1,0 +1,22 @@
+{
+  "_about": "Reviewed corrections from the database audit (docs/database-audit.json), approved 21 Nov 2026. Each changes the smallest thing possible and says why. Applied by scripts/build-corrections.mjs.",
+  "fixes": [
+    { "id": "s:174853", "portion": ["1 can (8 fl oz)", "1 can (12 fl oz)"], "why": "Source labels a 355 g can as 8 fl oz; 355 g is a 12 fl oz can." },
+    { "id": "s:171627", "sugar": null, "note": "The source lists 5 g sugar but 0 g carbohydrate for this ham, which can't both be right, so sugar is hidden.", "why": "Sugar above total carbohydrate." },
+    { "id": "f:2710269", "dropPortion": "1 tablet (1/2 grain)", "why": "Serving listed with no weight (0 g)." },
+    { "id": "a:F006087", "state": "raw", "why": "Named raw or blanched but marked cooked." },
+    { "id": "u:12-491", "note": "Carbohydrate wasn't measured for brie rind in the source, so carbs aren't counted for it.", "why": "Missing carbohydrate." }
+  ],
+  "checkNotes": {
+    "s:173858": "The calories published for this food don't match its protein, carbs and fat. Shown as published; check the pack if you can.",
+    "s:169058": "The calories published for this food don't match its protein, carbs and fat. Shown as published; check the pack if you can.",
+    "s:170495": "The calories published for this food don't match its protein, carbs and fat. Shown as published.",
+    "s:171315": "The calories published for this food don't match its protein, carbs and fat. Shown as published.",
+    "s:171318": "The calories published for this food don't match its protein, carbs and fat. Shown as published.",
+    "u:17-594": "The calories published for this drink don't match its protein, carbs, fat and alcohol. Shown as published.",
+    "u:17-358": "The source lists calories for cream of tartar but no protein, carbs or fat. Shown as published.",
+    "u:16-087": "The calories published for this food don't match its protein, carbs and fat. Shown as published.",
+    "u:13-882": "Protein, carbs and fat in the source add up to more than 100 g, so values are approximate.",
+    "a:F007715": "Protein, carbs and fat in the source add up to more than 100 g, so values are approximate."
+  }
+}

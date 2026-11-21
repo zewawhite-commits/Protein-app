@@ -16,7 +16,7 @@ export async function GET(): Promise<Response> {
   if (last && Date.now() - last.at < EVERY) return json({ ...last.body, cached: true });
   let body: Record<string, unknown>;
   try {
-    const r = await new Anthropic().messages.create({
+    const r = await new Anthropic({ maxRetries: 3 }).messages.create({
       model: RECOGNITION_MODEL,
       max_tokens: 256,
       output_config: { effort: 'low' },

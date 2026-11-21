@@ -54,6 +54,23 @@ for (const k of KINDS) {
   report.push(`${k.kind.padEnd(13)} ${String(g).padStart(4)} g  (median of ${donors.length} listed servings) → added to ${n} foods`);
 }
 for (const f of db.foods) if (RICE.is.test(f[NAME]) && !RICE.not.test(f[NAME])) { f[PORTIONS] = [...RICE.portions.map(([l, g]) => [l, g]), ...(f[PORTIONS] ?? [])]; added++; }
+// Plates and bowls for meals people eat by the plate or bowl (same sizes as rice and pepper soup above;
+// see docs/portions.md). Added only when the food has no plate or bowl already.
+const PLATE = { is: /^(pasta|spaghetti|macaroni|noodles|lasagn|biryani|pilau|pilaf|risotto|paella|curry|chili con carne|cowpeas, common|beans, (baked|kidney|black|pinto)[^]*cooked|yam, cooked|yam boiled|couscous|chow mein|lo mein|pad thai|fried noodles|stir fry)/i, not: /\b(dry|raw|sauce|soup|condensed|mix|flour|powder|salad)\b/i,
+  portions: [['1 medium plate (typical)', 300], ['1 small plate (typical)', 200], ['1 large plate (typical)', 400]] };
+const BOWL = { is: /^(soup|ramen|pho\b|lettuce, salad|salad, (green|garden|mixed|greek|caesar)|stew)/i, not: /\b(dry|mix|condensed|powder|cube|stock)\b/i,
+  portions: [['1 medium bowl (typical)', 350], ['1 small bowl (typical)', 250], ['1 large bowl (typical)', 450]] };
+const PORRIDGE = { is: /^(oats cooked|cereals, oats[^]*cooked|oatmeal|porridge)/i, not: /\b(dry|raw|instant, dry|bar|cookie)\b/i,
+  portions: [['1 medium bowl (typical)', 250], ['1 small bowl (typical)', 175], ['1 large bowl (typical)', 350]] };
+// Chips / french fries: fast-food portion sizes (small 71 g, medium 111 g, large 150 g, as published
+// by the biggest US chain), the sizes people order and picture.
+const FRIES = { is: /^(potato, french fries|french fries|potatoes, french fried|chips, (oven|deep|takeaway|fried))/i, not: /\b(raw|unprepared|frozen, unprepared|dry)\b/i,
+  portions: [['1 medium portion (typical)', 111], ['1 small portion (typical)', 71], ['1 large portion (typical)', 150]] };
+for (const k of [PLATE, BOWL, PORRIDGE, FRIES]) for (const f of db.foods) {
+  if (!k.is.test(f[NAME]) || k.not.test(f[NAME]) || (f[PORTIONS] ?? []).some(([l]) => /\b(plate|bowl)\b/i.test(l))) continue;
+  f[PORTIONS] = [...k.portions.map(([l, g]) => [l, g]), ...(f[PORTIONS] ?? [])];
+  added++;
+}
 for (const k of PACKS) for (const f of db.foods) if (k.is.test(f[NAME]) && !(f[PORTIONS] ?? []).length) { f[PORTIONS] = k.portions.map(([l, g]) => [l, g]); added++; }
 
 // UK, Australian and West African tables list no household servings. Borrow them from the US

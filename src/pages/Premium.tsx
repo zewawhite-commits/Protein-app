@@ -133,7 +133,7 @@ export default function Premium() {
             </div>
           )}
           <div className="mb-4 flex justify-center">
-            <Segmented<Billing> value={billing} onChange={setBilling} options={[{ value: 'monthly', label: 'Monthly' }, { value: 'yearly', label: 'Yearly · save 60%' }]} />
+            <Segmented<Billing> value={billing} onChange={setBilling} options={[{ value: 'monthly', label: 'Monthly' }, { value: 'yearly', label: 'Yearly · save 50%' }]} />
           </div>
           <div className="grid gap-2.5">
             {PREVIEW.map((t) => { const pr = t.tier ? plannedPrice(t.tier, billing) : { price: '$0', sub: 'forever', save: 0 }; return (
@@ -160,7 +160,7 @@ export default function Premium() {
           <TrialCard className="mt-6" />
           {hasYearly && plans.some((p) => p.id.endsWith('monthly')) && (
             <div className="mt-6 flex justify-center">
-              <Segmented<Billing> value={billing} onChange={setBilling} options={[{ value: 'monthly', label: 'Monthly' }, { value: 'yearly', label: 'Yearly · save 60%' }]} />
+              <Segmented<Billing> value={billing} onChange={setBilling} options={[{ value: 'monthly', label: 'Monthly' }, { value: 'yearly', label: 'Yearly · save 50%' }]} />
             </div>
           )}
 
