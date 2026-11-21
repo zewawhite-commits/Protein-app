@@ -107,7 +107,6 @@ export default function Profile({ mode = 'profile' }: { mode?: 'profile' | 'sett
           <TrialCard className="mt-5" />
           <InviteCard className="mt-5" />
           <PreferencesCard onEdit={() => setEditing(true)} />
-          <PremiumCard />
           <SubscriptionGroup />
           <PersonalDetails profile={profile} unit={settings.bodyUnit} dailyKcal={dailyKcal} onEdit={() => setEditing(true)} />
           <Group title="Goals">
@@ -282,25 +281,6 @@ export function Toggle({ on, onChange, label }: { on: boolean; onChange: (v: boo
   );
 }
 
-function PremiumCard() {
-  const premium = useStore((s) => s.premium);
-  const active = isPremiumActive(premium);
-  if (active) return null; // the Subscription section shows the plan
-  return (
-    <Link to="/premium" className="mt-6 block overflow-hidden rounded-[28px] bg-primary p-5 text-on-primary transition active:scale-[.99]">
-      <div className="flex items-center gap-4">
-        <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-on-primary/10"><Crown size={22} className="text-accent" /></span>
-        <div className="min-w-0 flex-1">
-          <p className="font-semibold">{active ? 'Pro is active' : 'Upgrade to Pro'}</p>
-          <p className="truncate text-[14px] opacity-70">
-            {active ? `${premium!.email} · until ${new Date(premium!.exp).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}` : 'Unlimited AI scans and coach'}
-          </p>
-        </div>
-        <ChevronRight size={18} className="opacity-60" />
-      </div>
-    </Link>
-  );
-}
 
 function AccountCard() {
   const session = useSession();

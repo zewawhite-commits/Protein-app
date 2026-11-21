@@ -51,7 +51,7 @@ export function Suggestions({ remaining, kcalLeft }: { remaining: number; kcalLe
         seen.add(short);
         return true;
       })
-      .slice(0, 4)
+      .slice(0, 2)
       .map((f) => { const short = splitName(f.name).title.split(',')[0].trim(); return { key: f.id, title: short, food: f, query: short }; });
   }, [db, entries, profile, avoid]);
 

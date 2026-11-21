@@ -166,9 +166,9 @@ export default function AddFood() {
         </Link>
       )}
 
-      {!searching && !photoId && <Usuals date={date} onDone={back} />}
+      {!searching && !photoId && (tab === 'recent' || tab === 'picks') && <Usuals date={date} onDone={back} />}
 
-      {!searching && !photoId && <WorldFoods onSearch={(v) => { setQ(v); window.scrollTo({ top: 0, behavior: 'smooth' }); }} />}
+      {!searching && !photoId && (tab === 'recent' || tab === 'picks') && <WorldFoods onSearch={(v) => { setQ(v); window.scrollTo({ top: 0, behavior: 'smooth' }); }} />}
 
       {error && <p className="card p-4 text-sm font-medium text-danger">{error}</p>}
       {!db && !error && (

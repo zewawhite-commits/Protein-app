@@ -1,29 +1,21 @@
 import { Link } from 'react-router-dom';
-import { useState } from 'react';
-import { Camera, Dumbbell, PenLine, ScanBarcode, type LucideIcon } from 'lucide-react';
-import { ExerciseSheet } from './LogMenu';
-import { todayKey } from '@/lib/dates';
+import { Camera, Mic, Search } from 'lucide-react';
 import { haptic } from './fx';
 
-/** Shortcuts on Home: scan, today's plan, saved meals, coach. */
+/**
+ * Home's one way in to logging, kept minimal: tap the bar to search, or the camera / mic.
+ * Everything else (barcode, label, describe, exercise) is in the + button and on Add food.
+ */
 export function QuickActions({ dateQuery = '' }: { dateQuery?: string }) {
-  const [ex, setEx] = useState(false);
-  const items: { to: string; icon: LucideIcon; label: string; sub: string }[] = [
-    { to: `/snap${dateQuery}`, icon: Camera, label: 'Scan food', sub: 'Photo' },
-    { to: `/barcode${dateQuery}`, icon: ScanBarcode, label: 'Barcode', sub: 'Packaged' },
-    { to: `/snap${dateQuery ? `${dateQuery}&` : '?'}mode=describe`, icon: PenLine, label: 'Describe', sub: 'Type it' },
-    { to: '#exercise', icon: Dumbbell, label: 'Exercise', sub: 'Workout' },
-  ];
+  const add = `/add${dateQuery}`;
+  const voice = `/add${dateQuery ? `${dateQuery}&` : '?'}voice=1`;
   return (
-    <div className="mb-6 grid grid-cols-4 gap-2.5">
-      {items.map((i) => (
-        <Link key={i.label} to={i.to === '#exercise' ? '#' : i.to} onClick={(e) => { haptic(); if (i.to === '#exercise') { e.preventDefault(); setEx(true); } }} className="flex flex-col items-center rounded-[22px] bg-surface px-1 pb-3 pt-3.5 text-center transition active:scale-95" style={{ boxShadow: 'var(--shadow)' }}>
-          <span className="grid h-11 w-11 place-items-center rounded-full bg-primary text-on-primary"><i.icon size={20} strokeWidth={2.2} /></span>
-          <span className="mt-2 text-[13px] font-bold leading-tight">{i.label}</span>
-          <span className="mt-0.5 text-[12px] font-medium leading-tight text-silver">{i.sub}</span>
-        </Link>
-      ))}
-      <ExerciseSheet open={ex} onClose={() => setEx(false)} date={dateQuery ? dateQuery.split('=')[1] : todayKey()} />
+    <div className="mb-6 flex items-center gap-2">
+      <Link to={add} onClick={() => haptic()} className="flex h-14 min-w-0 flex-1 items-center gap-3 rounded-full bg-surface px-5 text-silver transition active:scale-[0.98]" style={{ boxShadow: 'var(--shadow)' }} aria-label="Log food">
+        <Search size={19} className="shrink-0" /><span className="truncate text-[16px]">What did you eat?</span>
+      </Link>
+      <Link to={voice} onClick={() => haptic()} className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-surface text-ink transition active:scale-95" style={{ boxShadow: 'var(--shadow)' }} aria-label="Say what you ate"><Mic size={21} /></Link>
+      <Link to={`/snap${dateQuery}`} onClick={() => haptic()} className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-primary text-on-primary transition active:scale-95" aria-label="Scan food with the camera"><Camera size={21} /></Link>
     </div>
   );
 }

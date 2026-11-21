@@ -24,19 +24,16 @@ export function InstallBanner({ className }: { className?: string }) {
   const [steps, setSteps] = useState(false);
   if (installed || hidden || (!canPrompt && !ios)) return null;
   const dismiss = () => { setHidden(true); try { localStorage.setItem(DISMISS, '1'); } catch { /* ignore */ } };
+  // One quiet line; the steps only open when asked.
   return (
-    <section className={cx('card relative p-4', className)} aria-label="Install Nutivili AI">
-      <button onClick={dismiss} className="absolute right-2 top-2 grid h-9 w-9 place-items-center rounded-full text-silver" aria-label="Not now"><X size={17} /></button>
-      <div className="flex items-start gap-3 pr-8">
-        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-accent/10 text-accent"><Download size={20} /></span>
-        <div>
-          <p className="font-semibold">Add Nutivili AI to your home screen</p>
-          <p className="text-[14px] leading-relaxed text-silver">Opens full screen like an app, with its own icon, and works offline.</p>
-        </div>
-      </div>
-      {ios ? (steps ? <IOSSteps /> : <button onClick={() => { haptic(); setSteps(true); }} className="btn-primary mt-3 w-full">Show me how</button>) : (
-        <button onClick={async () => { haptic(); if (await install()) toast('Installed — find Nutivili AI with your apps'); }} className="btn-primary mt-3 w-full"><Download size={17} /> Install app</button>
+    <section className={cx('card flex flex-wrap items-center gap-3 px-4 py-3', className)} aria-label="Install Nutivili AI">
+      <Download size={18} className="shrink-0 text-accent" />
+      <p className="min-w-0 flex-1 text-[15px] font-medium">Add to your home screen</p>
+      {ios ? (!steps && <button onClick={() => { haptic(); setSteps(true); }} className="chip !h-9 !px-3 text-[14px]">How</button>) : (
+        <button onClick={async () => { haptic(); if (await install()) toast('Installed — find Nutivili AI with your apps'); }} className="chip !h-9 !px-3 text-[14px]">Install</button>
       )}
+      <button onClick={dismiss} className="grid h-9 w-9 place-items-center rounded-full text-silver" aria-label="Not now"><X size={17} /></button>
+      {ios && steps && <div className="w-full"><IOSSteps /></div>}
     </section>
   );
 }

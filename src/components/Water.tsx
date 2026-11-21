@@ -27,14 +27,13 @@ export function WaterCard({ date }: { date: string }) {
         </div>
         <div className="flex items-center gap-1.5">
           <button onClick={() => { haptic(); add(date, -250); }} disabled={ml <= 0} className="grid h-10 w-10 place-items-center rounded-full bg-raised disabled:opacity-40" aria-label="Remove a glass"><Minus size={17} /></button>
-          <button onClick={() => { haptic(); add(date, 250); }} className="chip !h-10" aria-label="Add a glass, 250 ml"><Plus size={15} /> Glass</button>
-          <button onClick={() => { haptic(); add(date, 500); }} className="chip !h-10" aria-label="Add a bottle, 500 ml"><Plus size={15} /> Bottle</button>
+          <button onClick={() => { haptic(); add(date, 250); }} className="chip !h-10 !px-3" aria-label="Add a glass, 250 ml"><Plus size={15} /> 250 ml</button>
         </div>
       </div>
       <div className="mt-3 h-2 overflow-hidden rounded-full bg-raised">
         <div className="h-full rounded-full bg-[#4AA3DF] transition-all" style={{ width: `${pct * 100}%` }} />
       </div>
-      <p className="mt-2 text-[12px] text-dim">A glass is 250 ml, a bottle 500 ml. Tea, milk and soup count too. The target is a rough guide based on your weight — set your own in Profile → Settings.</p>
+
     </section>
   );
 }

@@ -11,9 +11,7 @@ export const APP_NAME = 'Nutivili AI';
 /** The app name as a heading: "Nutivili" with "AI" beside it in the brand green. */
 export function BrandName({ className }: { className?: string }) {
   return (
-    <span className={cx('font-bold tracking-tight', className)}>
-      Nutivili <span className="text-accent">AI</span>
-    </span>
+    <span className={cx('font-semibold tracking-tight text-ink', className)}>Nutivili AI</span>
   );
 }
 

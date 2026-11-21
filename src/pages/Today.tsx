@@ -5,7 +5,6 @@ import { Logo } from '@/components/Logo';
 import { useMemo, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Check, ChevronRight, Copy, Droplet, Drumstick, Flame, Plus, Wheat } from 'lucide-react';
-import { MessagesButton } from '@/components/MessagesButton';
 import { useStore, goalOn } from '@/store/useStore';
 import { useDay, useFoodLookup } from '@/lib/hooks';
 import { addDays, fromKey, relativeDay, todayKey, weekOf } from '@/lib/dates';
@@ -82,7 +81,6 @@ export default function Today() {
               </Link>
             )}
             <NotificationBell />
-            <MessagesButton />
           </span>
         </div>
       </header>

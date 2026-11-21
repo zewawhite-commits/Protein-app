@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 import { ActivitySummary } from '@/components/ActivitySummary';
 import { WeightHistory } from '@/components/WeightHistory';
 import { Measurements } from '@/components/Measurements';
-import { ProOnly } from '@/components/ProOnly';
+import { ProMore, ProOnly } from '@/components/ProOnly';
 import { EatingPatterns, NutrientGaps, TargetCheck } from '@/components/NutritionInsights';
 import { useMemo, useState } from 'react';
 import { MessageCircle } from 'lucide-react';
@@ -18,7 +18,7 @@ import type { Meal } from '@/lib/types';
 import { PageHeader, Segmented, cx, fmt } from '@/components/ui';
 import { FoodVisual } from '@/components/FoodIcon';
 import { useStreak } from './Today';
-import { AverageCalories, WeightAndStreak, WeightChart, BeyondTheScale, SmartTarget } from '@/components/ProgressTop';
+import { WeightAndStreak, WeightChart, BeyondTheScale, SmartTarget } from '@/components/ProgressTop';
 import { ProgressPhotos } from '@/components/ProgressPhotos';
 
 type Range = '7' | '30' | '90';
@@ -84,19 +84,12 @@ export default function Insights() {
       <PageHeader title="Progress" right={<Link to="/reports" className="chip !h-10">Reports</Link>} />
       <GoalsSummary />
 
-      <div className="mb-6 space-y-4">
+      {/* 1. Weight */}
+      <div className="mb-8 space-y-4">
         <WeightAndStreak />
         <WeightChart />
         <WeightHistory />
-        <ProOnly what="Targets that adjust automatically to your progress"><SmartTarget /></ProOnly>
-        <BeyondTheScale />
-        <Measurements />
-        <ActivitySummary />
-        <TargetCheck />
-        <ProOnly what="Advanced micronutrient analysis"><NutrientGaps /></ProOnly>
-        <ProOnly what="Detailed eating-pattern reports"><EatingPatterns /></ProOnly>
-        <ProgressPhotos />
-        <AverageCalories />
+        <ProOnly quiet><SmartTarget /></ProOnly>
       </div>
 
       <div className="mb-3 flex items-center justify-between px-1">
@@ -174,6 +167,25 @@ export default function Insights() {
           </section>
         </div>
       )}
+      {/* 3. How you're eating, beyond the chart. */}
+      <div className="mt-4 space-y-4">
+        <TargetCheck />
+        <ProOnly quiet><NutrientGaps /></ProOnly>
+        <ProOnly quiet><EatingPatterns /></ProOnly>
+      </div>
+
+      {/* 4. Body and activity */}
+      <h2 className="mb-3 mt-8 px-1 text-xl font-bold">Body and activity</h2>
+      <div className="space-y-4">
+        <ActivitySummary />
+        <BeyondTheScale />
+        <Measurements />
+        <ProgressPhotos />
+      </div>
+
+      {/* Pro extras: one quiet line instead of a teaser card in every section. */}
+      <ProMore />
+
       {/* Everything they've ever logged or saved, kept for every plan — one tap from the graphs. */}
       <EverythingElse title="Your history" onProgress />
     </div>
