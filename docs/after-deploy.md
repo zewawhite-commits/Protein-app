@@ -23,3 +23,10 @@
 
 Supabase → SQL editor → paste the contents of `supabase/scale.sql` → Run. It only adds indexes
 (safe to re-run) so the feed, profiles and messages stay fast as the tables grow.
+
+## AI cost metering and fair use (run once)
+
+Supabase → SQL editor → paste the contents of `supabase/ai-usage.sql` → Run. Until then the app
+works normally but AI costs aren't recorded and the fair-use checks stay off (they fail open).
+The owner dashboard is at the bottom of Settings for emails in ADMIN_EMAILS. Optional: set
+`PAYMENT_FEE_PCT` in Vercel (default 3.9) so the margin uses your real Paystack fee.
