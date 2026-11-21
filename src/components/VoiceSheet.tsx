@@ -4,8 +4,8 @@ import { Check, Minus, Mic, Pencil, Plus, Search, Trash2, Volume2, VolumeX, X } 
 import { useStore } from '@/store/useStore';
 import { useFoodDb } from '@/lib/hooks';
 import { matchItems } from '@/lib/recognize-client';
-import { lastAmount, asRecognition, gramsFor, naturalServings, parseAmount, parseSaid, questionFor, type SaidFood } from '@/lib/describe';
-import { searchFoods, splitName } from '@/lib/foods';
+import { boneInQuery, detailQuery, detailQuestion, lastAmount, asRecognition, gramsFor, naturalServings, parseAmount, parseSaid, questionFor, soupProteinQuestion, type SaidFood } from '@/lib/describe';
+import { boneInFood, searchFoods, splitName } from '@/lib/foods';
 import { mealForNow, todayKey } from '@/lib/dates';
 import { MEAL_LABELS, defaultMeal, rememberMeal, useMealOptions } from '@/lib/meals';
 import type { CustomFood, Food, Meal } from '@/lib/types';
@@ -17,9 +17,16 @@ export type Recognizer = { lang: string; interimResults: boolean; continuous: bo
 export const SR = typeof window !== 'undefined' ? ((window as unknown as Record<string, unknown>).SpeechRecognition ?? (window as unknown as Record<string, unknown>).webkitSpeechRecognition) as (new () => Recognizer) | undefined : undefined;
 export const canUseVoice = !!SR;
 
-interface Line { key: string; said: SaidFood; food: Food | null; options: Food[]; grams: number | null; how: string }
+interface Line { key: string; said: SaidFood; food: Food | null; options: Food[]; grams: number | null; how: string; /** Follow-ups already asked, so nothing is asked twice. */ asked?: { detail?: boolean; soup?: boolean } }
 
-const short = (f: Food) => splitName(f.name).title.split(',')[0];
+const short = (f: Food) => splitName(f.name).title.split(',')[0].replace(/\b(NFS|NS)\b\s*/g, '').trim();
+
+/** Meat and fish in soup, the way it's cooked there ("2 pieces of beef" → stewed beef). */
+function soupMeat(answer: string): string {
+  return answer.replace(/^(yes|yeah|yep)[,.]?\s*/i, '')
+    .replace(/\bbeef\b/gi, 'beef stewing steak stewed').replace(/\bgoat( meat)?\b/gi, 'boiled goat meat').replace(/\b(shaki|tripe)\b/gi, 'tripe cooked')
+    .replace(/\bchicken\b/gi, 'stewed chicken').replace(/\b(stock ?fish|panla)\b/gi, 'stockfish');
+}
 
 /** "2 × 1 medium wrap" → "2 medium wraps"; "1 × 1 ladle" → "1 ladle" (for reading back aloud). */
 function spokenAmount(how: string): string {
@@ -131,8 +138,42 @@ export function VoiceSheet({ onClose, onSearch, date }: { onClose: () => void; o
   }
 
   // Ask out loud about the first food that still needs something, then listen for the answer.
+  // Change one line and carry on with the next question.
+  const patchAndContinue = (key: string, patch: (x: Line) => Partial<Line>) => setLines((cur) => {
+    const upd = cur.map((x) => (x.key === key ? { ...x, ...patch(x) } : x));
+    setTimeout(() => askNext(upd), 50);
+    return upd;
+  });
+
   function askNext(all: Line[]) {
+    // 1. How it was cooked, for chicken and fish said without it: it changes the numbers.
+    const det = all.find((x) => x.food && !x.asked?.detail && detailQuestion(x.said.text));
+    if (det) {
+      const dq = detailQuestion(det.said.text)!;
+      setAsking(dq.q);
+      say(dq.q, () => listen((answer) => {
+        const found = detailQuery(dq.kind, det.said.text, answer).map((q) => searchFoods(q, { custom })[0]).find(Boolean);
+        patchAndContinue(det.key, (x) => {
+          if (!found) return { asked: { ...x.asked, detail: true } };
+          const g = x.said.qty != null || x.said.unit ? gramsFor(found, x.said.qty, x.said.unit, x.said.size) : null;
+          return { food: found, options: [found, ...x.options.filter((o) => o.id !== found.id)].slice(0, 4), grams: g?.grams ?? (x.said.unit && /^(g|gram|kg|oz|lb)/.test(x.said.unit) ? x.grams : null), how: g?.how ?? x.how, asked: { ...x.asked, detail: true } };
+        });
+      }, true));
+      return;
+    }
+    // 3. Soups: meat or fish in it, asked once after the amount (most of a soup's protein).
+    const soup = all.find((x) => x.food && x.grams != null && !x.asked?.soup && !/\b(beef|meat|goat|chicken|fish|turkey|shaki|ponmo|kpomo|cow|crayfish|snail|assorted)\b/.test(x.said.text) && soupProteinQuestion(x.food, short(x.food).toLowerCase()));
     const l = all.find((x) => !x.food || x.grams == null);
+    if (!l && soup) {
+      const sq = soupProteinQuestion(soup.food!, short(soup.food!).toLowerCase())!;
+      setAsking(sq);
+      say(sq, () => listen((answer) => {
+        setLines((cur) => cur.map((x) => (x.key === soup.key ? { ...x, asked: { ...x.asked, soup: true } } : x)));
+        if (/^(no|nope|none|nothing|not really|just the soup|no meat)\b/i.test(answer.trim())) setTimeout(() => askNext(all.map((x) => (x.key === soup.key ? { ...x, asked: { ...x.asked, soup: true } } : x))), 50);
+        else understand(soupMeat(answer));
+      }, true));
+      return;
+    }
     if (!l) {
       setAsking(null);
       if (all.length) say(`Got it: ${all.map((x) => `${x.how ? spokenAmount(x.how) : `${fmt(x.grams ?? 0)} grams`} of ${x.food ? short(x.food).toLowerCase() : x.said.text}`).join(', ')}. Tap add when you're ready.`);
@@ -146,14 +187,21 @@ export function VoiceSheet({ onClose, onSearch, date }: { onClose: () => void; o
     }
     const name = short(l.food).toLowerCase();
     // Ask the way people actually serve this food (see questionFor): never "how many bowls" of a soup.
-    const { q, many, unit: countUnit } = questionFor(l.food, name);
+    const asked = questionFor(l.food, name);
+    // An ingredient of a smoothie or shake: say so, and ask what went in rather than what was drunk.
+    const inDrink = (t: string) => (l.said.partOf ? `In the ${l.said.partOf}: ${t.charAt(0).toLowerCase()}${t.slice(1).replace('did you drink', 'went in')}` : t);
+    const { unit: countUnit } = asked;
+    const q = inDrink(asked.q), many = inDrink(asked.many);
     setAsking(q);
     say(q, () => listen((answer) => {
       const a = parseAmount(answer);
+      // "300 grams with the bones": use the measured bone-in record, so bones aren't counted as food.
+      const bone = /\b(with (the )?bones?|bone[- ]in|bones? included)\b/i.test(answer) ? boneInFood(l.food!, boneInQuery(l.food!.name)) : null;
       // A bare number ("two") counts in the unit we asked about (ladles, wraps, sticks...).
-      const g = a.qty != null ? gramsFor(l.food!, a.qty, a.unit ?? (a.size ? null : countUnit), a.size) : null;
+      const g = a.qty != null ? gramsFor(bone ?? l.food!, a.qty, a.unit ?? (a.size ? null : countUnit), a.size) : null;
+      if (g && !bone && /\b(with (the )?bones?|bone[- ]in|bones? included)\b/i.test(answer)) toast(`No bone-in values for ${short(l.food!).toLowerCase()} — that weight is counted as all meat. Change the grams if you can weigh the meat alone.`);
       setLines((cur) => {
-        const upd = cur.map((x) => (x.key === l.key ? { ...x, grams: g?.grams ?? x.grams, how: g?.how ?? x.how } : x));
+        const upd = cur.map((x) => (x.key === l.key ? { ...x, ...(bone && g && { food: bone, options: [bone, ...x.options].slice(0, 4) }), grams: g?.grams ?? x.grams, how: g?.how ?? x.how } : x));
         // Didn't catch a number: ask again and listen again (it used to stop here).
         if (!g) { const again = `Sorry, ${many.charAt(0).toLowerCase() + many.slice(1)} For example, ${countUnit ? `2 ${countUnit}s, or medium` : '150 grams'}.`; setAsking(again); const h = handler.current; say(again, () => listen(h, true)); }
         else setTimeout(() => askNext(upd), 50);
@@ -219,6 +267,7 @@ export function VoiceSheet({ onClose, onSearch, date }: { onClose: () => void; o
                       {l.options.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
                     </select>
                   ) : <p className="truncate text-[15px] font-semibold">{l.food?.name ?? l.said.text}</p>}
+                  {l.said.partOf && <p className="text-xs font-semibold text-accent">Part of your {l.said.partOf}</p>}
                   <p className="num text-xs text-silver">{l.grams ? `${l.how ? `${l.how} · ` : ''}${fmt(((l.food?.per100.kcal ?? 0) * l.grams) / 100)} kcal · ${fmt(((l.food?.per100.protein ?? 0) * l.grams) / 100, 1)} g protein` : 'How much? Enter grams →'}</p>
                 </div>
                 <div className="relative w-20 shrink-0">

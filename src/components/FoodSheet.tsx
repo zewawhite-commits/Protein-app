@@ -7,10 +7,10 @@ import { Link } from 'react-router-dom';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Camera, ChevronDown, ExternalLink, Heart, ImagePlus, Minus, Plus, Trash2, Copy, ArrowLeftRight, Scale, Mic } from 'lucide-react';
 import type { Food, LogEntry, Meal } from '@/lib/types';
-import { nutrientsFor, round1, scale } from '@/lib/nutrition';
+import { alcoholPer100, nutrientsFor, round1, scale } from '@/lib/nutrition';
 import { EXTRA_KEYS } from '@/lib/nutrients';
 import { MACRO_COLOR, NutrientList } from './Nutrients';
-import { counterparts, dataQuality, similarFoods, sourceInfo, splitName } from '@/lib/foods';
+import { boneInFood, counterparts, dataQuality, similarFoods, sourceInfo, splitName } from '@/lib/foods';
 import { fitsDiet } from '@/lib/goals';
 import { foodAllergens } from '@/lib/allergens';
 import { useAvoid } from './Allergy';
@@ -18,7 +18,7 @@ import { deletePhoto, savePhoto } from '@/lib/photos';
 import { useFoodDb, usePhotoUrl, useDay } from '@/lib/hooks';
 import { dailyTargets } from '@/lib/energy';
 import { useStore } from '@/store/useStore';
-import { gramsFor, lastAmount, parseAmount } from '@/lib/describe';
+import { boneInQuery, gramsFor, lastAmount, parseAmount } from '@/lib/describe';
 import { AllergyBanner } from './Allergy';
 import { fromKey, mealForNow, todayKey } from '@/lib/dates';
 import { Ring, Segmented, Sheet, StateBadge, cx, fmt } from './ui';
@@ -106,6 +106,9 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
   const split = (() => { const c = (per100.carbs ?? 0) * 4, f = (per100.fat ?? 0) * 9, p = per100.protein * 4, t = c + f + p; return t > 0 && per100.carbs != null && per100.fat != null ? { carbs: c / t, fat: f / t, protein: p / t } : null; })();
   const { title, detail } = splitName(food.name);
   const alt = useMemo(() => (db ? counterparts(food, db.foods) : []), [db, food]);
+  const alcohol = alcoholPer100(food.name, food.per100);
+  // Measured "weighed with bone" record for meat and fish, so a bone-in weight isn't counted as all meat.
+  const boneIn = useMemo(() => (db ? boneInFood(food, boneInQuery(food.name)) : null), [db, food]);
   const avoid = useAvoid();
   const diet = useStore((s) => s.profile?.diet ?? 'all');
   // "Don't have it?" swaps from everyday foods and world dishes that fit the person's diet and avoid list.
@@ -219,6 +222,9 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
           <p className="mb-3 text-center text-[14px] font-medium text-silver">
             Weigh the <span className="font-semibold text-ink">edible part</span> — no bones, shells, skins or packaging.
           </p>
+        )}
+        {!entry && onSwitchFood && boneIn && (
+          <button onClick={() => { haptic(); onSwitchFood(boneIn); }} className="mx-auto -mt-1 mb-3 block text-center text-[13px] font-semibold text-accent">Weighed it with the bones? Use the bone-in values</button>
         )}
         {weighHint && !entry && (
           <div className="mb-4 flex items-center justify-center gap-2">
@@ -372,6 +378,7 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
           ))}
         </div>
         {split && <p className="mt-2 text-center text-[12px] text-dim">“% kcal” is how much of this food’s calories come from each — not your daily goal.</p>}
+        {alcohol != null && <p className="mt-2 rounded-2xl bg-raised px-3 py-2 text-center text-[13px] text-silver"><b className="num text-ink">{fmt((alcohol * g) / 100, 1)} g alcohol</b> · about {fmt((alcohol * 7 * g) / 100)} kcal of this. Worked out from the calories (7 kcal per gram); the food tables don’t list it.</p>}
         <DayWithThis add={n} date={date} entry={entry} />
         <button onClick={() => setShowMore((s) => !s)} className="mt-3 flex w-full items-center justify-center gap-1 text-xs font-semibold text-accent">
           {showMore ? 'Hide' : 'Show'} vitamins, minerals & sugar <ChevronDown size={14} className={cx('transition', showMore && 'rotate-180')} />

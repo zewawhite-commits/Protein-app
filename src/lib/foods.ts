@@ -166,7 +166,32 @@ const PHRASES: [RegExp, string][] = [
 /** One-word everyday names that mean a specific food. */
 const EXACT: Record<string, string> = { dodo: 'plantain cooked with oil', 'garden egg': 'eggplant fruit raw', 'garden eggs': 'eggplant fruit raw', toast: 'bread white toasted', steak: 'beef steak lean', mash: 'potato mashed', chips: 'french fries', eggs: 'egg whole cooked', rice: 'rice white cooked', pasta: 'pasta cooked', chicken: 'chicken breast', 'pepper soup': 'goat pepper soup', 'boiled rice': 'rice white cooked', 'white rice': 'rice white cooked', 'plain rice': 'rice white cooked', 'ofada rice': 'rice brown cooked', 'ofada': 'rice brown cooked', 'plantain': 'plantain cooked', 'boiled plantain': 'plantain boiled', 'fried plantain': 'plantain cooked with oil' };
 
+/**
+ * How it was cooked changes the numbers, so these phrases go straight to the matching record
+ * (found in the audit: "fried egg" used to find fried eggplant, "porridge" dry oats, "uncooked pasta" fresh pasta).
+ */
+const COOKED: [RegExp, string][] = [
+  [/^(fried eggs?|eggs? fried)$/, 'egg whole cooked fried'],
+  [/^(scrambled eggs?|eggs? scrambled)$/, 'egg whole cooked scrambled'],
+  [/^(poached eggs?|eggs? poached)$/, 'egg whole cooked poached'],
+  [/^(boiled|stewed) chicken$|^chicken (boiled|stewed)$/, 'chicken breast meat only cooked stewed'],
+  [/^(porridge|oat porridge|porridge oats|oatmeal|cooked oats|oats cooked|cooked oatmeal|oatmeal cooked|quaker oats)$/, 'oats cooked with water'],
+  [/^(fried potato(es)?|potato(es)? fried|fried irish potato(es)?|chips)$/, 'french fries'],
+  [/^(uncooked|raw|dry|dried) (pasta|spaghetti|macaroni|noodles)$|^(pasta|spaghetti|macaroni) (uncooked|raw|dry)$/, 'pasta dry enriched'],
+  [/^(uncooked|raw|dry) (white )?rice$|^rice (uncooked|raw|dry)$/, 'rice white long grain raw'],
+  [/^(uncooked|raw|dry) brown rice$/, 'rice brown long grain raw'],
+  [/^(uncooked|raw|dry) (rolled )?oats$|^oats (uncooked|raw|dry)$/, 'oats raw'],
+  [/^(uncooked|raw|dry|dried) (beans|cowpeas|black[- ]eyed (beans|peas))$/, 'cowpeas common mature seeds raw'],
+  [/^(beans|cooked beans|boiled beans|brown beans|black[- ]eyed (beans|peas)|ewa)$/, 'cowpeas common mature seeds cooked boiled'],
+  [/^(pap|akamu|ogi|koko)$/, 'ogi'],
+  [/^stockfish$|^panla$/, 'fish cod dried salted'],
+  [/^titus( fish)?$/, 'mackerel'],
+];
+
 export function searchFoods(query: string, opts: SearchOptions = {}): Food[] {
+  const q0 = query.trim().toLowerCase().replace(/\s+/g, ' ');
+  const cooked = COOKED.find(([re]) => re.test(q0))?.[1];
+  if (cooked) { const hit = searchWith(cooked, opts); if (hit.length) return [...hit, ...searchWith(query, opts).filter((f) => !hit.some((h) => h.id === f.id))].slice(0, opts.limit ?? 60); }
   const exact = EXACT[query.trim().toLowerCase()];
   if (exact) { const hit = searchWith(exact, opts); if (hit.length) return [...hit, ...searchWith(query, opts).filter((f) => !hit.some((h) => h.id === f.id))].slice(0, opts.limit ?? 60); }
   const direct = searchWith(query, opts);
@@ -221,10 +246,13 @@ export function editDistance(a: string, b: string, cap = Infinity): number {
   return prev[b.length];
 }
 
+const EATEN_COOKED = /\b(chicken|beef|goat|lamb|mutton|pork|turkey|veal|fish|tilapia|catfish|mackerel|salmon|cod|tuna|shrimp|prawns?|meat|liver|gizzard|kidney beans|cowpeas|lentils|chickpeas|rice|pasta|spaghetti|macaroni|noodles|yam|cassava|cocoyam)\b/;
+
 function searchTerms(terms: string[], opts: SearchOptions): Food[] {
   const { state = 'all', limit = 60, custom = [] } = opts;
   const pool: Indexed[] = [...custom.filter((c) => !c.archived).map(toIndexed), ...index];
   const phrase = terms.join(' ');
+  const wantsRaw = terms.some((t) => /^(raw|uncooked|dry|dried|fresh|uncook)/.test(t));
   const scored: { f: Food; s: number }[] = [];
   for (const it of pool) {
     if (state !== 'all' && it.food.state !== state) continue;
@@ -253,6 +281,8 @@ function searchTerms(terms: string[], opts: SearchOptions): Food[] {
     if (PROCESSED_CATEGORIES.has(it.food.category)) score -= 10;
     if (PROCESSED_WORDS.test(it.lower)) score -= 5;
     if (/\b(meat only|skinless|boneless|lean)\b/.test(it.lower)) score += 3;
+    // Meat, fish, grains and beans are eaten cooked: a raw record would understate a cooked portion.
+    if (!wantsRaw && it.food.state === 'raw' && EATEN_COOKED.test(it.lower)) score -= 8;
     scored.push({ f: it.food, s: score });
   }
   scored.sort((a, b) => b.s - a.s || a.f.name.length - b.f.name.length);
@@ -399,4 +429,13 @@ export function confidentMatch(queries: string[], opts: SearchOptions = {}): Foo
     if (hit) return hit;
   }
   return undefined;
+}
+
+/** The measured "weighed with bone(s)" record for this food, if the tables have one (UK CoFID, AU). */
+export function boneInFood(_food: Food, queries: string[] | null): Food | null {
+  for (const q of queries ?? []) {
+    const hit = searchFoods(q, { limit: 20 }).find((f) => /with bones?\b/i.test(f.name));
+    if (hit) return hit;
+  }
+  return null;
 }

@@ -68,3 +68,16 @@ export function gramsForProtein(per100Protein: number, proteinG: number): number
 export const KG_PER_LB = 0.45359237;
 export const toKg = (v: number, unit: 'kg' | 'lb') => (unit === 'kg' ? v : v * KG_PER_LB);
 export const fromKg = (kg: number, unit: 'kg' | 'lb') => (unit === 'kg' ? kg : kg / KG_PER_LB);
+
+const ALCOHOLIC = /\b(beer|lager|stout|ale|cider|wine|champagne|prosecco|vodka|gin|rum|whisk(?:e)?y|scotch|brandy|cognac|tequila|liqueur|spirits?|alcoholic|martini|cocktail|sherry|port|sake|palm wine|ogogoro|burukutu|pito|schnapps|margarita|mojito|daiquiri|sangria)\b/i;
+
+/**
+ * Alcohol per 100 g for alcoholic drinks, worked out from the calories the table gives
+ * (7 kcal per gram of alcohol after protein, carbs and fat). The tables don't list it, so the
+ * calories from alcohol would otherwise look unexplained. Null for anything else.
+ */
+export function alcoholPer100(name: string, per100: Per100): number | null {
+  if (!ALCOHOLIC.test(name) || /\b(non-?alcoholic|alcohol[- ]free|0\.0%?|dealcoholi[sz]ed|vinegar|cooking wine|sauce|cake|chocolate)\b/i.test(name) || per100.kcal == null) return null;
+  const rest = (per100.kcal - 4 * per100.protein - 4 * (per100.carbs ?? 0) - 9 * (per100.fat ?? 0)) / 7;
+  return rest > 0.5 ? Math.round(rest * 10) / 10 : null;
+}

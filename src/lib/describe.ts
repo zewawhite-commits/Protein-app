@@ -10,7 +10,7 @@
 import type { Food } from './types';
 import type { RecognitionResult } from './recognition';
 
-export interface SaidFood { text: string; qty: number | null; unit: string | null; size?: Size | null }
+export interface SaidFood { text: string; qty: number | null; unit: string | null; size?: Size | null; /** Set when it is an ingredient of a blended drink (smoothie). */ partOf?: string }
 export type Size = 'small' | 'medium' | 'large';
 
 /** "big", "normal" → the size words our servings use. */
@@ -27,7 +27,20 @@ const NUM_WORD = `\\d+(?:[.,]\\d+)?|${Object.keys(WORDS).join('|')}`;
 // A quantity that starts a new food, even without "and": "two boiled eggs a cup of rice" → two items.
 const NEW_ITEM = new RegExp(`\\s(?=(?:${NUM_WORD})\\s+(?!of\\b)[a-z])`, 'g');
 
+/** Drinks made of what's in them: logged as their ingredients, never as a generic drink plus extras. */
+const BLENDED = /^(.*?)\b(smoothie|protein shake|milkshake|milk shake|shake|parfait)s?\b\s+(?:made )?(?:with|of|containing|using)\s+(.+)$/;
+/** Ingredients that often run together when spoken ("banana milk and peanut butter"). */
+const BLEND_ITEMS = ['peanut butter', 'protein powder', 'greek yogurt', 'yogurt', 'yoghurt', 'oats', 'banana', 'bananas', 'milk', 'almond milk', 'honey', 'strawberries', 'strawberry', 'blueberries', 'berries', 'mango', 'pineapple', 'spinach', 'dates', 'apple', 'avocado', 'chia seeds', 'flax seeds', 'ice', 'water', 'cocoa', 'whey', 'kale', 'ginger', 'orange juice', 'coconut milk', 'coconut water', 'cinnamon'];
+
 export function parseSaid(text: string): SaidFood[] {
+  const blend = BLENDED.exec(text.toLowerCase().replace(/[.!?]/g, ' ').trim());
+  if (blend) {
+    const drink = blend[2].replace('milk shake', 'milkshake');
+    // Split runs of known ingredients: "banana milk" → banana, milk ("almond milk" stays one).
+    const names = [...BLEND_ITEMS].sort((a, b) => b.length - a.length).join('|');
+    const list = blend[3].replace(new RegExp(`\\b(${names})\\b(?=\\s+(?:${names})\\b)`, 'g'), '$1,');
+    return parseSaid(list).map((f) => ({ ...f, partOf: drink }));
+  }
   const clean = text.toLowerCase().replace(/[.!?]/g, ' ').replace(FILLER, ' ').replace(/\b(half|quarter)( of)? an? /g, '$1 ').replace(/\s+/g, ' ').trim();
   return clean
     .split(/,|;|\band then\b|\band\b|\bwith\b|\bplus\b|\balso\b|\n/)
@@ -54,7 +67,7 @@ export function parseSaid(text: string): SaidFood[] {
 const sing = (u: string) => (/(ss|sh|ch|x)es$/.test(u) ? u.slice(0, -2) : /ss$/.test(u) ? u : u.replace(/s$/, ''));
 
 /** Words for the same serving: a drink's "glass" is its cup if it has no glass size; packet = pack. */
-const SAME_AS: Record<string, string[]> = { stick: ['skewer'], skewer: ['stick'], glass: ['cup', '8 fl oz'], packet: ['pack', 'package'], pack: ['packet', 'package'], pot: ['container', 'carton'], biscuit: ['cookie', 'cracker'], cookie: ['biscuit'], cracker: ['biscuit'], bag: ['small single serving bag', 'single serving bag'] };
+const SAME_AS: Record<string, string[]> = { stick: ['skewer'], skewer: ['stick'], glass: ['cup', '8 fl oz'], packet: ['pack', 'package'], pack: ['packet', 'package'], pot: ['container', 'carton'], biscuit: ['cookie', 'cracker'], cookie: ['biscuit'], cracker: ['biscuit'], bag: ['small single serving bag', 'single serving bag'], bowl: ['medium bowl', 'medium portion'] };
 
 const PIECE = /^(piece|pc|wing|drumstick|thigh|leg|breast|egg|ball|fillet|wrap|slice|scoop|can|bottle|glass|bowl|plate|handful|serving|portion|spoon|pot|bar|bag|pack|biscuit|cookie|cracker|muffin)/;
 
@@ -82,7 +95,8 @@ export function gramsFor(food: Pick<Food, 'portions' | 'name'>, qty: number | nu
   // A named unit ("2 slices", "a stick") only uses that unit's own size: never another serving (a slice isn't a wrap).
   else if (/^(piece|pc)/.test(u)) p = find(/\b(piece|medium|whole|1 (?!cup|tbsp|tsp|oz|plate|bowl|wrap|ladle)\w+)\b/);
   else if (PIECE.test(u) || /^(stick|skewer|ladle)/.test(u)) p = find(new RegExp(`\\b${u}`)) ?? SAME_AS[u]?.map((x) => find(new RegExp(`\\b${x}`))).find(Boolean);
-  else if (!u && qty != null) p = find(/\b(piece|medium|whole|large|1 (?!cup|tbsp|tsp|oz)\w+)\b/);
+  // A named piece comes in its medium size ("2" thighs → 2 medium thighs); plain sizes keep the record's own order (eggs: large).
+  else if (!u && qty != null) p = find(/^1 medium \w/) ?? find(/\b(piece|medium|whole|large|fruit)\b/) ?? find(/^1 (?!cup|tbsp|tsp|tablespoon|teaspoon|oz|fl|linear|cubic|slice|inch)\w+/);
   else if (!u) p = find(/serving|medium|piece/) ?? portions.find((x) => x.grams >= 25 && x.grams <= 400);
   if (!p) return null;
   // "2 tbsp = 32 g" means one tablespoon is 16 g; "0.5 fillet = 178 g" means a fillet is 356 g.
@@ -178,6 +192,13 @@ export function questionFor(food: Pick<Food, 'portions'>, name: string): { q: st
     const many = `How many ${name}?`;
     return { q: `${many} You can say small, medium or large.`, many, unit: null };
   }
+  // Counted by name: "1 banana", "1 fruit", "1 medium thigh" → "How many bananas?", "How many chicken thighs?"
+  const word = name.split(/\s+/).pop()!.replace(/s$/, '');
+  if (word.length > 2 && has(new RegExp(`^1 (small |medium |large )?(${word}|fruit|whole)s?$`))) {
+    const plural = name.replace(/(\w+)$/, (w) => (/s$/.test(w) ? w : /(ch|sh|x)$/.test(w) ? `${w}es` : `${w}s`));
+    const many = `How many ${plural}?`;
+    return { q: has(/^1 (small|medium|large) /) ? `${many} You can say small, medium or large.` : many, many, unit: null };
+  }
   const unitP = labels.find((l) => /\b(piece|wing|drumstick|thigh|leg|slice|egg|ball|fillet|wrap|stick|plate|bowl)\b/.test(l));
   const unit = unitP ? /\b(piece|wing|drumstick|thigh|leg|slice|egg|ball|fillet|wrap|stick|plate|bowl)\b/.exec(unitP)![1] : null;
   if (unit) {
@@ -218,3 +239,70 @@ export function naturalServings(food: Pick<Food, 'portions'>): { name: string; p
     .map(({ name, per }) => ({ name, per }));
 }
 const NATURAL = [/^medium/, /^(small|large)/, /\b(slice|wrap|ladle|portion|plate|glass|pot|bar|bag|pack|piece|stick|biscuit|muffin|egg|fruit|wing|drumstick|thigh|fillet|breast)\b/, /cooking spoon/, /\b(tbsp|tablespoon|tsp|teaspoon)\b/, /\bcup\b/, /\boz\b/];
+
+// ---------------------------------------------------------------------------
+// Asking how meat and fish were cooked — only when it wasn't said and it changes the numbers.
+
+const PARTS = /\b(breast|thigh|drumstick|leg|wing)s?\b/;
+const METHODS: [RegExp, string][] = [
+  [/\b(fried|deep[- ]fried|fry)\b/, 'fried'], [/\b(grilled|grill|barbecued|bbq|suya|charcoal)\b/, 'grilled'],
+  [/\b(roast|roasted|baked|oven)\b/, 'roasted'], [/\b(boiled|stewed|stew|peppered|pepper soup|cooked in soup|in soup|steamed|poached)\b/, 'stewed'],
+  [/\b(smoked)\b/, 'smoked'], [/\b(dried|dry)\b/, 'dried'],
+];
+const FISH = /\b(tilapia|catfish|mackerel|titus|croaker|salmon|cod|tuna|sardines?|herring|stockfish|panla|bonga|snapper|hake|whiting|trout|haddock|sole|mullet|bass)\b/;
+const CHICKEN_ONLY = /^(?:(?:fried|grilled|roast(?:ed)?|baked|boiled|stewed|peppered|barbecued|bbq|chicken|pieces?|of|the|some|with|skin|without|skinless|and|breasts?|thighs?|drumsticks?|legs?|wings?)\s*)+$/;
+const FISH_ONLY = new RegExp(`^(?:(?:fried|grilled|roast(?:ed)?|baked|boiled|stewed|smoked|dried|steamed|fish|pieces?|of|the|some|whole|${FISH.source.slice(3, -3)})\\s*)+$`);
+
+const methodOf = (t: string) => METHODS.find(([re]) => re.test(t))?.[1] ?? null;
+const skinOf = (t: string): boolean | null => (/\b(no skin|without (the )?skin|skinless|skin off|removed the skin|didn'?t eat the skin)\b/.test(t) ? false : /\b(with (the )?skin|skin on|ate the skin|skin eaten|yes)\b/.test(t) ? true : null);
+
+/** A question to ask before the amount, when "chicken" or "fish" was said without what matters. */
+export function detailQuestion(said: string): { kind: 'chicken' | 'fish'; q: string } | null {
+  const t = said.toLowerCase().trim();
+  if (/\bchicken\b/.test(t) && CHICKEN_ONLY.test(t)) {
+    const need = [!PARTS.test(t) && 'which part (breast, thigh, drumstick or wing)', !methodOf(t) && 'how it was cooked (fried, grilled, roasted or boiled)', skinOf(t) === null && 'did you eat the skin'].filter(Boolean) as string[];
+    return need.length >= 2 || (need.length === 1 && !need[0].startsWith('did')) ? { kind: 'chicken', q: `For the chicken: ${need.join(', ')}?` } : null;
+  }
+  if (/\b(fish|tilapia|catfish|mackerel|titus|croaker|salmon|cod|sardines?|herring|bonga|snapper|hake|whiting|trout)\b/.test(t) && FISH_ONLY.test(t)) {
+    const need = [!FISH.test(t) && 'which fish (for example tilapia, catfish, mackerel or croaker)', !methodOf(t) && 'was it fried, grilled, smoked or boiled'].filter(Boolean) as string[];
+    return need.length ? { kind: 'fish', q: `For the fish: ${need.join(', and ')}?` } : null;
+  }
+  return null;
+}
+
+/** The search to run once the person answered the detail question. */
+export function detailQuery(kind: 'chicken' | 'fish', said: string, answer: string): string[] {
+  const t = `${said} ${answer}`.toLowerCase();
+  if (kind === 'chicken') {
+    const part = PARTS.exec(t)?.[1] ?? 'breast';
+    const part2 = part === 'leg' ? 'drumstick' : part;
+    const m = methodOf(t) ?? 'roasted';
+    const skin = skinOf(answer.toLowerCase()) ?? skinOf(said.toLowerCase());
+    const sk = skin === null ? '' : skin ? ' skin eaten' : ' skin not eaten';
+    const how = m === 'fried' ? (skin === false ? ' fried coated prepared skinless' : ' fried coated skin coating eaten') : m === 'grilled' ? ` grilled without sauce${sk}` : m === 'stewed' ? ` stewed${sk}` : ` baked broiled or roasted${sk}`;
+    return [`chicken ${part2}${how}`, `chicken ${part2} ${m === 'roasted' ? 'roasted' : m}`, `chicken ${m === 'roasted' ? 'roasted' : m}`];
+  }
+  const species = (FISH.exec(t)?.[1] ?? 'fish').replace(/^titus$/, 'mackerel').replace(/^(stockfish|panla)$/, 'cod dried salted').replace(/s$/, '');
+  const m = methodOf(t);
+  const how = m === 'stewed' ? 'boiled' : m ?? '';
+  return [`${species} ${how}`.trim(), `fish ${species} ${how}`.trim(), how ? `fish ${how}` : `fish ${species}`];
+}
+
+/** For a soup with no meat or fish said: ask once, since the protein mostly comes from them. */
+export const soupProteinQuestion = (food: Pick<Food, 'portions'>, name: string): string | null =>
+  (food.portions ?? []).some((p) => /^1 medium portion/.test(p.label)) ? `Any meat or fish in the ${name}? Say for example “2 pieces of beef”, or “no”.` : null;
+
+/** Same food, weighed with its bones: the measured bone-in record for it, when the tables have one. */
+export function boneInQuery(name: string): string[] | null {
+  const n = name.toLowerCase();
+  if (/with bone|weighed with/.test(n)) return null;
+  const chicken = /\bchicken\b/.test(n);
+  const fish = FISH.exec(n)?.[1] ?? (/\bfish\b/.test(n) ? 'fish' : null);
+  if (!chicken && !fish && !/\b(lamb|mutton|pork|turkey|beef)\b/.test(n)) return null;
+  const animal = chicken ? 'chicken' : fish ?? /\b(lamb|mutton|pork|turkey|beef)\b/.exec(n)![1];
+  const part = chicken ? (/\bwing/.test(n) ? 'wing quarter' : /\b(thigh|leg)/.test(n) ? 'leg quarter' : /\bdrumstick/.test(n) ? 'drumsticks' : /\bbreast/.test(n) ? 'breast' : '') : '';
+  const m = methodOf(n);
+  const how = m === 'fried' ? (chicken ? 'deep-fried' : 'fried') : m === 'grilled' ? 'grilled' : m === 'stewed' ? (chicken ? 'casseroled' : 'steamed') : m === 'roasted' ? 'roasted' : '';
+  const q = (...w: string[]) => `${animal} ${w.join(' ')} with bone`.replace(/\s+/g, ' ').trim();
+  return [...new Set([q(part, how), q(how), q(part), q()])];
+}
