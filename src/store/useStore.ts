@@ -140,7 +140,7 @@ export const useStore = create<State>()(
         if (!w) return null;
         const minutes = Math.max(1, Math.round(elapsed(w) / 60));
         const done = w.exercises.filter((e) => !e.skipped && (e.sets.some((x) => x.done) || e.minutes || e.km));
-        const log: WorkoutLog = { id: crypto.randomUUID(), date: todayKey(), name: w.name, startedAt: w.startedAt, minutes, exercises: done, note: w.note, createdAt: Date.now() };
+        const log: WorkoutLog = { id: crypto.randomUUID(), date: todayKey(), name: w.name, startedAt: w.startedAt, minutes, exercises: done, note: w.note, ...(w.feel ? { feel: w.feel } : {}), createdAt: Date.now() };
         const kg = get().profile?.bodyWeightKg ?? 0;
         // Each exercise also goes in the day's activity (calories are an estimate).
         const share = Math.max(1, Math.round(minutes / Math.max(1, done.length)));

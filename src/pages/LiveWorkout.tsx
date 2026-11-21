@@ -298,6 +298,9 @@ function Active({ w }: { w: ActiveWorkout }) {
         </div>
       )}
       <button onClick={() => setAdding({})} className="btn-ghost mt-4 w-full"><Plus size={18} /> Add exercise</button>
+      <div className="mt-4"><p className="mb-1.5 px-1 text-sm font-semibold">How did it feel? <span className="font-normal text-silver">(optional — helps your next plan)</span></p>
+        <Segmented<string> full value={w.feel ?? ''} onChange={(v) => set((c) => ({ ...c, feel: (v || undefined) as ActiveWorkout['feel'] }))} options={[{ value: 'easy', label: 'Too easy' }, { value: 'right', label: 'About right' }, { value: 'hard', label: 'Too hard' }]} />
+      </div>
       <textarea value={w.note ?? ''} onChange={(e) => set((c) => ({ ...c, note: e.target.value.slice(0, 500) }))} rows={2} placeholder="How did it feel? (optional)" className="field mt-3 !h-auto py-3" aria-label="Workout note" />
       <button onClick={() => { if (confirm('Discard this workout? Nothing will be saved.')) set(null); }} className="mt-3 w-full text-sm font-semibold text-danger">Discard workout</button>
 

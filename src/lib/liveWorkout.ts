@@ -8,8 +8,9 @@ export type ExerciseKind = 'strength' | 'cardio' | 'time';
 export interface CustomExercise { id: string; name: string; muscle: string; category: ExerciseKind; equipment: string; createdAt: number; updatedAt?: number }
 export interface LiveSet { weightKg?: number; reps?: number; seconds?: number; done: boolean }
 export interface LiveExercise { key: string; name: string; muscle: string; kind: ExerciseKind; sets: LiveSet[]; minutes?: number; km?: number; note?: string; skipped?: boolean }
-export interface ActiveWorkout { name: string; startedAt: number; pausedAt?: number; pausedMs: number; rest: number; exercises: LiveExercise[]; note?: string }
-export interface WorkoutLog { id: string; date: string; name: string; startedAt: number; minutes: number; exercises: LiveExercise[]; note?: string; createdAt: number }
+export type Feel = 'easy' | 'right' | 'hard';
+export interface ActiveWorkout { name: string; startedAt: number; pausedAt?: number; pausedMs: number; rest: number; exercises: LiveExercise[]; note?: string; feel?: Feel }
+export interface WorkoutLog { id: string; date: string; name: string; startedAt: number; minutes: number; exercises: LiveExercise[]; note?: string; feel?: Feel; createdAt: number }
 
 /** Seconds the workout has been running (pauses don't count). */
 export function elapsed(w: ActiveWorkout, now = Date.now()): number {

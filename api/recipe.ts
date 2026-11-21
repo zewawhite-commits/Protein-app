@@ -3,6 +3,7 @@
  * AI recipe; nutrition is calculated by the app from its database. Pro.
  */
 export const maxDuration = 60;
+import { logAiError } from './_lib/aiErrors.js';
 import Anthropic from '@anthropic-ai/sdk';
 import { contextText } from '../src/lib/coach.js';
 import { recipeWithClient } from '../src/lib/recipe.js';
@@ -29,6 +30,7 @@ export async function POST(request: Request): Promise<Response> {
     if (found(r).length) r = await recipeWithClient(new Anthropic(), context, `${ask || ''}\nImportant: it must not contain ${found(r).join(', ').toLowerCase()} — I avoid them.`.trim(), contextText);
     return json({ ...r, allergens: found(r) });
   } catch (e) {
+    await logAiError('recipe', e);
     if (e instanceof Anthropic.RateLimitError) return json({ error: 'Busy — try again in a moment.' }, 429);
     if (e instanceof Anthropic.APIError) console.error('[ai]', e.status, e.message);
     if (e instanceof Anthropic.APIError) return json({ error: `Recipe service error (${e.status ?? 'network'}).` }, 502);
@@ -57,6 +59,7 @@ async function importRecipe(request: Request, input: { text?: unknown; url?: unk
     if (!text && !image) return json({ error: 'Paste a recipe, add a link or a photo.' }, 400);
     return json(await importRecipeWithClient(new Anthropic(), { text, image }));
   } catch (e) {
+    await logAiError('recipe', e);
     if (e instanceof Anthropic.RateLimitError) return json({ error: 'Busy, try again in a moment.' }, 429);
     if (e instanceof Anthropic.APIError) return json({ error: `Recipe service error (${e.status ?? 'network'}).` }, 502);
     if ((e as Error).name === 'AbortError') return json({ error: 'That page took too long. Paste the recipe text instead.' }, 504);

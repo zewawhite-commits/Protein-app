@@ -3,6 +3,7 @@
  * AI eating plan for one day. Requires a Premium pass when payments are configured.
  */
 export const maxDuration = 60;
+import { logAiError } from './_lib/aiErrors.js';
 import Anthropic from '@anthropic-ai/sdk';
 import { contextText } from '../src/lib/coach.js';
 import { planWithClient } from '../src/lib/plan.js';
@@ -26,6 +27,7 @@ export async function POST(request: Request): Promise<Response> {
     if (found(r).length) r = await planWithClient(new Anthropic(), context, `${ask || ''}\nImportant: it must not contain ${found(r).join(', ').toLowerCase()} — I avoid them.`.trim(), contextText);
     return json({ ...r, allergens: found(r) });
   } catch (e) {
+    await logAiError('plan', e);
     if (e instanceof Anthropic.RateLimitError) return json({ error: 'Busy — try again in a moment.' }, 429);
     if (e instanceof Anthropic.APIError) console.error('[ai]', e.status, e.message);
     if (e instanceof Anthropic.APIError) return json({ error: `Plan service error (${e.status ?? 'network'}).` }, 502);
