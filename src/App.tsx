@@ -6,9 +6,10 @@ import { useAdaptiveTarget } from './components/ProgressTop';
 
 captureInvite();
 import { useCloudSync } from './lib/account';
+import { getAuthDraft, pendingEmail } from './lib/gate';
 import { Confetti, Toaster } from './components/fx';
 import { useMealReminders } from './components/Notifications';
-import { Navigate, Route, Routes } from 'react-router-dom';
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { useStore } from './store/useStore';
 import { useThemeSync } from './lib/hooks';
 import { Layout } from './components/Layout';
@@ -25,6 +26,7 @@ import Onboarding from './pages/Onboarding';
 const Insights = lazy(() => import('./pages/Insights'));
 const Admin = lazy(() => import('./pages/Admin'));
 const Owner = lazy(() => import('./pages/Owner'));
+const Landing = lazy(() => import('./pages/Landing'));
 const Snap = lazy(() => import('./pages/Snap'));
 const Premium = lazy(() => import('./pages/Premium'));
 const Coach = lazy(() => import('./pages/Coach'));
@@ -48,17 +50,19 @@ export default function App() {
   useEffect(() => { void refreshPremium(); }, []);
   // A daily copy of the data on this device, for restoring after a mistake.
   useEffect(() => { const t = setTimeout(() => void backupToday(), 4000); return () => clearTimeout(t); }, []);
-  useCloudSync();
+  const session = useCloudSync();
   usePerksSync();
   useMealReminders();
   useAdaptiveTarget();
   const profile = useStore((s) => s.profile);
   // Legal pages open from the welcome screen too, before a profile exists.
-  const path = typeof location !== 'undefined' ? location.pathname : '';
+  const path = useLocation().pathname;
   if (!profile && (path === '/privacy' || path === '/terms' || path === '/refunds')) return <Suspense fallback={null}>{path === '/privacy' ? <Privacy /> : path === '/terms' ? <Terms /> : <Refunds />}</Suspense>;
   // Prices are visible before sign-up, so nobody meets a surprise paywall.
   if (!profile && path === '/premium') return <Suspense fallback={null}><Toaster /><Premium /></Suspense>;
   if (path === '/r') return <Suspense fallback={null}><Toaster /><SharedRecipePage /></Suspense>;
+  // The public website for visitors: not signed in, nothing started, opened in a browser (the installed app goes straight in).
+  if (!profile && path === '/' && showWebsite(session)) return <Suspense fallback={null}><Landing /></Suspense>;
   if (!profile) return <Onboarding />;
   return (
     <Suspense fallback={null}>
@@ -99,4 +103,13 @@ export default function App() {
       </Routes>
     </Suspense>
   );
+}
+
+function showWebsite(session: unknown): boolean {
+  if (session) return false;
+  try {
+    if (window.matchMedia('(display-mode: standalone)').matches || (navigator as { standalone?: boolean }).standalone) return false;
+    if (getAuthDraft() || pendingEmail() || localStorage.getItem('nutivili-onboarding')) return false;
+  } catch { /* storage blocked: show the website */ }
+  return true;
 }

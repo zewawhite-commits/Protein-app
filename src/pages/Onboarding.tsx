@@ -563,7 +563,7 @@ function Choice<T>({ option, selected, onClick, multi }: { option: Option<T>; se
 
 function Welcome({ signedIn, email, onStart }: { signedIn: boolean; email?: string; onStart: () => void }) {
   // Back on the "check your email" screen after a reload (e.g. while they opened their email).
-  const [mode, setMode] = useState<'choose' | 'signup' | 'login' | 'phone' | 'code'>(() => { const d = getAuthDraft(); return d ? (d.signup ? 'signup' : 'login') : 'choose'; });
+  const [mode, setMode] = useState<'choose' | 'signup' | 'login' | 'phone' | 'code'>(() => { const d = getAuthDraft(); if (d) return d.signup ? 'signup' : 'login'; return new URLSearchParams(location.search).get('login') === '1' ? 'login' : 'choose'; });
   useEffect(() => { if (signedIn) { setAuthDraft(null); setPending(null); } }, [signedIn]);
   // Default to the phone's region (e.g. en-GB → United Kingdom), else the United Kingdom.
   const [dialLabel, setDialLabel] = useState(() => {
