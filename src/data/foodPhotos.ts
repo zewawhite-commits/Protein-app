@@ -89,6 +89,14 @@ const ONLY: Record<string, { yes: RegExp; no?: RegExp }> = {
   pancakes: { yes: /./, no: /\b(potato|frozen|mix|syrup|scotch|crepes?|fruit|chocolate)\b/ },
   croissant: { yes: /./, no: /\b(chocolate|apple|cheese|ham|almond|egg)\b/ },
   jollof: { yes: /rice|^jollof|jolof/, no: /\b(spaghetti|macaroni|pasta|beans|native|palm oil)\b/ },
+  grapes: { yes: /./, no: /\b(green|white|raisins?|juice|jelly|jam|leaves|sultana)\b/ },
+  strawberry: { yes: /./, no: /\b(dried|jam|frozen|syrup|shake|juice|yogh?urt|ice cream)\b/ },
+  watermelon: { yes: /./, no: /\b(seeds?|juice|rind|kernel)\b/ },
+  blueberries: { yes: /./, no: /\b(dried|frozen|canned|muffin|juice|syrup|sweetened)\b/ },
+  lemon: { yes: /\b(raw|fresh|peeled)\b/, no: /\b(peel|juice|sole|curd|zest|grass|pickled|preserved)\b/ },
+  coconut: { yes: /\b(flesh|fresh|raw|meat)\b/, no: /\b(water|cream|milk|oil|dried|desiccated|sugar|flour|candy)\b/ },
+  kiwi_fruit: { yes: /./, no: /\b(dried|juice|canned)\b/ },
+  peach: { yes: /\b(raw|fresh|flesh)\b/, no: /\b(canned|dried|dehydrated|melba|nectar|juice|syrup|frozen)\b/ },
   glass_of_milk: { yes: /^milk\b/, no: /\b(soy|soya|almond|oat|rice|coconut|goat|shake|chocolate|evaporated|condensed|powder|dried|dry|buttermilk|human)\b/ },
 };
 const onlyOk = (key: string, n: string) => { const o = ONLY[key]; return !o || (o.yes.test(n) && !o.no?.test(n)); };
