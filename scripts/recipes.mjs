@@ -10,6 +10,17 @@
  * ingredients: [exact record name, grams as added]
  * aliases: other names and spellings people search for (added to the searchable name)
  */
+// ---------------------------------------------------------------------------
+// West African household measures. Sources and reasoning: docs/portions.md.
+// Soup ladle ≈ 150 ml (Kumasi soup study); rice/stew "cooking spoon" ≈ 100 g / 75 g (weight steps
+// between 1–4 spoons in the Accra photographic food atlas, IFPRI 2022); moi moi milk tin ≈ 196 g
+// (Fadupin 2009, Univ. of Ibadan: ½ milk tin = 98 g). Medium is listed first: it's the default.
+const SWALLOW = [['1 medium wrap', 250], ['1 small wrap', 150], ['1 large wrap', 350]];
+const SOUP_PORTIONS = [['1 medium portion', 250], ['1 small portion', 150], ['1 large portion', 350], ['1 ladle', 150], ['1 cooking spoon', 75]];
+const RICE_DISH = [['1 medium plate', 300], ['1 small plate', 200], ['1 large plate', 400], ['1 cooking spoon', 100], ['1 cup', 200]];
+const PLATE_DISH = [['1 medium plate', 300], ['1 small plate', 200], ['1 large plate', 400], ['1 cooking spoon', 100]];
+const BOWL_SOUP = [['1 medium bowl', 350], ['1 small bowl', 250], ['1 large bowl', 450], ['1 ladle', 150]];
+
 export const RECIPES = [
   // ---- West Africa
   {
@@ -21,7 +32,7 @@ export const RECIPES = [
       ['Peppers, hot chili, red, raw', 15], ['Tomatoes, red, ripe, raw, year round average', 100],
       ['Soup, stock, beef, home-prepared', 300], ['Salt, table', 5],
     ],
-    portions: [['1 bowl', 300], ['1 ladle', 150]],
+    portions: SOUP_PORTIONS,
   },
   {
     name: 'Jollof rice', aliases: ['jolof', 'party jollof', 'nigerian jollof'], cuisine: 'West African', yield: 1600,
@@ -31,7 +42,7 @@ export const RECIPES = [
       ['Peppers, sweet, red, raw', 150], ['Onions, raw', 100], ['Peppers, hot chili, red, raw', 10],
       ['Oil, vegetable, soybean, refined', 80], ['Soup, stock, beef, home-prepared', 200], ['Salt, table', 6],
     ],
-    portions: [['1 plate', 350], ['1 cup', 200]],
+    portions: RICE_DISH,
   },
   {
     name: 'Moi moi', aliases: ['moin moin', 'moyin moyin', 'bean pudding'], cuisine: 'West African', yield: 800,
@@ -40,7 +51,7 @@ export const RECIPES = [
       ['Peppers, sweet, red, raw', 100], ['Onions, raw', 60], ['Oil, vegetable, soybean, refined', 50],
       ['Egg, whole, cooked, hard-boiled', 100], ['Shrimp, dried', 15],
     ],
-    portions: [['1 wrap', 150]],
+    portions: [['1 wrap (milk-tin size)', 196], ['1 small wrap', 130]],
   },
   {
     name: 'Akara', aliases: ['bean fritters', 'koose', 'accara'], cuisine: 'West African', yield: 430,
@@ -48,7 +59,7 @@ export const RECIPES = [
       ['Cowpeas, common (blackeyes, crowder, southern), mature seeds, cooked, boiled, with salt', 400],
       ['Onions, raw', 50], ['Peppers, hot chili, red, raw', 10], ['Oil, vegetable, soybean, refined', 60],
     ],
-    portions: [['1 ball', 30], ['5 balls', 150]],
+    portions: [['1 piece (ball)', 30], ['5 pieces', 150]],
   },
   {
     name: 'Suya', aliases: ['beef suya', 'kilishi', 'spicy grilled beef'], cuisine: 'West African', yield: 600,
@@ -57,17 +68,17 @@ export const RECIPES = [
       ['Peanuts, all types, dry-roasted, without salt', 50], ['Oil, vegetable, soybean, refined', 15],
       ['Onions, raw', 30], ['Peppers, hot chili, red, raw', 5], ['Salt, table', 4],
     ],
-    portions: [['1 stick', 100], ['1 serving', 200]],
+    portions: [['1 stick', 80], ['1 wrap (paper)', 200]],
   },
   {
     name: 'Pounded yam', aliases: ['iyan', 'fufu yam'], cuisine: 'West African', yield: 1000,
     ingredients: [['Yam, cooked, boiled, drained, or baked, without salt', 1000]],
-    portions: [['1 wrap', 250], ['1 small wrap', 150]],
+    portions: SWALLOW,
   },
   {
     name: 'Eba', aliases: ['garri', 'gari swallow'], cuisine: 'West African', yield: 900,
     ingredients: [['Cassava, grated, from fermented white cassava, toasted without oil (white gari)', 300], ['Beverages, water, tap, drinking', 600]],
-    portions: [['1 wrap', 250], ['1 small wrap', 150]],
+    portions: SWALLOW,
   },
   {
     name: 'Efo riro', aliases: ['efo', 'spinach stew', 'vegetable soup'], cuisine: 'West African', yield: 900,
@@ -76,7 +87,7 @@ export const RECIPES = [
       ['Beef, round, bottom round, steak, separable lean and fat, trimmed to 0" fat, all grades, cooked, braised', 200],
       ['Peppers, sweet, red, raw', 150], ['Onions, raw', 60], ['Shrimp, dried', 20], ['Peppers, hot chili, red, raw', 10], ['Salt, table', 4],
     ],
-    portions: [['1 bowl', 250]],
+    portions: SOUP_PORTIONS,
   },
   {
     name: 'Okra soup', aliases: ['okro soup', 'okra stew'], cuisine: 'West African', yield: 900,
@@ -85,7 +96,7 @@ export const RECIPES = [
       ['Beef, round, bottom round, steak, separable lean and fat, trimmed to 0" fat, all grades, cooked, braised', 200],
       ['Shrimp, dried', 20], ['Onions, raw', 50], ['Soup, stock, beef, home-prepared', 300], ['Peppers, hot chili, red, raw', 10], ['Salt, table', 4],
     ],
-    portions: [['1 bowl', 250]],
+    portions: SOUP_PORTIONS,
   },
   {
     name: 'Goat pepper soup', aliases: ['pepper soup', 'peppersoup'], cuisine: 'West African', yield: 1100,
@@ -93,7 +104,7 @@ export const RECIPES = [
       ['Game meat, goat, cooked, roasted', 400], ['Soup, stock, beef, home-prepared', 800], ['Onions, raw', 50],
       ['Peppers, hot chili, red, raw', 15], ['Salt, table', 5],
     ],
-    portions: [['1 bowl', 350]],
+    portions: BOWL_SOUP,
   },
   {
     name: 'Puff puff', aliases: ['puff-puff', 'bofrot', 'mandazi'], cuisine: 'West African', yield: 900,
@@ -101,7 +112,7 @@ export const RECIPES = [
       ['Wheat flour, white, all-purpose, enriched, unbleached', 500], ['Sugars, granulated', 80],
       ['Beverages, water, tap, drinking', 350], ['Oil, vegetable, soybean, refined', 120],
     ],
-    portions: [['1 ball', 30], ['5 balls', 150]],
+    portions: [['1 piece (ball)', 30], ['5 pieces', 150]],
   },
   {
     name: 'Chin chin', aliases: ['chinchin'], cuisine: 'West African', yield: 750,
@@ -117,7 +128,7 @@ export const RECIPES = [
       ['Rice, white, long-grain, regular, enriched, cooked', 600],
       ['Cowpeas, common (blackeyes, crowder, southern), mature seeds, cooked, boiled, with salt', 300],
     ],
-    portions: [['1 plate', 350]],
+    portions: RICE_DISH,
   },
   // ---- Caribbean
   {
@@ -305,18 +316,18 @@ const BOWL = [['1 bowl', 300]], PLATE = [['1 plate', 350]];
 RECIPES.push(
   // West Africa
   d('Ofada stew', 'West African', 650, [['green_pepper', 250], ['palm_oil', 100], ['beef', 300], ['tripe', 150], ['onion', 100], ['chili', 30], ['salt', 4]], [['1 serving', 150]], ['ayamase', 'designer stew']),
-  d('Yam porridge', 'West African', 950, [['yam', 600], ['palm_oil', 40], ['tomato', 150], ['red_pepper', 80], ['onion', 60], ['dried_shrimp', 15], ['spinach', 50], ['salt', 4]], BOWL, ['asaro', 'yam pottage']),
-  d('Beans porridge', 'West African', 820, [['cowpeas', 600], ['palm_oil', 40], ['tomato', 100], ['red_pepper', 60], ['onion', 50], ['dried_shrimp', 10], ['salt', 4]], BOWL, ['ewa riro', 'beans and plantain']),
+  d('Yam porridge', 'West African', 950, [['yam', 600], ['palm_oil', 40], ['tomato', 150], ['red_pepper', 80], ['onion', 60], ['dried_shrimp', 15], ['spinach', 50], ['salt', 4]], PLATE_DISH, ['asaro', 'yam pottage']),
+  d('Beans porridge', 'West African', 820, [['cowpeas', 600], ['palm_oil', 40], ['tomato', 100], ['red_pepper', 60], ['onion', 50], ['dried_shrimp', 10], ['salt', 4]], PLATE_DISH, ['ewa riro', 'beans and plantain']),
   d('Ewa agoyin', 'West African', 760, [['cowpeas', 600], ['palm_oil', 80], ['onion', 100], ['chili', 20], ['salt', 4]], BOWL, ['agoyin beans']),
   d('Gizdodo', 'West African', 850, [['plantain_fried', 300], ['gizzard', 250], ['tomato', 150], ['red_pepper', 100], ['onion', 60], ['oil', 40], ['salt', 3]], [['1 serving', 250]], ['gizzard and plantain']),
   d('Asun', 'West African', 600, [['goat', 500], ['onion', 80], ['chili', 20], ['oil', 20], ['salt', 4]], [['1 serving', 150]], ['spicy goat meat']),
-  d('Edikang ikong', 'West African', 1000, [['spinach', 350], ['kale', 200], ['palm_oil', 80], ['beef', 250], ['salt_cod', 40], ['dried_shrimp', 20], ['onion', 50], ['chili', 10], ['salt', 4]], BOWL, ['edikaikong', 'vegetable soup']),
+  d('Edikang ikong', 'West African', 1000, [['spinach', 350], ['kale', 200], ['palm_oil', 80], ['beef', 250], ['salt_cod', 40], ['dried_shrimp', 20], ['onion', 50], ['chili', 10], ['salt', 4]], SOUP_PORTIONS, ['edikaikong', 'vegetable soup']),
   d('Banku', 'West African', 1000, [['cornmeal', 300], ['cassava', 200], ['water', 700]], [['1 ball', 250]], ['akple']),
   d('Kelewele', 'West African', 410, [['plantain_fried', 400], ['ginger', 10], ['chili', 5], ['salt', 2]], [['1 serving', 150]], ['spicy fried plantain']),
-  d('Red red', 'West African', 950, [['cowpeas', 500], ['palm_oil', 50], ['tomato', 150], ['onion', 60], ['chili', 10], ['plantain_fried', 250], ['salt', 4]], PLATE, ['redred', 'beans stew with plantain']),
+  d('Red red', 'West African', 950, [['cowpeas', 500], ['palm_oil', 50], ['tomato', 150], ['onion', 60], ['chili', 10], ['plantain_fried', 250], ['salt', 4]], PLATE_DISH, ['redred', 'beans stew with plantain']),
   d('Shito', 'West African', 450, [['oil', 300], ['dried_shrimp', 100], ['onion', 200], ['chili', 50], ['garlic', 20], ['ginger', 20]], [['1 tbsp', 15]], ['black pepper sauce', 'shitor']),
   d('Groundnut soup', 'West African', 1600, [['peanut_butter', 150], ['tomato', 300], ['onion', 100], ['chicken_thigh', 500], ['stock', 800], ['chili', 10], ['salt', 5]], BOWL, ['peanut soup', 'nkate nkwan', 'maafe soup']),
-  d('Light soup', 'West African', 1800, [['chicken_thigh', 500], ['tomato', 400], ['onion', 150], ['chili', 20], ['stock', 1000], ['ginger', 10], ['salt', 5]], BOWL, ['ghana light soup', 'pepper soup ghana']),
+  d('Light soup', 'West African', 1800, [['chicken_thigh', 500], ['tomato', 400], ['onion', 150], ['chili', 20], ['stock', 1000], ['ginger', 10], ['salt', 5]], BOWL_SOUP, ['ghana light soup', 'pepper soup ghana']),
   d('Kontomire stew', 'West African', 800, [['cocoyam_leaves', 400], ['palm_oil', 60], ['tomato', 150], ['onion', 80], ['egg_boiled', 100], ['salt_cod', 50]], BOWL, ['palava sauce', 'kontomire']),
   d('Thieboudienne', 'West African', 1500, [['rice', 600], ['fish', 400], ['tomato_paste', 60], ['oil', 60], ['onion', 100], ['carrots', 150], ['cabbage', 150], ['eggplant', 100], ['salt', 6]], PLATE, ['ceebu jen', 'thieb', 'senegalese fish and rice']),
   d('Mafe', 'West African', 1400, [['beef', 400], ['peanut_butter', 150], ['tomato_paste', 50], ['onion', 100], ['sweet_potato', 200], ['carrots', 100], ['stock', 500], ['oil', 20], ['salt', 5]], BOWL, ['maafe', 'peanut stew', 'domoda']),
@@ -427,7 +438,7 @@ RECIPES.push(
       ['Peas, green, frozen, cooked, boiled, drained, without salt', 60], ['Oil, vegetable, soybean, refined', 60],
       ['Soup, stock, chicken, home-prepared', 250], ['Salt, table', 6],
     ],
-    portions: [['1 plate', 350], ['1 cup', 200]],
+    portions: RICE_DISH,
   },
   {
     name: 'Fried rice, Nigerian style', cuisine: 'Nigerian', yield: 1650, aliases: ['naija fried rice', 'party fried rice', 'nigerian fried rice'],
@@ -437,7 +448,7 @@ RECIPES.push(
       ['Beef, variety meats and by-products, liver, cooked, braised', 100], ['Spices, curry powder', 6], ['Spices, thyme, dried', 2],
       ['Oil, vegetable, soybean, refined', 80], ['Soup, stock, chicken, home-prepared', 150], ['Salt, table', 6],
     ],
-    portions: [['1 plate', 350], ['1 cup', 200]],
+    portions: RICE_DISH,
   },
   {
     name: 'Native jollof (palm oil rice)', cuisine: 'Nigerian', yield: 1550, aliases: ['concoction rice', 'palm oil jollof', 'iwuk edesi', 'palm oil rice'],
@@ -445,7 +456,7 @@ RECIPES.push(
       ['Rice, white, long-grain, regular, enriched, cooked', 1000], ['Oil, palm', 80], ['Onions, raw', 100], ['Peppers, hot chili, red, raw', 10],
       ['Shrimp, dried', 30], ['Spinach, cooked, boiled, drained, without salt', 150], ['Soup, stock, beef, home-prepared', 200], ['Salt, table', 6],
     ],
-    portions: [['1 plate', 350], ['1 cup', 200]],
+    portions: RICE_DISH,
   },
 );
 
@@ -485,7 +496,9 @@ const n = (name, yieldG, ingredients, portions, aliases = []) => ({ name, cuisin
 const WATER = 'Beverages, water, tap, drinking', PALM = 'Oil, palm', STOCK = 'Soup, stock, beef, home-prepared', SALT = 'Salt, table';
 const BEEF = I.beef, CRAY = 'Shrimp, dried', STOCKFISH = 'Fish, cod, Atlantic, dried and salted', ONION = 'Onions, raw', CHILI = 'Peppers, hot chili, red, raw';
 const IRU = 'African locust bean, fermented (soumbala)', CATFISH = 'Catfish, fillet, boiled* (as part of a recipe)', COCOYAM = 'Cocoyam, tuber, white, boiled* (without salt), drained';
-const WRAP = [['1 wrap', 250], ['1 small wrap', 150]], SOUP = [['1 bowl', 300], ['1 ladle', 150]];
+// How these are really served (see docs/portions.md): swallows by the wrap, soups by the ladle
+// or as a small / medium / large portion with the swallow — never counted in bowls.
+const WRAP = SWALLOW, SOUP = SOUP_PORTIONS;
 
 RECIPES.push(
   // Swallows: flour (or tuber) stirred into hot water; values per 100 g of the cooked swallow.
@@ -520,7 +533,7 @@ RECIPES.push(
 
   // Other Nigerian favourites
   n('Nigerian fried rice', 1500, [[I.rice, 1000], [I.carrots, 120], [I.peas, 100], [I.green_pepper, 60], [ONION, 60], ['Chicken, liver, all classes, cooked, simmered', 80], [I.oil, 70], [I.curry, 6], [I.thyme, 2], [STOCK, 150], [SALT, 6]], [['1 plate', 350], ['1 cup', 200]], ['party fried rice', 'naija fried rice']),
-  n('Abacha (African salad)', 700, [['Cassava, tuber, white flesh, dried', 250], [PALM, 60], [IRU, 30], [CRAY, 20], [ONION, 50], [CHILI, 10], [WATER, 250], [SALT, 4]], [['1 plate', 250]], ['abacha', 'african salad', 'abacha ncha']),
+  n('Abacha (African salad)', 700, [['Cassava, tuber, white flesh, dried', 250], [PALM, 60], [IRU, 30], [CRAY, 20], [ONION, 50], [CHILI, 10], [WATER, 250], [SALT, 4]], PLATE_DISH, ['abacha', 'african salad', 'abacha ncha']),
   n('Masa', 600, [['Rice, white, short-grain, enriched, cooked', 400], [I.sugar, 40], [I.oil, 40], [WATER, 150]], [['1 piece', 40], ['5 pieces', 200]], ['waina', 'rice cake', 'masa rice cakes']),
   n('Boli (roasted plantain)', 1000, [['Plantain, ripe, ivory flesh, raw', 1050]], [['1 plantain', 180]], ['bole', 'roasted plantain', 'boli and fish']),
 );

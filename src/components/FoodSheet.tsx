@@ -548,7 +548,7 @@ function SayAmount({ food, onGrams }: { food: Food; onGrams: (g: number, how: st
       setOn(false); recRef.current = null;
       if (!said) return;
       const a = parseAmount(said);
-      const g = a.qty != null ? gramsFor(food, a.qty, a.unit) : null;
+      const g = a.qty != null ? gramsFor(food, a.qty, a.unit, a.size) : null;
       if (g) { onGrams(g.grams, g.how); haptic(); toast(`Set to ${g.how} = ${fmt(g.grams)} g`); }
       else toast(`Heard “${said}” — say grams, or a serving this food has (e.g. ${food.portions[0]?.label ?? '150 grams'})`);
     };

@@ -4,7 +4,7 @@ import { Check, Mic, Plus, Search, Trash2, Volume2, VolumeX, X } from 'lucide-re
 import { useStore } from '@/store/useStore';
 import { useFoodDb } from '@/lib/hooks';
 import { matchItems } from '@/lib/recognize-client';
-import { lastAmount, asRecognition, gramsFor, parseAmount, parseSaid, type SaidFood } from '@/lib/describe';
+import { lastAmount, asRecognition, gramsFor, parseAmount, parseSaid, questionFor, type SaidFood } from '@/lib/describe';
 import { splitName } from '@/lib/foods';
 import { mealForNow, todayKey } from '@/lib/dates';
 import { MEAL_LABELS, defaultMeal, rememberMeal, useMealOptions } from '@/lib/meals';
@@ -20,6 +20,15 @@ export const canUseVoice = !!SR;
 interface Line { key: string; said: SaidFood; food: Food | null; options: Food[]; grams: number | null; how: string }
 
 const short = (f: Food) => splitName(f.name).title.split(',')[0];
+
+/** "2 × 1 medium wrap" → "2 medium wraps"; "1 × 1 ladle" → "1 ladle" (for reading back aloud). */
+function spokenAmount(how: string): string {
+  const m = /^([\d.]+) × 1 (.+)$/.exec(how);
+  if (!m) return how.replace(/^your usual /, 'your usual ');
+  const n = Number(m[1]); const label = m[2].replace(/\s*\(.*\)$/, '');
+  return n === 1 ? `1 ${label}` : `${m[1]} ${label.replace(/(\w+)$/, (w) => (/(s|sh|ch)$/.test(w) ? `${w}es` : `${w}s`))}`;
+}
+
 
 /**
  * Voice food logging, on the phone (free: the phone's own speech recognition and voice).
@@ -105,11 +114,11 @@ export function VoiceSheet({ onClose, onSearch, date }: { onClose: () => void; o
     const next: Line[] = parts.map((p, i) => {
       const all = found[i]?.candidates.slice(0, 8) ?? [];
       // "3 chicken wings": prefer a record that knows how much one wing weighs.
-      const fits = p.qty != null ? all.find((f) => gramsFor(f, p.qty, p.unit)) : undefined;
+      const fits = p.qty != null ? all.find((f) => gramsFor(f, p.qty, p.unit, p.size)) : undefined;
       const options = (fits ? [fits, ...all.filter((f) => f !== fits)] : all).slice(0, 4);
       const food = options[0] ?? null;
       // No amount said: use what they had last time if we know it; otherwise ask, never assume.
-      const g = food && (p.qty != null || p.unit) ? gramsFor(food, p.qty, p.unit) : null;
+      const g = food && (p.qty != null || p.unit) ? gramsFor(food, p.qty, p.unit, p.size) : null;
       const last = !g && food && p.qty == null && !p.unit ? lastAmount(useStore.getState().entries, food) : null;
       if (last) return { key: `${Date.now()}-${i}`, said: p, food, options, grams: last, how: `your usual ${fmt(last)} g of` };
       return { key: `${Date.now()}-${i}`, said: p, food, options, grams: g?.grams ?? null, how: g?.how ?? '' };
@@ -126,7 +135,7 @@ export function VoiceSheet({ onClose, onSearch, date }: { onClose: () => void; o
     const l = all.find((x) => !x.food || x.grams == null);
     if (!l) {
       setAsking(null);
-      if (all.length) say(`Got it: ${all.map((x) => `${x.how || `${fmt(x.grams ?? 0)} grams`} ${x.food ? short(x.food) : x.said.text}`).join(', ')}. Tap add when you're ready.`);
+      if (all.length) say(`Got it: ${all.map((x) => `${x.how ? spokenAmount(x.how) : `${fmt(x.grams ?? 0)} grams`} of ${x.food ? short(x.food).toLowerCase() : x.said.text}`).join(', ')}. Tap add when you're ready.`);
       return;
     }
     if (!l.food) {
@@ -136,19 +145,17 @@ export function VoiceSheet({ onClose, onSearch, date }: { onClose: () => void; o
       return;
     }
     const name = short(l.food).toLowerCase();
-    // Ask in the food's own serving: "How many wraps of eba?", "How many wings?"
-    const unitP = (l.food.portions ?? []).find((p) => /\b(piece|wing|drumstick|thigh|leg|slice|egg|ball|fillet|wrap|stick|plate|bowl)\b/i.test(p.label));
-    const unit = unitP ? /\b(piece|wing|drumstick|thigh|leg|slice|egg|ball|fillet|wrap|stick|plate|bowl)\b/i.exec(unitP.label)![1].toLowerCase() : null;
-    const many = unit ? (/(wing|drumstick|thigh|leg|egg|ball|fillet)/.test(unit) && name.includes(unit) ? `How many ${name}?` : `How many ${unit === 'piece' ? 'pieces' : `${unit}s`} of ${name}?`) : null;
-    const q = many ?? `How much ${name}? Say grams, or cups or spoons.`;
+    // Ask the way people actually serve this food (see questionFor): never "how many bowls" of a soup.
+    const { q, many, unit: countUnit } = questionFor(l.food, name);
     setAsking(q);
     say(q, () => listen((answer) => {
       const a = parseAmount(answer);
-      const g = a.qty != null ? gramsFor(l.food!, a.qty, a.unit) : null;
+      // A bare number ("two") counts in the unit we asked about (ladles, wraps, sticks...).
+      const g = a.qty != null ? gramsFor(l.food!, a.qty, a.unit ?? (a.size ? null : countUnit), a.size) : null;
       setLines((cur) => {
         const upd = cur.map((x) => (x.key === l.key ? { ...x, grams: g?.grams ?? x.grams, how: g?.how ?? x.how } : x));
         // Didn't catch a number: ask again and listen again (it used to stop here).
-        if (!g) { const again = `Sorry, ${many ? many.charAt(0).toLowerCase() + many.slice(1) : `how much ${name}?`} For example, 2, or 150 grams.`; setAsking(again); const h = handler.current; say(again, () => listen(h, true)); }
+        if (!g) { const again = `Sorry, ${many.charAt(0).toLowerCase() + many.slice(1)} For example, ${countUnit ? `2 ${countUnit}s, or medium` : '150 grams'}.`; setAsking(again); const h = handler.current; say(again, () => listen(h, true)); }
         else setTimeout(() => askNext(upd), 50);
         return upd;
       });
@@ -207,7 +214,7 @@ export function VoiceSheet({ onClose, onSearch, date }: { onClose: () => void; o
                 {l.food && <FoodVisual name={l.food.name} category={l.food.category} size={44} />}
                 <div className="min-w-0 flex-1">
                   {l.options.length > 1 ? (
-                    <select aria-label={`Which ${l.said.text}`} className="w-full truncate bg-transparent text-[15px] font-semibold outline-none" value={l.food?.id} onChange={(e) => setLines((cur) => cur.map((x) => { if (x.key !== l.key) return x; const f = x.options.find((o) => o.id === e.target.value)!; const g = gramsFor(f, x.said.qty, x.said.unit); return { ...x, food: f, grams: g?.grams ?? x.grams, how: g?.how ?? x.how }; }))}>
+                    <select aria-label={`Which ${l.said.text}`} className="w-full truncate bg-transparent text-[15px] font-semibold outline-none" value={l.food?.id} onChange={(e) => setLines((cur) => cur.map((x) => { if (x.key !== l.key) return x; const f = x.options.find((o) => o.id === e.target.value)!; const g = gramsFor(f, x.said.qty, x.said.unit, x.said.size); return { ...x, food: f, grams: g?.grams ?? x.grams, how: g?.how ?? x.how }; }))}>
                       {l.options.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
                     </select>
                   ) : <p className="truncate text-[15px] font-semibold">{l.food?.name ?? l.said.text}</p>}

@@ -99,7 +99,7 @@ export default function Snap() {
     if (!said.length) { setError('Say or type the foods, e.g. “2 eggs and a cup of rice”.'); setPhase('error'); return; }
     const ms = matchItems(asRecognition(said), custom, useStore.getState().picks).map((m, i) => {
       const f = m.candidates[0];
-      const stated = f && (said[i].qty != null || said[i].unit) ? gramsFor(f, said[i].qty, said[i].unit) : null;
+      const stated = f && (said[i].qty != null || said[i].unit) ? gramsFor(f, said[i].qty, said[i].unit, said[i].size) : null;
       // Nothing said about the amount: their own last amount of this food, if they've logged it before.
       const usual = f && !stated && said[i].qty == null && !said[i].unit ? lastAmount(useStore.getState().entries, f) : null;
       const g = stated ?? (usual ? { grams: usual } : f ? gramsFor(f, null, null) : null);
