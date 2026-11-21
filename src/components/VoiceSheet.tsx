@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Check, Mic, Plus, Search, Trash2, Volume2, VolumeX, X } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 import { useFoodDb } from '@/lib/hooks';
@@ -6,8 +7,8 @@ import { matchItems } from '@/lib/recognize-client';
 import { lastAmount, asRecognition, gramsFor, parseAmount, parseSaid, type SaidFood } from '@/lib/describe';
 import { splitName } from '@/lib/foods';
 import { mealForNow, todayKey } from '@/lib/dates';
-import { MEAL_LABELS } from '@/lib/meals';
-import type { Food } from '@/lib/types';
+import { MEAL_LABELS, useMealOptions } from '@/lib/meals';
+import type { Food, Meal } from '@/lib/types';
 import { FoodVisual } from './FoodIcon';
 import { cx, fmt } from './ui';
 import { haptic, toast } from './fx';
@@ -39,7 +40,10 @@ export function VoiceSheet({ onClose, onSearch, date }: { onClose: () => void; o
   const [speak, setSpeak] = useState(() => { try { return localStorage.getItem('nutivili-voice-replies') !== 'off'; } catch { return true; } });
   const rec = useRef<Recognizer | null>(null);
   const closed = useRef(false);
-  const meal = mealForNow();
+  const [meal, setMeal] = useState<Meal>(mealForNow());
+  const meals = useMealOptions(meal);
+  // What the mic is waiting for: a new meal, or the answer to a question ("How many wings?").
+  const handler = useRef<(text: string) => void>(() => undefined);
 
   // The microphone and the voice always stop when the sheet closes or the person leaves the app.
   const stopAll = () => {
@@ -67,8 +71,9 @@ export function VoiceSheet({ onClose, onSearch, date }: { onClose: () => void; o
     } catch { then?.(); }
   }
 
-  function listen(onFinal: (text: string) => void) {
+  function listen(onFinal: (text: string) => void, auto = false) {
     if (!SR || closed.current) return;
+    handler.current = onFinal;
     setErr('');
     stopAll();
     const r = new SR();
@@ -78,11 +83,17 @@ export function VoiceSheet({ onClose, onSearch, date }: { onClose: () => void; o
     let last = '';
     r.onresult = (e) => { last = Array.from(e.results).map((x) => x[0].transcript).join(' ').trim(); setSaid(last); };
     r.onend = () => { setListening(false); rec.current = null; if (last && !closed.current) onFinal(last); };
-    r.onerror = (e) => { setListening(false); if (e?.error === 'no-speech' || e?.error === 'aborted') return; setErr(e?.error === 'not-allowed' ? 'Microphone access is off. Allow it in your browser settings, or type below.' : 'Couldn’t hear that. Try again closer to the phone.'); };
+    r.onerror = (e) => {
+      setListening(false);
+      if (e?.error === 'no-speech' || e?.error === 'aborted') return;
+      // Phones (iPhone especially) won't reopen the mic by themselves after a spoken question: just tap to answer.
+      if (auto && (e?.error === 'not-allowed' || e?.error === 'service-not-allowed')) { setAsking((q) => (q && !q.includes('Tap the mic') ? `${q} Tap the mic to answer.` : q)); return; }
+      setErr(e?.error === 'not-allowed' ? 'Microphone access is off. Allow it in your browser settings, or type below.' : 'Couldn’t hear that. Tap the mic and try again.');
+    };
     rec.current = r;
     setListening(true);
     haptic();
-    try { r.start(); } catch { setListening(false); }
+    try { r.start(); } catch { setListening(false); if (auto) setAsking((q) => (q && !q.includes('Tap the mic') ? `${q} Tap the mic to answer.` : q)); }
   }
 
   // Turn a sentence into lines: each food found in the database, amounts from its own servings.
@@ -125,19 +136,23 @@ export function VoiceSheet({ onClose, onSearch, date }: { onClose: () => void; o
       return;
     }
     const name = short(l.food).toLowerCase();
-    const piecey = (l.food.portions ?? []).some((p) => /\b(piece|wing|drumstick|thigh|leg|slice|egg|medium|large|small|whole|ball|fillet)\b/i.test(p.label));
-    const q = piecey ? `How many ${name}?` : `How much ${name}? Say grams, or cups or spoons.`;
+    // Ask in the food's own serving: "How many wraps of eba?", "How many wings?"
+    const unitP = (l.food.portions ?? []).find((p) => /\b(piece|wing|drumstick|thigh|leg|slice|egg|ball|fillet|wrap|stick|plate|bowl)\b/i.test(p.label));
+    const unit = unitP ? /\b(piece|wing|drumstick|thigh|leg|slice|egg|ball|fillet|wrap|stick|plate|bowl)\b/i.exec(unitP.label)![1].toLowerCase() : null;
+    const many = unit ? (/(wing|drumstick|thigh|leg|egg|ball|fillet)/.test(unit) && name.includes(unit) ? `How many ${name}?` : `How many ${unit === 'piece' ? 'pieces' : `${unit}s`} of ${name}?`) : null;
+    const q = many ?? `How much ${name}? Say grams, or cups or spoons.`;
     setAsking(q);
     say(q, () => listen((answer) => {
       const a = parseAmount(answer);
       const g = a.qty != null ? gramsFor(l.food!, a.qty, a.unit) : null;
       setLines((cur) => {
         const upd = cur.map((x) => (x.key === l.key ? { ...x, grams: g?.grams ?? x.grams, how: g?.how ?? x.how } : x));
-        if (!g) { const again = `Sorry, how much ${name}? For example, 2, or 150 grams.`; setAsking(again); say(again); }
+        // Didn't catch a number: ask again and listen again (it used to stop here).
+        if (!g) { const again = `Sorry, ${many ? many.charAt(0).toLowerCase() + many.slice(1) : `how much ${name}?`} For example, 2, or 150 grams.`; setAsking(again); const h = handler.current; say(again, () => listen(h, true)); }
         else setTimeout(() => askNext(upd), 50);
         return upd;
       });
-    }));
+    }, true));
   }
 
   // Start listening once the food list is ready (so the first words aren't lost).
@@ -157,7 +172,8 @@ export function VoiceSheet({ onClose, onSearch, date }: { onClose: () => void; o
     close();
   }
 
-  return (
+  // Attached to the page itself, so nothing on the screen behind can push it out of view.
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-end bg-black/45 backdrop-blur-[2px]" onClick={close} role="dialog" aria-label="Voice logging">
       <div className="max-h-[92dvh] w-full overflow-y-auto rounded-t-[32px] bg-bg px-6 pb-[max(env(safe-area-inset-bottom),1.5rem)] pt-5" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between gap-2">
@@ -170,11 +186,14 @@ export function VoiceSheet({ onClose, onSearch, date }: { onClose: () => void; o
         <p className="mt-1 text-sm text-silver">For example: “two boiled eggs, a cup of rice and three chicken wings”. I’ll ask if I need to know how much.</p>
 
         <div className="my-5 grid place-items-center">
-          <button disabled={!SR} onClick={() => (listening ? stopAll() : listen(understand))} className={cx('relative grid h-20 w-20 place-items-center rounded-full text-white transition disabled:opacity-40', listening ? 'bg-danger' : 'bg-primary')} aria-label={listening ? 'Stop listening' : 'Start listening'}>
+          <button disabled={!SR} onClick={() => (listening ? stopAll() : listen(asking && lines.some((l) => !l.food || l.grams == null) ? handler.current : understand))} className={cx('relative grid h-20 w-20 place-items-center rounded-full text-white transition disabled:opacity-40', listening ? 'bg-danger' : 'bg-primary')} aria-label={listening ? 'Stop listening' : 'Start listening'}>
             {listening && <span className="absolute inset-0 animate-ping rounded-full bg-danger/40" />}
             <Mic size={32} className="relative" />
           </button>
           <p className="mt-2 text-sm font-semibold text-silver">{!SR ? 'Voice isn’t available in this browser — type below' : listening ? 'Listening…' : lines.length ? 'Tap to add more' : 'Tap to speak'}</p>
+        </div>
+        <div className="-mx-6 mb-3 flex gap-1.5 overflow-x-auto px-6 no-scrollbar" role="group" aria-label="Meal">
+          {meals.map((m) => <button key={m.value} onClick={() => setMeal(m.value)} className={cx('chip !h-8 shrink-0 !px-3 text-[13px]', meal === m.value && 'chip-on')}>{m.label}</button>)}
         </div>
         {asking && <p className="mb-2 rounded-2xl bg-accent/10 px-4 py-3 text-[15px] font-semibold text-accent">{asking}</p>}
         {said && <p className="mb-2 rounded-2xl bg-surface px-4 py-2.5 text-[15px] text-silver">“{said}”</p>}
@@ -213,6 +232,7 @@ export function VoiceSheet({ onClose, onSearch, date }: { onClose: () => void; o
           <button disabled={!ready} onClick={addAll} className="btn-primary"><Check size={18} /> {lines.length ? `Add ${lines.length} to ${MEAL_LABELS[meal]} · ${fmt(kcal)} kcal, ${fmt(protein)} g protein` : 'Add to diary'}</button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
