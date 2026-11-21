@@ -17,10 +17,18 @@ const UNIT = '(g|grams?|gram|kg|kilos?|kilograms?|oz|ounces?|lbs?|pounds?|ml|mil
 const LEAD = new RegExp(`^(?:about|around|roughly|like|maybe|some)?\\s*(\\d+(?:[.,]\\d+)?|${Object.keys(WORDS).join('|')})?\\s*(?:x\\s*)?${UNIT}?\\b\\s*(?:of\\s+)?(.*)$`, 'i');
 
 /** Split a sentence into foods with their amounts. */
+const FILLER = /\b(hey|hi|hello|um+|uh+|erm|okay|ok|so|well|like|just|basically|actually|please|nutivili|for (breakfast|lunch|dinner|supper|a snack|my \w+)|this (morning|afternoon|evening)|today|tonight|earlier|i (have |just )?(had|ate|eaten|drank|drunk|consumed)|i'?ve (had|eaten)|(can you |please )?(log|add|record)( that)?( i had)?|i want to log|some of)\b/g;
+const NUM_WORD = `\\d+(?:[.,]\\d+)?|${Object.keys(WORDS).join('|')}`;
+// A quantity that starts a new food, even without "and": "two boiled eggs a cup of rice" → two items.
+const NEW_ITEM = new RegExp(`\\s(?=(?:${NUM_WORD})\\s+(?!of\\b)[a-z])`, 'g');
+
 export function parseSaid(text: string): SaidFood[] {
-  const clean = text.toLowerCase().replace(/^(i (had|ate|drank)|for (breakfast|lunch|dinner)( i had)?|today i had|log)\s+/, '').replace(/[.!?]/g, ' ');
+  const clean = text.toLowerCase().replace(/[.!?]/g, ' ').replace(FILLER, ' ').replace(/\b(half|quarter)( of)? an? /g, '$1 ').replace(/\s+/g, ' ').trim();
   return clean
     .split(/,|;|\band then\b|\band\b|\bwith\b|\bplus\b|\balso\b|\n/)
+    .flatMap((p) => p.trim().split(NEW_ITEM).map((x) => x.trim()).filter(Boolean)
+      // "a" / "an" only start a new item after a word that ends a food, not "half a cup".
+      .reduce<string[]>((acc, part) => { const prev = acc[acc.length - 1]; if (prev && /^(a|an)\s/.test(part) && /\b(half|quarter|about|around|roughly)$/.test(prev)) acc[acc.length - 1] = `${prev} ${part}`; else acc.push(part); return acc; }, []))
     .map((p) => p.trim())
     .filter((p) => p.length > 1)
     .map((p) => {

@@ -4,7 +4,7 @@ import { MealPicker } from './MealPicker';
 import { aiHeaders } from '@/lib/premium';
 import { Link } from 'react-router-dom';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Camera, ChevronDown, ExternalLink, Heart, ImagePlus, Minus, Plus, Trash2, Copy, ArrowLeftRight, Scale } from 'lucide-react';
+import { Camera, ChevronDown, ExternalLink, Heart, ImagePlus, Minus, Plus, Trash2, Copy, ArrowLeftRight, Scale, Mic } from 'lucide-react';
 import type { Food, LogEntry, Meal } from '@/lib/types';
 import { nutrientsFor, round1, scale } from '@/lib/nutrition';
 import { EXTRA_KEYS } from '@/lib/nutrients';
@@ -16,7 +16,7 @@ import { useAvoid } from './Allergy';
 import { deletePhoto, savePhoto } from '@/lib/photos';
 import { useFoodDb, usePhotoUrl, useDay } from '@/lib/hooks';
 import { useStore } from '@/store/useStore';
-import { lastAmount } from '@/lib/describe';
+import { gramsFor, lastAmount, parseAmount } from '@/lib/describe';
 import { AllergyBanner } from './Allergy';
 import { fromKey, mealForNow, todayKey } from '@/lib/dates';
 import { Ring, Segmented, Sheet, StateBadge, cx, fmt } from './ui';
@@ -272,6 +272,7 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
               AI estimate ~{preset.aiEstimate}g
             </button>
           )}
+          <SayAmount food={food} onGrams={(v) => { setByCount(false); setG(v); }} />
           {!!usual && (
             <button onClick={() => { haptic(); setG(usual); }} className={cx('chip shrink-0', Math.round(g) === Math.round(usual) && 'chip-on')} title="The amount you logged last time">
               Last time {fmt(usual)}g
@@ -510,4 +511,36 @@ function prettyDiff(base: string, other: string): string {
   let label = parts.join(', ').trim() || 'Plain';
   if (label.length > 28) label = label.slice(0, 28).replace(/[ ,]+\S*$/, '') + '…';
   return label.charAt(0).toUpperCase() + label.slice(1);
+}
+
+type Rec = { lang: string; interimResults: boolean; continuous: boolean; start: () => void; stop: () => void; onresult: (e: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void; onend: () => void; onerror: () => void };
+const SpeechRec = typeof window !== 'undefined' ? ((window as unknown as Record<string, unknown>).SpeechRecognition ?? (window as unknown as Record<string, unknown>).webkitSpeechRecognition) as (new () => Rec) | undefined : undefined;
+
+/** Say the amount ("150 grams", "two pieces", "a cup"); only uses this food's own serving sizes. */
+function SayAmount({ food, onGrams }: { food: Food; onGrams: (g: number, how: string) => void }) {
+  const [on, setOn] = useState(false);
+  const recRef = useRef<Rec | null>(null);
+  useEffect(() => () => recRef.current?.stop(), []);
+  if (!SpeechRec) return null;
+  function start() {
+    if (on) { recRef.current?.stop(); return; }
+    const r = new SpeechRec!();
+    r.lang = navigator.language || 'en-GB'; r.interimResults = false; r.continuous = false;
+    let said = '';
+    r.onresult = (e) => { said = Array.from(e.results).map((x) => x[0].transcript).join(' '); };
+    r.onend = () => {
+      setOn(false); recRef.current = null;
+      if (!said) return;
+      const a = parseAmount(said);
+      const g = a.qty != null ? gramsFor(food, a.qty, a.unit) : null;
+      if (g) { onGrams(g.grams, g.how); haptic(); toast(`Set to ${g.how} = ${fmt(g.grams)} g`); }
+      else toast(`Heard “${said}” — say grams, or a serving this food has (e.g. ${food.portions[0]?.label ?? '150 grams'})`);
+    };
+    r.onerror = () => setOn(false);
+    recRef.current = r; setOn(true); haptic();
+    try { r.start(); } catch { setOn(false); }
+  }
+  return (
+    <button type="button" onClick={start} className={cx('chip shrink-0', on && 'chip-on')} aria-label="Say the amount"><Mic size={15} /> {on ? 'Listening…' : 'Say it'}</button>
+  );
 }

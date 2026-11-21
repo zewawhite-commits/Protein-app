@@ -3,14 +3,24 @@ import { nutrientsFor } from '@/lib/nutrition';
 import { splitName } from '@/lib/foods';
 import { useFoodLookup } from '@/lib/hooks';
 import { FoodVisual } from './FoodIcon';
+import { Trash2 } from 'lucide-react';
+import { useStore } from '@/store/useStore';
 import { StateBadge, cx, fmt } from './ui';
+import { haptic, toast } from './fx';
 
-export function EntryRow({ entry, onClick }: { entry: LogEntry; onClick?: () => void }) {
+export function EntryRow({ entry, onClick, deletable = true }: { entry: LogEntry; onClick?: () => void; deletable?: boolean }) {
   const lookup = useFoodLookup();
   const n = nutrientsFor(entry.food.per100, entry.grams);
   const { title } = splitName(entry.food.name);
+  // Delete straight from the list (with Undo), so nobody has to open the food to remove it.
+  function remove() {
+    haptic();
+    useStore.getState().removeEntry(entry.id, { keepPhoto: true });
+    toast(`Removed ${title}`, { action: { label: 'Undo', run: () => useStore.setState((s) => ({ entries: [...s.entries, entry], deleted: Object.fromEntries(Object.entries(s.deleted).filter(([k]) => k !== entry.id)) })) } });
+  }
   return (
-    <button onClick={onClick} className={cx('flex w-full items-center gap-4 rounded-[22px] p-3.5 text-left transition active:scale-[.99] active:bg-raised/60', entry.planned && 'opacity-60')}>
+    <div className="flex items-center">
+    <button onClick={onClick} className={cx('flex min-w-0 flex-1 items-center gap-4 rounded-[22px] p-3.5 text-left transition active:scale-[.99] active:bg-raised/60', entry.planned && 'opacity-60')}>
       <FoodVisual name={entry.food.name} category={lookup(entry.foodId)?.category} photoId={entry.photoId} fdcId={entry.food.fdcId} size={56} />
       <div className="min-w-0 flex-1">
         <p className="line-clamp-2 text-[16px] font-bold leading-snug">{title}</p>
@@ -27,5 +37,7 @@ export function EntryRow({ entry, onClick }: { entry: LogEntry; onClick?: () => 
         <p className="mt-1 text-[12px] font-semibold text-dim">kcal</p>
       </div>
     </button>
+    {deletable && <button onClick={remove} className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-dim transition active:bg-raised active:text-danger" aria-label={`Delete ${title}`}><Trash2 size={17} /></button>}
+    </div>
   );
 }

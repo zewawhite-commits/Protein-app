@@ -863,12 +863,7 @@ function CommunityFeed() {
         <span className="grid h-10 w-10 place-items-center rounded-full bg-primary text-on-primary"><Plus size={18} /></span>
       </button>
       <div className="mb-4"><Segmented full value={show} onChange={setShow} options={[{ value: 'all', label: 'Everyone' }, { value: 'following', label: 'Following' }]} /></div>
-      {posts === null ? <Loading /> : posts.length === 0 ? (
-        <div className="card p-6 text-center">
-          <p className="font-bold">Be the first to post</p>
-          <p className="mt-1 text-sm text-silver">Share today’s meal or where you’re starting from.</p>
-        </div>
-      ) : (
+      {posts === null ? <Loading /> : posts.length === 0 ? null : (
         <div className="space-y-4">
           {shown.length === 0 && show === 'following' && <p className="card p-5 text-sm text-silver">Posts from people you follow show here. Tap someone’s name on a post, then Follow.</p>}
           {shown.map((p) => <PostCard key={p.id} post={p} me={me} onAuthor={() => setPerson({ id: p.user_id, profile: p.author! })} onReact={(e) => react(p, e)} onOpen={() => setOpenPost(p)} onDelete={async () => { await deletePost(p); toast('Post deleted'); void load(); }} />)}

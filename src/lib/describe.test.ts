@@ -56,3 +56,14 @@ describe('lastAmount', () => {
     expect(lastAmount([e('b', 50, 4)], { id: 'a', name: 'a' })).toBeNull();
   });
 });
+
+describe('natural speech', () => {
+  it('keeps every food from a conversational sentence without "and"', () => {
+    const r = parseSaid('Hey I had two boiled eggs a cup of rice and three chicken wings');
+    expect(r.map((x) => [x.text, x.qty, x.unit])).toEqual([['boiled eggs', 2, null], ['rice', 1, 'cup'], ['chicken wings', 3, null]]);
+  });
+  it('handles fillers, half a cup and plain lists', () => {
+    expect(parseSaid('um so for breakfast I just had half a cup of oats, 2 eggs').map((x) => [x.text, x.qty])).toEqual([['oats', 0.5], ['eggs', 2]]);
+    expect(parseSaid('jollof rice and chicken').map((x) => x.text)).toEqual(['jollof rice', 'chicken']);
+  });
+});

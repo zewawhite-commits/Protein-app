@@ -13,32 +13,43 @@ export function LogMenu({ open, onClose, date }: { open: boolean; onClose: () =>
   const [exercise, setExercise] = useState(false);
   const q = date && date !== todayKey() ? `?date=${date}` : '';
   const go = (to: string) => { haptic(); onClose(); nav(to); };
-  const items = [
-    { icon: Camera, label: 'Scan food', sub: 'Photo of your meal', to: `/snap${q}` },
-    { icon: ScanBarcode, label: 'Barcode', sub: 'Packaged foods', to: `/barcode${q}` },
-    { icon: ScanText, label: 'Food label', sub: 'Photo of the nutrition table', to: `/snap${q ? `${q}&` : '?'}mode=label` },
-    { icon: PenLine, label: 'Describe', sub: 'Type or say it', to: `/snap${q ? `${q}&` : '?'}mode=describe` },
-    { icon: Search, label: 'Food database', sub: '18,000+ foods', to: `/add${q}` },
-    { icon: Bookmark, label: 'Saved meals', sub: 'Log in one tap', to: `/add?tab=saved${q ? `&${q.slice(1)}` : ''}` },
-    { icon: PlusSquare, label: 'Create a food', sub: 'Your own numbers', to: `/add?create=1${q ? `&${q.slice(1)}` : ''}` },
-    { icon: ChefHat, label: 'Recipes', sub: 'Make, import & share', to: `/add?tab=custom${q ? `&${q.slice(1)}` : ''}` },
+  const groups: { title: string; items: { icon: typeof Camera; label: string; sub: string; to?: string; run?: () => void }[] }[] = [
+    { title: 'Quick logging', items: [
+      { icon: Camera, label: 'Scan food', sub: 'Photo of your meal', to: `/snap${q}` },
+      { icon: PenLine, label: 'Describe your food', sub: 'Type or say it', to: `/snap${q ? `${q}&` : '?'}mode=describe` },
+      { icon: Search, label: 'Food database', sub: '18,000+ foods', to: `/add${q}` },
+      { icon: Bookmark, label: 'Saved meals', sub: 'Log in one tap', to: `/add?tab=saved${q ? `&${q.slice(1)}` : ''}` },
+    ] },
+    { title: 'Packaged food', items: [
+      { icon: ScanBarcode, label: 'Barcode', sub: 'Scan the pack', to: `/barcode${q}` },
+      { icon: ScanText, label: 'Nutrition label', sub: 'Photo of the label', to: `/snap${q ? `${q}&` : '?'}mode=label` },
+    ] },
+    { title: 'Your food', items: [
+      { icon: PlusSquare, label: 'Custom food', sub: 'Your own numbers', to: `/add?create=1${q ? `&${q.slice(1)}` : ''}` },
+      { icon: ChefHat, label: 'Recipes', sub: 'Make, import & share', to: `/add?tab=custom${q ? `&${q.slice(1)}` : ''}` },
+    ] },
+    { title: 'Activity', items: [
+      { icon: Dumbbell, label: 'Log exercise', sub: 'Add a workout', run: () => { haptic(); onClose(); setExercise(true); } },
+    ] },
   ];
   return (
     <>
       <Sheet open={open} onClose={onClose} title="Log">
-        <div className="grid grid-cols-2 gap-2.5">
-          {items.map((i) => (
-            <button key={i.label} onClick={() => go(i.to)} className="flex flex-col items-start rounded-[22px] bg-surface p-4 text-left transition active:scale-[.97]" style={{ boxShadow: 'var(--shadow)' }}>
-              <span className="grid h-11 w-11 place-items-center rounded-full bg-primary text-on-primary"><i.icon size={20} /></span>
-              <span className="mt-3 font-bold">{i.label}</span>
-              <span className="text-sm text-silver">{i.sub}</span>
-            </button>
+        <div className="space-y-4 pb-1">
+          {groups.map((g) => (
+            <section key={g.title}>
+              <p className="mb-2 px-1 text-[13px] font-semibold text-silver">{g.title}</p>
+              <div className="grid grid-cols-2 gap-2.5">
+                {g.items.map((i) => (
+                  <button key={i.label} onClick={() => (i.run ? i.run() : go(i.to!))} className="flex flex-col items-start rounded-[22px] bg-surface p-4 text-left transition active:scale-[.97]" style={{ boxShadow: 'var(--shadow)' }}>
+                    <span className="grid h-11 w-11 place-items-center rounded-full bg-primary text-on-primary"><i.icon size={20} /></span>
+                    <span className="mt-3 font-bold">{i.label}</span>
+                    <span className="text-sm text-silver">{i.sub}</span>
+                  </button>
+                ))}
+              </div>
+            </section>
           ))}
-          <button onClick={() => { haptic(); onClose(); setExercise(true); }} className="flex flex-col items-start rounded-[22px] bg-surface p-4 text-left transition active:scale-[.97]" style={{ boxShadow: 'var(--shadow)' }}>
-            <span className="grid h-11 w-11 place-items-center rounded-full bg-primary text-on-primary"><Dumbbell size={20} /></span>
-            <span className="mt-3 font-bold">Exercise</span>
-            <span className="text-sm text-silver">Log a workout</span>
-          </button>
         </div>
       </Sheet>
       <ExerciseSheet open={exercise} onClose={() => setExercise(false)} date={date ?? todayKey()} />
