@@ -24,6 +24,7 @@ import Onboarding from './pages/Onboarding';
 
 const Insights = lazy(() => import('./pages/Insights'));
 const Admin = lazy(() => import('./pages/Admin'));
+const Owner = lazy(() => import('./pages/Owner'));
 const Snap = lazy(() => import('./pages/Snap'));
 const Premium = lazy(() => import('./pages/Premium'));
 const Coach = lazy(() => import('./pages/Coach'));
@@ -91,6 +92,7 @@ export default function App() {
         <Route path="routines" element={<Routines />} />
         <Route path="workout" element={<LiveWorkout />} />
         <Route path="goals" element={<Goals />} />
+        <Route path="owner" element={<Owner />} />
         <Route path="messages" element={<Messages />} />
         <Route path="add" element={<div className="mx-auto max-w-lg px-5 pb-16 md:max-w-2xl md:px-8 lg:max-w-3xl"><AddFood /></div>} />
         <Route path="*" element={<Navigate to="/" replace />} />

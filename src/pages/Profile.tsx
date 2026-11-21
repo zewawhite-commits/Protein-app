@@ -22,8 +22,6 @@ import { UsageCard } from '@/components/UsageCard';
 import { InviteCard, TrialCard } from '@/components/FreePro';
 import { PageHeader, Segmented, Sheet, cx, fmt } from '@/components/ui';
 import { ReminderSettings } from '@/components/Notifications';
-import { OwnerStats } from '@/components/OwnerStats';
-import { AiCosts } from '@/components/AiCosts';
 import { calorieGoal } from '@/lib/energy';
 
 export default function Profile({ mode = 'profile' }: { mode?: 'profile' | 'settings' }) {
@@ -118,6 +116,7 @@ export default function Profile({ mode = 'profile' }: { mode?: 'profile' | 'sett
           <UsageCard />
           <TrialCard className="mt-5" />
           <InviteCard className="mt-5" />
+          <OwnerLink />
           <Group title="More">
             <Link to="/settings" className="block"><Row icon={<SettingsIcon size={18} />} label="Settings" chevron><span className="text-sm text-silver">Theme, units, notifications, data</span></Row></Link>
           </Group>
@@ -126,8 +125,6 @@ export default function Profile({ mode = 'profile' }: { mode?: 'profile' | 'sett
 
       {isSettings && (
         <>
-      <OwnerStats />
-      <AiCosts />
 
       <Group title="Appearance">
         <Row icon={settings.theme === 'light' ? <Sun size={18} /> : <Moon size={18} />} label="Theme">
@@ -500,5 +497,17 @@ function SyncRow({ userId }: { userId: string }) {
         <span className={`text-sm font-semibold ${failed || (!online && pending) ? 'text-danger' : 'text-silver'}`}>{label}</span>
       </Row>
     </button>
+  );
+}
+
+/** Only the owner (server says admin) sees the link to their dashboard. */
+function OwnerLink() {
+  const [admin, setAdmin] = useState(false);
+  useEffect(() => { void import('@/lib/premium').then((m) => m.fetchUsage()).then((u) => setAdmin(!!u?.admin)).catch(() => undefined); }, []);
+  if (!admin) return null;
+  return (
+    <Group title="Owner">
+      <Link to="/owner" className="block"><Row icon={<Lightbulb size={18} />} label="Owner dashboard" chevron><span className="text-sm text-silver">Users, AI costs, revenue</span></Row></Link>
+    </Group>
   );
 }
