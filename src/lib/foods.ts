@@ -307,11 +307,22 @@ function searchTerms(terms: string[], opts: SearchOptions): Food[] {
     // Equally good matches: prefer the one people can measure in servings (spoons, cups, slices).
     if (it.food.portions.length) score += 2;
     if (terms.length === 2 && new RegExp(`^${terms[1]}s?, ${terms[0]}\\b`).test(it.lower)) score += 16;
+    // One plain word ("carrot", "tomato", "onion"): the ingredient itself before juices, dips and sauces made from it.
+    if (terms.length === 1) {
+      const t = terms[0].replace(/(es|s)$/, '');
+      if (new RegExp(`^${t}(es|s)?(,|$)`).test(it.lower)) {
+        score += 8;
+        // The everyday form: fresh/raw produce, or the generic record; not dried, pickled or powdered.
+        if (/\b(dried|dehydrated|pickled|powder|sundried|sun-dried|canned|frozen|freeze-dried|flakes|concentrate|green)\b/.test(it.lower)) score -= 5;
+        else if (!EATEN_COOKED.test(it.lower) && (/, (raw|fresh|nfs)\b/.test(it.lower) || /\b(raw|nfs)$/.test(it.lower))) score += 3;
+      }
+      if (new RegExp(`^${t}(es|s)? (juice|dip|sauce|soup|chips|flour|powder|paste|rings|cake|pie|bread|oil|salad|casserole|pudding|patty|ketchup|puree|drink|flavou?red)\\b`).test(it.lower)) score -= 6;
+    }
     if (PROCESSED_CATEGORIES.has(it.food.category)) score -= 10;
     if (PROCESSED_WORDS.test(it.lower)) score -= 5;
     if (/\b(meat only|skinless|boneless|lean)\b/.test(it.lower)) score += 3;
     // Meat, fish, grains and beans are eaten cooked: a raw record would understate a cooked portion.
-    if (!wantsRaw && it.food.state === 'raw' && EATEN_COOKED.test(it.lower)) score -= 8;
+    if (!wantsRaw && (it.food.state === 'raw' || it.food.state === 'dry') && EATEN_COOKED.test(it.lower)) score -= 8;
     scored.push({ f: it.food, s: score });
   }
   scored.sort((a, b) => b.s - a.s || a.f.name.length - b.f.name.length);

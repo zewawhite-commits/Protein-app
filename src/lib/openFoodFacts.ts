@@ -6,10 +6,12 @@
 import type { Food } from './types';
 
 const BASE = 'https://world.openfoodfacts.org';
-const FIELDS = 'code,product_name,generic_name,brands,quantity,serving_size,serving_quantity,categories_tags,nutriments';
+const FIELDS = 'code,product_name,generic_name,brands,quantity,serving_size,serving_quantity,categories_tags,nutriments,last_modified_t';
 
 interface OffProduct {
   code: string;
+  /** When the product's data was last changed (unix seconds). */
+  last_modified_t?: number;
   product_name?: string;
   generic_name?: string;
   brands?: string;
@@ -50,6 +52,7 @@ export function offToFood(p: OffProduct): Food | null {
     },
     portions: serving ? [{ label: p.serving_size ? `1 serving (${p.serving_size})` : '1 serving', grams: serving }] : [],
     source: 'off',
+    ...(p.last_modified_t ? { sourceNote: `label data ${new Date(p.last_modified_t * 1000).toISOString().slice(0, 7)}` } : {}),
   };
 }
 

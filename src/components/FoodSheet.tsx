@@ -438,6 +438,9 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
             {q.text}{q.missing > 0 ? ` · ${q.missing} nutrient${q.missing > 1 ? 's' : ''} not listed` : ''}
           </p>
         ); })()}
+        {food.source === 'off' && labelAge(food.sourceNote) && (
+          <p className="mb-2 rounded-xl bg-[#B7791F]/10 px-3 py-2 text-xs leading-snug text-[#8a5a12] dark:text-[#E9B44C]">This product’s label data was last updated {labelAge(food.sourceNote)}. Recipes and packs change, so check the numbers against your pack.</p>
+        )}
         <button onClick={() => setShowSource((s) => !s)} className="flex w-full items-center justify-center gap-1 py-1 text-xs font-semibold text-silver">
           {sourceInfo(food).label.split(' · ')[0]} · per 100g
           <ChevronDown size={14} className={cx('transition', showSource && 'rotate-180')} />
@@ -607,4 +610,14 @@ function DayWithThis({ add, date, entry }: { add: { kcal: number | null; protein
       </div>
     </div>
   );
+}
+
+/** "in March 2021 (over 3 years ago)" when an Open Food Facts label record is old, else null. */
+function labelAge(note?: string): string | null {
+  const m = /label data (\d{4})-(\d{2})/.exec(note ?? '');
+  if (!m) return null;
+  const at = new Date(Number(m[1]), Number(m[2]) - 1, 1);
+  const years = (Date.now() - at.getTime()) / (365.25 * 864e5);
+  if (years < 3) return null;
+  return `in ${at.toLocaleDateString([], { month: 'long', year: 'numeric' })} (over ${Math.floor(years)} years ago)`;
 }

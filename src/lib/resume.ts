@@ -18,7 +18,10 @@ export function ResumeRoute() {
   useEffect(() => {
     if (first.current) {
       first.current = false;
-      try {
+      // Only on a fresh launch (the phone closed the app). A reload or a link inside the same visit stays put.
+      let fresh = true;
+      try { fresh = !sessionStorage.getItem('nutivili-visit'); sessionStorage.setItem('nutivili-visit', '1'); } catch { /* storage blocked */ }
+      if (fresh) try {
         const saved = JSON.parse(localStorage.getItem(KEY) ?? 'null') as { path: string; at: number } | null;
         const launchedAtHome = loc.pathname === '/' && !loc.search;
         if (saved && launchedAtHome && Date.now() - saved.at < KEEP && !SKIP.test(saved.path.split('?')[0])) { nav(saved.path, { replace: true }); return; }

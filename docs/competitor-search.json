@@ -1,0 +1,328 @@
+[
+ {
+  "q": "potato",
+  "ok": true,
+  "top": [
+   "Potato, NFS",
+   "Potato, baked, NFS",
+   "Potato, boiled, NFS",
+   "Potato, mashed, NFS",
+   "Potato, roasted, NFS"
+  ]
+ },
+ {
+  "q": "orange",
+  "ok": true,
+  "top": [
+   "Orange, raw",
+   "Orange, raw",
+   "Orange, peeled, raw",
+   "Orange, navel, peeled, raw",
+   "Orange, valencia, peeled, raw"
+  ]
+ },
+ {
+  "q": "apple",
+  "ok": true,
+  "top": [
+   "Apple, raw",
+   "Apple, with skin, raw",
+   "Apple, without skin, raw",
+   "Apple, fuji, unpeeled, raw",
+   "Apple, bonza, unpeeled, raw"
+  ]
+ },
+ {
+  "q": "banana",
+  "ok": true,
+  "top": [
+   "Banana, raw",
+   "Banana, cavendish, peeled, raw",
+   "Banana, baked",
+   "Banana, white flesh, ripe, raw",
+   "Banana, yellow flesh, ripe, raw"
+  ]
+ },
+ {
+  "q": "egg",
+  "ok": true,
+  "top": [
+   "Egg, whole, raw, fresh",
+   "Egg, whole, cooked, hard-boiled",
+   "Egg, whole, raw",
+   "Egg, yolk only, raw",
+   "Egg, white only, raw"
+  ]
+ },
+ {
+  "q": "milk",
+  "ok": true,
+  "top": [
+   "Milk, NFS",
+   "Milk, sheeps, raw",
+   "Milk, camel, fresh",
+   "Milk, sheep, fresh",
+   "Milk, whole"
+  ]
+ },
+ {
+  "q": "chicken",
+  "ok": true,
+  "top": [
+   "Chicken, broilers or fryers, breast, meat only, cooked, roasted",
+   "Chicken breast, fried, coated, prepared skinless, coating eaten, from raw",
+   "Chicken breast, stewed, skin eaten",
+   "Chicken breast, sauteed, skin eaten",
+   "Chicken breast, rotisserie, skin eaten"
+  ]
+ },
+ {
+  "q": "rice",
+  "ok": true,
+  "top": [
+   "Rice, white, long-grain, regular, enriched, cooked",
+   "Rice, white, cooked, glutinous",
+   "Rice, white, cooked, as ingredient",
+   "Rice, white, cooked, no added fat",
+   "Rice, white, cooked, made with oil"
+  ]
+ },
+ {
+  "q": "bread",
+  "ok": true,
+  "top": [
+   "Bread, white",
+   "Bread, white, toasted",
+   "Bread, white, average",
+   "Bread, white, premium",
+   "Bread, white, toasted"
+  ]
+ },
+ {
+  "q": "yogurt",
+  "ok": true,
+  "top": [
+   "Yogurt, Greek, plain, nonfat (Includes foods for USDA's Food Distribution Program)",
+   "Yogurt, NFS",
+   "Yogurt, soy",
+   "Yogurt, liquid",
+   "Yogurt, almond milk"
+  ]
+ },
+ {
+  "q": "oats",
+  "ok": true,
+  "top": [
+   "Oats (Includes foods for USDA's Food Distribution Program)",
+   "Cereals, oats, regular and quick, not fortified, dry",
+   "Oats, raw",
+   "Oats, rolled, raw",
+   "Oats, hulled, uncooked"
+  ]
+ },
+ {
+  "q": "broccoli",
+  "ok": true,
+  "top": [
+   "Broccoli, raw",
+   "Broccoli, raw",
+   "Broccoli, stalks, raw",
+   "Broccoli, chinese, raw",
+   "Broccoli, flower clusters, raw"
+  ]
+ },
+ {
+  "q": "carrot",
+  "ok": true,
+  "top": [
+   "Carrot, raw",
+   "Carrot, baby, peeled, fresh, raw",
+   "Carrot, mature, peeled, fresh, raw",
+   "Carrot, baby, peeled, fresh, boiled, drained",
+   "Carrot, mature, peeled, fresh, boiled, drained"
+  ]
+ },
+ {
+  "q": "tomato",
+  "ok": true,
+  "top": [
+   "Tomato, cherry, raw",
+   "Tomato, common, raw",
+   "Tomato, red, ripe, raw",
+   "Tomato, puree, commercial",
+   "Tomatoes, raw"
+  ]
+ },
+ {
+  "q": "onion",
+  "ok": true,
+  "top": [
+   "Onion, fresh, raw",
+   "Onion, spring, fresh, raw",
+   "Onion, mature, red skinned, raw",
+   "Onion, mature, brown skinned, peeled, raw",
+   "Onion, fresh, boiled* (without salt), drained"
+  ]
+ },
+ {
+  "q": "avocado",
+  "ok": true,
+  "top": [
+   "Avocado, raw",
+   "Avocado, hass, raw",
+   "Avocado, fruit, raw",
+   "Avocado, shepard, raw",
+   "Avocado, for use on a sandwich"
+  ]
+ },
+ {
+  "q": "salmon",
+  "ok": true,
+  "top": [
+   "Fish, salmon, Atlantic, farmed, cooked, dry heat",
+   "Salmon, Pacific King, fillet, skinless, grilled, no added fat",
+   "Salmon, wild, baked",
+   "Salmon, wild, grilled",
+   "Salmon, wild, steamed"
+  ]
+ },
+ {
+  "q": "beef",
+  "ok": true,
+  "top": [
+   "Beef, ground, 90% lean meat / 10% fat, patty, cooked, broiled",
+   "Beef, ground, 90% lean meat / 10% fat, crumbles, cooked, pan-browned",
+   "Beef rendang",
+   "Beef tacos",
+   "Beef, steak, strip, lean only eaten"
+  ]
+ },
+ {
+  "q": "cheese",
+  "ok": true,
+  "top": [
+   "Cheese, cottage, lowfat, 2% milkfat",
+   "Cheese, NFS",
+   "Cheese, cottage, NFS",
+   "Cheese, Mozzarella, NFS",
+   "Cheese, fresh, queso fresco"
+  ]
+ },
+ {
+  "q": "butter",
+  "ok": true,
+  "top": [
+   "Butter, NFS",
+   "Butter, tub",
+   "Butter, light",
+   "Butter, stick",
+   "Butter, salted"
+  ]
+ },
+ {
+  "q": "chick",
+  "ok": true,
+  "top": [
+   "Chicken, broilers or fryers, breast, meat only, cooked, roasted",
+   "Chicken tagine",
+   "Chicken karahi",
+   "Chicken katsu",
+   "Chickpeas (garbanzo beans, bengal gram), mature seeds, cooked, boiled, without salt"
+  ]
+ },
+ {
+  "q": "banan",
+  "ok": true,
+  "top": [
+   "Banana, raw",
+   "Banana chips",
+   "Banana split",
+   "Bananas, raw",
+   "Banana nectar"
+  ]
+ },
+ {
+  "q": "brocoli",
+  "ok": true,
+  "top": [
+   "Broccoli, raw",
+   "Broccoli, raw",
+   "Broccoli, stalks, raw",
+   "Broccoli, chinese, raw",
+   "Broccoli, flower clusters, raw"
+  ]
+ },
+ {
+  "q": "yoghurt",
+  "ok": true,
+  "top": [
+   "Yogurt, Greek, plain, nonfat (Includes foods for USDA's Food Distribution Program)",
+   "Yogurt, NFS",
+   "Yogurt, soy",
+   "Yogurt, liquid",
+   "Yogurt, almond milk"
+  ]
+ },
+ {
+  "q": "spagetti",
+  "ok": true,
+  "top": [
+   "Spaghetti, spinach, cooked",
+   "Spaghetti, protein-fortified, cooked, enriched (n x 6.25)",
+   "Spaghetti, spinach, dry",
+   "Spaghetti squash, cooked",
+   "Spaghetti bolognese, homemade"
+  ]
+ },
+ {
+  "q": "avacado",
+  "ok": true,
+  "top": [
+   "Avocado, raw",
+   "Avocado, hass, raw",
+   "Avocado, fruit, raw",
+   "Avocado, shepard, raw",
+   "Avocado, for use on a sandwich"
+  ]
+ },
+ {
+  "q": "potatoe",
+  "ok": true,
+  "top": [
+   "Potatoes, raw, skin",
+   "Potatoes, flesh and skin, raw",
+   "Potatoes, red, flesh and skin, raw",
+   "Potatoes, white, flesh and skin, raw",
+   "Potatoes, old, raw, flesh only"
+  ]
+ },
+ {
+  "q": "jolof",
+  "ok": true,
+  "top": [
+   "Jollof rice",
+   "Jollof rice, Ghanaian style",
+   "Jollof spaghetti (Burkina Faso)*: spaghetti in vegetable sauce",
+   "Jollof fonio (Burkina Faso)*: fonio with fish and vegetables",
+   "Jollof macaroni (Burkina Faso)*: macaroni in tomato sauce with mutton"
+  ]
+ },
+ {
+  "q": "egusi",
+  "ok": true,
+  "top": [
+   "Egusi soup"
+  ]
+ },
+ {
+  "q": "plantian",
+  "ok": true,
+  "top": [
+   "Plantain, raw",
+   "Plantain swallow",
+   "Plantain, ripe, ivory flesh, raw",
+   "Plantain, ripe, orange flesh, raw",
+   "Plantain, unripe, pale flesh, raw"
+  ]
+ }
+]

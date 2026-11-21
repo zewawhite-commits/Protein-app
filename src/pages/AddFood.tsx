@@ -74,7 +74,16 @@ export default function AddFood() {
     if (photoId && !useStore.getState().entries.some((e) => e.photoId === photoId)) void deletePhoto(photoId);
   }, [photoId]);
 
-  const results = useMemo(() => (db && searching ? searchFoods(dq, { state, custom }) : []), [db, dq, searching, state, custom]);
+  // Foods you've starred or logged before come first among the matches (never a food that doesn't match the words).
+  const results = useMemo(() => {
+    if (!db || !searching) return [];
+    const r = searchFoods(dq, { state, custom });
+    const terms = dq.toLowerCase().split(/[^a-z0-9\u00c0-\u024f]+/).filter((t) => t.length > 1);
+    const words = (n: string) => n.toLowerCase().split(/[^a-z0-9\u00c0-\u024f]+/);
+    const mine = [...new Set([...favIds, ...recentIds])].map((id) => lookup(id)).filter((f): f is Food => !!f && (state === 'all' || f.state === state) && terms.length > 0 && terms.every((t) => words(f.name).some((w) => w.startsWith(t))));
+    const ids = new Set(mine.map((f) => f.id));
+    return [...mine, ...r.filter((f) => !ids.has(f.id))];
+  }, [db, dq, searching, state, custom, favIds, recentIds, lookup]);
   const browse = useMemo(() => {
     const ids = tab === 'recent' ? recentIds : tab === 'favs' ? favIds : [];
     const list =

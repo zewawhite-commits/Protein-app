@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { BarChart3, BookOpen, CalendarDays, ChevronLeft, ChevronRight, ClipboardList, Plus, Dumbbell, FileText, Images, MessageCircle, Scale, Search, UtensilsCrossed } from 'lucide-react';
+import { BarChart3, BookOpen, CalendarDays, ChevronLeft, ChevronRight, ClipboardList, Copy, Plus, Dumbbell, FileText, Images, MessageCircle, Scale, Search, UtensilsCrossed } from 'lucide-react';
 import { pastChats } from '@/lib/chats';
 import { useStore, goalOn } from '@/store/useStore';
 import { useFoodLookup, usePhotoUrl } from '@/lib/hooks';
@@ -14,6 +14,16 @@ import { EntryRow } from '@/components/EntryRow';
 import { dailyTargets } from '@/lib/energy';
 import { mealLabel, useMealOptions } from '@/lib/meals';
 import { entryAsFood } from './Today';
+import { toast } from '@/components/fx';
+import type { Meal } from '@/lib/types';
+
+/** Log a whole meal from another day again today, with an undo. */
+function copyMeal(list: LogEntry[], meal: Meal, label: string) {
+  const { addEntry, removeEntry } = useStore.getState();
+  const today = todayKey();
+  const made = list.map((e) => addEntry({ date: today, meal, food: { ...e.food, id: e.foodId } as never, grams: e.grams }));
+  toast(`${label} copied to today · ${made.length} item${made.length === 1 ? '' : 's'}`, { action: { label: 'Undo', run: () => made.forEach((x) => removeEntry(x.id)) } });
+}
 
 export default function History() {
   const [params] = useSearchParams();
@@ -101,7 +111,12 @@ function DayDiary({ initial }: { initial: string }) {
                   <p className="text-[16px] font-bold">{m.label}</p>
                   {list.length > 0 && <p className="num text-xs text-silver">{fmt(t.kcal)} kcal · {fmt(t.protein)} g protein{detailed ? ` · C ${fmt(t.carbs)} · F ${fmt(t.fat)}` : ''}</p>}
                 </div>
-                <Link to={`/add?date=${date}&meal=${m.value}`} className="grid h-9 w-9 place-items-center rounded-full bg-primary text-on-primary" aria-label={`Add to ${m.label}`}><Plus size={18} /></Link>
+                <div className="flex items-center gap-1.5">
+                  {date !== todayKey() && list.some((e) => !e.planned) && (
+                    <button onClick={() => copyMeal(list.filter((e) => !e.planned), m.value, m.label)} className="chip !h-9 !px-3 text-[13px]" aria-label={`Copy ${m.label} to today`}><Copy size={14} /> Copy to today</button>
+                  )}
+                  <Link to={`/add?date=${date}&meal=${m.value}`} className="grid h-9 w-9 place-items-center rounded-full bg-primary text-on-primary" aria-label={`Add to ${m.label}`}><Plus size={18} /></Link>
+                </div>
               </div>
               {list.length === 0 ? <p className="px-3 pb-3 pt-1 text-sm text-dim">Nothing logged</p> : list.map((e) => <EntryRow key={e.id} entry={e} onClick={() => setEditing(e)} />)}
             </section>
