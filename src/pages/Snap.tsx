@@ -491,7 +491,7 @@ export default function Snap() {
           <p className="flex items-center gap-2 text-[17px] font-bold"><ScanLine size={18} className="text-accent" /> You’re out of AI scans</p>
           <p className="mt-2 text-sm leading-relaxed text-silver">{error || 'Unlimited AI scans come with Plus.'} Picking the food yourself is always free.</p>
           <div className="mt-4 grid gap-2">
-            <Link to="/premium" className="btn-primary"><Crown size={17} /> Upgrade to Plus — $7.99/month</Link>
+            <Link to="/premium" className="btn-primary"><Crown size={17} /> Upgrade to Plus — $8.99/month</Link>
             <Link to={manualUrl()} className="btn-ghost">Pick food manually</Link>
           </div>
         </div>

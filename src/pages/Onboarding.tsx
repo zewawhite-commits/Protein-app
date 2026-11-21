@@ -296,7 +296,7 @@ export default function Onboarding() {
               <p className="mt-4 font-bold text-ink">Your data</p>
               <p className="mt-1">Your food diary, weight and workouts are yours. They are saved on this phone and, when you have an account, in your private cloud copy. We never sell them. You can download everything (CSV or JSON) or delete your account at any time in Profile. Photos you scan are sent to our AI provider only to recognise the food.</p>
               <p className="mt-4 font-bold text-ink">Plans</p>
-              <p className="mt-1">Free stays free. Plus costs $7.99 a month and you can cancel any time.</p>
+              <p className="mt-1">Free stays free. Plus costs $8.99 a month and you can cancel any time.</p>
               <p className="mt-4">Full documents: <a href="/terms" target="_blank" className="font-semibold text-accent underline">Terms of Service</a> · <a href="/privacy" target="_blank" className="font-semibold text-accent underline">Privacy Policy</a></p>
             </div>
             <label className="mt-4 flex items-start gap-3 px-1 text-[14px] leading-relaxed">
@@ -656,7 +656,7 @@ function Welcome({ signedIn, email, onStart }: { signedIn: boolean; email?: stri
           </button>
           <p className="text-center text-[15px] text-silver">Already have an account? <button onClick={() => setMode('login')} className="font-semibold text-accent">Log in</button></p>
           <p className="text-center text-xs text-dim">An account saves your data so you can use it on any phone.</p>
-          <p className="mb-2 text-center text-[13px] text-silver">Free to start, no card. Plus is $7.99/mo, or save 60% yearly · <a href="/premium" className="font-semibold text-accent underline">See what’s included</a></p>
+          <p className="mb-2 text-center text-[13px] text-silver">Free to start, no card. Plus is $8.99/mo, or save 60% yearly · <a href="/premium" className="font-semibold text-accent underline">See what’s included</a></p>
           <p className="text-center text-xs text-dim">By continuing you agree to our <a href="/terms" className="underline">Terms</a>, <a href="/privacy" className="underline">Privacy Policy</a> and <a href="/refunds" className="underline">Refund Policy</a>.</p>
         </div>
       )}

@@ -391,11 +391,11 @@ function SubscriptionGroup() {
               <ul className="mt-1.5 space-y-1 text-silver"><li>Food search, barcode and diary</li><li>Voice logging</li><li>3 AI scans a day</li><li>5 coach messages a day</li></ul>
             </div>
             <div className="rounded-2xl bg-accent/10 p-3">
-              <p className="font-bold">Plus <span className="font-medium text-silver">· $7.99/mo</span></p>
+              <p className="font-bold">Plus <span className="font-medium text-silver">· $8.99/mo</span></p>
               <ul className="mt-1.5 space-y-1 text-silver"><li>Unlimited AI scans and coach</li><li>Coach talks back</li><li>Meal plans, recipes, workouts</li><li>Vitamin and eating-pattern reports</li></ul>
             </div>
           </div>
-          <Link to="/premium" className="block"><Row icon={<CreditCard size={18} />} label="See Plus" chevron><span className="text-sm font-semibold text-accent">$7.99/mo or $38.35/yr</span></Row></Link>
+          <Link to="/premium" className="block"><Row icon={<CreditCard size={18} />} label="See Plus" chevron><span className="text-sm font-semibold text-accent">$8.99/mo or $43.15/yr</span></Row></Link>
           <Link to="/premium?restore=1" className="block"><Row icon={<RotateCcw size={18} />} label="Restore purchase" chevron /></Link>
         </>
       )}
