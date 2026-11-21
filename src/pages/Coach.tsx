@@ -179,7 +179,8 @@ function Chat() {
   const endRef = useRef<HTMLDivElement>(null);
   const profile = useStore((s) => s.profile);
 
-  useEffect(() => { save(msgs); if (!busy) archiveChat(msgs, chatId); endRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' }); }, [msgs, busy]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Only scroll to the newest message once there's a conversation — an empty chat stays at the top.
+  useEffect(() => { save(msgs); if (!busy) archiveChat(msgs, chatId); if (msgs.length) endRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' }); }, [msgs, busy]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { try { localStorage.setItem(CHAT_ID, chatId); } catch { /* storage blocked */ } }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const context = useCoachContext();

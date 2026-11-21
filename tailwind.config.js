@@ -39,7 +39,8 @@ export default {
         pop: { '0%': { transform: 'scale(1)' }, '40%': { transform: 'scale(1.06)' }, '100%': { transform: 'scale(1)' } },
       },
       animation: {
-        'fade-up': 'fade-up .35s cubic-bezier(.2,.8,.2,1) both',
+        // 'backwards', not 'both': a transform left on a page would trap fixed pop-ups (like the voice panel) inside it.
+        'fade-up': 'fade-up .35s cubic-bezier(.2,.8,.2,1) backwards',
         'sheet-up': 'sheet-up .34s cubic-bezier(.2,.8,.2,1) both',
         fade: 'fade .2s both',
         pop: 'pop .45s cubic-bezier(.2,.8,.2,1)',
