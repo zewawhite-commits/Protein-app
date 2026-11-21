@@ -10,9 +10,8 @@ import { calorieGoal } from './energy';
 import { sumEntries } from './nutrition';
 import { goalOn } from '@/store/useStore';
 
-export type GoalKind = 'weight' | 'protein' | 'calories' | 'water' | 'workouts' | 'distance' | 'strength';
-export interface GoalSetting { on: boolean; paused?: boolean; done?: boolean; target?: number; deadline?: string; updatedAt?: number }
-export type GoalSettings = Partial<Record<GoalKind, GoalSetting>>;
+import type { GoalKind, GoalSetting, GoalSettings } from './types';
+export type { GoalKind, GoalSetting, GoalSettings };
 
 export const GOAL_INFO: Record<GoalKind, { title: string; what: string; unit: string; period: 'day' | 'week' | 'total' }> = {
   weight: { title: 'Reach a weight', what: 'Lose, gain or keep your weight', unit: 'kg', period: 'total' },

@@ -179,7 +179,7 @@ export interface Reminders {
 export interface Settings {
   theme: Theme;
   /** Personal goals that are switched on (see lib/myGoals). */
-  goals?: import('./myGoals.js').GoalSettings;
+  goals?: GoalSettings;
   /** Accent colour (green by default); works with light and dark. */
   accent?: 'green' | 'pink';
   bodyUnit: BodyUnit;
@@ -225,3 +225,8 @@ export interface MeasurementEntry { id: string; date: string; site: string; cm: 
 
 /** A progress photo (image kept on this device in IndexedDB). */
 export interface ProgressPhoto { id: string; photoId: string; date: string; kg?: number }
+
+/** Personal goals (see lib/myGoals). */
+export type GoalKind = 'weight' | 'protein' | 'calories' | 'water' | 'workouts' | 'distance' | 'strength';
+export interface GoalSetting { on: boolean; paused?: boolean; done?: boolean; target?: number; deadline?: string; updatedAt?: number }
+export type GoalSettings = Partial<Record<GoalKind, GoalSetting>>;
