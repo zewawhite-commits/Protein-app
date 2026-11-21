@@ -177,4 +177,5 @@ export function subscribePhoto(key: string, f: () => void) {
 }
 
 /** An Unsplash image at the size it's shown (their CDN resizes and crops). */
-export const sizedPhoto = (url: string, px: number) => `${url}${url.includes('?') ? '&' : '?'}w=${px}&h=${px}&fit=crop&crop=entropy&auto=format&q=70`;
+/** Unsplash resizes on request; other hosts (Wikimedia, Flickr) get their own fixed-size file as is. */
+export const sizedPhoto = (url: string, px: number) => (/^https:\/\/images\.unsplash\.com\//.test(url) ? `${url}${url.includes('?') ? '&' : '?'}w=${px}&h=${px}&fit=crop&crop=entropy&auto=format&q=70` : url);

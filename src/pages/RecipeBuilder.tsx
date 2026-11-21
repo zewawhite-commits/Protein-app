@@ -1,5 +1,5 @@
 import { ShareRecipeSheet } from '@/components/ShareRecipe';
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Plus, Search, Trash2, Share2 } from 'lucide-react';
 import { useStore } from '@/store/useStore';
@@ -10,6 +10,7 @@ import type { Food, Per100, RecipeDef } from '@/lib/types';
 import { cx, fmt } from '@/components/ui';
 import { haptic, toast } from '@/components/fx';
 import { RecipeImport, type ImportResult } from '@/components/RecipeImport';
+import { standardRecipe } from '@/lib/recipe';
 
 const KEYS = ['protein', 'kcal', 'fat', 'carbs', 'fiber', ...EXTRA_KEYS] as (keyof Per100)[];
 
@@ -52,6 +53,25 @@ export default function RecipeBuilder() {
   const [servings, setServings] = useState(String(existing?.recipe?.servings ?? 2));
   const [q, setQ] = useState('');
   const [check, setCheck] = useState<ImportResult | null>(null);
+  // "Make it your way": start from a world dish's standard recipe (?from=<food id>) and change it.
+  const [base, setBase] = useState<string | null>(null);
+  useEffect(() => {
+    const from = params.get('from');
+    if (!db || !from || existing || items.length) return;
+    const dish = db.byId.get(from);
+    const std = dish && standardRecipe(dish.sourceNote);
+    if (!dish || !std) return;
+    const byName = new Map<string, Food>();
+    for (const f of db.foods) if (!byName.has(f.name)) byName.set(f.name, f); // the record the dish was built from
+    const found = std.items.map((i) => ({ i, f: byName.get(i.name) })).filter((x) => x.f);
+    setItems(found.map(({ i, f }) => ({ foodId: f!.id, name: splitName(f!.name).title, grams: i.grams, per100: f!.per100 })));
+    const title = splitName(dish.name).title.replace(/\s*\(.*$/, '');
+    setName(`My ${title.toLowerCase()}`);
+    setCooked(String(std.yieldGrams));
+    const portion = dish.portions.find((p) => /medium|plate|wrap|bowl|portion|serving/.test(p.label));
+    setServings(String(Math.max(1, Math.round(std.yieldGrams / (portion?.grams || std.yieldGrams / 4)))));
+    setBase(title);
+  }, [db]); // eslint-disable-line react-hooks/exhaustive-deps
   const imported = (r: ImportResult) => {
     if (r.title && !name.trim()) setName(r.title);
     if (r.servings) setServings(String(r.servings));
@@ -100,7 +120,13 @@ export default function RecipeBuilder() {
       </header>
       {existing && <ShareRecipeSheet food={existing} open={share} onClose={() => setShare(false)} />}
 
-      {!existing && <div className="mb-5" ref={(el) => { if (el && params.get('import') && !importScrolled.current) { importScrolled.current = true; el.scrollIntoView({ block: 'start' }); } }}><RecipeImport onImported={imported} /></div>}
+      {base && (
+        <div className="mb-5 rounded-2xl bg-accent/10 px-4 py-3 text-[14px] leading-relaxed">
+          <p className="font-semibold">Starting from our standard {base} recipe</p>
+          <p className="text-silver">Change the amounts to how you cook it — especially the oil, meat or fish, and vegetables. Remove what you don’t use and add what you do. The nutrition updates as you go. Set the cooked weight if you know it.</p>
+        </div>
+      )}
+      {!existing && !base && <div className="mb-5" ref={(el) => { if (el && params.get('import') && !importScrolled.current) { importScrolled.current = true; el.scrollIntoView({ block: 'start' }); } }}><RecipeImport onImported={imported} /></div>}
       {check && (check.unmatched.length > 0 || check.guessed.length > 0 || check.missing.length > 0 || check.note) && (
         <div className="mb-5 rounded-[20px] bg-warn/15 p-4 text-sm">
           <p className="font-bold">Please check</p>

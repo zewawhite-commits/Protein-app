@@ -161,7 +161,8 @@ export function questionFor(food: Pick<Food, 'portions'>, name: string): { q: st
   }
   if (sized('portion')) {
     const many = `How much ${name} did you have: a small, medium or large portion?`;
-    return { q: `${many} Or say how many ladles.`, many, unit: has(/ladle/) ? 'ladle' : null };
+    const by = has(/ladle/) ? 'ladle' : has(/cooking spoon/) ? 'cooking spoon' : null;
+    return { q: by ? `${many} Or say how many ${by}s.` : many, many, unit: by };
   }
   if (sized('wrap')) { const many = `How many wraps of ${name}?`; return { q: `${many} You can add small, medium or large.`, many, unit: 'wrap' }; }
   if (sized('plate')) {
@@ -211,7 +212,7 @@ export function questionFor(food: Pick<Food, 'portions'>, name: string): { q: st
   return { q: `${many} ${examples.length ? `For example ${examples.join(' or ')}, or grams.` : 'Say how many grams.'}`, many, unit: null };
 }
 
-const DRINK = /\b(juice|milk|tea|coffee|cola|coke|soda|drink|water|beer|wine|malt|smoothie|lemonade|zobo|kunu|fanta|sprite|pepsi|yoghurt drink|yogurt drink|shake)\b/;
+const DRINK = /\b(juice|milk|carbonated|soda|fizzy|tea|coffee|cola|coke|soda|drink|water|beer|wine|malt|smoothie|lemonade|zobo|kunu|fanta|sprite|pepsi|yoghurt drink|yogurt drink|shake)\b/;
 const SPOONED = /\b(butter|margarine|oil|honey|sugar|jam|marmalade|syrup|mayonnaise|mayo|ketchup|sauce|spread|nutella|peanut butter|salad cream|cream cheese|milo|bournvita|ovaltine|cocoa)\b/;
 const SLICED = /\b(cake|bread|toast|pizza|loaf|cheesecake|gateau|pie|ham|cheese|watermelon|pineapple|pawpaw|papaya)\b/;
 

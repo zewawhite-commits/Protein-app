@@ -79,3 +79,14 @@ export function sanitizeRecipe(raw: unknown): Recipe {
     tip: String(r.tip ?? '').replace(/\d+(\.\d+)?\s*(g|kcal|%)/gi, '').slice(0, 200),
   };
 }
+
+/**
+ * The standard recipe behind a world dish ("per 1000 g cooked: 100 g Melon seed… [FAO 06_013]; 60 g Oil, palm…"),
+ * so someone can start from it and change the oil, meat, fish or vegetables to how they cook.
+ */
+export function standardRecipe(sourceNote: string | undefined): { yieldGrams: number; items: { name: string; grams: number }[] } | null {
+  const y = /per (\d+(?:\.\d+)?) g cooked:/.exec(sourceNote ?? '');
+  if (!y) return null;
+  const items = [...sourceNote!.slice(y.index + y[0].length).matchAll(/(\d+(?:\.\d+)?) g (.+?) \[(?:FAO|USDA)[^\]]*\]/g)].map((m) => ({ name: m[2].trim(), grams: Number(m[1]) }));
+  return items.length ? { yieldGrams: Number(y[1]), items } : null;
+}

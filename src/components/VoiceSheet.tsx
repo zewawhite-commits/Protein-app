@@ -5,7 +5,7 @@ import { useStore } from '@/store/useStore';
 import { useFoodDb } from '@/lib/hooks';
 import { matchItems } from '@/lib/recognize-client';
 import { boneInQuery, detailQuery, detailQuestion, lastAmount, asRecognition, gramsFor, naturalServings, parseAmount, parseSaid, questionFor, soupProteinQuestion, type SaidFood } from '@/lib/describe';
-import { boneInFood, searchFoods, splitName } from '@/lib/foods';
+import { boneInFood, matchIsConfident, searchFoods, splitName } from '@/lib/foods';
 import { mealForNow, todayKey } from '@/lib/dates';
 import { MEAL_LABELS, defaultMeal, rememberMeal, useMealOptions } from '@/lib/meals';
 import type { CustomFood, Food, Meal } from '@/lib/types';
@@ -17,7 +17,7 @@ export type Recognizer = { lang: string; interimResults: boolean; continuous: bo
 export const SR = typeof window !== 'undefined' ? ((window as unknown as Record<string, unknown>).SpeechRecognition ?? (window as unknown as Record<string, unknown>).webkitSpeechRecognition) as (new () => Recognizer) | undefined : undefined;
 export const canUseVoice = !!SR;
 
-interface Line { key: string; said: SaidFood; food: Food | null; options: Food[]; grams: number | null; how: string; /** Follow-ups already asked, so nothing is asked twice. */ asked?: { detail?: boolean; soup?: boolean } }
+interface Line { key: string; said: SaidFood; food: Food | null; options: Food[]; grams: number | null; how: string; /** Follow-ups already asked, so nothing is asked twice. */ asked?: { detail?: boolean; soup?: boolean; swallow?: boolean }; /** The match may not be what was said: ask before using it. */ unsure?: boolean }
 
 const short = (f: Food) => splitName(f.name).title.split(',')[0].replace(/\b(NFS|NS)\b\s*/g, '').trim();
 
@@ -127,8 +127,9 @@ export function VoiceSheet({ onClose, onSearch, date }: { onClose: () => void; o
       // No amount said: use what they had last time if we know it; otherwise ask, never assume.
       const g = food && (p.qty != null || p.unit) ? gramsFor(food, p.qty, p.unit, p.size) : null;
       const last = !g && food && p.qty == null && !p.unit ? lastAmount(useStore.getState().entries, food) : null;
-      if (last) return { key: `${Date.now()}-${i}`, said: p, food, options, grams: last, how: `your usual ${fmt(last)} g of` };
-      return { key: `${Date.now()}-${i}`, said: p, food, options, grams: g?.grams ?? null, how: g?.how ?? '' };
+      const unsure = !!food && !matchIsConfident(p.text, food);
+      if (last && !unsure) return { key: `${Date.now()}-${i}`, said: p, food, options, grams: last, how: `your usual ${fmt(last)} g of` };
+      return { key: `${Date.now()}-${i}`, said: p, food, options, grams: g?.grams ?? null, how: g?.how ?? '', unsure };
     });
     setLines((cur) => {
       const all = [...cur, ...next];
@@ -146,6 +147,25 @@ export function VoiceSheet({ onClose, onSearch, date }: { onClose: () => void; o
   });
 
   function askNext(all: Line[]) {
+    // 0. Not sure the match is what was said: offer the closest options instead of guessing.
+    const unsure = all.find((x) => x.food && x.unsure);
+    if (unsure) {
+      const opts = unsure.options.slice(0, 3);
+      const q = `I'm not sure I found ${unsure.said.text}. Is it ${opts.map((o, i) => `${['one', 'two', 'three'][i]}: ${short(o).toLowerCase()}`).join(', ')}? Or say it another way.`;
+      setAsking(q);
+      say(q, () => listen((answer) => {
+        const a = answer.toLowerCase();
+        const pick = /\b(one|first|1)\b/.test(a) ? opts[0] : /\b(two|second|2)\b/.test(a) ? opts[1] : /\b(three|third|3)\b/.test(a) ? opts[2] : undefined;
+        const again = pick ?? searchFoods(answer, { custom })[0];
+        const ok = !!again && (!!pick || matchIsConfident(answer, again));
+        if (!ok) { setLines((cur) => cur.filter((x) => x.key !== unsure.key)); const m = `I still couldn't find ${unsure.said.text}. Type it below, or add it as your own food.`; setAsking(m); say(m); return; }
+        patchAndContinue(unsure.key, (x) => {
+          const g = x.said.qty != null || x.said.unit ? gramsFor(again!, x.said.qty, x.said.unit, x.said.size) : null;
+          return { food: again!, unsure: false, options: [again!, ...x.options.filter((o) => o.id !== again!.id)].slice(0, 4), grams: g?.grams ?? null, how: g?.how ?? '' };
+        });
+      }, true));
+      return;
+    }
     // 1. How it was cooked, for chicken and fish said without it: it changes the numbers.
     const det = all.find((x) => x.food && !x.asked?.detail && detailQuestion(x.said.text));
     if (det) {
@@ -171,6 +191,19 @@ export function VoiceSheet({ onClose, onSearch, date }: { onClose: () => void; o
         setLines((cur) => cur.map((x) => (x.key === soup.key ? { ...x, asked: { ...x.asked, soup: true } } : x)));
         if (/^(no|nope|none|nothing|not really|just the soup|no meat)\b/i.test(answer.trim())) setTimeout(() => askNext(all.map((x) => (x.key === soup.key ? { ...x, asked: { ...x.asked, soup: true } } : x))), 50);
         else understand(soupMeat(answer));
+      }, true));
+      return;
+    }
+    // 4. Soup with no swallow said: ask once (eba, pounded yam, amala… carry most of the meal's calories).
+    const SWALLOW = /\b(eba|garri|gari|pounded yam|poundo|iyan|amala|lafun|fufu|akpu|semo|semovita|tuwo|starch|wheat|swallow|banku|kenkey|rice|yam|plantain)\b/;
+    const soloSoup = !l && !all.some((x) => SWALLOW.test(`${x.said.text} ${x.food?.name ?? ''}`.toLowerCase())) ? all.find((x) => x.food && x.asked?.soup && !x.asked?.swallow && soupProteinQuestion(x.food, '')) : undefined;
+    if (soloSoup) {
+      const q = `Did you have the ${short(soloSoup.food!).toLowerCase()} with a swallow, like eba, pounded yam, amala or fufu? Say which and how many wraps, or “no”.`;
+      setAsking(q);
+      say(q, () => listen((answer) => {
+        setLines((cur) => cur.map((x) => (x.key === soloSoup.key ? { ...x, asked: { ...x.asked, swallow: true } } : x)));
+        if (/^(no|nope|none|nothing|just the soup|on its own)\b/i.test(answer.trim())) setTimeout(() => askNext(all.map((x) => (x.key === soloSoup.key ? { ...x, asked: { ...x.asked, swallow: true } } : x))), 50);
+        else understand(answer.replace(/^(yes|yeah|yep)[,.]?\s*/i, ''));
       }, true));
       return;
     }
@@ -263,11 +296,12 @@ export function VoiceSheet({ onClose, onSearch, date }: { onClose: () => void; o
                 {l.food && <FoodVisual name={l.food.name} category={l.food.category} size={44} />}
                 <div className="min-w-0 flex-1">
                   {l.options.length > 1 ? (
-                    <select aria-label={`Which ${l.said.text}`} className="w-full truncate bg-transparent text-[15px] font-semibold outline-none" value={l.food?.id} onChange={(e) => setLines((cur) => cur.map((x) => { if (x.key !== l.key) return x; const f = x.options.find((o) => o.id === e.target.value)!; const g = gramsFor(f, x.said.qty, x.said.unit, x.said.size); return { ...x, food: f, grams: g?.grams ?? x.grams, how: g?.how ?? x.how }; }))}>
+                    <select aria-label={`Which ${l.said.text}`} className="w-full truncate bg-transparent text-[15px] font-semibold outline-none" value={l.food?.id} onChange={(e) => setLines((cur) => cur.map((x) => { if (x.key !== l.key) return x; const f = x.options.find((o) => o.id === e.target.value)!; const g = gramsFor(f, x.said.qty, x.said.unit, x.said.size); return { ...x, food: f, unsure: false, grams: g?.grams ?? x.grams, how: g?.how ?? x.how }; }))}>
                       {l.options.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
                     </select>
                   ) : <p className="truncate text-[15px] font-semibold">{l.food?.name ?? l.said.text}</p>}
                   {l.said.partOf && <p className="text-xs font-semibold text-accent">Part of your {l.said.partOf}</p>}
+                  {l.unsure && <p className="text-xs font-semibold text-warn">Not sure this is “{l.said.text}” — check it</p>}
                   <p className="num text-xs text-silver">{l.grams ? `${l.how ? `${l.how} · ` : ''}${fmt(((l.food?.per100.kcal ?? 0) * l.grams) / 100)} kcal · ${fmt(((l.food?.per100.protein ?? 0) * l.grams) / 100, 1)} g protein` : 'How much? Enter grams →'}</p>
                 </div>
                 <div className="relative w-20 shrink-0">
@@ -326,7 +360,7 @@ function LineFix({ line, custom, onChange }: { line: Line; custom: CustomFood[];
           <input autoFocus className="field !h-10" placeholder={`What was it instead of ${line.food ? short(line.food).toLowerCase() : line.said.text}?`} value={q} onChange={(e) => setQ(e.target.value)} aria-label="Search for the right food" />
           <div className="mt-1 space-y-1">
             {results.map((f) => (
-              <button key={f.id} onClick={() => { const g = gramsFor(f, line.said.qty, line.said.unit, line.said.size); onChange({ food: f, options: [f, ...line.options.filter((o) => o.id !== f.id)].slice(0, 4), grams: g?.grams ?? line.grams, how: g?.how ?? line.how }); setSwap(false); setQ(''); setPicked(null); haptic(); }} className="block w-full truncate rounded-xl bg-raised px-3 py-2 text-left text-sm font-semibold">{f.name}</button>
+              <button key={f.id} onClick={() => { const g = gramsFor(f, line.said.qty, line.said.unit, line.said.size); onChange({ food: f, unsure: false, options: [f, ...line.options.filter((o) => o.id !== f.id)].slice(0, 4), grams: g?.grams ?? line.grams, how: g?.how ?? line.how }); setSwap(false); setQ(''); setPicked(null); haptic(); }} className="block w-full truncate rounded-xl bg-raised px-3 py-2 text-left text-sm font-semibold">{f.name}</button>
             ))}
           </div>
           <button onClick={() => { setSwap(false); setQ(''); }} className="mt-1 text-xs font-semibold text-silver">Cancel</button>

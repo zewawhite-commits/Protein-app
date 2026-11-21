@@ -315,6 +315,8 @@ const BOWL = [['1 bowl', 300]], PLATE = [['1 plate', 350]];
 
 RECIPES.push(
   // West Africa
+  // The everyday red stew served with rice, yam and beans (meat counted separately, as people serve it).
+  d('Nigerian stew', 'West African', 900, [['tomato', 600], ['red_pepper', 300], ['chili', 30], ['onion', 150], ['oil', 120], ['tomato_paste', 70], ['salt', 5]], [['1 medium portion', 150], ['1 small portion', 100], ['1 large portion', 220], ['1 cooking spoon', 75]], ['tomato stew', 'obe ata', 'red stew', 'obe', 'rice and stew stew']),
   d('Ofada stew', 'West African', 650, [['green_pepper', 250], ['palm_oil', 100], ['beef', 300], ['tripe', 150], ['onion', 100], ['chili', 30], ['salt', 4]], [['1 serving', 150]], ['ayamase', 'designer stew']),
   d('Yam porridge', 'West African', 950, [['yam', 600], ['palm_oil', 40], ['tomato', 150], ['red_pepper', 80], ['onion', 60], ['dried_shrimp', 15], ['spinach', 50], ['salt', 4]], PLATE_DISH, ['asaro', 'yam pottage']),
   d('Beans porridge', 'West African', 820, [['cowpeas', 600], ['palm_oil', 40], ['tomato', 100], ['red_pepper', 60], ['onion', 50], ['dried_shrimp', 10], ['salt', 4]], PLATE_DISH, ['ewa riro', 'beans and plantain']),

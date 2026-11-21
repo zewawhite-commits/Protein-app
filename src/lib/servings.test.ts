@@ -1,7 +1,8 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import { readFileSync } from 'fs';
-import { boneInFood, loadFoodDb, searchFoods } from './foods';
+import { boneInFood, foodById, loadFoodDb, matchIsConfident, searchFoods } from './foods';
 import { alcoholPer100 } from './nutrition';
+import { standardRecipe } from './recipe';
 import { boneInQuery, detailQuery, detailQuestion, gramsFor, naturalServings, parseAmount, parseSaid, questionFor, soupProteinQuestion } from './describe';
 
 // Every kind of food is asked about, and understood, in the way it's really measured.
@@ -156,5 +157,46 @@ describe('alcohol', () => {
     expect(alcoholPer100('Rum', { kcal: 231, protein: 0, carbs: 0, fat: 0, fiber: 0 } as never)).toBeCloseTo(33, 0);
     expect(alcoholPer100('Beer, non-alcoholic', { kcal: 37, protein: 0.2, carbs: 8, fat: 0, fiber: 0 } as never)).toBeNull();
     expect(alcoholPer100('Rum cake', { kcal: 380, protein: 4, carbs: 50, fat: 15, fiber: 0 } as never)).toBeNull();
+  });
+});
+
+describe('world dishes can be made your way', () => {
+  it('every standard recipe parses and every ingredient is found again', async () => {
+    const db = await loadFoodDb();
+    // First record with each name, as the build uses.
+    const byName = new Map<string, (typeof db.foods)[number]>();
+    for (const f of db.foods) if (!byName.has(f.name)) byName.set(f.name, f);
+    const dishes = db.foods.filter((f) => f.source === 'recipe');
+    expect(dishes.length).toBeGreaterThan(150);
+    for (const d of dishes) {
+      const std = standardRecipe(d.sourceNote);
+      expect(std, d.name).not.toBeNull();
+      for (const i of std!.items) expect(byName.has(i.name), `${d.name}: ${i.name}`).toBe(true);
+      // Rebuilding from the ingredients gives the same calories as the stored dish.
+      const kcal = std!.items.reduce((s, i) => s + ((byName.get(i.name)!.per100.kcal ?? 0) * i.grams) / 100, 0) / std!.yieldGrams * 100;
+      expect(Math.abs(kcal - (d.per100.kcal ?? 0)), d.name).toBeLessThan(Math.max(1.5, (d.per100.kcal ?? 0) * 0.01));
+    }
+  });
+});
+
+describe('duplicate foods', () => {
+  it('identical twins were merged, and their old ids still find the food', async () => {
+    const file = JSON.parse(readFileSync('public/data/foods.json', 'utf8')) as { redirects: Record<string, string> };
+    const [from, to] = Object.entries(file.redirects)[0];
+    const prefix = (k: string) => ({ s: 'usda', f: 'usda', w: 'wafct', u: 'cofid', a: 'afcd', r: 'recipe' } as Record<string, string>)[k.split(':')[0]] + ':' + k.split(':')[1];
+    expect(foodById(prefix(from))?.id).toBe(prefix(to));
+  });
+  it('foods that differ are all kept', () => {
+    const milks = searchFoods('milk evaporated whole', { limit: 20 }).filter((f) => /^Milk, evaporated, whole$/i.test(f.name));
+    expect(new Set(milks.map((m) => m.per100.kcal)).size).toBeGreaterThan(1);
+  });
+});
+
+describe('never silently pick an unrelated food', () => {
+  const conf = (q: string) => matchIsConfident(q, food(q));
+  it.each(['jollof rice', 'egusi soup', 'fried egg', 'porridge', 'coke', 'malt', 'stew', 'chicken', 'boiled chicken', 'egushi', 'pounded yam', 'banana', 'moin moin', 'fanta'])('confident: %s', (q) => expect(conf(q)).toBe(true));
+  it.each(['ponmo soup stuff', 'zzkx'])('unsure or nothing: %s', (q) => { const f = food(q); expect(!f || !matchIsConfident(q, f)).toBe(true); });
+  it('typo-corrected unrelated matches are flagged', () => {
+    expect(matchIsConfident('fantx', { name: 'Fufu', source: 'usda-sr' } as never)).toBe(false);
   });
 });

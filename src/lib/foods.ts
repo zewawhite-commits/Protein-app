@@ -16,6 +16,8 @@ interface FoodsFile {
   generatedAt: string;
   categories: Record<string, string>;
   quickPicks: number[];
+  /** Merged twins: "s:123" → "f:456" (source letter : key). */
+  redirects?: Record<string, string>;
   foods: [number | string, string, number, PrepState, number, number | null, number | null, number | null, number | null, [string, number][], SourceCode, (number | null)[]?, string?][];
 }
 
@@ -57,7 +59,7 @@ export function sourceInfo(food: Pick<Food, 'source' | 'fdcId' | 'ref' | 'source
 }
 
 export const SOURCE_SHORT: Record<FoodSource, string> = {
-  'usda-sr': 'USDA', 'usda-fndds': 'USDA dish', 'fao-wafct': 'FAO W. Africa', 'uk-cofid': 'UK', 'au-afcd': 'Australia', recipe: 'Recipe', off: 'Product', custom: 'Mine',
+  'usda-sr': 'US', 'usda-fndds': 'US', 'fao-wafct': 'West Africa', 'uk-cofid': 'UK', 'au-afcd': 'Australia', recipe: 'Standard recipe', off: 'Product', custom: 'Mine',
 };
 
 interface Indexed {
@@ -81,7 +83,9 @@ const PROCESSED_WORDS = /\b(breaded|battered|tenders|nuggets|patties|roll|deli|l
 
 let loadedById: Map<string, Food> | undefined;
 /** A database food by id, once the database has loaded. */
-export const foodById = (id: string): Food | undefined => loadedById?.get(id);
+/** Records merged into an identical twin keep working through this (old id → kept id). */
+let redirectIds: Map<string, string> | null = null;
+export const foodById = (id: string): Food | undefined => loadedById?.get(id) ?? (redirectIds?.get(id) ? loadedById?.get(redirectIds.get(id)!) : undefined);
 
 export function loadFoodDb(): Promise<FoodDb> {
   if (!dbPromise) {
@@ -114,6 +118,7 @@ export function loadFoodDb(): Promise<FoodDb> {
         });
         const byId = new Map(foods.map((f) => [f.id, f]));
         loadedById = byId;
+        redirectIds = new Map(Object.entries(file.redirects ?? {}).map(([from, to]) => { const [fs, fk] = from.split(':'); const [ts, tk] = to.split(':'); return [`${ID_PREFIX[fs as SourceCode]}:${fk}`, `${ID_PREFIX[ts as SourceCode]}:${tk}`]; }));
         index = foods.map(toIndexed);
         quickPickIds = new Set(file.quickPicks.map((id) => `usda:${id}`));
         return {
@@ -186,12 +191,28 @@ const COOKED: [RegExp, string][] = [
   [/^(pap|akamu|ogi|koko)$/, 'ogi'],
   [/^stockfish$|^panla$/, 'fish cod dried salted'],
   [/^titus( fish)?$/, 'mackerel'],
+  // Everyday Nigerian names that otherwise land on a different food.
+  [/^(stew|tomato stew|red stew|obe ata|nigerian stew)$/, 'nigerian stew'],
+  [/^(yam|boiled yam)$/, 'yam boiled'],
+  [/^(bread|agege bread|agege|sliced bread)$/, 'bread white'],
+  [/^(spaghetti|macaroni|boiled spaghetti|cooked spaghetti)$/, 'pasta cooked'],
+  [/^(coke|coca[- ]cola|pepsi|cola)$/, 'soft drink cola'],
+  [/^(sprite|7 ?up|seven up|lemon lime soda)$/, 'lemon lime soda'],
+  [/^(fanta|orange soda|orange fizzy drink)$/, 'beverages carbonated orange'],
+  [/^(malt|maltina|malta|amstel malta|malt drink)$/, 'malt beverage non alcoholic'],
+  [/^gala( sausage roll)?$/, 'sausage roll'],
+  [/^(shaki|tripe|assorted|assorted meat|roundabout)$/, 'beef tripe cooked'],
+  [/^chicken suya$/, 'chicken thigh grilled without sauce skin eaten'],
+  [/^peppered chicken$/, 'chicken thigh stewed skin eaten'],
+  [/^(fish|catfish) pepper ?soup$/, 'ofe nsala'],
+  [/^goat( meat)? pepper ?soup$/, 'goat pepper soup'],
 ];
 
 export function searchFoods(query: string, opts: SearchOptions = {}): Food[] {
   const q0 = query.trim().toLowerCase().replace(/\s+/g, ' ');
   const cooked = COOKED.find(([re]) => re.test(q0))?.[1];
-  if (cooked) { const hit = searchWith(cooked, opts); if (hit.length) return [...hit, ...searchWith(query, opts).filter((f) => !hit.some((h) => h.id === f.id))].slice(0, opts.limit ?? 60); }
+  // Alternatives from the words as said, but only real ones ("fanta" must not offer fufu via a typo fix).
+  if (cooked) { const hit = searchWith(cooked, opts); if (hit.length) return [...hit, ...searchWith(query, opts).filter((f) => !hit.some((h) => h.id === f.id) && matchIsConfident(query, f, true))].slice(0, opts.limit ?? 60); }
   const exact = EXACT[query.trim().toLowerCase()];
   if (exact) { const hit = searchWith(exact, opts); if (hit.length) return [...hit, ...searchWith(query, opts).filter((f) => !hit.some((h) => h.id === f.id))].slice(0, opts.limit ?? 60); }
   const direct = searchWith(query, opts);
@@ -438,4 +459,22 @@ export function boneInFood(_food: Food, queries: string[] | null): Food | null {
     if (hit) return hit;
   }
   return null;
+}
+
+const STOP = new Set(['a', 'an', 'the', 'of', 'some', 'my', 'with', 'and', 'plain', 'fresh', 'homemade', 'nigerian', 'style', 'piece', 'pieces', 'plate', 'bowl', 'cup', 'glass']);
+/**
+ * Is this food really what was said? True when a known everyday name maps to it, or when every
+ * word said (allowing plurals and one-letter slips) is in the food's name or other names.
+ * False means: show alternatives and ask — never silently log something unrelated ("fanta" → fufu).
+ */
+export function matchIsConfident(said: string, food: Food, wordsOnly = false): boolean {
+  const q = said.trim().toLowerCase().replace(/\s+/g, ' ');
+  if (!wordsOnly && (COOKED.some(([re]) => re.test(q)) || EXACT[q] || PHRASES.some(([re]) => re.test(q)))) return true;
+  if (food.source === 'custom') return true;
+  const words = tokenize(`${food.name} ${food.aliases?.join(' ') ?? ''}`);
+  const asked = tokenize(q).map((t) => SYNONYMS[t] ?? t).filter((t) => !STOP.has(t) && !/^\d/.test(t));
+  if (!asked.length) return true;
+  const hit = (t: string) => words.some((w) => w.startsWith(t) || t.startsWith(w.replace(/s$/, '')) && w.length >= 4 || (t.length >= 5 && editDistance(t, w, 2) <= 1));
+  const n = asked.filter(hit).length;
+  return n === asked.length || (asked.length >= 3 && n >= asked.length - 1);
 }

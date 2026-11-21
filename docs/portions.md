@@ -57,7 +57,7 @@ do list one, mostly USDA FNDDS, which records what people actually eat. The serv
 biscuit 13 g, glass of drink 248 g, yogurt pot 170 g, small bag of crisps 28 g. Indomie uses
 the pack sizes printed on the packet (70 g and 120 g). Rebuild with:
 
-    node scripts/build-recipes.mjs && node scripts/build-typical-portions.mjs
+    node scripts/build-recipes.mjs && node scripts/build-typical-portions.mjs && node scripts/build-dedupe.mjs
 
 Every voice item can be corrected before it's added. Tap a serving button in that food's own
 units, use − / + for how many, type the grams, or tap "Wrong food? Change it" to search for the

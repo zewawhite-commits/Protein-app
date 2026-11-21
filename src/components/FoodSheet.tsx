@@ -19,6 +19,7 @@ import { useFoodDb, usePhotoUrl, useDay } from '@/lib/hooks';
 import { dailyTargets } from '@/lib/energy';
 import { useStore } from '@/store/useStore';
 import { boneInQuery, gramsFor, lastAmount, parseAmount } from '@/lib/describe';
+import { standardRecipe } from '@/lib/recipe';
 import { AllergyBanner } from './Allergy';
 import { fromKey, mealForNow, todayKey } from '@/lib/dates';
 import { Ring, Segmented, Sheet, StateBadge, cx, fmt } from './ui';
@@ -106,7 +107,7 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
   const split = (() => { const c = (per100.carbs ?? 0) * 4, f = (per100.fat ?? 0) * 9, p = per100.protein * 4, t = c + f + p; return t > 0 && per100.carbs != null && per100.fat != null ? { carbs: c / t, fat: f / t, protein: p / t } : null; })();
   const { title, detail } = splitName(food.name);
   const alt = useMemo(() => (db ? counterparts(food, db.foods) : []), [db, food]);
-  const alcohol = alcoholPer100(food.name, food.per100);
+  const alcohol = alcoholPer100(food.name, food.per100, food.category);
   // Measured "weighed with bone" record for meat and fish, so a bone-in weight isn't counted as all meat.
   const boneIn = useMemo(() => (db ? boneInFood(food, boneInQuery(food.name)) : null), [db, food]);
   const avoid = useAvoid();
@@ -420,6 +421,14 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
       )}
       <input ref={camRef} type="file" accept="image/*" capture="environment" hidden onChange={(e) => onPhoto(e.target.files?.[0])} />
       <input ref={galRef} type="file" accept="image/*" hidden onChange={(e) => onPhoto(e.target.files?.[0])} />
+
+      {/* World dishes are worked out from one standard recipe: say so, and let people use their own. */}
+      {food.source === 'recipe' && standardRecipe(food.sourceNote) && (
+        <div className="rounded-2xl bg-raised px-4 py-3 text-[14px] leading-relaxed">
+          <p><b>Estimate from a standard recipe.</b> <span className="text-silver">Home cooking varies, especially oil and meat. If yours is different, make it your way and log your own version.</span></p>
+          <Link to={`/recipe?from=${encodeURIComponent(food.id)}`} onClick={onClose} className="mt-1 inline-block font-semibold text-accent">Make it your way →</Link>
+        </div>
+      )}
 
       {/* Source */}
       <div>
