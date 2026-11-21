@@ -7,6 +7,7 @@ import type { ImportedRecipe } from '@/lib/recipeImport';
 import type { RecipeDef } from '@/lib/types';
 import { Segmented, cx } from './ui';
 import { haptic } from './fx';
+import { useHasTier } from '@/lib/perks';
 
 type Mode = 'paste' | 'link' | 'photo';
 export interface ImportResult { title: string; servings: number; items: RecipeDef['ingredients']; unmatched: string[]; guessed: string[]; missing: string[]; steps: string[]; note: string }
@@ -20,6 +21,7 @@ export function RecipeImport({ onImported }: { onImported: (r: ImportResult) => 
   const [text, setText] = useState('');
   const [url, setUrl] = useState('');
   const [busy, setBusy] = useState(false);
+  const plus = useHasTier('pro');
   const [err, setErr] = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -60,6 +62,7 @@ export function RecipeImport({ onImported }: { onImported: (r: ImportResult) => 
     <div className="card p-4">
       <p className="font-bold">Import a recipe</p>
       <p className="mt-0.5 text-sm text-silver">Paste it, add a link, or snap a recipe page. You can check every ingredient before saving.</p>
+      {!plus && <p className="mt-1 text-[13px] font-semibold text-accent">Free: 1 recipe import a day (your 3 AI scans are separate)</p>}
       <div className="mt-3"><Segmented full value={mode} onChange={setMode} options={[{ value: 'paste', label: 'Paste' }, { value: 'link', label: 'Link' }, { value: 'photo', label: 'Photo' }]} /></div>
       {mode === 'paste' && (
         <>

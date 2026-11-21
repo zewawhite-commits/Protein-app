@@ -2,7 +2,7 @@
  * Plan limits for every AI feature, enforced on the server so they can't be bypassed.
  *
  *            scan  coach  workout  recipe  plan  ideas   (per calendar month, UTC)
- *   free       3      5      0        0      0     0
+ *   free       3      5      0        0      0     0     + 1 recipe import a day
  *   plus      ∞      ∞      ∞        ∞     30     ∞     ∞ = unlimited (with a hidden fair-use cap against abuse)
  *   pro       ∞      ∞      ∞        ∞      ∞     ∞     Plus: unlimited plans, smarter coach, advanced analysis & reports
  *   trial     ∞      ∞      ∞        ∞      ∞     ∞     3-day Plus trial: everything unlimited
@@ -19,7 +19,7 @@
 import { bearer, readPass } from './premium.js';
 import { accountsConfigured, useScan, userFromToken } from './accounts.js';
 
-export type Feature = 'scan' | 'coach' | 'workout' | 'recipe' | 'plan' | 'ideas' | 'menu';
+export type Feature = 'scan' | 'coach' | 'workout' | 'recipe' | 'plan' | 'ideas' | 'menu' | 'import';
 export type PlanTier = 'free' | 'plus' | 'pro' | 'trial' | 'reward';
 
 const FAIR_USE = 900;
@@ -31,20 +31,20 @@ const today = () => new Date().toISOString().slice(0, 10);
 export const usageKey = (feature: string, userId: string, tier: PlanTier) => (DAILY[tier] || (tier === 'reward' && feature === 'coach') ? `${feature}:${userId}:${today()}` : `${feature}:${userId}`);
 
 const DEFAULTS: Record<PlanTier, Record<Feature, number>> = {
-  free: { scan: 3, coach: 5, workout: 0, recipe: 0, plan: 0, ideas: 0, menu: 0 },
+  free: { scan: 3, coach: 5, workout: 0, recipe: 0, plan: 0, ideas: 0, menu: 0, import: 1 },
   // There is only one paid plan now (Plus); any older Plus subscription gets everything Plus has.
-  plus: { scan: FAIR_USE, coach: FAIR_USE * 3, workout: FAIR_USE, recipe: FAIR_USE, plan: FAIR_USE, ideas: FAIR_USE, menu: FAIR_USE },
-  pro: { scan: FAIR_USE, coach: FAIR_USE * 3, workout: FAIR_USE, recipe: FAIR_USE, plan: FAIR_USE, ideas: FAIR_USE, menu: FAIR_USE },
+  plus: { scan: FAIR_USE, coach: FAIR_USE * 3, workout: FAIR_USE, recipe: FAIR_USE, plan: FAIR_USE, ideas: FAIR_USE, menu: FAIR_USE, import: FAIR_USE },
+  pro: { scan: FAIR_USE, coach: FAIR_USE * 3, workout: FAIR_USE, recipe: FAIR_USE, plan: FAIR_USE, ideas: FAIR_USE, menu: FAIR_USE, import: FAIR_USE },
   // The 3-day Plus trial: everything Plus has, unlimited (fair-use cap only).
-  trial: { scan: FAIR_USE, coach: FAIR_USE * 3, workout: FAIR_USE, recipe: FAIR_USE, plan: FAIR_USE, ideas: FAIR_USE, menu: FAIR_USE },
+  trial: { scan: FAIR_USE, coach: FAIR_USE * 3, workout: FAIR_USE, recipe: FAIR_USE, plan: FAIR_USE, ideas: FAIR_USE, menu: FAIR_USE, import: FAIR_USE },
   // Days earned by inviting friends: Plus features, coach at the Free daily allowance.
-  reward: { scan: FAIR_USE, coach: 5, workout: FAIR_USE, recipe: FAIR_USE, plan: FAIR_USE, ideas: FAIR_USE, menu: FAIR_USE },
+  reward: { scan: FAIR_USE, coach: 5, workout: FAIR_USE, recipe: FAIR_USE, plan: FAIR_USE, ideas: FAIR_USE, menu: FAIR_USE, import: FAIR_USE },
 };
 
 /** Limits at or above this are shown as "Unlimited" (a fair-use cap, ~30 a day). */
 export const UNLIMITED = 900;
 
-const NAMES: Record<Feature, string> = { scan: 'AI scans', coach: 'coach messages', workout: 'workout guides', recipe: 'AI recipes', plan: 'eating plans', ideas: 'AI meal ideas', menu: 'Restaurant menu scans' };
+const NAMES: Record<Feature, string> = { scan: 'AI scans', coach: 'coach messages', workout: 'workout guides', recipe: 'AI recipes', plan: 'eating plans', ideas: 'AI meal ideas', menu: 'Restaurant menu scans', import: 'recipe imports' };
 
 export function limitFor(tier: PlanTier, feature: Feature): number {
   const v = Number(process.env[`LIMIT_${tier.toUpperCase()}_${feature.toUpperCase()}`]);
@@ -106,7 +106,7 @@ export async function gate(request: Request, feature: Feature, count = 1): Promi
     }
     if (left < 0) {
       if (limit >= UNLIMITED) return { ok: false, status: 429, body: { error: 'You’ve hit the fair-use limit for this month. It resets on the 1st. Contact support if you need more.', limitReached: true, feature, tier } };
-      return { ok: false, status: 402, body: { error: tier === 'plus' ? `You’ve used your ${limit} ${NAMES[feature]} this month. Plus has unlimited.` : tier === 'reward' ? `You’ve used your ${limit} ${NAMES[feature]} for today. They reset tomorrow, or upgrade to Plus for unlimited.` : `You’ve used your ${limit} free ${NAMES[feature]} for today. They reset tomorrow, or upgrade to Plus for unlimited.`, premium: true, limitReached: true, feature, tier } };
+      return { ok: false, status: 402, body: { error: tier === 'plus' ? `You’ve used your ${limit} ${NAMES[feature]} this month. Plus has unlimited.` : tier === 'reward' ? `You’ve used your ${limit} ${NAMES[feature]} for today. They reset tomorrow, or upgrade to Plus for unlimited.` : `You’ve used your ${limit} free ${limit === 1 ? NAMES[feature].replace(/s$/, '') : NAMES[feature]} for today. They reset tomorrow, or upgrade to Plus for unlimited.`, premium: true, limitReached: true, feature, tier } };
     }
     return { ok: true, tier, left, limit };
   } catch (e) {
