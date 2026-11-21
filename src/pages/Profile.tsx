@@ -23,6 +23,7 @@ import { InviteCard, TrialCard } from '@/components/FreePro';
 import { PageHeader, Segmented, Sheet, cx, fmt } from '@/components/ui';
 import { ReminderSettings } from '@/components/Notifications';
 import { OwnerStats } from '@/components/OwnerStats';
+import { AiCosts } from '@/components/AiCosts';
 import { calorieGoal } from '@/lib/energy';
 
 export default function Profile({ mode = 'profile' }: { mode?: 'profile' | 'settings' }) {
@@ -126,6 +127,7 @@ export default function Profile({ mode = 'profile' }: { mode?: 'profile' | 'sett
       {isSettings && (
         <>
       <OwnerStats />
+      <AiCosts />
 
       <Group title="Appearance">
         <Row icon={settings.theme === 'light' ? <Sun size={18} /> : <Moon size={18} />} label="Theme">

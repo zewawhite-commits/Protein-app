@@ -14,13 +14,13 @@ import { Segmented, cx } from '@/components/ui';
 /** Planned prices, shown until live plans load from the payment provider (which sets the real charge). */
 const PREVIEW = [
   { tier: null, name: 'Free', perks: ['Calories, macros & 18,000+ foods', 'Barcode, exercise, progress & feed', '3 AI scans + 5 coach messages a day'], best: false },
-  { tier: 'pro' as Tier, name: 'Plus', perks: ['Unlimited AI food scans', 'Restaurant menus: photo, QR code or link', 'Smarter, personal AI nutrition coach', 'Personalized weekly & monthly meal plans', 'Plans adjust automatically to your progress', 'Daily meal suggestions', 'Unlimited AI recipes and recipe imports', 'AI workout guides', 'Advanced micronutrient analysis', 'Detailed nutrition reports', 'Adjusts to your cuisine & diet'], best: true },
+  { tier: 'pro' as Tier, name: 'Plus', perks: ['Unlimited AI food scans for personal use', 'Restaurant menus: photo, QR code or link', 'Smarter, personal AI nutrition coach', 'Personalized weekly & monthly meal plans', 'Plans adjust automatically to your progress', 'Daily meal suggestions', 'Unlimited AI recipes and recipe imports', 'AI workout guides', 'Advanced micronutrient analysis', 'Detailed nutrition reports', 'Adjusts to your cuisine & diet'], best: true },
 ];
 
 const TIER_INFO: Record<'free' | Tier, { name: string; perks: string[] }> = {
   free: { name: 'Free', perks: ['18,000+ foods, barcode, exercise & progress', 'Feed and groups', '3 AI scans + 5 coach messages a day', '1 recipe import a day'] },
-  plus: { name: 'Plus', perks: ['Unlimited AI food scans', 'Restaurant menus: photo, QR code or link', 'Smarter, personal AI nutrition coach', 'Personalized weekly & monthly meal plans', 'Plans adjust automatically to your progress', 'Daily meal suggestions', 'Unlimited AI recipes and recipe imports', 'AI workout guides', 'Advanced micronutrient analysis', 'Detailed nutrition reports', 'Adjusts to your cuisine & diet'] },
-  pro: { name: 'Plus', perks: ['Unlimited AI food scans', 'Restaurant menus: photo, QR code or link', 'Smarter, personal AI nutrition coach', 'Personalized weekly & monthly meal plans', 'Plans adjust automatically to your progress', 'Daily meal suggestions', 'Unlimited AI recipes and recipe imports', 'AI workout guides', 'Advanced micronutrient analysis', 'Detailed nutrition reports', 'Adjusts to your cuisine & diet'] },
+  plus: { name: 'Plus', perks: ['Unlimited AI food scans for personal use', 'Restaurant menus: photo, QR code or link', 'Smarter, personal AI nutrition coach', 'Personalized weekly & monthly meal plans', 'Plans adjust automatically to your progress', 'Daily meal suggestions', 'Unlimited AI recipes and recipe imports', 'AI workout guides', 'Advanced micronutrient analysis', 'Detailed nutrition reports', 'Adjusts to your cuisine & diet', 'No ads'] },
+  pro: { name: 'Plus', perks: ['Unlimited AI food scans for personal use', 'Restaurant menus: photo, QR code or link', 'Smarter, personal AI nutrition coach', 'Personalized weekly & monthly meal plans', 'Plans adjust automatically to your progress', 'Daily meal suggestions', 'Unlimited AI recipes and recipe imports', 'AI workout guides', 'Advanced micronutrient analysis', 'Detailed nutrition reports', 'Adjusts to your cuisine & diet', 'No ads'] },
 };
 
 type Billing = 'monthly' | 'yearly';

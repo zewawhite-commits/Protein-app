@@ -24,6 +24,7 @@ export async function GET(request: Request): Promise<Response> {
     }
     return new Response(lines.join('\n'), { headers: { 'content-type': 'text/csv; charset=utf-8', 'content-disposition': 'attachment; filename="nutivili-mailing-list.csv"', 'cache-control': 'no-store' } });
   }
+  if (new URL(request.url).searchParams.get('ai') === '1') return json(await aiDashboard(db));
   const rows: Row[] = [];
   for (let from = 0; from < 20000; from += 1000) {
     const { data, error } = await db.from('user_data').select('data, updated_at').range(from, from + 999);
@@ -60,4 +61,57 @@ export async function GET(request: Request): Promise<Response> {
     if (!list || list.users.length < 1000) break;
   }
   return json({ ...summarize(rows), aiThisMonth: ai, aiCost, funnel, signups });
+}
+
+/** AI cost dashboard: real metered spend (ai_usage), by feature and account, with revenue and margin. */
+async function aiDashboard(db: NonNullable<ReturnType<typeof admin>>) {
+  const now = new Date();
+  const from = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).toISOString();
+  const to = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1)).toISOString();
+  const [byFeature, top, monthly, alerts] = await Promise.all([
+    db.rpc('ai_cost_by_feature', { p_from: from, p_to: to }),
+    db.rpc('ai_top_accounts', { p_from: from, p_to: to, p_limit: 15 }),
+    db.rpc('ai_monthly', { p_months: 6 }),
+    db.from('ai_alerts').select('at, user_id, kind, detail').order('at', { ascending: false }).limit(25),
+  ]);
+  if (byFeature.error) return { ready: false, error: 'Run supabase/ai-usage.sql in Supabase to start metering AI costs.' };
+  // Emails for the top accounts and alerts (owner-only view).
+  const ids = [...new Set([...(top.data ?? []).map((r: { user_id: string }) => r.user_id), ...(alerts.data ?? []).map((r: { user_id: string }) => r.user_id)])];
+  const emails: Record<string, string> = {};
+  await Promise.all(ids.slice(0, 40).map(async (id) => { const { data } = await db.auth.admin.getUserById(id); if (data.user?.email) emails[id] = data.user.email; }));
+  // Revenue: active Plus subscriptions from Paystack, as a monthly figure (yearly ÷ 12).
+  let revenue: { monthlyUsd: number | null; subscribers: number; currency: string; note?: string } = { monthlyUsd: null, subscribers: 0, currency: 'USD', note: 'Paystack isn’t connected yet.' };
+  try {
+    const { config, paystack } = await import('./_lib/premium.js');
+    if (config().enabled) {
+      let monthly = 0, subs = 0, currency = 'USD';
+      for (let page = 1; page <= 20; page++) {
+        const list = await paystack<{ status: string; amount: number; plan?: { interval?: string; currency?: string } }[]>(`/subscription?perPage=100&page=${page}`);
+        for (const s of list.filter((x) => x.status === 'active' || x.status === 'non-renewing')) {
+          subs++; currency = s.plan?.currency ?? currency;
+          monthly += (s.amount / 100) / (s.plan?.interval === 'annually' ? 12 : 1);
+        }
+        if (list.length < 100) break;
+      }
+      revenue = { monthlyUsd: currency === 'USD' ? Math.round(monthly * 100) / 100 : null, subscribers: subs, currency, ...(currency !== 'USD' && { note: `Paystack plans are in ${currency}: ${Math.round(monthly)} ${currency} a month.` }) };
+    }
+  } catch (e) { revenue.note = `Couldn’t read Paystack: ${(e as Error).message}`; }
+  type F = { feature: string; tier: string; requests: number; cost: number; people: number };
+  const rows = (byFeature.data ?? []) as F[];
+  const sum = (f: (r: F) => boolean, k: 'cost' | 'requests') => rows.filter(f).reduce((a, r) => a + Number(r[k]), 0);
+  const paid = (r: F) => r.tier === 'plus' || r.tier === 'pro';
+  const paidPeople = new Set((top.data ?? []).filter((r: { tier: string }) => ['plus', 'pro'].includes(r.tier)).map((r: { user_id: string }) => r.user_id)).size;
+  const totalCost = sum(() => true, 'cost'), paidCost = sum(paid, 'cost');
+  const feePct = Number(process.env.PAYMENT_FEE_PCT ?? 3.9) / 100;
+  const margin = revenue.monthlyUsd == null ? null : Math.round((revenue.monthlyUsd * (1 - feePct) - totalCost) * 100) / 100;
+  return {
+    ready: true, month: from.slice(0, 7),
+    byFeature: rows.map((r) => ({ ...r, cost: Number(r.cost), requests: Number(r.requests), people: Number(r.people) })),
+    totals: { cost: Math.round(totalCost * 100) / 100, requests: sum(() => true, 'requests'), paidCost: Math.round(paidCost * 100) / 100, freeCost: Math.round((totalCost - paidCost) * 100) / 100 },
+    perSubscriber: revenue.subscribers ? Math.round((paidCost / revenue.subscribers) * 1000) / 1000 : paidPeople ? Math.round((paidCost / paidPeople) * 1000) / 1000 : null,
+    top: (top.data ?? []).map((r: Record<string, unknown>) => ({ ...r, email: emails[r.user_id as string] ?? '', cost: Number(r.cost), requests: Number(r.requests), devices: Number(r.devices) })),
+    monthly: (monthly.data ?? []).map((r: Record<string, unknown>) => ({ month: r.month, requests: Number(r.requests), cost: Number(r.cost), people: Number(r.people), paidCost: Number(r.paid_cost), paidPeople: Number(r.paid_people) })),
+    alerts: (alerts.data ?? []).map((a: { at: string; user_id: string; kind: string; detail: string }) => ({ ...a, email: emails[a.user_id] ?? '' })),
+    revenue, paymentFeePct: feePct * 100, margin,
+  };
 }

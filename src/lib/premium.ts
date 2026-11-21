@@ -122,13 +122,22 @@ export function formatPrice(p: PlanInfo): string {
 export const intervalLabel = (i: string) => ({ monthly: 'month', annually: 'year', quarterly: 'quarter', weekly: 'week', biannually: '6 months', daily: 'day' })[i] ?? i;
 
 /** Headers for AI requests: who you are (account) and your plan (pass), if any. */
+/** A random id for this phone/browser (no personal data): helps spot one account shared by many devices. */
+function deviceId(): string {
+  try {
+    let id = localStorage.getItem('nutivili-device');
+    if (!id) { id = crypto.randomUUID(); localStorage.setItem('nutivili-device', id); }
+    return id;
+  } catch { return 'unknown'; }
+}
+
 export async function aiHeaders(): Promise<Record<string, string>> {
   const { requireOnline } = await import('./online');
   requireOnline();
   const { accessToken } = await import('./account');
   const token = useStore.getState().premium?.token;
   const user = await accessToken();
-  return { 'content-type': 'application/json', ...(token && { authorization: `Bearer ${token}` }), ...(user && { 'x-user-token': user }) };
+  return { 'content-type': 'application/json', 'x-device-id': deviceId(), ...(token && { authorization: `Bearer ${token}` }), ...(user && { 'x-user-token': user }) };
 }
 
 export interface Usage { tier: 'free' | 'plus' | 'pro'; admin: boolean; perks?: { proUntil: number; freePro: boolean; trialUsed: boolean; referrals: number; maxReferrals: number; referralDays: number; code: string }; features: Record<'scan' | 'coach' | 'workout' | 'recipe' | 'plan' | 'ideas', { used: number; limit: number | null }> }

@@ -171,7 +171,8 @@ export async function recognizeWithClient(client: Anthropic, imageBase64: string
       effort: 'medium',
       format: { type: 'json_schema', schema: SCHEMA as unknown as Record<string, unknown> },
     },
-    system: SYSTEM,
+    // The instructions are the same for every scan: cached, so repeat scans pay about 1/20 for them.
+    system: [{ type: 'text', text: SYSTEM, cache_control: { type: 'ephemeral' } }],
     messages: [
       {
         role: 'user',

@@ -5,6 +5,7 @@
 export const maxDuration = 60;
 import { busyMessage, logAiError } from './_lib/aiErrors.js';
 import Anthropic from '@anthropic-ai/sdk';
+import { aiClient } from './_lib/metering.js';
 import { contextText } from '../src/lib/coach.js';
 import { planWithClient } from '../src/lib/plan.js';
 import { json } from './_lib/premium.js';
@@ -22,9 +23,9 @@ export async function POST(request: Request): Promise<Response> {
     const context = cleanContext(body?.context);
     const avoid = avoidSet({ avoid: context.avoid });
     const found = (r: Awaited<ReturnType<typeof planWithClient>>) => allergensInAll([...r.meals.flatMap((m) => [m.title, ...m.items.map((i) => `${i.name} ${i.localName}`)])], avoid);
-    let r = await planWithClient(new Anthropic({ maxRetries: 3 }), context, ask, contextText);
+    let r = await planWithClient(aiClient('plan', g.who), context, ask, contextText);
     // The prompt asks the AI to respect the avoid list; check it did, and try once more if not.
-    if (found(r).length) r = await planWithClient(new Anthropic({ maxRetries: 3 }), context, `${ask || ''}\nImportant: it must not contain ${found(r).join(', ').toLowerCase()} — I avoid them.`.trim(), contextText);
+    if (found(r).length) r = await planWithClient(aiClient('plan', g.who), context, `${ask || ''}\nImportant: it must not contain ${found(r).join(', ').toLowerCase()} — I avoid them.`.trim(), contextText);
     return json({ ...r, allergens: found(r) });
   } catch (e) {
     await logAiError('plan', e);

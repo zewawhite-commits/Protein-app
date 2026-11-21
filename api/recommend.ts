@@ -4,6 +4,7 @@ import { busyMessage } from './_lib/aiErrors.js';
  * AI meal ideas (food names only). Requires a Premium pass when payments are configured.
  */
 import Anthropic from '@anthropic-ai/sdk';
+import { aiClient } from './_lib/metering.js';
 import { ideasWithClient, type IdeaRequest } from '../src/lib/recommendation.js';
 import { json } from './_lib/premium.js';
 import { gate } from './_lib/quota.js';
@@ -39,7 +40,7 @@ export async function POST(request: Request): Promise<Response> {
   try {
     // The prompt asks the AI to respect the avoid list; this checks it did.
     const avoid = avoidSet({ avoid: req.avoid });
-    const ideas = (await ideasWithClient(new Anthropic({ maxRetries: 3 }), req))
+    const ideas = (await ideasWithClient(aiClient('ideas', g.who), req))
       .filter((i) => !allergensIn(`${i.name} ${i.localName}`, avoid).length)
       .map((i) => (allergensIn(i.swap, avoid).length ? { ...i, swap: '' } : i));
     return json({ ideas });

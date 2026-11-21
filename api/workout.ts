@@ -5,6 +5,7 @@
 export const maxDuration = 60;
 import { busyMessage, logAiError } from './_lib/aiErrors.js';
 import Anthropic from '@anthropic-ai/sdk';
+import { aiClient } from './_lib/metering.js';
 import { contextText } from '../src/lib/coach.js';
 import { cleanWorkoutRequest, workoutWithClient } from '../src/lib/workout.js';
 import { json } from './_lib/premium.js';
@@ -17,7 +18,7 @@ export async function POST(request: Request): Promise<Response> {
   if (!g.ok) return json(g.body, g.status);
   const body = (await request.json().catch(() => null)) as { context?: unknown; request?: unknown } | null;
   try {
-    return json(await workoutWithClient(new Anthropic({ maxRetries: 3 }), cleanContext(body?.context), cleanWorkoutRequest(body?.request), contextText));
+    return json(await workoutWithClient(aiClient('workout', g.who), cleanContext(body?.context), cleanWorkoutRequest(body?.request), contextText));
   } catch (e) {
     await logAiError('workout', e);
     if (e instanceof Anthropic.RateLimitError) return json({ error: 'Busy — try again in a moment.' }, 429);

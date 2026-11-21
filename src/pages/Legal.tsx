@@ -122,20 +122,27 @@ export function Terms() {
 
       <H>Plans and payments</H>
       <ul className="list-disc space-y-2 pl-5">
-        <li><b>Free</b> costs nothing and includes a limited number of AI scans and coach messages each month.</li>
+        <li><b>Free</b> costs nothing and includes 3 AI photo scans, 5 coach messages and 1 recipe import each day. Free may show advertising.</li>
         <li><b>Plus</b> costs {money('pro_monthly')} a month or {money('pro_yearly')} a year. The price is shown before you pay.</li>
         <li>Paid plans are billed in advance through Paystack and renew automatically at the end of each month or year until you cancel.</li>
         <li>Prices are shown in US dollars. If you’re charged in another currency, your bank or card provider sets the exchange rate and may add fees.</li>
         <li>We may change prices for future billing periods. We’ll tell you in advance, and you can cancel before the new price applies.</li>
-        <li>“Unlimited” features have a fair-use limit to stop abuse; normal use won’t reach it.</li>
         <li>Cancellations and refunds are covered by our <Link to="/refunds" className="font-semibold text-accent">Cancellation & Refund Policy</Link>.</li>
+      </ul>
+
+      <H>Fair use of unlimited AI</H>
+      <ul className="list-disc space-y-2 pl-5">
+        <li>Plus includes unlimited AI photo scans, coach conversations, recipe imports and voice replies for your own personal use. There are no daily caps for normal use.</li>
+        <li>Not personal use: automated or scripted requests, bulk scanning (for example hundreds of photos in a day), sharing one account between several people, or using {APP_NAME}’s AI for a business or for other people.</li>
+        <li>If an account sends requests faster than a person could, we ask it to wait a minute. If use goes far beyond personal use in a day, that AI feature pauses until the next day and we tell you why. Nothing else on your account is affected.</li>
+        <li>We watch for unusual use so the price can stay low for everyone. If we think an account is being misused we’ll contact you first, and support can always lift a pause made by mistake.</li>
       </ul>
 
       <H>Free trial and invites</H>
       <ul className="list-disc space-y-2 pl-5">
         <li>Each person can have one free 3-day Plus trial. No card is needed and it ends on its own; nothing is charged when it ends.</li>
         <li>Friends who join with your invite link get 14 days of Plus free, and you get 7 days of Plus for each friend who joins, up to 10 friends. Invites are for real people; we may remove free time earned with fake or duplicate accounts.</li>
-        <li>Free Plus time includes every Plus feature with monthly limits, has no cash value and can’t be exchanged or transferred.</li>
+        <li>Free Plus time includes Plus features under the same fair use (invite rewards keep the coach at the Free allowance), has no cash value and can’t be exchanged or transferred.</li>
       </ul>
 
       <H>Acceptable use and community rules</H>

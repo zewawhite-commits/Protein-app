@@ -5,6 +5,7 @@
 export const maxDuration = 60;
 import { busyMessage, logAiError } from './_lib/aiErrors.js';
 import Anthropic from '@anthropic-ai/sdk';
+import { aiClient, isDuplicate } from './_lib/metering.js';
 import { cleanTurns, coachStream, coachWithClient, type ChatImage } from '../src/lib/coach.js';
 import { json } from './_lib/premium.js';
 import { gate } from './_lib/quota.js';
@@ -32,6 +33,8 @@ export async function POST(request: Request): Promise<Response> {
     const scan = await gate(request, 'scan');
     if (!scan.ok) return json({ ...scan.body, error: `${scan.body.error} You can still chat without photos.` }, scan.status);
   }
+  // The same message sent twice in a few seconds is answered once.
+  if (await isDuplicate(coach.who.userId, JSON.stringify(turns.slice(-2)) + (image?.data.slice(0, 2048) ?? ''))) return json({ error: 'Already answering that. Give it a moment.', duplicate: true }, 409);
   const pro = coach.tier === 'pro' || coach.tier === 'trial';
   const quota = { left: coach.left, limit: coach.limit, tier: coach.tier };
   // Streaming (?stream=1): newline-separated JSON — {"t": piece} while writing, then {"done": reply}.
@@ -45,12 +48,12 @@ export async function POST(request: Request): Promise<Response> {
         try {
           let reply;
           try {
-            reply = await coachStream(new Anthropic({ maxRetries: 3 }), turns, ctx, image, { pro }, (t) => { sentAny = true; send({ t }); });
+            reply = await coachStream(aiClient('coach', coach.who), turns, ctx, image, { pro }, (t) => { sentAny = true; send({ t }); });
           } catch (e) {
     await logAiError('chat', e);
             // Nothing shown yet: answer the normal way instead of failing.
             if (sentAny) throw e;
-            reply = await coachWithClient(new Anthropic({ maxRetries: 3 }), turns, ctx, image, { pro });
+            reply = await coachWithClient(aiClient('coach', coach.who), turns, ctx, image, { pro });
           }
           send({ done: { ...reply, quota } });
         } catch (e) {
@@ -65,7 +68,7 @@ export async function POST(request: Request): Promise<Response> {
     return new Response(out, { headers: { 'content-type': 'application/x-ndjson; charset=utf-8', 'cache-control': 'no-store', 'x-accel-buffering': 'no' } });
   }
   try {
-    return json({ ...(await coachWithClient(new Anthropic({ maxRetries: 3 }), turns, cleanContext(body?.context), image, { pro })), quota });
+    return json({ ...(await coachWithClient(aiClient('coach', coach.who), turns, cleanContext(body?.context), image, { pro })), quota });
   } catch (e) {
     await logAiError('chat', e);
     if (e instanceof Anthropic.RateLimitError) return json({ error: 'Busy — try again in a moment.' }, 429);

@@ -50,7 +50,7 @@ const OBSTACLES = ['Lack of consistency', 'Busy schedule', 'Unhealthy eating hab
 
 const PLAN_CHOICES = [
   { tier: 'free' as const, name: 'Free', badge: '', perks: ['Calories, macros & 18,000+ foods', 'Barcode, exercise, progress & feed', '3 AI scans + 5 coach messages a day', '1 recipe import a day'] },
-  { tier: 'pro' as const, name: 'Plus', badge: 'Everything included', perks: ['Unlimited AI food scans', 'Restaurant menus: photo, QR code or link', 'Smarter, personal AI nutrition coach', 'Personalized weekly & monthly meal plans', 'Plans adjust automatically to your progress', 'Daily meal suggestions', 'Unlimited AI recipes and recipe imports', 'AI workout guides', 'Advanced micronutrient analysis', 'Detailed nutrition reports', 'Adjusts to your cuisine & diet'] },
+  { tier: 'pro' as const, name: 'Plus', badge: 'Everything included', perks: ['Unlimited AI food scans for personal use', 'Restaurant menus: photo, QR code or link', 'Smarter, personal AI nutrition coach', 'Personalized weekly & monthly meal plans', 'Plans adjust automatically to your progress', 'Daily meal suggestions', 'Unlimited AI recipes and recipe imports', 'AI workout guides', 'Advanced micronutrient analysis', 'Detailed nutrition reports', 'Adjusts to your cuisine & diet', 'No ads'] },
 ];
 
 /** Setup answers are kept on this phone until setup is finished, so leaving the app (to open the
