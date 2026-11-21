@@ -1,14 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Check, Mic, Plus, Search, Trash2, Volume2, VolumeX, X } from 'lucide-react';
+import { Check, Minus, Mic, Pencil, Plus, Search, Trash2, Volume2, VolumeX, X } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 import { useFoodDb } from '@/lib/hooks';
 import { matchItems } from '@/lib/recognize-client';
-import { lastAmount, asRecognition, gramsFor, parseAmount, parseSaid, questionFor, type SaidFood } from '@/lib/describe';
-import { splitName } from '@/lib/foods';
+import { lastAmount, asRecognition, gramsFor, naturalServings, parseAmount, parseSaid, questionFor, type SaidFood } from '@/lib/describe';
+import { searchFoods, splitName } from '@/lib/foods';
 import { mealForNow, todayKey } from '@/lib/dates';
 import { MEAL_LABELS, defaultMeal, rememberMeal, useMealOptions } from '@/lib/meals';
-import type { Food, Meal } from '@/lib/types';
+import type { CustomFood, Food, Meal } from '@/lib/types';
 import { FoodVisual } from './FoodIcon';
 import { cx, fmt } from './ui';
 import { haptic, toast } from './fx';
@@ -210,7 +210,8 @@ export function VoiceSheet({ onClose, onSearch, date }: { onClose: () => void; o
         {lines.length > 0 && (
           <div className="card divide-y divide-line p-1">
             {lines.map((l) => (
-              <div key={l.key} className="flex items-center gap-3 p-2.5">
+              <div key={l.key} className="p-2.5">
+              <div className="flex items-center gap-3">
                 {l.food && <FoodVisual name={l.food.name} category={l.food.category} size={44} />}
                 <div className="min-w-0 flex-1">
                   {l.options.length > 1 ? (
@@ -225,6 +226,9 @@ export function VoiceSheet({ onClose, onSearch, date }: { onClose: () => void; o
                   <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-xs text-silver">g</span>
                 </div>
                 <button onClick={() => setLines((cur) => cur.filter((x) => x.key !== l.key))} className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-dim" aria-label={`Remove ${l.said.text}`}><Trash2 size={16} /></button>
+              </div>
+              {/* Wrong food or wrong amount? Fix it here, in this food's own servings. */}
+              <LineFix line={l} custom={custom} onChange={(patch) => setLines((cur) => cur.map((x) => (x.key === l.key ? { ...x, ...patch } : x)))} />
               </div>
             ))}
           </div>
@@ -242,5 +246,45 @@ export function VoiceSheet({ onClose, onSearch, date }: { onClose: () => void; o
       </div>
     </div>,
     document.body,
+  );
+}
+
+/** Fix one voice line: pick a serving of this food (slices, wraps, ladles…) and how many, or swap the food. */
+function LineFix({ line, custom, onChange }: { line: Line; custom: CustomFood[]; onChange: (patch: Partial<Line>) => void }) {
+  const [swap, setSwap] = useState(false);
+  const [q, setQ] = useState('');
+  const servings = line.food ? naturalServings(line.food).slice(0, 4) : [];
+  const [count, setCount] = useState(line.said.qty ?? 1);
+  const [picked, setPicked] = useState<number | null>(null);
+  const use = (i: number, n: number) => { const s = servings[i]; setPicked(i); setCount(n); onChange({ grams: Math.round(s.per * n), how: `${n} × 1 ${s.name}` }); haptic(); };
+  const results = swap && q.trim().length > 1 ? searchFoods(q, { custom }).slice(0, 5) : [];
+  return (
+    <div className="mt-2 pl-[56px]">
+      {servings.length > 0 && !swap && (
+        <div className="flex flex-wrap items-center gap-1.5">
+          <div className="flex items-center rounded-full bg-raised">
+            <button onClick={() => picked != null ? use(picked, Math.max(0.5, count - (count > 1 ? 1 : 0.5))) : setCount((c) => Math.max(0.5, c - (c > 1 ? 1 : 0.5)))} className="grid h-8 w-8 place-items-center" aria-label={`Fewer ${line.said.text}`}><Minus size={14} /></button>
+            <span className="num w-7 text-center text-sm font-bold" aria-label="How many">{fmt(count, 1)}</span>
+            <button onClick={() => picked != null ? use(picked, count + (count < 1 ? 0.5 : 1)) : setCount((c) => c + (c < 1 ? 0.5 : 1))} className="grid h-8 w-8 place-items-center" aria-label={`More ${line.said.text}`}><Plus size={14} /></button>
+          </div>
+          {servings.map((s, i) => (
+            <button key={s.name} onClick={() => use(i, count)} className={cx('chip !h-8 !px-3 text-[13px]', picked === i && 'chip-on')}>{s.name}</button>
+          ))}
+        </div>
+      )}
+      {swap ? (
+        <div className="mt-1">
+          <input autoFocus className="field !h-10" placeholder={`What was it instead of ${line.food ? short(line.food).toLowerCase() : line.said.text}?`} value={q} onChange={(e) => setQ(e.target.value)} aria-label="Search for the right food" />
+          <div className="mt-1 space-y-1">
+            {results.map((f) => (
+              <button key={f.id} onClick={() => { const g = gramsFor(f, line.said.qty, line.said.unit, line.said.size); onChange({ food: f, options: [f, ...line.options.filter((o) => o.id !== f.id)].slice(0, 4), grams: g?.grams ?? line.grams, how: g?.how ?? line.how }); setSwap(false); setQ(''); setPicked(null); haptic(); }} className="block w-full truncate rounded-xl bg-raised px-3 py-2 text-left text-sm font-semibold">{f.name}</button>
+            ))}
+          </div>
+          <button onClick={() => { setSwap(false); setQ(''); }} className="mt-1 text-xs font-semibold text-silver">Cancel</button>
+        </div>
+      ) : (
+        <button onClick={() => setSwap(true)} className="mt-1.5 inline-flex items-center gap-1 text-xs font-semibold text-silver"><Pencil size={12} /> Wrong food? Change it</button>
+      )}
+    </div>
   );
 }

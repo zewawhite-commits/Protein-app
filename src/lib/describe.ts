@@ -18,7 +18,7 @@ const SIZE_WORD = '(small|little|medium|normal|regular|average|big|large)';
 export const toSize = (w?: string | null): Size | null => (!w ? null : /small|little/.test(w) ? 'small' : /big|large/.test(w) ? 'large' : 'medium');
 
 const WORDS: Record<string, number> = { a: 1, an: 1, one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10, half: 0.5, quarter: 0.25, couple: 2, few: 3 };
-const UNIT = '(g|grams?|gram|kg|kilos?|kilograms?|oz|ounces?|lbs?|pounds?|ml|millilit(?:re|er)s?|l|lit(?:re|er)s?|cups?|tbsps?|tablespoons?|tsps?|teaspoons?|slices?|pieces?|pcs|wings?|drumsticks?|thighs?|legs?|breasts?|bowls?|plates?|servings?|portions?|scoops?|glass(?:es)?|cans?|bottles?|handfuls?|cooking spoons?|serving spoons?|stew spoons?|milk tins?|tins?|spoons?|wraps?|balls?|fillets?|eggs?|sticks?|skewers?|ladles?|wraps?|handfuls?)';
+const UNIT = '(g|grams?|gram|kg|kilos?|kilograms?|oz|ounces?|lbs?|pounds?|ml|millilit(?:re|er)s?|l|lit(?:re|er)s?|cups?|tbsps?|tablespoons?|tsps?|teaspoons?|slices?|pieces?|pcs|wings?|drumsticks?|thighs?|legs?|breasts?|bowls?|plates?|servings?|portions?|scoops?|glass(?:es)?|cans?|bottles?|handfuls?|pots?|bars?|bags?|packs?|packets?|biscuits?|cookies?|crackers?|muffins?|cooking spoons?|serving spoons?|stew spoons?|milk tins?|tins?|spoons?|wraps?|balls?|fillets?|eggs?|sticks?|skewers?|ladles?|wraps?|handfuls?)';
 const LEAD = new RegExp(`^(?:about|around|roughly|like|maybe|some)?\\s*(\\d+(?:[.,]\\d+)?|${Object.keys(WORDS).join('|')})?\\s*(?:x\\s*)?(?:${SIZE_WORD}\\s+(?=${UNIT.replace('(', '(?:')}\\b))?${UNIT}?\\b\\s*(?:of\\s+)?(.*)$`, 'i');
 
 /** Split a sentence into foods with their amounts. */
@@ -53,7 +53,10 @@ export function parseSaid(text: string): SaidFood[] {
 /** "pieces" → "piece", "glasses" → "glass", "cups" → "cup". */
 const sing = (u: string) => (/(ss|sh|ch|x)es$/.test(u) ? u.slice(0, -2) : /ss$/.test(u) ? u : u.replace(/s$/, ''));
 
-const PIECE = /^(piece|pc|wing|drumstick|thigh|leg|breast|egg|ball|fillet|wrap|slice|scoop|can|bottle|glass|bowl|plate|handful|serving|portion|spoon)/;
+/** Words for the same serving: a drink's "glass" is its cup if it has no glass size; packet = pack. */
+const SAME_AS: Record<string, string[]> = { stick: ['skewer'], skewer: ['stick'], glass: ['cup', '8 fl oz'], packet: ['pack', 'package'], pack: ['packet', 'package'], pot: ['container', 'carton'], biscuit: ['cookie', 'cracker'], cookie: ['biscuit'], cracker: ['biscuit'], bag: ['small single serving bag', 'single serving bag'] };
+
+const PIECE = /^(piece|pc|wing|drumstick|thigh|leg|breast|egg|ball|fillet|wrap|slice|scoop|can|bottle|glass|bowl|plate|handful|serving|portion|spoon|pot|bar|bag|pack|biscuit|cookie|cracker|muffin)/;
 
 /** Grams for "qty unit" of this food, or null when we'd have to guess. */
 export function gramsFor(food: Pick<Food, 'portions' | 'name'>, qty: number | null, unit: string | null, size?: Size | null): { grams: number; how: string } | null {
@@ -78,12 +81,18 @@ export function gramsFor(food: Pick<Food, 'portions' | 'name'>, qty: number | nu
   else if (/tin$/.test(u)) p = find(/\btin\b/);
   // A named unit ("2 slices", "a stick") only uses that unit's own size: never another serving (a slice isn't a wrap).
   else if (/^(piece|pc)/.test(u)) p = find(/\b(piece|medium|whole|1 (?!cup|tbsp|tsp|oz|plate|bowl|wrap|ladle)\w+)\b/);
-  else if (PIECE.test(u) || /^(stick|skewer|ladle)/.test(u)) p = find(new RegExp(`\\b${u}`)) ?? (u === 'stick' ? find(/\bskewer/) : u === 'skewer' ? find(/\bstick/) : undefined);
+  else if (PIECE.test(u) || /^(stick|skewer|ladle)/.test(u)) p = find(new RegExp(`\\b${u}`)) ?? SAME_AS[u]?.map((x) => find(new RegExp(`\\b${x}`))).find(Boolean);
   else if (!u && qty != null) p = find(/\b(piece|medium|whole|large|1 (?!cup|tbsp|tsp|oz)\w+)\b/);
   else if (!u) p = find(/serving|medium|piece/) ?? portions.find((x) => x.grams >= 25 && x.grams <= 400);
   if (!p) return null;
-  return { grams: Math.round(p.grams * n), how: `${n} × ${p.label}` };
+  // "2 tbsp = 32 g" means one tablespoon is 16 g; "0.5 fillet = 178 g" means a fillet is 356 g.
+  const per = p.grams / (Number(/^(\d+(?:\.\d+)?)\s/.exec(p.label)?.[1]) || 1);
+  const label = /^1\s/.test(p.label) || !/^\d/.test(p.label) ? p.label : `1 ${singular(p.label.replace(/^[\d.]+\s/, ''))}`;
+  return { grams: Math.round(per * n), how: `${n} × ${label}` };
 }
+
+/** "tbsp" stays; "pieces" → "piece", "chips" → "chip" (first word only). */
+const singular = (label: string) => label.replace(/^(\w+?)(es|s)\b/, (w, stem: string, end: string) => (/(tbsp|tsp|oz|fl)$/.test(w) ? w : end === 'es' && /(ch|sh|x|ss)$/.test(stem) ? stem : stem + (end === 'es' ? 'e' : '')));
 
 /** The said foods in the shape the scan results screen uses (amounts filled in later). */
 export function asRecognition(said: SaidFood[]): RecognitionResult {
@@ -146,12 +155,66 @@ export function questionFor(food: Pick<Food, 'portions'>, name: string): { q: st
     return { q: `${many} Or say how many cooking spoons.`, many, unit: 'plate' };
   }
   if (sized('bowl')) { const many = `How much ${name}: a small, medium or large bowl?`; return { q: many, many, unit: 'bowl' }; }
+  // Drinks: by the glass or cup, or ml.
+  if (DRINK.test(name) && has(/\b(glass|cup|fl oz|can|bottle)\b/)) {
+    const many = `How much ${name} did you drink: a glass, a cup, or how many ml?`;
+    return { q: many, many, unit: has(/\bglass\b/) ? 'glass' : 'cup' };
+  }
+  // Spreads, oils, sugar, sauces: by the spoon.
+  if (SPOONED.test(name) && has(/\b(tbsp|tablespoon|tsp|teaspoon)\b/)) {
+    const many = `How many spoons of ${name}: teaspoons or tablespoons?`;
+    return { q: many, many, unit: has(/\b(tbsp|tablespoon)\b/) ? 'tablespoon' : 'teaspoon' };
+  }
+  // Sliced foods (cake, bread, pizza...): by the slice.
+  if (has(/^1 (\w+ )*slices?\b/) && SLICED.test(name)) {
+    const many = `How many slices of ${name}?`;
+    return { q: many, many, unit: 'slice' };
+  }
+  // Packaged things: pots, bars, bags, packs; baked goods by the piece.
+  const packWord = ['pot', 'container', 'bar', 'bag', 'pack', 'biscuit', 'muffin', 'cookie', 'cracker'].find((w) => has(new RegExp(`^1 (small |medium |large |super |individual )?${w}\\b`)))?.replace('container', 'pot');
+  if (packWord) { const many = `How many ${packWord === 'bag' ? 'bags' : packWord + 's'} of ${name}?`; return { q: many, many, unit: packWord }; }
+  // Fruit, eggs, potatoes...: counted, in their size.
+  if (has(/^1 (small|medium|large|extra large)$/)) {
+    const many = `How many ${name}?`;
+    return { q: `${many} You can say small, medium or large.`, many, unit: null };
+  }
   const unitP = labels.find((l) => /\b(piece|wing|drumstick|thigh|leg|slice|egg|ball|fillet|wrap|stick|plate|bowl)\b/.test(l));
   const unit = unitP ? /\b(piece|wing|drumstick|thigh|leg|slice|egg|ball|fillet|wrap|stick|plate|bowl)\b/.exec(unitP)![1] : null;
   if (unit) {
     const many = /(wing|drumstick|thigh|leg|egg|ball|fillet)/.test(unit) && name.includes(unit) ? `How many ${name}?` : `How many ${unit === 'piece' ? 'pieces' : `${unit}s`} of ${name}?`;
     return { q: many, many, unit };
   }
+  // Anything else: give this food's own servings as examples, never ones it doesn't have.
+  const examples = (food.portions ?? []).map((p) => spokenServing(p.label)).filter((x): x is string => !!x).slice(0, 2);
   const many = `How much ${name}?`;
-  return { q: `${many} Say grams, or cups or spoons.`, many, unit: null };
+  return { q: `${many} ${examples.length ? `For example ${examples.join(' or ')}, or grams.` : 'Say how many grams.'}`, many, unit: null };
 }
+
+const DRINK = /\b(juice|milk|tea|coffee|cola|coke|soda|drink|water|beer|wine|malt|smoothie|lemonade|zobo|kunu|fanta|sprite|pepsi|yoghurt drink|yogurt drink|shake)\b/;
+const SPOONED = /\b(butter|margarine|oil|honey|sugar|jam|marmalade|syrup|mayonnaise|mayo|ketchup|sauce|spread|nutella|peanut butter|salad cream|cream cheese|milo|bournvita|ovaltine|cocoa)\b/;
+const SLICED = /\b(cake|bread|toast|pizza|loaf|cheesecake|gateau|pie|ham|cheese|watermelon|pineapple|pawpaw|papaya)\b/;
+
+/** A serving label read naturally ("1 cup, chopped" → "1 cup", "0.5 fillet" → "half a fillet"), or null if odd. */
+function spokenServing(label: string): string | null {
+  const l = label.toLowerCase().replace(/\s*\(.*?\)/g, '').replace(/,.*$/, '').trim();
+  if (/guideline|cubic|nlea|yield|any size|unit|container\b.*oz/.test(l) || !l) return null;
+  return l.replace(/^0\.5 /, 'half a ').replace(/^0\.25 /, 'a quarter ');
+}
+
+/**
+ * This food's servings in the order people use them (slices, wraps, ladles, glasses before cups
+ * and ounces), each with the weight of ONE ("2 tbsp = 32 g" → tablespoon, 16 g). Odd ones are left out.
+ */
+export function naturalServings(food: Pick<Food, 'portions'>): { name: string; per: number }[] {
+  const seen = new Set<string>();
+  return (food.portions ?? [])
+    .map((p) => {
+      const n = Number(/^(\d+(?:\.\d+)?)\s/.exec(p.label)?.[1]) || 1;
+      const name = spokenServing(p.label.replace(/^[\d.]+\s+/, '1 '))?.replace(/^1 /, '');
+      return name && p.grams > 0 ? { name: n === 1 ? name : singular(name), per: p.grams / n, rank: NATURAL.findIndex((re) => re.test(name)) } : null;
+    })
+    .filter((x): x is { name: string; per: number; rank: number } => !!x && !seen.has(x.name) && !!seen.add(x.name))
+    .sort((a, b) => (a.rank < 0 ? 99 : a.rank) - (b.rank < 0 ? 99 : b.rank))
+    .map(({ name, per }) => ({ name, per }));
+}
+const NATURAL = [/^medium/, /^(small|large)/, /\b(slice|wrap|ladle|portion|plate|glass|pot|bar|bag|pack|piece|stick|biscuit|muffin|egg|fruit|wing|drumstick|thigh|fillet|breast)\b/, /cooking spoon/, /\b(tbsp|tablespoon|tsp|teaspoon)\b/, /\bcup\b/, /\boz\b/];

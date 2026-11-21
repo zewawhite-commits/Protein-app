@@ -42,3 +42,23 @@ guesses.
 
 Fadupin notes that Nigerian homes rarely have kitchen scales. That is why the app asks in
 household measures and shows the grams it used.
+
+## Every other food
+
+Questions follow the kind of food: cake and bread by the slice; drinks by the glass, cup or ml;
+spreads, oil and sugar by the teaspoon or tablespoon; yogurt, crisps, chocolate and noodles by the
+pot, bag, bar or pack; fruit and eggs counted, with small, medium or large; anything else with
+examples from that food's own servings. A cake is never asked about like jollof.
+
+Foods that list no natural serving (for example a UK "Cake, chocolate fudge") get the typical
+serving of their kind. That's the median weight of that serving across the similar foods that
+do list one, mostly USDA FNDDS, which records what people actually eat. The serving is labelled
+"(typical)". Current values: cake slice 57 g, muffin 130 g, pie 150 g, bread slice 23 g,
+biscuit 13 g, glass of drink 248 g, yogurt pot 170 g, small bag of crisps 28 g. Indomie uses
+the pack sizes printed on the packet (70 g and 120 g). Rebuild with:
+
+    node scripts/build-recipes.mjs && node scripts/build-typical-portions.mjs
+
+Every voice item can be corrected before it's added. Tap a serving button in that food's own
+units, use − / + for how many, type the grams, or tap "Wrong food? Change it" to search for the
+right one. Photo scans already offer other matches and a search.

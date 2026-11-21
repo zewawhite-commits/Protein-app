@@ -119,7 +119,7 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
   const after = before + n.protein;
 
   // Foods eaten in pieces (wings, eggs, slices, cups…): count them instead of weighing.
-  const countable = food.portions.filter((p) => p.grams > 0).sort((a, b) => Number(/\b(piece|wing|drumstick|thigh|leg|egg|slice|medium|large|small|whole|fillet|ball|serving|cup)\b/i.test(b.label)) - Number(/\b(piece|wing|drumstick|thigh|leg|egg|slice|medium|large|small|whole|fillet|ball|serving|cup)\b/i.test(a.label)));
+  const countable = food.portions.filter((p) => p.grams > 0).sort((a, b) => Number(/\b(piece|wing|drumstick|thigh|leg|egg|slice|medium|large|small|whole|fillet|ball|serving|wrap|portion|plate|ladle|glass|pot|bar|bag|pack|stick|biscuit|muffin|cup)\b/i.test(b.label)) - Number(/\b(piece|wing|drumstick|thigh|leg|egg|slice|medium|large|small|whole|fillet|ball|serving|wrap|portion|plate|ladle|glass|pot|bar|bag|pack|stick|biscuit|muffin|cup)\b/i.test(a.label)));
   const pieceFirst = !!countable[0] && /\b(piece|wing|drumstick|thigh|leg|egg|slice|fillet|ball)\b/i.test(countable[0].label);
   const usualCount = usual && countable[0] ? Math.round((usual / countable[0].grams) * 2) / 2 : null;
   const usualFits = !!usualCount && Math.abs(usualCount * countable[0].grams - usual!) < 1;
