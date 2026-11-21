@@ -1,7 +1,7 @@
 import { AllergyTextBanner } from './Allergy';
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Bookmark, BookmarkCheck, Check, ChefHat, ChevronRight, Clock, Lightbulb, Loader2, Search, Trash2, Users } from 'lucide-react';
+import { Bookmark, BookmarkCheck, Check, ChefHat, ChevronRight, Download, Plus, Clock, Lightbulb, Loader2, Search, Trash2, Users } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 import { useFoodDb } from '@/lib/hooks';
 import { confidentMatch, splitName } from '@/lib/foods';
@@ -71,6 +71,20 @@ export function RecipeView() {
 
   return (
     <div className="space-y-4 pb-6">
+      {/* Your own recipes first: add one from ingredients or import it — free, no AI needed. */}
+      <div className="grid grid-cols-2 gap-2.5">
+        <Link to="/recipe" className="card flex flex-col items-start p-4 transition active:scale-[.98]">
+          <span className="grid h-10 w-10 place-items-center rounded-full bg-primary text-on-primary"><Plus size={19} /></span>
+          <span className="mt-2.5 font-bold">Add a recipe</span>
+          <span className="text-[13px] text-silver">From your ingredients</span>
+        </Link>
+        <Link to="/recipe?import=1" className="card flex flex-col items-start p-4 transition active:scale-[.98]">
+          <span className="grid h-10 w-10 place-items-center rounded-full bg-primary text-on-primary"><Download size={18} /></span>
+          <span className="mt-2.5 font-bold">Import a recipe</span>
+          <span className="text-[13px] text-silver">Link, photo or text</span>
+        </Link>
+      </div>
+      <MyRecipes />
       <PlanBadge needs="plus" what="AI recipes with full nutrition" />
       <section className="card p-5">
         <p className="text-[19px] font-bold tracking-tight">What are you cooking?</p>
@@ -112,8 +126,6 @@ export function RecipeView() {
           </div>
         </section>
       )}
-
-      <MyRecipes />
 
       {recipe && (
         <RecipeCard
@@ -234,10 +246,10 @@ function MyRecipes() {
     <section>
       <div className="mb-2 flex items-center justify-between px-1">
         <p className="text-[15px] font-semibold">My recipes {mine.length > 0 && <span className="font-normal text-silver">· made or imported</span>}</p>
-        <Link to="/recipe" className="text-sm font-semibold text-accent">+ New or import</Link>
+
       </div>
       {mine.length === 0 ? (
-        <Link to="/recipe" className="card block p-4 text-sm text-silver">No recipes yet. Build one from ingredients, or import from a link, a photo or pasted text — then log a portion any time.</Link>
+        <p className="card p-4 text-sm text-silver">No recipes yet. Add or import one above, then log a portion any time.</p>
       ) : (
         <div className="card divide-y divide-line p-1.5">
           {mine.map((r) => (
