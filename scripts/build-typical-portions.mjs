@@ -55,6 +55,74 @@ for (const k of KINDS) {
 }
 for (const f of db.foods) if (RICE.is.test(f[NAME]) && !RICE.not.test(f[NAME])) { f[PORTIONS] = [...RICE.portions.map(([l, g]) => [l, g]), ...(f[PORTIONS] ?? [])]; added++; }
 for (const k of PACKS) for (const f of db.foods) if (k.is.test(f[NAME]) && !(f[PORTIONS] ?? []).length) { f[PORTIONS] = k.portions.map(([l, g]) => [l, g]); added++; }
+
+// UK, Australian and West African tables list no household servings. Borrow them from the US
+// record for the same food in the same state (raw/cooked/dry/as eaten), matched by name:
+// "Carrot, raw" ← "Carrots, raw"; "Apples, eating, raw" ← "Apples, raw". Only household measures
+// (cup, tbsp, tsp, slice, piece, medium…) are copied, labelled "(typical)". No match → no serving.
+const SOURCE = db.fields.indexOf('source'), STATE = db.fields.indexOf('state');
+const sing = (w) => w.replace(/(ies)$/, 'y').replace(/(oes|ches|shes|xes)$/, (m) => m.slice(0, -2)).replace(/([^s])s$/, '$1');
+const norm = (n) => n.toLowerCase().replace(/\([^)]*\)/g, '').replace(/[’']/g, '').split(',').map((x) => x.trim().split(/\s+/).map(sing).join(' ')).filter(Boolean);
+const STOP = /^(raw|fresh|cooked|boiled|flesh only|flesh and skin|without skin|with skin|peeled|whole|average|unspecified|nfs|edible portion|canned|frozen|dried)$/;
+const HOUSEHOLD = /^(1|2|0\.5|1\/2|1\/4) (cup|tbsp|tablespoon|tsp|teaspoon|slice|piece|medium|small|large|fruit|serving|oz|fl oz|stalk|clove|leaf|egg|fillet|wedge|bar|roll|muffin|biscuit|cookie|patty|link|strip|wing|drumstick|thigh|breast|cob|ear|spear|floret|head|bunch|glass|bowl|can|bottle|container|pot)\b/i;
+// The food's meaningful name parts (cooking/state words dropped), all of them, in order.
+const key = (n) => norm(n).filter((x) => !STOP.test(x)).join(', ');
+const donorsBy = new Map();
+for (const f of db.foods) {
+  if (!['s', 'f'].includes(f[SOURCE])) continue;
+  const ps = (f[PORTIONS] ?? []).filter(([l, g]) => HOUSEHOLD.test(l) && !/yields|\bear\b|any size/i.test(l) && g > 0 && !/\((typical|as sold)\)/.test(l));
+  if (!ps.length) continue;
+  const id = `${f[STATE]}|${key(f[NAME])}`;
+  const cur = donorsBy.get(id);
+  if (!cur || ps.length > cur.length) donorsBy.set(id, ps);
+}
+let borrowed = 0; const bySource = {};
+for (const f of db.foods) {
+  if (!['u', 'a', 'w'].includes(f[SOURCE]) || (f[PORTIONS] ?? []).length) continue;
+  const ps = donorsBy.get(`${f[STATE]}|${key(f[NAME])}`);
+  if (!ps) continue;
+  f[PORTIONS] = ps.slice(0, 4).map(([l, g]) => [`${l} (typical)`, g]);
+  borrowed++; bySource[f[SOURCE]] = (bySource[f[SOURCE]] ?? 0) + 1;
+}
+added += borrowed;
+// Still nothing: a serving from an official portion guide, by kind of food. Each one is a standard
+// household or guideline measure, not a guess at this exact food.
+//  - Fruit and vegetables: 1 portion = 80 g, dried fruit 30 g (NHS "5 A Day" portion sizes).
+//  - Nuts and seeds: 1 handful = 30 g (NHS / British Heart Foundation).
+//  - Cooked meat and fish: 3 oz = 85 g (USDA Dietary Guidelines cooked portion).
+//  - Oils 1 tbsp = 13.6 g, butter and spreads 1 tbsp = 14.2 g (USDA SR household weights).
+//  - Beer and cider 1 pint (568 ml), wine 1 glass (175 ml), spirits 1 measure (25 ml) — UK standard
+//    servings; grams assume the density of water (beer/cider ~1.01, close enough at this size).
+//  - A whole boiled, poached or fried egg: 50 g (USDA large egg, edible part).
+const CAT = db.fields.indexOf('categoryId');
+const catName = (f) => db.categories[String(f[CAT])] ?? '';
+const usFruitVegCat = new Map(db.foods.filter((f) => ['s', 'f'].includes(f[SOURCE]) && /^(Fruits and Fruit Juices|Vegetables and Vegetable Products)$/.test(catName(f))).map((f) => [norm(f[NAME])[0], catName(f)]));
+const usFruitVeg = new Set(db.foods.filter((f) => ['s', 'f'].includes(f[SOURCE]) && /^(Fruits and Fruit Juices|Vegetables and Vegetable Products)$/.test(catName(f))).map((f) => norm(f[NAME])[0]));
+const NOT_FV = /homemade|burger|sausage|\brice\b| and |\bwith\b|\bpeel\b|potato|\byam\b|plantain|cassava|breadfruit|\btaro\b|cocoyam|\bbeans?, (aduki|black|blackeye|borlotti|cannellini|haricot|kidney|mung|pinto|soya|baked)|lentil|chickpea|juice|soup|curry|pie|crumble|sauce|chutney|pickle|jam|marmalade|powder|flour|bhaji|pakora|samosa|fritter|chips|crisps|cake|pudding|salad dressing|weighed with|stuffed|in batter|ketchup|puree, concentrated|leaves, dried|seasoning|stock|gravy|\bmix\b/i;
+const GUIDE = [
+  { when: (f) => /dried/i.test(f[NAME]) && !/boiled|soaked|cooked/i.test(f[NAME]) && /Fruit/i.test(catName(f) + (usFruitVegCat.get(norm(f[NAME])[0]) ?? '')) && !NOT_FV.test(f[NAME]), portions: [['1 portion, dried fruit (typical)', 30]] },
+  { when: (f) => isFV(f) && !NOT_FV.test(f[NAME]) && !/dried|dehydrated|freeze/i.test(f[NAME]), portions: [['1 portion (typical)', 80]] },
+  { when: (f) => /Nuts and seeds|Nuts, seeds/i.test(catName(f)) && !/butter|oil|flour|paste|spread|milk|weighed with/i.test(f[NAME]), portions: [['1 handful (typical)', 30]] },
+  { when: (f) => f[STATE] === 'cooked' && /meat|poultry|fish|Meat and meat|Fish and fish/i.test(catName(f)) && !/curry|pie|stew|soup|sauce|casserole|burger|sandwich|pasty|in batter|risotto|pilau|lasagne|bolognese|weighed with/i.test(f[NAME]), portions: [['3 oz cooked portion (typical)', 85]] },
+  { when: (f) => /^(oil|[a-z ]+ oil)\b/i.test(f[NAME]) && !/fish oil capsule|essential/i.test(f[NAME]), portions: [['1 tbsp (typical)', 13.6], ['1 tsp (typical)', 4.5]] },
+  { when: (f) => /^(butter|margarine|spread|fat spread|ghee|lard|dripping|baking fat)/i.test(f[NAME]), portions: [['1 tbsp (typical)', 14.2], ['1 tsp (typical)', 4.7]] },
+  { when: (f) => /^(beer|lager|cider|stout|ale)\b/i.test(f[NAME]), portions: [['1 pint, 568 ml (typical)', 574], ['1 can, 330 ml (typical)', 333]] },
+  { when: (f) => /^wine\b/i.test(f[NAME]) && !/vinegar|cooking/i.test(f[NAME]), portions: [['1 glass, 175 ml (typical)', 175], ['1 small glass, 125 ml (typical)', 125]] },
+  { when: (f) => /^(spirits|whisky|whiskey|vodka|gin|rum|brandy)\b/i.test(f[NAME]), portions: [['1 measure, 25 ml (typical)', 24]] },
+  { when: (f) => /^eggs?, (chicken|whole)?,? ?(boiled|poached|fried)/i.test(f[NAME]) && !/white|yolk|dried/i.test(f[NAME]), portions: [['1 egg (typical)', 50]] },
+];
+function isFV(f) { return usFruitVeg.has(norm(f[NAME])[0]) && (/Fruit|Vegetable/i.test(catName(f)) || f[SOURCE] === 'a'); }
+let guided = 0; const guidedBy = {};
+for (const f of db.foods) {
+  if (!['u', 'a', 'w'].includes(f[SOURCE]) || (f[PORTIONS] ?? []).length) continue;
+  const g = GUIDE.find((x) => x.when(f));
+  if (!g) continue;
+  f[PORTIONS] = g.portions.map(([l, w]) => [l, w]);
+  guided++; guidedBy[f[SOURCE]] = (guidedBy[f[SOURCE]] ?? 0) + 1;
+}
+added += guided;
+report.push(`from official portion guides: ${guided} (UK ${guidedBy.u ?? 0}, Australia ${guidedBy.a ?? 0}, West Africa ${guidedBy.w ?? 0})`);
+report.push(`borrowed from the matching US food: ${borrowed} (UK ${bySource.u ?? 0}, Australia ${bySource.a ?? 0}, West Africa ${bySource.w ?? 0})`);
 writeFileSync(FILE, JSON.stringify(db));
 console.log(report.join('\n'));
 console.log(`Added a typical serving to ${added} foods.`);

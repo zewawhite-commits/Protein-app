@@ -55,7 +55,14 @@ serving of their kind. That's the median weight of that serving across the simil
 do list one, mostly USDA FNDDS, which records what people actually eat. The serving is labelled
 "(typical)". Current values: cake slice 57 g, muffin 130 g, pie 150 g, bread slice 23 g,
 biscuit 13 g, glass of drink 248 g, yogurt pot 170 g, small bag of crisps 28 g. Indomie uses
-the pack sizes printed on the packet (70 g and 120 g). Rebuild with:
+the pack sizes printed on the packet (70 g and 120 g). UK, Australian and West African foods (which list no household measures) get servings two more ways:
+the household measures of the US record with exactly the same name and state (e.g. "Carrot, raw" ←
+"Carrots, raw": 1 cup chopped 128 g), or a standard portion from an official guide: fruit and
+vegetables 80 g and dried fruit 30 g (NHS 5 A Day), nuts and seeds 30 g handful, cooked meat and fish
+3 oz (85 g, USDA Dietary Guidelines), oil 1 tbsp 13.6 g, butter and spreads 1 tbsp 14.2 g, beer a pint,
+wine a 175 ml glass, spirits a 25 ml measure (UK standard servings), a whole egg 50 g. All are labelled
+"(typical)". Mixed dishes with no matching source keep grams only rather than a guessed serving.
+Rebuild with:
 
     node scripts/build-recipes.mjs && node scripts/build-typical-portions.mjs && node scripts/build-dedupe.mjs
 
