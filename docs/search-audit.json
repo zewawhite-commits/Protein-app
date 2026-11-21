@@ -1,0 +1,1958 @@
+{
+ "total": 176,
+ "firstOk": 164,
+ "top3Ok": 164,
+ "rows": [
+  {
+   "region": "Nigeria",
+   "q": "jollof rice",
+   "first": "Jollof rice",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Jollof rice",
+    "Jollof rice, Ghanaian style",
+    "Native jollof"
+   ]
+  },
+  {
+   "region": "Nigeria",
+   "q": "egusi soup",
+   "first": "Egusi soup",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Egusi soup"
+   ]
+  },
+  {
+   "region": "Nigeria",
+   "q": "pounded yam",
+   "first": "Pounded yam",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Pounded yam",
+    "Poundo yam"
+   ]
+  },
+  {
+   "region": "Nigeria",
+   "q": "moi moi",
+   "first": "Moi moi",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Moi moi",
+    "Turkey, skin, moist, roasted",
+    "Prunes, dehydrated (low-moisture), stewed"
+   ]
+  },
+  {
+   "region": "Nigeria",
+   "q": "suya",
+   "first": "Suya",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Suya"
+   ]
+  },
+  {
+   "region": "Nigeria",
+   "q": "akara",
+   "first": "Akara",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Akara",
+    "Acarajé"
+   ]
+  },
+  {
+   "region": "Nigeria",
+   "q": "eba",
+   "first": "Eba",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Eba"
+   ]
+  },
+  {
+   "region": "Nigeria",
+   "q": "efo riro",
+   "first": "Efo riro",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Efo riro"
+   ]
+  },
+  {
+   "region": "Nigeria",
+   "q": "ogbono soup",
+   "first": "Ogbono soup",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Ogbono soup"
+   ]
+  },
+  {
+   "region": "Nigeria",
+   "q": "puff puff",
+   "first": "Puff puff",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Puff puff",
+    "Puffs, fried, crab meat and cream cheese filled",
+    "Puff pastry, frozen, ready-to-bake"
+   ]
+  },
+  {
+   "region": "Nigeria",
+   "q": "chin chin",
+   "first": "Chin chin",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Chin chin",
+    "Chinese pancake",
+    "Char siu"
+   ]
+  },
+  {
+   "region": "Nigeria",
+   "q": "zobo",
+   "first": "Zobo drink",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Zobo drink"
+   ]
+  },
+  {
+   "region": "Ghana",
+   "q": "waakye",
+   "first": "Waakye",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Waakye"
+   ]
+  },
+  {
+   "region": "Ghana",
+   "q": "banku",
+   "first": "Banku",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Banku"
+   ]
+  },
+  {
+   "region": "Ghana",
+   "q": "kenkey",
+   "first": "Maize dough, fermented (kenkey), from whole white maize with salt added, cooked",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Maize dough, fermented (kenkey), from whole white maize with salt added, cooked"
+   ]
+  },
+  {
+   "region": "Ghana",
+   "q": "kelewele",
+   "first": "Kelewele",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Kelewele"
+   ]
+  },
+  {
+   "region": "Ghana",
+   "q": "light soup",
+   "first": "Light soup",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Light soup"
+   ]
+  },
+  {
+   "region": "Ghana",
+   "q": "red red",
+   "first": "Red red",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Red red",
+    "Red pea loaf",
+    "Red snapper, flesh only, raw"
+   ]
+  },
+  {
+   "region": "Kenya",
+   "q": "ugali",
+   "first": "Ugali",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Ugali"
+   ]
+  },
+  {
+   "region": "Kenya",
+   "q": "sukuma wiki",
+   "first": "Sukuma wiki",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Sukuma wiki"
+   ]
+  },
+  {
+   "region": "Kenya",
+   "q": "chapati",
+   "first": "Chapatis, made without fat",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Chapatis, made without fat",
+    "Chapatis, made with fat, retail",
+    "Flour, chapati, brown"
+   ]
+  },
+  {
+   "region": "Kenya",
+   "q": "githeri",
+   "first": "Githeri",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Githeri"
+   ]
+  },
+  {
+   "region": "Kenya",
+   "q": "nyama choma",
+   "first": "Nyama choma",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Nyama choma"
+   ]
+  },
+  {
+   "region": "Kenya",
+   "q": "mandazi",
+   "first": "Puff puff",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Puff puff"
+   ]
+  },
+  {
+   "region": "Ethiopia",
+   "q": "injera",
+   "first": "Injera, Ethiopian bread",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Injera, Ethiopian bread"
+   ]
+  },
+  {
+   "region": "Ethiopia",
+   "q": "doro wat",
+   "first": "Doro wat",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Doro wat"
+   ]
+  },
+  {
+   "region": "Ethiopia",
+   "q": "shiro",
+   "first": "Shiro",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Shiro"
+   ]
+  },
+  {
+   "region": "Ethiopia",
+   "q": "tibs",
+   "first": "Tibs",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Tibs"
+   ]
+  },
+  {
+   "region": "South Africa",
+   "q": "bobotie",
+   "first": "Bobotie",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Bobotie"
+   ]
+  },
+  {
+   "region": "South Africa",
+   "q": "pap",
+   "first": "Maize porridge, fermented (ogi), from decorticated white maize only, cooked",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Maize porridge, fermented (ogi), from decorticated white maize only, cooked",
+    "Papaya, raw",
+    "Papayas, raw"
+   ]
+  },
+  {
+   "region": "South Africa",
+   "q": "biltong",
+   "first": "Beef jerky",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Beef jerky",
+    "Snacks, beef jerky, chopped and formed"
+   ]
+  },
+  {
+   "region": "South Africa",
+   "q": "boerewors",
+   "first": "Pork and beef sausage",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Pork and beef sausage",
+    "Sausage, pork and beef, fresh, cooked",
+    "Sausage, pork and beef, with cheddar cheese, smoked"
+   ]
+  },
+  {
+   "region": "South Africa",
+   "q": "chakalaka",
+   "first": "Chakalaka",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Chakalaka"
+   ]
+  },
+  {
+   "region": "Egypt",
+   "q": "koshari",
+   "first": "Koshari",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Koshari"
+   ]
+  },
+  {
+   "region": "Egypt",
+   "q": "ful medames",
+   "first": "Ful medames",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Ful medames"
+   ]
+  },
+  {
+   "region": "Egypt",
+   "q": "falafel",
+   "first": "Falafel",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Falafel",
+    "Falafel sandwich",
+    "Falafel, home-prepared"
+   ]
+  },
+  {
+   "region": "Egypt",
+   "q": "molokhia",
+   "first": null,
+   "ok": false,
+   "inTop3": false,
+   "top": []
+  },
+  {
+   "region": "UK",
+   "q": "fish and chips",
+   "first": "Fish and chips",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Fish and chips",
+    "Potato chips, fried in palm oil, from takeaway fish and chip shops",
+    "Potato chips, fried in rapeseed oil, from takeaway fish and chip shops"
+   ]
+  },
+  {
+   "region": "UK",
+   "q": "baked beans",
+   "first": "Baked beans",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Baked beans",
+    "Beans, baked, home prepared",
+    "Beans, baked, canned, with beef"
+   ]
+  },
+  {
+   "region": "UK",
+   "q": "crumpet",
+   "first": "Crumpet, from white flour, toasted",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Crumpet, from white flour, toasted",
+    "Crumpets, toasted"
+   ]
+  },
+  {
+   "region": "UK",
+   "q": "shepherds pie",
+   "first": "Shepherd's pie",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Shepherd's pie",
+    "Shepherd's pie, homemade",
+    "Shepherd's pie, vegetable"
+   ]
+  },
+  {
+   "region": "UK",
+   "q": "scone",
+   "first": "Scone",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Scone",
+    "Scone, with fruit",
+    "Scone, plain, homemade"
+   ]
+  },
+  {
+   "region": "UK",
+   "q": "porridge",
+   "first": "Cereals, oats, regular and quick, unenriched, cooked with water (includes boiling and microwaving), without salt",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Cereals, oats, regular and quick, unenriched, cooked with water (includes boiling and microwaving), without salt",
+    "Cereals, oats, regular and quick and instant, unenriched, cooked with water (includes boiling and microwaving), with salt",
+    "Porridge oats, unfortified"
+   ]
+  },
+  {
+   "region": "UK",
+   "q": "sausage roll",
+   "first": "Sausage roll, purchased frozen, baked",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Sausage roll, purchased frozen, baked",
+    "Sausage roll, commercial, ready to eat",
+    "Sausage rolls, short pastry, homemade"
+   ]
+  },
+  {
+   "region": "UK",
+   "q": "yorkshire pudding",
+   "first": "Yorkshire pudding, made with whole milk",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Yorkshire pudding, made with whole milk",
+    "Yorkshire pudding, made with skimmed milk, homemade",
+    "Yorkshire pudding, made with semi-skimmed milk, homemade"
+   ]
+  },
+  {
+   "region": "UK",
+   "q": "full english breakfast",
+   "first": "Full English breakfast",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Full English breakfast"
+   ]
+  },
+  {
+   "region": "France",
+   "q": "croissant",
+   "first": "Croissant",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Croissant",
+    "Croissant, fruit",
+    "Croissant, cheese"
+   ]
+  },
+  {
+   "region": "France",
+   "q": "baguette",
+   "first": null,
+   "ok": false,
+   "inTop3": false,
+   "top": []
+  },
+  {
+   "region": "France",
+   "q": "ratatouille",
+   "first": "Ratatouille",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Ratatouille",
+    "Ratatouille, homemade"
+   ]
+  },
+  {
+   "region": "France",
+   "q": "crepe",
+   "first": "Crepe, NFS",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Crepe, NFS",
+    "Crepe, plain",
+    "Crepe, with meat"
+   ]
+  },
+  {
+   "region": "France",
+   "q": "quiche",
+   "first": "Quiche with meat, poultry or fish",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Quiche with meat, poultry or fish",
+    "Quiche, vegetable, retail",
+    "Quiche, Lorraine, homemade"
+   ]
+  },
+  {
+   "region": "Italy",
+   "q": "spaghetti bolognese",
+   "first": "Spaghetti bolognese, homemade",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Spaghetti bolognese, homemade",
+    "Spaghetti bolognese, retail, reheated, with spaghetti",
+    "Spaghetti bolognese, retail, meat and sauce only, reheated"
+   ]
+  },
+  {
+   "region": "Italy",
+   "q": "lasagne",
+   "first": "Lasagne, homemade, with extra lean minced beef",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Lasagne, homemade, with extra lean minced beef",
+    "Lasagne, homemade",
+    "Lasagne, beef, homemade"
+   ]
+  },
+  {
+   "region": "Italy",
+   "q": "risotto",
+   "first": "Risotto, plain, homemade",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Risotto, plain, homemade",
+    "Risotto, chicken, homemade",
+    "Risotto, vegetable, brown rice"
+   ]
+  },
+  {
+   "region": "Italy",
+   "q": "pizza margherita",
+   "first": "Pizza, cheese & tomato, commercial",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Pizza, cheese & tomato, commercial",
+    "Pizza, cheese and tomato, retail"
+   ]
+  },
+  {
+   "region": "Italy",
+   "q": "tiramisu",
+   "first": "Tiramisu",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Tiramisu",
+    "Tiramisu"
+   ]
+  },
+  {
+   "region": "Italy",
+   "q": "mozzarella",
+   "first": "Mozzarella cheese, tomato, and basil, with oil and vinegar dressing",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Mozzarella cheese, tomato, and basil, with oil and vinegar dressing",
+    "Mozzarella sticks, breaded, baked, or fried",
+    "Cheese, Mozzarella, NFS"
+   ]
+  },
+  {
+   "region": "Italy",
+   "q": "pesto",
+   "first": "Pesto sauce",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Pesto sauce",
+    "Pesto, red",
+    "Pesto, green"
+   ]
+  },
+  {
+   "region": "Spain",
+   "q": "paella",
+   "first": "Paella, NFS",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Paella, NFS",
+    "Paella with seafood",
+    "Seafood paella, Puerto Rican style"
+   ]
+  },
+  {
+   "region": "Spain",
+   "q": "tortilla espanola",
+   "first": "Spanish omelette",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Spanish omelette"
+   ]
+  },
+  {
+   "region": "Spain",
+   "q": "gazpacho",
+   "first": "Soup, gazpacho",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Soup, gazpacho",
+    "Soup, gazpacho, homemade"
+   ]
+  },
+  {
+   "region": "Spain",
+   "q": "chorizo",
+   "first": "Chorizo",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Chorizo",
+    "Chorizo",
+    "Sausage, chorizo, uncooked"
+   ]
+  },
+  {
+   "region": "Germany",
+   "q": "bratwurst",
+   "first": "Bratwurst",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Bratwurst",
+    "Bratwurst, with cheese",
+    "Bratwurst, pork, cooked"
+   ]
+  },
+  {
+   "region": "Germany",
+   "q": "sauerkraut",
+   "first": "Sauerkraut",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Sauerkraut",
+    "Sauerkraut",
+    "Sauerkraut, canned, solids and liquids"
+   ]
+  },
+  {
+   "region": "Germany",
+   "q": "pretzel",
+   "first": "Pretzel chips, hard, plain",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Pretzel chips, hard, plain",
+    "Pretzel chips, hard, flavored",
+    "Pretzel chips, hard, gluten free"
+   ]
+  },
+  {
+   "region": "Germany",
+   "q": "schnitzel",
+   "first": "Wiener schnitzel, homemade",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Wiener schnitzel, homemade",
+    "Chicken, schnitzel, baked without fat",
+    "Meat alternative, mycoprotein/fungus base, schnitzels/fish alternative/patty/sausages, as purchased"
+   ]
+  },
+  {
+   "region": "Mediterranean",
+   "q": "hummus",
+   "first": "Hummus, plain",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Hummus, plain",
+    "Hummus, flavored",
+    "Hummus, commercial"
+   ]
+  },
+  {
+   "region": "Mediterranean",
+   "q": "greek salad",
+   "first": "Salad, Greek",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Salad, Greek",
+    "Greek Salad, no dressing"
+   ]
+  },
+  {
+   "region": "Mediterranean",
+   "q": "feta",
+   "first": "Cheese, feta",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Cheese, feta",
+    "Cheese, Feta",
+    "Cheese, Feta"
+   ]
+  },
+  {
+   "region": "Mediterranean",
+   "q": "olive oil",
+   "first": "Olive oil",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Olive oil",
+    "Oil, olive",
+    "Oil, olive"
+   ]
+  },
+  {
+   "region": "Mediterranean",
+   "q": "moussaka",
+   "first": "Moussaka, homemade",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Moussaka, homemade",
+    "Moussaka, retail, reheated",
+    "Moussaka, vegetable, retail"
+   ]
+  },
+  {
+   "region": "India",
+   "q": "chicken tikka masala",
+   "first": "Chicken tikka masala",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Chicken tikka masala",
+    "Curry, chicken tikka masala, retail, reheated"
+   ]
+  },
+  {
+   "region": "India",
+   "q": "dal",
+   "first": "Dal",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Dal",
+    "Dal",
+    "Dal Dhokari, homemade"
+   ]
+  },
+  {
+   "region": "India",
+   "q": "naan",
+   "first": "Bread, naan",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Bread, naan",
+    "Bread, naan, retail",
+    "Bread, Naan, commercial"
+   ]
+  },
+  {
+   "region": "India",
+   "q": "biryani",
+   "first": "Biryani with meat",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Biryani with meat",
+    "Biryani with chicken",
+    "Biryani with vegetables"
+   ]
+  },
+  {
+   "region": "India",
+   "q": "samosa",
+   "first": "Samosa",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Samosa",
+    "Samosas, vegetable, retail",
+    "Samosas, lamb, baked, homemade"
+   ]
+  },
+  {
+   "region": "India",
+   "q": "paneer",
+   "first": "Palak Paneer",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Palak Paneer",
+    "Cheese, paneer",
+    "Cheese, Paneer"
+   ]
+  },
+  {
+   "region": "India",
+   "q": "idli",
+   "first": "Idli",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Idli"
+   ]
+  },
+  {
+   "region": "India",
+   "q": "dosa",
+   "first": "Dosa, plain",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Dosa, plain",
+    "Dosa, with filling",
+    "Dosa, filling, vegetable, homemade"
+   ]
+  },
+  {
+   "region": "India",
+   "q": "chana masala",
+   "first": "Chana masala",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Chana masala"
+   ]
+  },
+  {
+   "region": "India",
+   "q": "ghee",
+   "first": "Ghee, clarified butter",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Ghee, clarified butter",
+    "Ghee, butter",
+    "Ghee, clarified butter"
+   ]
+  },
+  {
+   "region": "China",
+   "q": "fried rice",
+   "first": "Fried rice, Nigerian style",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Fried rice, Nigerian style",
+    "Rice, fried, NFS",
+    "Rice, fried, meatless"
+   ]
+  },
+  {
+   "region": "China",
+   "q": "chow mein",
+   "first": "Chow mein or chop suey, meatless, no noodles",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Chow mein or chop suey, meatless, no noodles",
+    "Chow mein or chop suey, meatless, with noodles",
+    "Chow mein, chicken, takeaway"
+   ]
+  },
+  {
+   "region": "China",
+   "q": "dumplings",
+   "first": "Dumplings, homemade",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Dumplings, homemade",
+    "Dumpling, no meat",
+    "Momo"
+   ]
+  },
+  {
+   "region": "China",
+   "q": "kung pao chicken",
+   "first": "Kung pao chicken",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Kung pao chicken",
+    "Restaurant, Chinese, kung pao chicken"
+   ]
+  },
+  {
+   "region": "China",
+   "q": "sweet and sour pork",
+   "first": "Sweet and sour pork",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Sweet and sour pork",
+    "Sweet and sour pork with rice",
+    "Sweet and sour pork, homemade"
+   ]
+  },
+  {
+   "region": "China",
+   "q": "bok choy",
+   "first": "Bok choy, raw",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Bok choy, raw",
+    "Bok choy, steamed",
+    "Bok choy, fried, no added fat"
+   ]
+  },
+  {
+   "region": "China",
+   "q": "tofu",
+   "first": "Tofu (soy bean curd), firm, as purchased",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Tofu (soy bean curd), firm, as purchased",
+    "Tofu, firm, prepared with calcium sulfate and magnesium chloride (nigari)",
+    "Tofu yogurt"
+   ]
+  },
+  {
+   "region": "Japan",
+   "q": "sushi",
+   "first": "Sushi, NFS",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Sushi, NFS",
+    "Sushi, topped with eel",
+    "Sushi, topped with egg"
+   ]
+  },
+  {
+   "region": "Japan",
+   "q": "ramen",
+   "first": "Ramen bowl, NFS",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Ramen bowl, NFS",
+    "Ramen bowl, vegetarian",
+    "Ramen bowl with beef"
+   ]
+  },
+  {
+   "region": "Japan",
+   "q": "miso soup",
+   "first": "Miso soup",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Miso soup",
+    "Soup, miso or tofu"
+   ]
+  },
+  {
+   "region": "Japan",
+   "q": "tempura",
+   "first": "Vegetable tempura",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Vegetable tempura",
+    "Fish, tofu, and vegetables, tempura"
+   ]
+  },
+  {
+   "region": "Japan",
+   "q": "edamame",
+   "first": "Edamame, cooked",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Edamame, cooked",
+    "Edamame, frozen, prepared",
+    "Edamame, frozen, unprepared"
+   ]
+  },
+  {
+   "region": "Japan",
+   "q": "udon",
+   "first": "Udon noodles",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Udon noodles"
+   ]
+  },
+  {
+   "region": "Korea",
+   "q": "kimchi",
+   "first": "Kimchi",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Kimchi",
+    "Cabbage, kimchi"
+   ]
+  },
+  {
+   "region": "Korea",
+   "q": "bibimbap",
+   "first": "Bibimbap, Korean",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Bibimbap, Korean"
+   ]
+  },
+  {
+   "region": "Korea",
+   "q": "bulgogi",
+   "first": "Bulgogi",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Bulgogi"
+   ]
+  },
+  {
+   "region": "Thailand",
+   "q": "pad thai",
+   "first": "Pad Thai, NFS",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Pad Thai, NFS",
+    "Pad Thai, meatless",
+    "Pad Thai with meat"
+   ]
+  },
+  {
+   "region": "Thailand",
+   "q": "green curry",
+   "first": "Curry, green bean, masala, homemade",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Curry, green bean, masala, homemade",
+    "Curry, chicken, Thai green, takeaway and restaurant",
+    "Paste, green curry, commercial"
+   ]
+  },
+  {
+   "region": "Thailand",
+   "q": "tom yum",
+   "first": "Tom yum",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Tom yum"
+   ]
+  },
+  {
+   "region": "Vietnam",
+   "q": "pho",
+   "first": "Soup, pho, no meat",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Soup, pho, no meat",
+    "Soup, pho, with meat",
+    "Beverages, Cocoa mix, low calorie, powder, with added calcium, phosphorus, aspartame, without added sodium or vitamin A"
+   ]
+  },
+  {
+   "region": "Vietnam",
+   "q": "banh mi",
+   "first": "Banh mi",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Banh mi"
+   ]
+  },
+  {
+   "region": "Vietnam",
+   "q": "spring roll",
+   "first": "Spring rolls, meat, takeaway",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Spring rolls, meat, takeaway",
+    "Spring roll, meat & vegetable filling, commercial, deep fried"
+   ]
+  },
+  {
+   "region": "Philippines",
+   "q": "adobo",
+   "first": "Adobo, with rice",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Adobo, with rice",
+    "Adobo, with noodles"
+   ]
+  },
+  {
+   "region": "Philippines",
+   "q": "lumpia",
+   "first": "Spring rolls, meat, takeaway",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Spring rolls, meat, takeaway",
+    "Spring roll, meat & vegetable filling, commercial, deep fried"
+   ]
+  },
+  {
+   "region": "Philippines",
+   "q": "pancit",
+   "first": "Pancit",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Pancit"
+   ]
+  },
+  {
+   "region": "Philippines",
+   "q": "sinigang",
+   "first": "Sinigang",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Sinigang"
+   ]
+  },
+  {
+   "region": "Lebanon",
+   "q": "tabbouleh",
+   "first": "Tabbouleh",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Tabbouleh"
+   ]
+  },
+  {
+   "region": "Lebanon",
+   "q": "shawarma",
+   "first": "Chicken shawarma wrap",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Chicken shawarma wrap"
+   ]
+  },
+  {
+   "region": "Lebanon",
+   "q": "baba ganoush",
+   "first": "Baba ganoush",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Baba ganoush"
+   ]
+  },
+  {
+   "region": "Lebanon",
+   "q": "fattoush",
+   "first": "Fattoush",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Fattoush"
+   ]
+  },
+  {
+   "region": "Turkey",
+   "q": "doner kebab",
+   "first": "Doner kebabs, meat only",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Doner kebabs, meat only",
+    "Doner kebab in pitta bread with salad"
+   ]
+  },
+  {
+   "region": "Turkey",
+   "q": "baklava",
+   "first": "Baklava",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Baklava",
+    "Pastries, Greek, baklava, retail"
+   ]
+  },
+  {
+   "region": "Turkey",
+   "q": "lahmacun",
+   "first": null,
+   "ok": false,
+   "inTop3": false,
+   "top": []
+  },
+  {
+   "region": "Turkey",
+   "q": "ayran",
+   "first": null,
+   "ok": false,
+   "inTop3": false,
+   "top": []
+  },
+  {
+   "region": "Saudi",
+   "q": "kabsa",
+   "first": "Kabsa",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Kabsa"
+   ]
+  },
+  {
+   "region": "Saudi",
+   "q": "dates",
+   "first": "Dates, medjool",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Dates, medjool",
+    "Dates, deglet noor",
+    "Dates, raw, flesh and skin"
+   ]
+  },
+  {
+   "region": "Saudi",
+   "q": "mandi",
+   "first": null,
+   "ok": false,
+   "inTop3": false,
+   "top": []
+  },
+  {
+   "region": "Iran",
+   "q": "tahdig",
+   "first": null,
+   "ok": false,
+   "inTop3": false,
+   "top": []
+  },
+  {
+   "region": "Iran",
+   "q": "kebab koobideh",
+   "first": null,
+   "ok": false,
+   "inTop3": false,
+   "top": []
+  },
+  {
+   "region": "Iran",
+   "q": "ghormeh sabzi",
+   "first": null,
+   "ok": false,
+   "inTop3": false,
+   "top": []
+  },
+  {
+   "region": "US",
+   "q": "cheeseburger",
+   "first": "Cheeseburger (McDonalds)",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Cheeseburger (McDonalds)",
+    "Cheeseburger (Burger King)",
+    "Cheeseburger, NFS"
+   ]
+  },
+  {
+   "region": "US",
+   "q": "mac and cheese",
+   "first": "Mac and cheese",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Mac and cheese",
+    "Macaroni or noodles with cheese and egg",
+    "Macaroni or noodles with cheese and meat"
+   ]
+  },
+  {
+   "region": "US",
+   "q": "pancakes",
+   "first": "Pancakes (served with crispy duck), pancakes only, takeaway",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Pancakes (served with crispy duck), pancakes only, takeaway",
+    "Pancakes, NFS",
+    "Pancakes, fruit"
+   ]
+  },
+  {
+   "region": "US",
+   "q": "bagel",
+   "first": "Bagel",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Bagel",
+    "Bagel chips",
+    "Bagel, wheat"
+   ]
+  },
+  {
+   "region": "US",
+   "q": "peanut butter",
+   "first": "Peanut butter",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Peanut butter",
+    "Peanut butter, smooth style, without salt",
+    "Peanut butter and jelly"
+   ]
+  },
+  {
+   "region": "US",
+   "q": "hot dog",
+   "first": "Hot dog, NFS",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Hot dog, NFS",
+    "Hot dog, beef",
+    "Hot dog, turkey"
+   ]
+  },
+  {
+   "region": "US",
+   "q": "bbq ribs",
+   "first": "BBQ ribs",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "BBQ ribs",
+    "Pork, spare ribs, marinated, baked, roasted, fried, grilled or BBQ'd, fat not further defined"
+   ]
+  },
+  {
+   "region": "US",
+   "q": "apple pie",
+   "first": "Pie, apple",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Pie, apple",
+    "Pie, apple, fast food",
+    "Pie, apple, pastry top and bottom, homemade"
+   ]
+  },
+  {
+   "region": "US",
+   "q": "french fries",
+   "first": "French fries, deep fried in unfortified vegetable oil*",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "French fries, deep fried in unfortified vegetable oil*",
+    "Potato, french fries, NFS",
+    "Potato, french fries, school"
+   ]
+  },
+  {
+   "region": "US",
+   "q": "oatmeal",
+   "first": "Cereals, oats, regular and quick, unenriched, cooked with water (includes boiling and microwaving), without salt",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Cereals, oats, regular and quick, unenriched, cooked with water (includes boiling and microwaving), without salt",
+    "Cereals, oats, regular and quick and instant, unenriched, cooked with water (includes boiling and microwaving), with salt",
+    "Oatmeal, NFS"
+   ]
+  },
+  {
+   "region": "Canada",
+   "q": "poutine",
+   "first": null,
+   "ok": false,
+   "inTop3": false,
+   "top": []
+  },
+  {
+   "region": "Canada",
+   "q": "maple syrup",
+   "first": "Syrup, maple, pure",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Syrup, maple, pure",
+    "Syrup, maple, Canadian",
+    "Syrups, maple"
+   ]
+  },
+  {
+   "region": "Canada",
+   "q": "butter tart",
+   "first": null,
+   "ok": false,
+   "inTop3": false,
+   "top": []
+  },
+  {
+   "region": "Mexico",
+   "q": "tacos",
+   "first": "Taco, NFS",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Taco, NFS",
+    "Taco sauce",
+    "Taco, fish"
+   ]
+  },
+  {
+   "region": "Mexico",
+   "q": "burrito",
+   "first": "Burrito, NFS",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Burrito, NFS",
+    "Burrito bowl, NFS",
+    "Burrito, cheese only"
+   ]
+  },
+  {
+   "region": "Mexico",
+   "q": "guacamole",
+   "first": "Guacamole, NFS",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Guacamole, NFS",
+    "Guacamole with tomatoes",
+    "Guacamole, homemade"
+   ]
+  },
+  {
+   "region": "Mexico",
+   "q": "quesadilla",
+   "first": "Quesadilla, egg",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Quesadilla, egg",
+    "Quesadilla, NFS",
+    "Quesadilla, chicken"
+   ]
+  },
+  {
+   "region": "Mexico",
+   "q": "tamale",
+   "first": "Tamale, NFS",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Tamale, NFS",
+    "Tamale, beef",
+    "Tamale, pork"
+   ]
+  },
+  {
+   "region": "Mexico",
+   "q": "enchilada",
+   "first": "Enchilada, NFS",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Enchilada, NFS",
+    "Enchilada, beef",
+    "Enchilada, pork"
+   ]
+  },
+  {
+   "region": "Mexico",
+   "q": "tortilla",
+   "first": "Tortilla, NFS",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Tortilla, NFS",
+    "Tortilla, corn",
+    "Tortilla, flour"
+   ]
+  },
+  {
+   "region": "Caribbean",
+   "q": "jerk chicken",
+   "first": "Jerk chicken",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Jerk chicken"
+   ]
+  },
+  {
+   "region": "Caribbean",
+   "q": "rice and peas",
+   "first": "Rice and peas",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Rice and peas",
+    "Rice and split peas",
+    "Rice and pigeon peas"
+   ]
+  },
+  {
+   "region": "Caribbean",
+   "q": "ackee and saltfish",
+   "first": "Ackee and saltfish",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Ackee and saltfish"
+   ]
+  },
+  {
+   "region": "Caribbean",
+   "q": "plantain",
+   "first": "Plantain, cooked with oil",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Plantain, cooked with oil",
+    "Plantain, cooked, no added fat",
+    "Plantain, cooked with butter or margarine"
+   ]
+  },
+  {
+   "region": "Caribbean",
+   "q": "roti",
+   "first": "Kottu roti",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Kottu roti",
+    "Bread, chappatti or roti",
+    "Chicken, broiler, rotisserie, BBQ, back meat only"
+   ]
+  },
+  {
+   "region": "Brazil",
+   "q": "feijoada",
+   "first": "Feijoada",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Feijoada"
+   ]
+  },
+  {
+   "region": "Brazil",
+   "q": "pao de queijo",
+   "first": "Pão de queijo",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Pão de queijo"
+   ]
+  },
+  {
+   "region": "Brazil",
+   "q": "acai bowl",
+   "first": "Smoothie bowl",
+   "ok": false,
+   "inTop3": false,
+   "top": [
+    "Smoothie bowl"
+   ]
+  },
+  {
+   "region": "Brazil",
+   "q": "coxinha",
+   "first": null,
+   "ok": false,
+   "inTop3": false,
+   "top": []
+  },
+  {
+   "region": "Colombia",
+   "q": "arepa",
+   "first": "Arepa Dominicana",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Arepa Dominicana",
+    "Restaurant, Latino, arepa (unleavened cornmeal bread)"
+   ]
+  },
+  {
+   "region": "Colombia",
+   "q": "bandeja paisa",
+   "first": "Bandeja paisa",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Bandeja paisa"
+   ]
+  },
+  {
+   "region": "Colombia",
+   "q": "empanada",
+   "first": "Empanada, NFS",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Empanada, NFS",
+    "Empanada, beef",
+    "Empanada, fruit"
+   ]
+  },
+  {
+   "region": "Peru",
+   "q": "ceviche",
+   "first": "Ceviche",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Ceviche"
+   ]
+  },
+  {
+   "region": "Peru",
+   "q": "lomo saltado",
+   "first": "Lomo saltado",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Lomo saltado"
+   ]
+  },
+  {
+   "region": "Peru",
+   "q": "quinoa",
+   "first": "Quinoa, cooked",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Quinoa, cooked",
+    "Quinoa, uncooked",
+    "Quinoa, fat added"
+   ]
+  },
+  {
+   "region": "Basics",
+   "q": "chicken breast",
+   "first": "Chicken, broilers or fryers, breast, meat only, cooked, roasted",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Chicken, broilers or fryers, breast, meat only, cooked, roasted",
+    "Chicken breast, fried, coated, prepared skinless, coating eaten, from raw",
+    "Chicken breast, stewed, skin eaten"
+   ]
+  },
+  {
+   "region": "Basics",
+   "q": "boiled egg",
+   "first": "Egg, whole, cooked, hard-boiled",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Egg, whole, cooked, hard-boiled",
+    "Egg, whole, boiled or poached",
+    "Egg, duck, boiled* (without salt)"
+   ]
+  },
+  {
+   "region": "Basics",
+   "q": "white rice",
+   "first": "Rice, white, long-grain, regular, enriched, cooked",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Rice, white, long-grain, regular, enriched, cooked",
+    "Rice, white, cooked, glutinous",
+    "Rice, white, cooked, as ingredient"
+   ]
+  },
+  {
+   "region": "Basics",
+   "q": "brown rice",
+   "first": "Rice, brown, cooked, as ingredient",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Rice, brown, cooked, as ingredient",
+    "Rice, brown, cooked, no added fat",
+    "Rice, brown, with corn, fat added"
+   ]
+  },
+  {
+   "region": "Basics",
+   "q": "salmon",
+   "first": "Fish, salmon, Atlantic, farmed, cooked, dry heat",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Fish, salmon, Atlantic, farmed, cooked, dry heat",
+    "Fish, salmon, NFS",
+    "Fish, salmon, fried"
+   ]
+  },
+  {
+   "region": "Basics",
+   "q": "banana",
+   "first": "Banana, raw",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Banana, raw",
+    "Banana chips",
+    "Banana split"
+   ]
+  },
+  {
+   "region": "Basics",
+   "q": "apple",
+   "first": "Apple, raw",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Apple, raw",
+    "Apple cider",
+    "Apple, baked"
+   ]
+  },
+  {
+   "region": "Basics",
+   "q": "whole milk",
+   "first": "Milk, whole",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Milk, whole",
+    "Milk, whole, UHT",
+    "Milk, whole, pasteurised, average"
+   ]
+  },
+  {
+   "region": "Basics",
+   "q": "greek yogurt",
+   "first": "Yogurt, Greek, plain, nonfat (Includes foods for USDA's Food Distribution Program)",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Yogurt, Greek, plain, nonfat (Includes foods for USDA's Food Distribution Program)",
+    "Yogurt, Greek, with oats",
+    "Yogurt, Greek style, fruit"
+   ]
+  },
+  {
+   "region": "Basics",
+   "q": "avocado",
+   "first": "Avocado, raw",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Avocado, raw",
+    "Avocado dressing",
+    "Avocado, for use on a sandwich"
+   ]
+  },
+  {
+   "region": "Basics",
+   "q": "broccoli",
+   "first": "Broccoli, raw",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Broccoli, raw",
+    "Broccoli, raw",
+    "Broccoli raab, raw"
+   ]
+  },
+  {
+   "region": "Basics",
+   "q": "sweet potato",
+   "first": "Sweet potato tots",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Sweet potato tots",
+    "Sweet potato, NFS",
+    "Sweet potato chips"
+   ]
+  },
+  {
+   "region": "Spelling",
+   "q": "yoghurt",
+   "first": "Yogurt, Greek, plain, nonfat (Includes foods for USDA's Food Distribution Program)",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Yogurt, Greek, plain, nonfat (Includes foods for USDA's Food Distribution Program)",
+    "Yogurt tube",
+    "Yogurt, NFS"
+   ]
+  },
+  {
+   "region": "Spelling",
+   "q": "chilli",
+   "first": "Chilli (chili), red, raw",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Chilli (chili), red, raw",
+    "Chilli (chili), green, raw",
+    "Chilli (chili), dried, ground"
+   ]
+  },
+  {
+   "region": "Spelling",
+   "q": "aubergine",
+   "first": "Eggplant dip",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Eggplant dip",
+    "Eggplant, raw",
+    "Eggplant, pickled"
+   ]
+  },
+  {
+   "region": "Spelling",
+   "q": "courgette",
+   "first": "Squash, summer, souffle",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Squash, summer, souffle",
+    "Squash, winter, souffle",
+    "Squash, winter, acorn, raw"
+   ]
+  },
+  {
+   "region": "Spelling",
+   "q": "chickpeas",
+   "first": "Chickpeas (garbanzo beans, bengal gram), mature seeds, cooked, boiled, without salt",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Chickpeas (garbanzo beans, bengal gram), mature seeds, cooked, boiled, without salt",
+    "Chickpeas (garbanzo beans, bengal gram), mature seeds, cooked, boiled, with salt",
+    "Chickpeas (garbanzo beans, bengal gram), mature seeds, canned, drained solids"
+   ]
+  },
+  {
+   "region": "Spelling",
+   "q": "brocoli",
+   "first": "Broccoli, raw",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Broccoli, raw",
+    "Broccoli, raw",
+    "Broccoli raab, raw"
+   ]
+  },
+  {
+   "region": "Spelling",
+   "q": "spagetti",
+   "first": "Spaghetti sauce",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Spaghetti sauce",
+    "Spaghetti, spinach, dry",
+    "Spaghetti squash, cooked"
+   ]
+  },
+  {
+   "region": "Spelling",
+   "q": "avacado",
+   "first": "Avocado, raw",
+   "ok": true,
+   "inTop3": true,
+   "top": [
+    "Avocado, raw",
+    "Avocado dressing",
+    "Avocado, for use on a sandwich"
+   ]
+  }
+ ]
+}

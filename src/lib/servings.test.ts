@@ -71,7 +71,7 @@ describe('serving buttons for fixing an amount', () => {
     expect(names('apple')[0]).toBe('medium');
   });
   it('gives the weight of one', () => {
-    const pb = naturalServings(food('peanut butter')).find((s) => s.name === 'tbsp');
+    const pb = naturalServings(food('peanut butter')).find((s) => /^(tbsp|tablespoon)$/.test(s.name));
     expect(pb?.per).toBe(16);
   });
 });

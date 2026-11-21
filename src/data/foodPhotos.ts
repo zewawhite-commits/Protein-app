@@ -49,12 +49,16 @@ const FALSE_FRIENDS = /^(cocoa|shea|almond|cashew|hazelnut|apple|honey|sunflower
  * (The beef photo is a grilled steak, so ground or corned beef get a plain tile instead.)
  */
 const ONLY: Record<string, { yes: RegExp; no?: RegExp }> = {
-  cut_of_meat: { yes: /\b(steak|sirloin|rib ?eye|tenderloin|t-bone|porterhouse|strip loin|flank|rump|skirt|filet mignon)\b/, no: /\b(ground|mince|corned|cured|jerky|raw)\b/ },
+  // The photo is a grilled steak: not braised, stewed, pot-roasted, country-fried or a roast joint.
+  cut_of_meat: { yes: /\b(steak|sirloin|rib ?eye|tenderloin|t-bone|porterhouse|strip loin|flank|rump|skirt|filet mignon)\b/, no: /\b(ground|mince|corned|cured|jerky|raw|braised|braising|stewed|slow cooked|pot-roasted|casseroled|country fried|chicken fried|cube|joint)\b/ },
   poultry_leg: { yes: /\b(roast(ed)?|rotisserie)\b.*\b(chicken|whole)|\bwhole\b.*\broast/ },
   // The checked photos: grilled whole fish; raw salmon fillet; grilled chicken breast; raw thighs/legs; cooked prawns.
-  fish: { yes: /./, no: /\b(raw|dried|dry|salted|smoked|canned|pickled|roe|paste|oil|fingers?|sticks?|cakes?|balls?|frozen|ns as to|gefilte|surimi)\b/ },
-  salmon: { yes: /\b(raw|smoked|fresh|fillet|lox|gravlax|cold-smoked)\b/, no: /\b(cooked|baked|grilled|fried|broiled|canned|steamed|poached|roasted|microwaved|dry heat)\b/ },
-  chicken_breast: { yes: /./, no: /\b(raw|uncooked|breaded|coated|fried|batter|deli|sliced|luncheon|canned)\b/ },
+  // The photo is a whole fried fish: only fried fish, not fillets of cod or steamed and grilled fish.
+  fish: { yes: /\bfried\b/, no: /\b(raw|dried|dry|salted|smoked|canned|pickled|roe|paste|oil|fingers?|sticks?|cakes?|balls?|frozen|ns as to|gefilte|surimi|cod|haddock|pollock|flounder|halibut|swordfish|shark|eel|anchovy|escovitch|batter|breaded)\b/ },
+  // The photo is a raw salmon fillet: not smoked slices, and not rock salmon (dogfish).
+  salmon: { yes: /\b(raw|fresh|fillet)\b/, no: /\b(cooked|baked|grilled|fried|broiled|canned|steamed|poached|roasted|microwaved|dry heat|smoked|lox|gravlax|rock salmon|dogfish)\b/ },
+  // The photo is grilled, sliced breast: not raw, stewed or casseroled.
+  chicken_breast: { yes: /./, no: /\b(raw|uncooked|breaded|coated|fried|batter|deli|sliced|luncheon|canned|stewed|casseroled|poached|boiled)\b/ },
   chicken_thigh: { yes: /\braw\b/, no: /\b(fried|coated|cooked|roasted|baked|stewed|grilled|from raw)\b/ },
   shrimp: { yes: /./, no: /\b(raw|dried|dry|canned|paste|breaded|fried|kung pao)\b/ },
   cooked_rice: { yes: /\bwhite\b.*\b(cooked|boiled|steamed)\b|\b(cooked|boiled|steamed)\b.*\bwhite\b/, no: /\b(raw|uncooked|dry|flour|brown|wild|red|yellow|fried|beverage|cakes?)\b/ },
@@ -65,10 +69,11 @@ const ONLY: Record<string, { yes: RegExp; no?: RegExp }> = {
   pea_pod: { yes: /\b(green|garden)\b.*\bpeas?\b|^peas?, (green|garden|fresh|frozen)/, no: /\b(pigeon|split|dried|dry|mature|yellow|snow|snap|edible-podded|chick|black-eyed|cowpea|canned|sprouted|flour|soup)\b/ },
   yogurt: { yes: /\b(plain|natural|greek|unflavou?red)\b/, no: /\b(fruit|flavou?r(ed|s)?|vanilla|strawberry|frozen|drink|liquid|chocolate|honey|coffee|lemon|banana|berry|peach|cereal)\b/ },
   bell_pepper: { yes: /\b(sweet|bell|capsicum)\b/, no: /\b(hot|chil[ie]|jalapeno|serrano|dried|stuffed|black|pasilla|cooked|boiled|sauteed|fried|canned|roasted|frozen|pickled)\b/ },
-  teacup_without_handle: { yes: /^tea\b/, no: /\b(iced|bubble|long island|milk|chai|sweetened|instant|powder|bottled|dry|leaves|lemon|ready-to-drink|kombucha|green|herbal|chamomile|matcha|mint|fruit)\b/ },
-  chicken_wings: { yes: /./, no: /\b(raw|glazed|barbecued?|bbq|buffalo|sauce|teriyaki|honey|frozen|marinated)\b/ },
+  teacup_without_handle: { yes: /^tea\b/, no: /\b(hibiscus|rooibos|iced|bubble|long island|milk|chai|sweetened|instant|powder|bottled|dry|leaves|lemon|ready-to-drink|kombucha|green|herbal|chamomile|matcha|mint|fruit)\b/ },
+  // The photo is fried wings: only fried or coated wings.
+  chicken_wings: { yes: /\b(fried|coated|"wings", plain)\b|"wings"/, no: /\b(raw|glazed|barbecued?|bbq|buffalo|sauce|teriyaki|honey|frozen|marinated|stewed|casseroled|lean flesh)\b/ },
   mushroom: { yes: /\b(white|button|common|agaricus)\b/, no: /\b(cooked|boiled|fried|canned|dried|shiitake|oyster|enoki|portabell?a|chanterelle|morel|maitake|jew|asian|straw|stuffed|sauteed|microwaved|grilled)\b/ },
-  wine_glass: { yes: /\bred\b/, no: /\b(white|rose|sparkling|fortified|non-?alcoholic|cooking|dessert|port|sherry)\b/ },
+  wine_glass: { yes: /\bred\b/, no: /\b(white|rose|sparkling|fortified|non-?alcoholic|cooking|cooked|dessert|port|sherry)\b/ },
   red_apple: { yes: /\b(raw|fresh|red|eating)\b/, no: /\b(dried|baked|juice|sauce|canned|cooked|stewed|green|granny|peeled|without skin|flesh only|crab|rose|star|custard|cashew|sugar|mammie|wax|chips|sweet apple)\b/ },
   onion: { yes: /\braw\b/, no: /\b(red|spring|green|pearl|cooked|fried|dried|powder|rings?|welsh|young|scallion|shallot|pickled|sweet)\b/ },
   tuna: { yes: /\b(fresh|steak|fillet|yellowfin|bluefin|skipjack|albacore)\b/, no: /\b(canned|raw|salad|smoked|dried|sushi|sauce|cream)\b/ },
@@ -87,7 +92,7 @@ const ONLY: Record<string, { yes: RegExp; no?: RegExp }> = {
   oats: { yes: /\b(raw|rolled|dry|uncooked|flakes)\b|^oats$/, no: /\b(cooked|porridge|milk|bran|swallow|fufu|instant|beverage|bread|muffin|cereal|flour)\b/ },
   bagel: { yes: /./, no: /\b(sandwich|cream cheese|chips)\b/ },
   pancakes: { yes: /./, no: /\b(potato|frozen|mix|syrup|scotch|crepes?|fruit|chocolate)\b/ },
-  croissant: { yes: /./, no: /\b(chocolate|apple|cheese|ham|almond|egg)\b/ },
+  croissant: { yes: /./, no: /\b(chocolate|apple|cheese|ham|almond|egg|fruit)\b/ },
   jollof: { yes: /rice|^jollof|jolof/, no: /\b(spaghetti|macaroni|pasta|beans|native|palm oil)\b/ },
   grapes: { yes: /./, no: /\b(green|white|raisins?|juice|jelly|jam|leaves|sultana)\b/ },
   strawberry: { yes: /./, no: /\b(dried|jam|frozen|syrup|shake|juice|yogh?urt|ice cream)\b/ },
@@ -97,7 +102,20 @@ const ONLY: Record<string, { yes: RegExp; no?: RegExp }> = {
   coconut: { yes: /\b(flesh|fresh|raw|meat)\b/, no: /\b(water|cream|milk|oil|dried|desiccated|sugar|flour|candy)\b/ },
   kiwi_fruit: { yes: /./, no: /\b(dried|juice|canned)\b/ },
   peach: { yes: /\b(raw|fresh|flesh)\b/, no: /\b(canned|dried|dehydrated|melba|nectar|juice|syrup|frozen)\b/ },
-  glass_of_milk: { yes: /^milk\b/, no: /\b(soy|soya|almond|oat|rice|coconut|goat|shake|chocolate|evaporated|condensed|powder|dried|dry|buttermilk|human)\b/ },
+  // Checked in the full photo audit: each photo only on foods that look like it.
+  beans: { yes: /\b(dry|dried)\b|mature seeds, raw/, no: /\b(from dried|fresh|green|snap|string|yardlong|winged|sprout(ed)?|baked|re-?fried|canned|cooked|boiled|in pod|fruit|fermented|pickled|runner|balor|papri|cluster|sword|fried|immature|soya|soy|locust|velvet|jack|ground bean|chick)\b/ },
+  cheese_wedge: { yes: /\b(cheddar|colby|gouda|edam|emmental|gruyere|swiss|monterey|jack|muenster|havarti|jarlsberg|leicester|gloucester|cheshire|derby|wensleydale|lancashire|fontina|tilsit|brick|caraway|port (de|du) salut|port salut|provolone|hard, average|parmesan, (hard|fresh)|romano)\b/, no: /\b(cottage|cream|ricotta|mascarpone|quark|fet+a|mozzarella|bocconcini|paneer|hal+oumi|blue|roquefort|stilton|dolcelatte|brie|camembert|goats?|spreadable|process(ed)?|pasteurized|head cheese|cauliflower|queso|neufchatel|gjetost|grated|shredded|sliced|rind|alternative|white|american|blend|reduced|low|fat free|nonfat|half fat|less fat|sage)\b/ },
+  bread: { yes: /^bread\b/, no: /\b(fruit(ed)?|raisin|cinnamon|banana|zucchini|pumpkin|sweet potato|nut|onion|garlic|brioche|pitta|pita|puri|pan dulce|coffee|dough|boston|damper|vegetable|potato|toasted|soda|cuban|native)\b/ },
+  pizza: { yes: /\b(cheese|tomato|margherita)\b/, no: /\b(dessert|mexican|white pizza|no cheese|fish|gluten-free|school|chicken|ham|pineapple|supreme|pepperoni|meat|sausage|vegetable)\b/ },
+  almonds: { yes: /^(nuts, )?almonds?\b/, no: /\b(chicken|butter|oil|paste|milk|flour|meal|extract)\b/ },
+  fried_egg: { yes: /\begg\b/, no: /\beggplant\b/ },
+  chocolate_bar: { yes: /\bchocolate\b/, no: /\b(white|liquid|cooking|compound|baking|mexican)\b/ },
+  cherries: { yes: /\b(raw|fresh|sweet|sour)\b/, no: /\b(dried|maraschino|glace|candied|canned|west indian|acerola)\b/ },
+  popcorn: { yes: /./, no: /\b(caramel|kettle|cheese|chocolate)\b/ },
+  doughnut: { yes: /./, no: /\b(custard|jelly|jam|cream|crullers?|filled|chocolate)\b/ },
+  hot_dog: { yes: /\bbun\b/, no: /\bno bun\b/ },
+  tofu: { yes: /^tofu\b/, no: /\b(fried|mapo|sauce|skin)\b/ },
+  glass_of_milk: { yes: /^milk\b/, no: /\b(malted|fermented|soy|soya|almond|oat|rice|coconut|goat|shake|chocolate|evaporated|condensed|powder|dried|dry|buttermilk|human)\b/ },
 };
 const onlyOk = (key: string, n: string) => { const o = ONLY[key]; return !o || (o.yes.test(n) && !o.no?.test(n)); };
 

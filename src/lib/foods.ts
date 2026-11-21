@@ -199,6 +199,7 @@ const COOKED: [RegExp, string][] = [
   [/^(coke|coca[- ]cola|pepsi|cola)$/, 'soft drink cola'],
   [/^(sprite|7 ?up|seven up|lemon lime soda)$/, 'lemon lime soda'],
   [/^(fanta|orange soda|orange fizzy drink)$/, 'beverages carbonated orange'],
+  [/^(pizza )?margherita( pizza)?$/, 'pizza cheese tomato'],
   [/^(malt|maltina|malta|amstel malta|malt drink)$/, 'malt beverage non alcoholic'],
   [/^gala( sausage roll)?$/, 'sausage roll'],
   [/^(shaki|tripe|assorted|assorted meat|roundabout)$/, 'beef tripe cooked'],
@@ -222,6 +223,7 @@ export function searchFoods(query: string, opts: SearchOptions = {}): Food[] {
   if (alt !== query.toLowerCase()) { const hit = searchWith(alt, opts); if (hit.length) return hit; }
   // "jollof rice with chicken": find the main food, then the rest can be added separately.
   const main = query.toLowerCase().split(/\s+(?:with|and|plus|\+|&)\s+/)[0];
+  // Nothing found stays nothing: dropping words guessed wrong foods ("butter tart" → butter).
   return main !== query.toLowerCase() ? searchFoods(main, opts) : [];
 }
 
@@ -299,6 +301,12 @@ function searchTerms(terms: string[], opts: SearchOptions): Food[] {
     if (it.food.source === 'recipe' && (firstPos === 0 || firstPos >= it.nameWords)) score += 12;
     // The exact phrase appears in the name ("sesame seeds" → "Seeds, sesame seeds, whole", not sesame paste).
     if (terms.length > 1 && it.lower.includes(phrase)) score += 10;
+    // Food tables name things the other way round: "brown rice" is "Rice, brown", "whole milk" is "Milk, whole".
+    // The food's name is exactly what was typed: best of all.
+    if (it.lower === phrase || it.lower.startsWith(`${phrase} (`)) score += 20;
+    // Equally good matches: prefer the one people can measure in servings (spoons, cups, slices).
+    if (it.food.portions.length) score += 2;
+    if (terms.length === 2 && new RegExp(`^${terms[1]}s?, ${terms[0]}\\b`).test(it.lower)) score += 16;
     if (PROCESSED_CATEGORIES.has(it.food.category)) score -= 10;
     if (PROCESSED_WORDS.test(it.lower)) score -= 5;
     if (/\b(meat only|skinless|boneless|lean)\b/.test(it.lower)) score += 3;

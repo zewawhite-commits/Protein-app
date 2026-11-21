@@ -1,0 +1,197 @@
+{
+ "records": 18201,
+ "sources": {
+  "USDA SR Legacy (US)": 7253,
+  "USDA FNDDS (US)": 5312,
+  "FAO West Africa": 1024,
+  "UK CoFID": 2853,
+  "Australia AFCD": 1581,
+  "Standard recipe (world dishes)": 178
+ },
+ "status": {
+  "verified": 18201
+ },
+ "status_by_source": {
+  "USDA FNDDS (US)": {
+   "verified": 5312
+  },
+  "USDA SR Legacy (US)": {
+   "verified": 7253
+  },
+  "FAO West Africa": {
+   "verified": 1024
+  },
+  "UK CoFID": {
+   "verified": 2853
+  },
+  "Australia AFCD": {
+   "verified": 1581
+  },
+  "Standard recipe (world dishes)": {
+   "verified": 178
+  }
+ },
+ "fields_that_differ": {},
+ "flags": {
+  "missing sugar": 2817,
+  "missing satFat": 530,
+  "missing sodium": 76,
+  "energy explained: alcohol": 198,
+  "missing fibre": 698,
+  "energy explained: fibre counted at 2 kcal/g": 91,
+  "serving weight out of the usual range": 96,
+  "energy explained: sugar alcohols or food-specific factors (cocoa, bran, sweeteners)": 22,
+  "energy not explained by protein, carbs, fat, fibre or alcohol": 8,
+  "sugar above carbohydrate": 1,
+  "energy explained: small difference on a low-energy food": 1,
+  "serving with no weight": 1,
+  "missing calories or a macro": 1,
+  "macros add up to more than 100 g": 1,
+  "marked cooked but named raw": 1
+ },
+ "examples": {
+  "serving weight out of the usual range": [
+   "Beverages, carbonated, reduced sugar, cola, contains caffeine and swee [USDA SR Legacy (US)] 1 can (8 fl oz) = 355 g",
+   "Beverages, Orange-flavor drink, breakfast type, low calorie, powder [USDA SR Legacy (US)] 1 portion, amount of dry mix to make 8 fl oz prepared = 2.5 g",
+   "Beverages, water, tap, municipal [USDA SR Legacy (US)] 3 ice cube (3/4 fl oz) = 64 g",
+   "Chives, freeze-dried [USDA SR Legacy (US)] 1 tbsp = 0.2 g",
+   "Chives, freeze-dried [USDA SR Legacy (US)] 0.25 cup = 0.8 g",
+   "Cookie, ladyfinger [USDA FNDDS (US)] 1 egg jumbo (4\" x 2\") = 12.8 g",
+   "Cream, fluid, half and half [USDA SR Legacy (US)] 1 container, individual (.5 fl oz) = 15 g",
+   "Cream, half and half [USDA FNDDS (US)] 1 individual container (.5 fl oz) = 15 g",
+   "Cream, half and half, flavored [USDA FNDDS (US)] 1 individual container (.5 fl oz) = 15 g",
+   "Currants, dried [USDA FNDDS (US)] 1 slice/chunk = 0.5 g",
+   "Egg omelet or scrambled egg, with cheese and dark-green vegetables, fa [USDA FNDDS (US)] 1 egg = 85 g",
+   "Egg omelet or scrambled egg, with cheese and dark-green vegetables, NS [USDA FNDDS (US)] 1 egg = 85 g"
+  ],
+  "energy not explained by protein, carbs, fat, fibre or alcohol": [
+   "Chicken spread [USDA SR Legacy (US)] 158 kcal vs 246",
+   "Jams and preserves, no sugar (with sodium saccharin), any flavor [USDA SR Legacy (US)] 132 kcal vs 218",
+   "Seaweed, spirulina, dried [USDA SR Legacy (US)] 290 kcal vs 395",
+   "Spices, allspice, ground [USDA SR Legacy (US)] 263 kcal vs 391",
+   "Spices, chervil, dried [USDA SR Legacy (US)] 237 kcal vs 324",
+   "Coffee, Irish [UK CoFID] 125 kcal vs 92",
+   "Cream of tartar [UK CoFID] 239 kcal vs 0",
+   "Lemon sole, goujons, baked [UK CoFID] 187 kcal vs 254"
+  ],
+  "sugar above carbohydrate": [
+   "Ham, chopped, not canned [USDA SR Legacy (US)] 5 > 0"
+  ],
+  "serving with no weight": [
+   "Sugar substitute, saccharin, powder [USDA FNDDS (US)] 1 tablet (1/2 grain)"
+  ],
+  "missing calories or a macro": [
+   "Cheese, Brie, rind only [UK CoFID] kcal 304, protein 16.5, carbs None, fat 26.4"
+  ],
+  "macros add up to more than 100 g": [
+   "Rosemary, dried [UK CoFID] 109.1 g"
+  ],
+  "marked cooked but named raw": [
+   "Nut, brazil, raw or blanched, unsalted [Australia AFCD]"
+  ]
+ },
+ "same_name_groups": 167,
+ "same_name_identical_values": 0,
+ "categories_most_flagged": [
+  [
+   "Eggs and omelets",
+   47,
+   147
+  ],
+  [
+   "Pork Products",
+   13,
+   336
+  ],
+  [
+   "Vegetables and Vegetable Products",
+   11,
+   813
+  ],
+  [
+   "Sweets",
+   10,
+   357
+  ],
+  [
+   "Soups, Sauces, and Gravies",
+   5,
+   254
+  ],
+  [
+   "Beverages",
+   3,
+   366
+  ],
+  [
+   "Dairy and Egg Products",
+   3,
+   282
+  ],
+  [
+   "Sausages and Luncheon Meats",
+   2,
+   166
+  ],
+  [
+   "Cream and cream substitutes",
+   2,
+   18
+  ],
+  [
+   "Spices and Herbs",
+   2,
+   63
+  ],
+  [
+   "Cookies and brownies",
+   1,
+   102
+  ],
+  [
+   "Dried fruits",
+   1,
+   18
+  ],
+  [
+   "Fruit drinks",
+   1,
+   49
+  ],
+  [
+   "Sugar substitutes",
+   1,
+   10
+  ],
+  [
+   "Not included in a food category",
+   1,
+   76
+  ],
+  [
+   "Milk and milk products (UK)",
+   1,
+   186
+  ],
+  [
+   "Beverages (UK)",
+   1,
+   74
+  ],
+  [
+   "Soups, sauces and miscellaneous (UK)",
+   1,
+   126
+  ],
+  [
+   "Fish and fish dishes (UK)",
+   1,
+   285
+  ],
+  [
+   "Herbs and spices (UK)",
+   1,
+   35
+  ]
+ ]
+}
