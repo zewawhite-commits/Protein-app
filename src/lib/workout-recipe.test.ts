@@ -4,7 +4,7 @@ import { sanitizeRecipe } from './recipe';
 
 describe('workout guide', () => {
   it('cleans requests and plans', () => {
-    expect(cleanWorkoutRequest({ daysPerWeek: 99, minutes: 2, place: 'moon', level: 'pro' })).toEqual({ daysPerWeek: 7, minutes: 10, place: 'gym', level: 'beginner', focus: '' });
+    expect(cleanWorkoutRequest({ daysPerWeek: 99, minutes: 2, place: 'moon', level: 'pro' })).toMatchObject({ daysPerWeek: 7, minutes: 10, place: 'gym', level: 'beginner', focus: '', goal: 'general' });
     const p = sanitizeWorkout({ title: 'Week', days: [{ name: 'Day 1', focus: 'Upper', minutes: 40, warmup: '5 min row', exercises: [{ name: 'Push-up', sets: 3, reps: '10', restSeconds: 60, how: 'Brace' }, { name: '' }] }, { name: 'Empty', exercises: [] }], tips: ['Sleep'] });
     expect(p.days).toHaveLength(1);
     expect(p.days[0].exercises).toHaveLength(1);
