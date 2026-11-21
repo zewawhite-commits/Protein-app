@@ -15,6 +15,7 @@ import { foodAllergens } from '@/lib/allergens';
 import { useAvoid } from './Allergy';
 import { deletePhoto, savePhoto } from '@/lib/photos';
 import { useFoodDb, usePhotoUrl, useDay } from '@/lib/hooks';
+import { dailyTargets } from '@/lib/energy';
 import { useStore } from '@/store/useStore';
 import { gramsFor, lastAmount, parseAmount } from '@/lib/describe';
 import { AllergyBanner } from './Allergy';
@@ -124,7 +125,11 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
   const [byCount, setByCount] = useState(() => !entry && pieceFirst && (!usual || usualFits));
   const [portionIdx, setPortionIdx] = useState(0);
   const [count, setCount] = useState(entry ? '' : pieceFirst ? (usual && usualFits ? String(usualCount) : usual ? '' : '1') : '');
-  const portion = countable[portionIdx] ?? countable[0];
+  // Your own serving size (e.g. the bowl you always use), for any food.
+  const [ownSize, setOwnSize] = useState('');
+  const own = Number(ownSize.replace(',', '.'));
+  const ownPortion = own > 0 && own <= 3000 ? { label: '1 serving', grams: own } : undefined;
+  const portion = (portionIdx === -1 ? ownPortion : undefined) ?? countable[portionIdx] ?? countable[0] ?? ownPortion;
   const applyCount = (c: string, p = portion) => { setCount(c); const n = Number(c.replace(',', '.')); if (p && n >= 0) setGrams(toUnit(n * p.grams, unit)); };
   useEffect(() => { if (byCount && count && portion) applyCount(count); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const bump = (d: number) => setG(Math.max(0, g + Math.sign(d) * ({ g: 5, ml: 5, oz: 14.17, kg: 50, lb: 45.36 } as const)[unit]));
@@ -219,9 +224,15 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
             <span className="flex items-center gap-1.5 text-[14px] font-semibold text-silver"><Scale size={14} /> {weighHint}</span>
           </div>
         )}
-        {countable.length > 0 && (
+        {(
           <div className="mb-4 flex justify-center">
             <Segmented<'count' | 'weight'> value={byCount ? 'count' : 'weight'} onChange={(v) => { haptic(); setByCount(v === 'count'); if (v === 'count') applyCount(count || '1'); }} options={[{ value: 'count', label: pieceFirst ? 'How many' : 'Servings' }, { value: 'weight', label: 'Weight' }]} />
+          </div>
+        )}
+        {byCount && !portion && (
+          <div className="mx-auto max-w-[260px] text-center">
+            <p className="text-sm text-silver">How much is one of your servings?</p>
+            <label className="mt-2 flex items-center justify-center gap-2"><span className="text-sm font-semibold">1 serving =</span><input inputMode="decimal" autoFocus value={ownSize} onChange={(e) => { setOwnSize(e.target.value.replace(/[^\d.,]/g, '')); setPortionIdx(-1); const n2 = Number(e.target.value.replace(',', '.')); if (n2 > 0) setGrams(toUnit((Number(count.replace(',', '.')) || 1) * n2, unit)); }} className="field !h-11 !w-24 text-center" aria-label="Grams in one serving" placeholder="g" /><span className="text-sm text-silver">g</span></label>
           </div>
         )}
         {byCount && portion ? (
@@ -234,10 +245,11 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
               </label>
               <button onClick={() => applyCount(String((Number(count.replace(',', '.')) || 0) + 1))} className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-raised" aria-label="One more"><Plus size={20} strokeWidth={2.6} /></button>
             </div>
-            <p className="num mt-2 text-center text-[13px] text-silver">= {fmt(g)} g{portion.grams ? ` (${fmt(portion.grams)} g each, from the food record)` : ''}</p>
+            <p className="num mt-2 text-center text-[13px] text-silver">= {fmt(g)} g{portion.grams ? ` (${fmt(portion.grams)} g each, ${portion === ownPortion ? 'your size' : 'from the food record'})` : ''}</p>
+            <label className="mx-auto mt-2 flex w-fit items-center gap-2 text-[13px] text-silver">Your serving size<input inputMode="decimal" value={ownSize} onChange={(e) => { const v = e.target.value.replace(/[^\d.,]/g, ''); setOwnSize(v); const n2 = Number(v.replace(',', '.')); if (n2 > 0) { setPortionIdx(-1); setGrams(toUnit((Number(count.replace(',', '.')) || 1) * n2, unit)); } else setPortionIdx(0); }} className="field !h-9 !w-20 !px-2 text-center" aria-label="Your serving size in grams" placeholder="g" />g</label>
             {countable.length > 1 && (
               <div className="-mx-5 mt-3 flex gap-2 overflow-x-auto px-5 no-scrollbar">
-                {countable.map((p, i) => <button key={p.label} onClick={() => { setPortionIdx(i); applyCount(count || '1', p); }} className={cx('chip shrink-0', i === portionIdx && 'chip-on')}>{p.label} <span className="opacity-60">{fmt(p.grams)}g</span></button>)}
+                {countable.map((p, i) => <button key={p.label} onClick={() => { setPortionIdx(i); setOwnSize(''); applyCount(count || '1', p); }} className={cx('chip shrink-0', i === portionIdx && 'chip-on')}>{p.label} <span className="opacity-60">{fmt(p.grams)}g</span></button>)}
               </div>
             )}
           </>
@@ -351,12 +363,14 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
           {([['Protein', n.protein, 'protein'], ['Carbs', n.carbs, 'carbs'], ['Fat', n.fat, 'fat'], ['Fibre', n.fiber, 'fiber']] as const).map(([l, v, c]) => (
             <div key={l} className="rounded-2xl bg-raised px-1 py-2">
               <span className={cx('mx-auto mb-1 block h-1.5 w-5 rounded-full', MACRO_COLOR[c])} />
-              {c !== 'fiber' && split && <p className="num text-[12px] font-semibold text-silver">{Math.round(split[c] * 100)}%</p>}
+              {c !== 'fiber' && split && <p className="num text-[12px] font-semibold text-silver" title="Share of this food’s calories">{Math.round(split[c] * 100)}% kcal</p>}
               <p className="num text-[15px] font-bold">{v == null ? '—' : fmt(v, v < 10 ? 1 : 0)}<span className="text-[12px] text-silver">g</span></p>
               <p className="text-[12px] text-silver">{l}</p>
             </div>
           ))}
         </div>
+        {split && <p className="mt-2 text-center text-[12px] text-dim">“% kcal” is how much of this food’s calories come from each — not your daily goal.</p>}
+        <DayWithThis add={n} date={date} entry={entry} />
         <button onClick={() => setShowMore((s) => !s)} className="mt-3 flex w-full items-center justify-center gap-1 text-xs font-semibold text-accent">
           {showMore ? 'Hide' : 'Show'} vitamins, minerals & sugar <ChevronDown size={14} className={cx('transition', showMore && 'rotate-180')} />
         </button>
@@ -542,5 +556,37 @@ function SayAmount({ food, onGrams }: { food: Food; onGrams: (g: number, how: st
   }
   return (
     <button type="button" onClick={start} className={cx('chip shrink-0', on && 'chip-on')} aria-label="Say the amount"><Mic size={15} /> {on ? 'Listening…' : 'Say it'}</button>
+  );
+}
+
+/** Today's totals with this food added: eaten so far + this, against each daily target. */
+function DayWithThis({ add, date, entry }: { add: { kcal: number | null; protein: number; carbs: number | null; fat: number | null }; date: string; entry?: LogEntry }) {
+  const day = useDay(date);
+  const profile = useStore((s) => s.profile);
+  const t = profile ? dailyTargets(profile, day.goal) : null;
+  if (!t) return null;
+  const minus = entry ? nutrientsFor(entry.food.per100, entry.grams) : null;
+  const rows: [string, number, number | undefined, string][] = [
+    ['Calories', day.totals.kcal - (minus?.kcal ?? 0) + (add.kcal ?? 0), t.kcal, 'kcal'],
+    ['Protein', day.totals.protein - (minus?.protein ?? 0) + add.protein, t.protein, 'g'],
+    ['Carbs', day.totals.carbs - (minus?.carbs ?? 0) + (add.carbs ?? 0), t.carbs, 'g'],
+    ['Fat', day.totals.fat - (minus?.fat ?? 0) + (add.fat ?? 0), t.fat, 'g'],
+  ];
+  return (
+    <div className="mt-4 rounded-2xl bg-raised px-4 py-3">
+      <p className="mb-2 text-[12px] font-semibold text-silver">{date === todayKey() ? 'Today' : 'This day'} with this food · eaten / daily target</p>
+      <div className="space-y-1.5">
+        {rows.filter(([, , target]) => target).map(([l, v, target, u]) => {
+          const pct = Math.min(1, v / target!); const left = target! - v;
+          return (
+            <div key={l} className="grid grid-cols-[4.2rem_1fr_auto] items-center gap-2 text-[13px]">
+              <span className="font-semibold">{l}</span>
+              <span className="h-1.5 overflow-hidden rounded-full bg-line"><span className={cx('block h-full rounded-full', left < 0 ? 'bg-warn' : 'bg-accent')} style={{ width: `${pct * 100}%` }} /></span>
+              <span className="num text-silver">{fmt(v)} / {fmt(target!)} {u} · {left >= 0 ? `${fmt(left)} left` : `${fmt(-left)} over`}</span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 }
