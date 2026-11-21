@@ -3,7 +3,7 @@ import { BadgeCheck, Copy, Gift, Loader2, Share2 } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 import { isPremiumActive } from '@/lib/premium';
 import { useSession } from '@/lib/account';
-import { inviteLink, startTrial, useFreePro } from '@/lib/perks';
+import { cleanInviteCode, inviteCode, inviteLink, redeemInvite, startTrial, useFreePro } from '@/lib/perks';
 import { haptic, toast } from './fx';
 import { cx } from './ui';
 
@@ -77,10 +77,38 @@ export function InviteCard({ className }: { className?: string }) {
           {perks.referrals} friend{perks.referrals === 1 ? '' : 's'} joined · {perks.referrals * perks.referralDays} days of Plus features earned{left === 0 ? ' · that’s the maximum' : ''}
         </p>
       )}
-      <div className="mt-4 flex gap-2">
+      <p className="mt-3 text-[13px] text-silver">Your code: <button onClick={async () => { try { await navigator.clipboard.writeText(inviteCode(session.user.id)); toast('Code copied'); } catch { toast(inviteCode(session.user.id)); } }} className="font-mono font-semibold text-ink underline decoration-dotted">{inviteCode(session.user.id)}</button></p>
+      <div className="mt-3 flex gap-2">
         <button onClick={share} className="btn-primary flex-1"><Share2 size={17} /> Share invite</button>
         <button onClick={async () => { try { await navigator.clipboard.writeText(link); toast('Link copied'); } catch { toast(link); } }} className="btn-ghost !w-14 !px-0" aria-label="Copy invite link"><Copy size={17} /></button>
       </div>
+      <EnterCode createdAt={session.user.created_at} />
     </div>
+  );
+}
+
+/** "Have a friend's code?" — for new accounts only (first 14 days), like an invite link. */
+function EnterCode({ createdAt }: { createdAt: string }) {
+  const [code, setCode] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [done, setDone] = useState(false);
+  const [err, setErr] = useState('');
+  if (done || Date.now() - new Date(createdAt).getTime() > 14 * 864e5) return null;
+  const ok = cleanInviteCode(code);
+  return (
+    <form className="mt-4 border-t border-line pt-4" onSubmit={async (e) => {
+      e.preventDefault(); if (!ok) return;
+      setBusy(true); setErr('');
+      try { const r = await redeemInvite(ok); setDone(true); toast(r.days ? `Code accepted: ${r.days} days of Plus, free` : 'Code accepted: your friend gets their reward'); }
+      catch (x) { setErr((x as Error).message); } finally { setBusy(false); }
+    }}>
+      <p className="text-[14px] font-semibold">Have a friend’s invite code?</p>
+      <p className="text-[12px] text-silver">New accounts can use one within 14 days of signing up.</p>
+      <div className="mt-2 flex gap-2">
+        <input value={code} onChange={(e) => setCode(e.target.value)} aria-label="Friend’s invite code" placeholder="Paste code or link" className="field flex-1 !h-11" />
+        <button disabled={!ok || busy} className="btn-primary !h-11 !px-4 text-sm">{busy ? '…' : 'Use code'}</button>
+      </div>
+      {err && <p className="mt-2 text-[13px] text-danger" role="alert">{err}</p>}
+    </form>
   );
 }

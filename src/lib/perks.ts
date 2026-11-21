@@ -11,6 +11,21 @@ import { toast } from '@/components/fx';
 const KEY = 'provora-invite';
 const DAY = 864e5;
 
+/** Codes people can type: the 22-character code, or a whole invite link pasted in. */
+export function cleanInviteCode(raw: string): string | null {
+  const m = /[?&]ref=([A-Za-z0-9_-]{22})/.exec(raw) ?? /^\s*([A-Za-z0-9_-]{22})\s*$/.exec(raw);
+  return m ? m[1] : null;
+}
+/** Keep a typed code until sign-up finishes (same place as a code from a link). */
+export function saveInviteCode(code: string) { try { localStorage.setItem(KEY, code); } catch { /* storage blocked */ } }
+
+/** Use a friend's code on an account that already exists (new accounts only, once). */
+export async function redeemInvite(code: string): Promise<{ days: number }> {
+  const d = await post('invite', { code });
+  await refreshPerks();
+  return { days: d.days };
+}
+
 /** Remember an invite code from the link (?ref=…) until the person has an account. */
 export function captureInvite() {
   try {

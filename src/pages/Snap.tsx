@@ -46,7 +46,7 @@ export default function Snap() {
   const [described, setDescribed] = useState(params.get('q') ?? '');
   const [photoId, setPhotoId] = useState<string>();
   const [error, setError] = useState('');
-  const [left, setLeft] = useState<{ left: number; limit: number } | null>(null);
+  const [, setLeft] = useState<{ left: number; limit: number } | null>(null);
   const [note, setNote] = useState('');
   const [quality, setQuality] = useState<'good' | 'fair' | 'poor'>('good');
   const [matches, setMatches] = useState<MatchedItem[]>([]);
@@ -372,12 +372,6 @@ export default function Snap() {
             <p className="mt-2 px-1 text-xs leading-relaxed text-dim">
               Want it exact? Shop-bought: <Link to="/barcode" className="font-semibold text-accent">scan its barcode</Link>. Home-made: <Link to="/recipe" className="font-semibold text-accent">use your recipe</Link> — a photo can’t see what went inside. Scans are estimates for general wellness, not medical advice.
             </p>
-          )}
-          {left && (
-            <Link to="/premium" className="mt-3 flex items-center justify-between rounded-2xl bg-accent/10 px-4 py-3 text-[14px] font-semibold text-accent">
-              <span>{left.left} of {left.limit} free AI scans left today</span>
-              <span>Unlimited →</span>
-            </Link>
           )}
           {isMenu && <MenuFits matches={matches} date={date} onPick={(i) => { const m = matches[i]; if (m.candidates[0]) setPick({ food: m.candidates[0], grams: m.item.estimatedGrams || undefined, label: m.item.name, index: i }); }} />}
           {!isMenu && matches.length > 0 && <PlateWeight matches={matches} onLeftovers={(left) => { setMatches((ms) => ms.map((m, k) => { const eaten = Math.max(0, m.item.estimatedGrams - (left[k] ?? 0)); const f = m.item.estimatedGrams ? eaten / m.item.estimatedGrams : 1; return { ...m, item: { ...m.item, estimatedGrams: Math.round(eaten), gramsLow: Math.round(m.item.gramsLow * f), gramsHigh: Math.round(m.item.gramsHigh * f) } }; })); toast('Portions updated: what you ate = plate before − what’s left'); }} onApply={(factor, msg) => { setMatches((ms) => ms.map((m) => ({ ...m, item: { ...m.item, estimatedGrams: Math.round(m.item.estimatedGrams * factor), gramsLow: Math.round((msg ? m.item.gramsLow : m.item.estimatedGrams) * factor), gramsHigh: Math.round((msg ? m.item.gramsHigh : m.item.estimatedGrams) * factor) } }))); toast(msg ?? 'Portions updated from your plate weight'); }} />}

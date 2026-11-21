@@ -4,6 +4,7 @@ import { cleanPhone, validPhone, sendEmailCode, signInWithGoogle, verifyEmailCod
 import { GoogleIcon } from './BrandIcons';
 import { cx } from './ui';
 import { getAuthDraft, setAuthDraft, setPending } from '@/lib/gate';
+import { cleanInviteCode, saveInviteCode } from '@/lib/perks';
 
 const validEmail = (e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e.trim());
 const SENT_KEY = 'nutivili-code-sent';
@@ -39,6 +40,8 @@ export function EmailAuth({ start = 'signup', onBack, onPreview }: { start?: 'si
   const tel = cleanPhone(phone);
   const phoneOk = !phone.trim() || validPhone(tel);
   const [marketing, setMarketing] = useState(true);
+  const [invite, setInvite] = useState('');
+  const inviteOk = !invite.trim() || !!cleanInviteCode(invite);
   const [code, setCode] = useState('');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
@@ -53,6 +56,7 @@ export function EmailAuth({ start = 'signup', onBack, onPreview }: { start?: 'si
     if (busy || wait > 0) return;
     setErr(''); setBusy(true);
     try {
+      if (signup && invite.trim() && cleanInviteCode(invite)) saveInviteCode(cleanInviteCode(invite)!);
       await sendEmailCode(addr, signup ? { phone: phone.trim() ? tel : undefined, marketing } : undefined);
       startWait();
       toCode();
@@ -92,7 +96,7 @@ export function EmailAuth({ start = 'signup', onBack, onPreview }: { start?: 'si
     );
   }
 
-  const ready = validEmail(addr) && (!signup || phoneOk);
+  const ready = validEmail(addr) && (!signup || (phoneOk && inviteOk));
   return (
     <form className="grid gap-2.5" onSubmit={(e) => { e.preventDefault(); if (ready) void send(); }}>
       <p className="text-[19px] font-bold tracking-tight">{signup ? 'Create your account' : 'Welcome back'}</p>
@@ -101,6 +105,8 @@ export function EmailAuth({ start = 'signup', onBack, onPreview }: { start?: 'si
         <>
           <input type="tel" inputMode="tel" autoComplete="tel" aria-label="Phone number (optional)" className={cx('field', !phoneOk && '!ring-2 !ring-danger')} placeholder="Phone number (optional)" value={phone} onChange={(e) => setPhone(e.target.value)} />
           {!phoneOk && <p className="px-1 text-[13px] text-danger">Add your country code with + at the start.</p>}
+          <input aria-label="Invite code (optional)" className={cx('field', !inviteOk && '!ring-2 !ring-danger')} placeholder="Friend’s invite code (optional)" value={invite} onChange={(e) => setInvite(e.target.value)} />
+          {!inviteOk && <p className="px-1 text-[13px] text-danger">That code doesn’t look right. Paste the code or the whole invite link.</p>}
           <label className="flex items-start gap-2.5 px-1 text-[13px] leading-snug text-silver">
             <input type="checkbox" checked={marketing} onChange={(e) => setMarketing(e.target.checked)} className="mt-0.5 h-5 w-5 shrink-0 accent-[rgb(var(--accent))]" aria-label="Email me tips and offers" />
             <span>Send me tips, recipes and offers. You can turn this off any time.</span>
