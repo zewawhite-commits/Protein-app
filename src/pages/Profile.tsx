@@ -5,7 +5,7 @@ import { SignInButtons } from '@/components/SignIn';
 import { useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useEffect } from 'react';
-import { Droplet, Dumbbell, Utensils, ArrowLeft, CalendarDays, Palette, ChevronRight, Cloud, CreditCard, Crown, Database, Download, FileText, Flame, HeartHandshake, LifeBuoy, Lightbulb, Lock, LogOut, Mail, Moon, Receipt, RotateCcw, Scale, Settings as SettingsIcon, ShieldCheck, SlidersHorizontal, Smartphone, Sun, Table, Trash2, Upload, UserRound, XCircle } from 'lucide-react';
+import { Target, Utensils, ArrowLeft, CalendarDays, Palette, ChevronRight, Cloud, CreditCard, Crown, Database, Download, FileText, Flame, HeartHandshake, LifeBuoy, Lightbulb, Lock, LogOut, Mail, Moon, Receipt, RotateCcw, Scale, Settings as SettingsIcon, ShieldCheck, SlidersHorizontal, Smartphone, Sun, Table, Trash2, Upload, UserRound, XCircle } from 'lucide-react';
 import { useStore, exportData } from '@/store/useStore';
 import { fetchBilling, isPremiumActive, manageSubscription, type Billing } from '@/lib/premium';
 import { SUPPORT_EMAIL } from '@/pages/Legal';
@@ -38,6 +38,7 @@ export default function Profile({ mode = 'profile' }: { mode?: 'profile' | 'sett
   const [msg, setMsg] = useState<string | null>(null);
   const [adminTaps, setAdminTaps] = useState(0);
   const dailyKcal = calorieGoal(profile)?.kcal;
+  const goalCount = useStore((s) => Object.values(s.settings.goals ?? {}).filter((g) => g?.on && !g.paused && !g.done).length);
 
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -108,111 +109,94 @@ export default function Profile({ mode = 'profile' }: { mode?: 'profile' | 'sett
           <PreferencesCard onEdit={() => setEditing(true)} />
           <PremiumCard />
           <SubscriptionGroup />
-          <Group title="Appearance">
-            <Row icon={settings.theme === 'light' ? <Sun size={18} /> : <Moon size={18} />} label="Theme">
-              <Segmented<Theme> value={settings.theme} onChange={(t) => updateSettings({ theme: t })} options={[{ value: 'dark', label: 'Dark' }, { value: 'light', label: 'Light' }, { value: 'system', label: 'Auto' }]} />
-            </Row>
-            <Row icon={<Palette size={18} />} label="Colour">
-              <Segmented<'green' | 'pink'> value={settings.accent ?? 'green'} onChange={(a) => updateSettings({ accent: a })} options={[{ value: 'green', label: 'Green' }, { value: 'pink', label: 'Pink' }]} />
-            </Row>
+          <PersonalDetails profile={profile} unit={settings.bodyUnit} dailyKcal={dailyKcal} onEdit={() => setEditing(true)} />
+          <Group title="Goals">
+            <Link to="/goals" className="block"><Row icon={<Target size={18} />} label="My goals" chevron><span className="text-sm text-silver">{goalCount ? `${goalCount} active` : 'Set goals'}</span></Row></Link>
           </Group>
           <Group title="More">
-            <Link to="/history" className="block"><Row icon={<CalendarDays size={18} />} label="Your history" chevron><span className="text-sm text-silver">Meals, workouts, plans, chats</span></Row></Link>
-            <Link to="/settings" className="block"><Row icon={<SettingsIcon size={18} />} label="Settings & account" chevron /></Link>
-            <Link to="/privacy" className="block"><Row icon={<Lock size={18} />} label="Privacy policy" chevron /></Link>
-            <Link to="/terms" className="block"><Row icon={<FileText size={18} />} label="Terms & Conditions" chevron /></Link>
-            <Link to="/refunds" className="block"><Row icon={<FileText size={18} />} label="Cancellation & refunds" chevron /></Link>
+            <Link to="/history" className="block"><Row icon={<CalendarDays size={18} />} label="Diary" chevron><span className="text-sm text-silver">Every meal, by date</span></Row></Link>
+            <Link to="/settings" className="block"><Row icon={<SettingsIcon size={18} />} label="Settings" chevron /></Link>
           </Group>
         </>
       )}
 
       {isSettings && (
         <>
-      <Group title="Personal details">
-        {([
-          ['Name', profile.name || 'Add your name'],
-          ['Age', profile.age ? `${profile.age}` : 'Add'],
-          ['Height', profile.heightCm ? (settings.bodyUnit === 'lb' ? `${Math.floor(profile.heightCm / 2.54 / 12)} ft ${Math.round((profile.heightCm / 2.54) % 12)} in` : `${profile.heightCm} cm`) : 'Add'],
-          ['Weight', profile.bodyWeightKg ? `${fmt(settings.bodyUnit === 'lb' ? profile.bodyWeightKg * 2.20462 : profile.bodyWeightKg, 1)} ${settings.bodyUnit}` : 'Add'],
-          ['Goal weight', profile.goalWeightKg ? `${fmt(settings.bodyUnit === 'lb' ? profile.goalWeightKg * 2.20462 : profile.goalWeightKg, 1)} ${settings.bodyUnit}` : 'Not set'],
-          ['Daily calories', dailyKcal ? `${fmt(dailyKcal)} kcal` : 'Add height & age'],
-        ] as const).map(([label, value]) => (
-          <button key={label} onClick={() => setEditing(true)} className="w-full">
-            <Row icon={<UserRound size={18} />} label={label} chevron><span className="max-w-[50%] truncate text-sm font-semibold text-silver">{value}</span></Row>
-          </button>
-        ))}
-      </Group>
-
-      <AccountCard />
       <OwnerStats />
 
-      <Group title="Preferences">
+      <Group title="Appearance">
         <Row icon={settings.theme === 'light' ? <Sun size={18} /> : <Moon size={18} />} label="Theme">
           <Segmented<Theme> value={settings.theme} onChange={(t) => updateSettings({ theme: t })} options={[{ value: 'dark', label: 'Dark' }, { value: 'light', label: 'Light' }, { value: 'system', label: 'Auto' }]} />
         </Row>
+        <Row icon={<Palette size={18} />} label="Colour">
+          <Segmented<'green' | 'pink'> value={settings.accent ?? 'green'} onChange={(a) => updateSettings({ accent: a })} options={[{ value: 'green', label: 'Green' }, { value: 'pink', label: 'Pink' }]} />
+        </Row>
+      </Group>
+
+      <Group title="Tracking">
         <Row icon={<Scale size={18} />} label="Weight unit">
           <Segmented value={settings.bodyUnit} onChange={(u) => updateSettings({ bodyUnit: u })} options={[{ value: 'kg', label: 'kg' }, { value: 'lb', label: 'lb' }]} />
         </Row>
         <Row icon={<SlidersHorizontal size={18} />} label="Tracking style" />
         <div className="px-3 pb-2">
-          <Segmented full value={settings.tracking ?? 'detailed'} onChange={(t) => updateSettings({ tracking: t })} options={[{ value: 'photo', label: 'Photo diary' }, { value: 'simple', label: 'Simple' }, { value: 'detailed', label: 'Detailed' }]} />
+          <Segmented full value={settings.tracking ?? 'detailed'} onChange={(t) => updateSettings({ tracking: t })} options={[{ value: 'simple', label: 'Simple' }, { value: 'detailed', label: 'Detailed' }, { value: 'photo', label: 'Photo diary' }]} />
+          <p className="mt-2 text-xs leading-relaxed text-dim">{(settings.tracking ?? 'detailed') === 'simple' ? 'Calories and protein only, for a clean, quick log.' : (settings.tracking ?? 'detailed') === 'detailed' ? 'Calories, protein, carbs, fat, fibre, sugar, vitamins and minerals.' : 'Save meal photos by date and meal, and work out the nutrition later if you want.'} Switching never changes what you’ve logged.</p>
         </div>
-        <p className="px-4 pb-2 text-xs leading-relaxed text-dim">Photo diary: snap your meals with no numbers — analyse any photo later if you want. Simple shows just calories and protein on Home. Detailed adds carbs, fat and every nutrient. Nothing is lost either way.</p>
         <Row icon={<Utensils size={18} />} label="Meals per day" />
         <div className="px-3 pb-2">
           <Segmented full value={String(settings.mealsPerDay ?? 4)} onChange={(v) => updateSettings({ mealsPerDay: Number(v) })} options={['4', '5', '6', '7'].map((n) => ({ value: n, label: n }))} />
-          <p className="mt-2 text-xs leading-relaxed text-dim">4 = breakfast, snack, lunch, dinner. More adds an afternoon snack, an evening snack and a late meal.</p>
+          <p className="mt-2 text-xs leading-relaxed text-dim">4 is breakfast, snack, lunch and dinner. More adds afternoon and evening snacks and a late meal.</p>
         </div>
-        <Row icon={<Droplet size={18} />} label="Daily water goal" />
-        <div className="px-3 pb-2">
-          <Segmented full value={String(settings.waterGoalMl ?? 0)} onChange={(v) => updateSettings({ waterGoalMl: Number(v) || undefined })} options={[{ value: '0', label: 'Auto' }, ...['1500', '2000', '2500', '3000', '3500'].map((n) => ({ value: n, label: `${Number(n) / 1000} L` }))]} />
-          <p className="mt-2 text-xs leading-relaxed text-dim">Auto works it out from your weight (about 35 ml per kg).</p>
-        </div>
-        <Row icon={<Dumbbell size={18} />} label="Workouts per week goal" />
-        <div className="px-3 pb-2">
-          <Segmented full value={String(settings.workoutsPerWeek ?? 0)} onChange={(v) => updateSettings({ workoutsPerWeek: Number(v) || undefined })} options={[{ value: '0', label: 'None' }, ...['2', '3', '4', '5', '6'].map((n) => ({ value: n, label: n }))]} />
-          <p className="mt-2 text-xs leading-relaxed text-dim">Shown on Progress and in your reports. Rest days count too — this is just a target.</p>
-        </div>
-        <Row icon={<Lightbulb size={18} />} label="Suggestions on Home">
-          <Toggle on={!settings.quietAi} onChange={(v) => updateSettings({ quietAi: !v })} label="Suggestions on Home" />
-        </Row>
-        <p className="px-4 pb-2 text-xs leading-relaxed text-dim">Turn off to hide “What to eat next”. The coach only ever speaks when you ask it.</p>
-        <MarketingRow />
-        <Row icon={<HeartHandshake size={18} />} label="Gentle mode">
-          <Toggle on={!!settings.gentle} onChange={(v) => updateSettings({ gentle: v })} label="Gentle mode" />
-        </Row>
-        <p className="px-4 pb-2 text-xs leading-relaxed text-dim">Hides streaks and “over target” notices. If tracking ever makes you anxious about food, switch this on, pause reminders, or take a break — your data stays safe. In the UK, Beat offers free support: <a className="font-semibold text-accent" href="https://www.beateatingdisorders.org.uk" target="_blank" rel="noreferrer">beateatingdisorders.org.uk</a>.</p>
+      </Group>
+
+      <Group title="Nutrition">
         <Row icon={<Flame size={18} />} label="Add exercise calories to my budget">
           <Toggle on={!!settings.addBurned} onChange={(v) => updateSettings({ addBurned: v })} label="Add exercise calories" />
         </Row>
+        <Row icon={<HeartHandshake size={18} />} label="Gentle mode">
+          <Toggle on={!!settings.gentle} onChange={(v) => updateSettings({ gentle: v })} label="Gentle mode" />
+        </Row>
+        <p className="px-4 pb-2 text-xs leading-relaxed text-dim">Hides streaks and “over target” notices. If tracking ever makes you anxious about food, take a break; your data stays safe. Free support in the UK: <a className="font-semibold text-accent" href="https://www.beateatingdisorders.org.uk" target="_blank" rel="noreferrer">Beat</a>.</p>
+      </Group>
+
+      <Group title="AI">
+        <Row icon={<Lightbulb size={18} />} label="Suggestions on Home">
+          <Toggle on={!settings.quietAi} onChange={(v) => updateSettings({ quietAi: !v })} label="Suggestions on Home" />
+        </Row>
+        <p className="px-4 pb-2 text-xs leading-relaxed text-dim">Shows “What to eat next”. The coach only replies when you ask.</p>
       </Group>
 
       <section className="mt-6">
-        <p className="mb-3 px-1 text-sm font-semibold text-silver">Reminders</p>
+        <p className="mb-3 px-1 text-sm font-semibold text-silver">Notifications</p>
         <div className="card px-5 pb-5 [&>section]:mt-0 [&>section]:pt-5"><ReminderSettings /></div>
+        <div className="card mt-2.5 p-1.5"><MarketingRow /></div>
       </section>
 
+      <AccountCard />
+
       <Group title="Your data">
-        <p className="px-4 pb-1 pt-3 text-sm leading-relaxed text-silver">Your data is never sold and Nutivili AI has no ads. Photos and text you send to AI features are used only to answer you, not to train AI models.</p>
-        <button onClick={() => { if (confirm('Answer the setup questions again? Your food log and history stay.')) useStore.setState({ profile: null }); }} className="w-full"><Row icon={<RotateCcw size={18} />} label="Redo setup questions" chevron /></button>
+        <p className="px-4 pb-1 pt-3 text-sm leading-relaxed text-silver">Your data is never sold and there are no ads. What you send to AI features is used only to answer you, not to train AI models.</p>
+        <button onClick={downloadCsv} className="w-full"><Row icon={<Table size={18} />} label="Download food log" chevron /></button>
         <ShareReportRow Row={Row} />
-        <button onClick={downloadCsv} className="w-full"><Row icon={<Table size={18} />} label="Download food log (spreadsheet)" chevron /></button>
         <button onClick={download} className="w-full"><Row icon={<Download size={18} />} label="Export backup" chevron /></button>
         <button onClick={() => fileRef.current?.click()} className="w-full"><Row icon={<Upload size={18} />} label="Restore backup" chevron /></button>
         <AutoBackups />
+        <button onClick={() => { if (confirm('Answer the setup questions again? Your food log and history stay.')) useStore.setState({ profile: null }); }} className="w-full"><Row icon={<RotateCcw size={18} />} label="Update your preferences" chevron /></button>
         <input ref={fileRef} type="file" accept="application/json,.json" hidden onChange={(e) => { void upload(e.target.files?.[0]); e.target.value = ''; }} />
         <button onClick={reset} className="w-full"><Row icon={<Trash2 size={18} />} label="Delete all data" danger /></button>
       </Group>
       {msg && <p className="mt-2 px-1 text-sm font-semibold text-silver">{msg}</p>}
 
-      <Group title="Support & legal">
+      <Group title="Help and support">
+        <Link to="/help" className="block"><Row icon={<LifeBuoy size={18} />} label="Help and support" chevron /></Link>
+        {SUPPORT_EMAIL && <a href={`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent('Nutivili AI support')}`} className="block"><Row icon={<Mail size={18} />} label="Contact support" chevron /></a>}
         <InstallRow />
-        <Link to="/help" className="block"><Row icon={<LifeBuoy size={18} />} label="Help, FAQ & feedback" chevron /></Link>
-        {SUPPORT_EMAIL && <a href={`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent('Nutivili AI support')}`} className="block"><Row icon={<LifeBuoy size={18} />} label="Contact support" chevron /></a>}
+      </Group>
+
+      <Group title="Legal">
         <Link to="/privacy" className="block"><Row icon={<Lock size={18} />} label="Privacy policy" chevron /></Link>
-        <Link to="/terms" className="block"><Row icon={<FileText size={18} />} label="Terms & Conditions" chevron /></Link>
-            <Link to="/refunds" className="block"><Row icon={<FileText size={18} />} label="Cancellation & refunds" chevron /></Link>
-            <Link to="/credits" className="block"><Row icon={<FileText size={18} />} label="Photo credits" chevron /></Link>
+        <Link to="/terms" className="block"><Row icon={<FileText size={18} />} label="Terms and conditions" chevron /></Link>
+        <Link to="/refunds" className="block"><Row icon={<FileText size={18} />} label="Cancellation and refunds" chevron /></Link>
       </Group>
 
       {(settings.adminMode || adminTaps >= 7) && (
@@ -226,14 +210,13 @@ export default function Profile({ mode = 'profile' }: { mode?: 'profile' | 'sett
         </Group>
       )}
 
-      <Group title="About">
+      <Group title="About Nutivili">
         <div className="px-3.5 py-3 text-sm font-medium leading-relaxed text-silver">
           <p className="flex items-center gap-2 font-semibold text-ink"><Database size={16} className="text-accent" /> Nutrition data</p>
           <p className="mt-1.5">
             USDA FoodData Central — SR Legacy (2018) and FNDDS (2024). UK: McCance and Widdowson’s CoFID 2021 (Open Government Licence v3.0). Australia: FSANZ Australian Food Composition Database Release 3 (CC BY 4.0). FAO/INFOODS Food Composition Table for Western Africa (2019), © FAO, used with acknowledgement for non-commercial use. Packaged products: Open Food Facts (ODbL), label data contributed by its community. Values are per 100 g and are copied from these tables; world dishes not in any table are calculated from their listed ingredient records.
           </p>
-          <p className="mt-4 flex items-center gap-2 font-semibold text-ink"><Smartphone size={16} className="text-accent" /> Install</p>
-          <p className="mt-1.5">Add Nutivili AI to your home screen from Support above. On iPhone: Share → Add to Home Screen. On Android: menu → Install app. Works offline once installed.</p>
+          <p className="mt-3">Food photos: <Link to="/credits" className="font-semibold text-accent">photographer credits</Link>.</p>
         </div>
       </Group>
 
@@ -250,6 +233,26 @@ export default function Profile({ mode = 'profile' }: { mode?: 'profile' | 'sett
   );
 }
 
+
+function PersonalDetails({ profile, unit, dailyKcal, onEdit }: { profile: import("@/lib/types").Profile; unit: 'kg' | 'lb'; dailyKcal?: number; onEdit: () => void }) {
+  const w = (kg?: number | null) => (kg ? `${fmt(unit === 'lb' ? kg * 2.20462 : kg, 1)} ${unit}` : 'Add');
+  const rows: [string, string][] = [
+    ['Name', profile.name || 'Add your name'],
+    ['Age', profile.age ? `${profile.age}` : 'Add'],
+    ['Height', profile.heightCm ? (unit === 'lb' ? `${Math.floor(profile.heightCm / 2.54 / 12)} ft ${Math.round((profile.heightCm / 2.54) % 12)} in` : `${profile.heightCm} cm`) : 'Add'],
+    ['Weight', w(profile.bodyWeightKg)],
+    ['Daily calories', dailyKcal ? `${fmt(dailyKcal)} kcal` : 'Add height and age'],
+  ];
+  return (
+    <Group title="Personal details">
+      {rows.map(([label, value]) => (
+        <button key={label} onClick={onEdit} className="w-full">
+          <Row icon={<UserRound size={18} />} label={label} chevron><span className="max-w-[50%] truncate text-sm font-semibold text-silver">{value}</span></Row>
+        </button>
+      ))}
+    </Group>
+  );
+}
 
 function Group({ title, children }: { title: string; children: React.ReactNode }) {
   return (

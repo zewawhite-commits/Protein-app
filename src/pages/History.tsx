@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { BarChart3, BookOpen, CalendarDays, ChevronLeft, ChevronRight, ClipboardList, Dumbbell, FileText, Images, MessageCircle, Scale, Search, UtensilsCrossed } from 'lucide-react';
+import { BarChart3, BookOpen, CalendarDays, ChevronLeft, ChevronRight, ClipboardList, Plus, Dumbbell, FileText, Images, MessageCircle, Scale, Search, UtensilsCrossed } from 'lucide-react';
 import { pastChats } from '@/lib/chats';
 import { useStore, goalOn } from '@/store/useStore';
 import { useFoodLookup, usePhotoUrl } from '@/lib/hooks';
@@ -10,15 +10,20 @@ import { splitName } from '@/lib/foods';
 import type { LogEntry } from '@/lib/types';
 import { Empty, PageHeader, Ring, Segmented, cx, fmt } from '@/components/ui';
 import { FoodSheet } from '@/components/FoodSheet';
+import { EntryRow } from '@/components/EntryRow';
+import { dailyTargets } from '@/lib/energy';
+import { mealLabel, useMealOptions } from '@/lib/meals';
 import { entryAsFood } from './Today';
 
 export default function History() {
   const [params] = useSearchParams();
-  const [view, setView] = useState<'calendar' | 'days' | 'photos'>(params.get('view') === 'days' ? 'days' : params.get('view') === 'photos' ? 'photos' : 'calendar');
+  const v = params.get('view');
+  const [view, setView] = useState<'day' | 'calendar' | 'days' | 'photos'>(v === 'calendar' || v === 'days' || v === 'photos' ? v : 'day');
   const [q, setQ] = useState('');
   return (
     <div className="animate-fade-up">
-      <PageHeader title="History" right={<Segmented value={view} onChange={setView} options={[{ value: 'calendar', label: 'Calendar' }, { value: 'days', label: 'Days' }, { value: 'photos', label: 'Photos' }]} />} />
+      <PageHeader title="Diary" />
+      <div className="mb-4"><Segmented full value={view} onChange={setView} options={[{ value: 'day', label: 'Day' }, { value: 'calendar', label: 'Calendar' }, { value: 'days', label: 'All days' }, { value: 'photos', label: 'Photos' }]} /></div>
       {view === 'days' && (
         <div className="relative mb-5">
           <Search size={18} strokeWidth={2.4} className="absolute left-5 top-1/2 -translate-y-1/2" />
@@ -31,7 +36,79 @@ export default function History() {
           />
         </div>
       )}
-      {view === 'calendar' ? <><MonthCalendar /><EverythingElse /></> : view === 'days' ? <Days query={q} /> : <Photos />}
+      {view === 'day' ? <DayDiary initial={params.get('date') ?? todayKey()} /> : view === 'calendar' ? <><MonthCalendar /><EverythingElse /></> : view === 'days' ? <Days query={q} /> : <Photos />}
+    </div>
+  );
+}
+
+/**
+ * One day of eating, meal by meal: what was eaten, how much, its calories and protein (carbs
+ * and fat too in Detailed mode), the day's totals against targets, and + to add to any meal
+ * on any day. Every entry can be opened to edit or deleted straight from the list.
+ */
+function DayDiary({ initial }: { initial: string }) {
+  const [date, setDate] = useState(initial);
+  const today = todayKey();
+  const all = useStore((s) => s.entries);
+  const profile = useStore((s) => s.profile);
+  const goalHistory = useStore((s) => s.goalHistory);
+  const tracking = useStore((s) => s.settings.tracking ?? 'detailed');
+  const meals = useMealOptions();
+  const lookup = useFoodLookup();
+  const [editing, setEditing] = useState<LogEntry | null>(null);
+  const entries = useMemo(() => all.filter((e) => e.date === date), [all, date]);
+  const eaten = entries.filter((e) => !e.planned);
+  const totals = sumEntries(eaten);
+  const goal = goalOn(date, goalHistory, profile);
+  const targets = profile ? dailyTargets(profile, goal) : null;
+  const detailed = tracking === 'detailed';
+  const shown = meals.filter((m) => m.value === 'breakfast' || m.value === 'lunch' || m.value === 'dinner' || entries.some((e) => e.meal === m.value) || m.value.startsWith('snack'));
+  const extra = [...new Set(entries.map((e) => e.meal))].filter((m) => !shown.some((x) => x.value === m));
+  const stat = (label: string, v: number, t?: number, unit = 'g') => (
+    <div className="rounded-2xl bg-raised px-3 py-2">
+      <p className="text-[12px] font-semibold text-silver">{label}</p>
+      <p className="num text-[17px] font-bold leading-tight">{fmt(v)}<span className="text-[12px] font-semibold text-silver">{t ? ` / ${fmt(t)}` : ''} {unit}</span></p>
+    </div>
+  );
+  return (
+    <div>
+      <div className="mb-3 flex items-center gap-2">
+        <button onClick={() => setDate(addDays(date, -1))} className="grid h-10 w-10 place-items-center rounded-full bg-surface" style={{ boxShadow: 'var(--shadow)' }} aria-label="Previous day"><ChevronLeft size={18} /></button>
+        <label className="relative flex-1 text-center">
+          <span className="block text-[17px] font-bold">{relativeDay(date)}</span>
+          <span className="block text-xs text-silver">{fromKey(date).toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</span>
+          <input type="date" value={date} max={addDays(today, 28)} onChange={(e) => e.target.value && setDate(e.target.value)} className="absolute inset-0 opacity-0" aria-label="Pick a date" />
+        </label>
+        <button onClick={() => setDate(addDays(date, 1))} disabled={date >= addDays(today, 28)} className="grid h-10 w-10 place-items-center rounded-full bg-surface disabled:opacity-40" style={{ boxShadow: 'var(--shadow)' }} aria-label="Next day"><ChevronRight size={18} /></button>
+      </div>
+      {date !== today && <button onClick={() => setDate(today)} className="mb-3 w-full text-sm font-semibold text-accent">Back to today</button>}
+
+      <div className={cx('card grid gap-2 p-3', detailed ? 'grid-cols-2' : 'grid-cols-2')}>
+        {stat('Calories', totals.kcal, targets?.kcal, 'kcal')}
+        {stat('Protein', totals.protein, goal)}
+        {detailed && stat('Carbs', totals.carbs, targets?.carbs)}
+        {detailed && stat('Fat', totals.fat, targets?.fat)}
+      </div>
+
+      <div className="mt-4 space-y-3">
+        {[...shown, ...extra.map((m) => ({ value: m, label: mealLabel(m) }))].map((m) => {
+          const list = entries.filter((e) => e.meal === m.value);
+          const t = sumEntries(list.filter((e) => !e.planned));
+          return (
+            <section key={m.value} className="card p-2">
+              <div className="flex items-center justify-between px-3 pt-2">
+                <div>
+                  <p className="text-[16px] font-bold">{m.label}</p>
+                  {list.length > 0 && <p className="num text-xs text-silver">{fmt(t.kcal)} kcal · {fmt(t.protein)} g protein{detailed ? ` · C ${fmt(t.carbs)} · F ${fmt(t.fat)}` : ''}</p>}
+                </div>
+                <Link to={`/add?date=${date}&meal=${m.value}`} className="grid h-9 w-9 place-items-center rounded-full bg-primary text-on-primary" aria-label={`Add to ${m.label}`}><Plus size={18} /></Link>
+              </div>
+              {list.length === 0 ? <p className="px-3 pb-3 pt-1 text-sm text-dim">Nothing logged</p> : list.map((e) => <EntryRow key={e.id} entry={e} onClick={() => setEditing(e)} />)}
+            </section>
+          );
+        })}
+      </div>
+      <FoodSheet food={editing ? entryAsFood(editing, lookup) : null} entry={editing ?? undefined} date={date} onClose={() => setEditing(null)} />
     </div>
   );
 }

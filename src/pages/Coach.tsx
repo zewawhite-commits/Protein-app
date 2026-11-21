@@ -1,4 +1,5 @@
 import { FoodVisual } from '@/components/FoodIcon';
+import { goalsForCoach } from '@/lib/myGoals';
 import { archiveChat, pastChats, removeChat, type PastChat } from '@/lib/chats';
 import { mealLabel } from '@/lib/meals';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -89,6 +90,8 @@ export function useCoachContext(): CoachContext {
     for (const e of week) { const n = splitName(e.food.name).title.split(',')[0]; counts.set(n, (counts.get(n) ?? 0) + 1); }
     const recentFoods = [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 20).map(([n, c]) => (c > 1 ? `${n} ×${c}` : n));
     const progress: string[] = [`Logged food on ${new Set(week.map((e) => e.date)).size} of the last 7 days.`];
+    // The goals they've chosen, so advice fits what they're working towards.
+    for (const g of goalsForCoach()) progress.push(`Goal — ${g}`);
     const mean = (a: string, b: string) => { const v = weights.filter((w) => w.date > a && w.date <= b).map((w) => w.kg); return v.length ? v.reduce((s, n) => s + n, 0) / v.length : null; };
     const now = mean(from, todayKey()), prev = mean(addDays(todayKey(), -14), from);
     const st = useStore.getState();

@@ -1,4 +1,5 @@
 import { EverythingElse } from './History';
+import { GoalsSummary } from './Goals';
 import { MEAL_LABELS, MEAL_ORDER } from '@/lib/meals';
 import { Link } from 'react-router-dom';
 import { ActivitySummary } from '@/components/ActivitySummary';
@@ -81,6 +82,7 @@ export default function Insights() {
   return (
     <div className="animate-fade-up">
       <PageHeader title="Progress" right={<Link to="/reports" className="chip !h-10">Reports</Link>} />
+      <GoalsSummary />
 
       <div className="mb-6 space-y-4">
         <WeightAndStreak />

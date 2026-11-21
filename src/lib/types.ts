@@ -178,6 +178,8 @@ export interface Reminders {
 
 export interface Settings {
   theme: Theme;
+  /** Personal goals that are switched on (see lib/myGoals). */
+  goals?: import('./myGoals.js').GoalSettings;
   /** Accent colour (green by default); works with light and dark. */
   accent?: 'green' | 'pink';
   bodyUnit: BodyUnit;

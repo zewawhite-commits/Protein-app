@@ -34,7 +34,7 @@ interface Props {
   onSwitchFood?: (f: Food) => void;
   /** Starting values from the photo flow: the meal photo and an AI portion estimate (a suggestion only). */
   /** From the photo flow: the meal photo and the AI's rough portion guess (never pre-filled as the weight). */
-  preset?: { photoId?: string; aiEstimate?: number };
+  preset?: { photoId?: string; aiEstimate?: number; meal?: Meal };
 }
 
 type Unit = 'g' | 'kg' | 'ml' | 'oz' | 'lb';
@@ -76,7 +76,7 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
   // What they had last time is their own number, so a new entry starts there (they can change it).
   const [usual] = useState(() => (entry ? null : lastAmount(useStore.getState().entries, food)));
   const [grams, setGrams] = useState(entry ? toUnit(entry.grams, unit) : usual ? toUnit(usual, unit) : '');
-  const [meal, setMeal] = useState<Meal>(entry?.meal ?? mealForNow());
+  const [meal, setMeal] = useState<Meal>(entry?.meal ?? preset?.meal ?? mealForNow());
   const MEALS = useMealOptions(meal);
   const [photoId, setPhotoId] = useState<string | undefined>(entry?.photoId ?? preset?.photoId);
   const [busy, setBusy] = useState(false);

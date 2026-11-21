@@ -14,6 +14,7 @@ import { Layout } from './components/Layout';
 import Today from './pages/Today';
 import AddFood from './pages/AddFood';
 import History from './pages/History';
+import Goals from './pages/Goals';
 import Profile from './pages/Profile';
 import Onboarding from './pages/Onboarding';
 
@@ -81,6 +82,7 @@ export default function App() {
         <Route path="reports" element={<Reports />} />
         <Route path="routines" element={<Routines />} />
         <Route path="workout" element={<LiveWorkout />} />
+        <Route path="goals" element={<Goals />} />
         <Route path="messages" element={<Messages />} />
         <Route path="add" element={<div className="mx-auto max-w-lg px-5 pb-16 md:max-w-2xl md:px-8 lg:max-w-3xl"><AddFood /></div>} />
         <Route path="*" element={<Navigate to="/" replace />} />

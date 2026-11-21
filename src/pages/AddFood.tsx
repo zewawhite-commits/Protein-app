@@ -13,7 +13,7 @@ import { deletePhoto } from '@/lib/photos';
 import { fitsDiet } from '@/lib/goals';
 import { addDays, mealForNow, relativeDay, todayKey } from '@/lib/dates';
 import { useStore } from '@/store/useStore';
-import type { CustomFood, Food, PrepState } from '@/lib/types';
+import type { CustomFood, Food, PrepState, Meal } from '@/lib/types';
 import { FoodSheet } from '@/components/FoodSheet';
 import { FoodVisual } from '@/components/FoodIcon';
 import { WorldFoods } from '@/components/WorldFoods';
@@ -242,7 +242,7 @@ export default function AddFood() {
         </p>
       )}
 
-      <FoodSheet food={selected} date={date} preset={photoId ? { photoId } : undefined} onClose={() => setSelected(null)} onSaved={back} onSwitchFood={setSelected} />
+      <FoodSheet food={selected} date={date} preset={photoId || params.get('meal') ? { ...(photoId ? { photoId } : {}), ...(params.get('meal') ? { meal: params.get('meal') as Meal } : {}) } : undefined} onClose={() => setSelected(null)} onSaved={back} onSwitchFood={setSelected} />
     </div>
   );
 }

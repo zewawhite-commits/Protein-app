@@ -96,7 +96,7 @@ export default function Today() {
 
       <div className="mb-2 flex items-center justify-between px-1">
         <p className="text-[14px] font-semibold text-silver">{fromKey(date).toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}</p>
-        <Link to="/history" className="text-[14px] font-semibold text-accent">View all</Link>
+        <Link to="/history?view=calendar" className="text-[14px] font-semibold text-accent">View all</Link>
       </div>
       <WeekStrip date={date} onSelect={setDate} />
       {!isToday && (
@@ -128,7 +128,7 @@ export default function Today() {
           {entries.length > 0 && (
             <span className="flex items-center gap-4">
               <SaveMealButton entries={entries} />
-              <Link to="/history" className="text-sm font-semibold text-accent">View all</Link>
+              <Link to={`/history?date=${date}`} className="text-sm font-semibold text-accent">Diary</Link>
             </span>
           )}
         </div>
