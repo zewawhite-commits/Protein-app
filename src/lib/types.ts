@@ -114,6 +114,8 @@ export type Theme = 'dark' | 'light' | 'system';
 
 export interface Profile {
   name: string;
+  /** When the person accepted the Terms and Privacy Policy during setup. */
+  termsAcceptedAt?: number;
   /** Always stored in kg. */
   bodyWeightKg: number | null;
   goalMode: 'fixed' | 'perKg';

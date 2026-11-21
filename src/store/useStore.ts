@@ -12,6 +12,7 @@ import { dailyGoal } from '@/lib/nutrition';
 import { todayKey } from '@/lib/dates';
 import { deletePhoto } from '@/lib/photos';
 import { burnedKcal, type ExerciseEntry, type ExerciseType, type Routine } from '@/lib/exercise';
+import { guardWrite } from '@/lib/gate';
 import { elapsed, type ActiveWorkout, type CustomExercise, type LiveSet, type WorkoutLog } from '@/lib/liveWorkout';
 
 interface State {
@@ -375,4 +376,16 @@ export function exportData() {
   const { profile, settings, entries, customFoods, goalHistory, recentFoodIds, favoriteFoodIds, remoteFoods, savedMeals, savedPlans, workoutPlan, savedRecipes, coachChats, weights, exercises, measurements, routines, customExercises, workoutLogs, water, deleted } = useStore.getState();
   const safeSettings = settings;
   return { app: 'protein-app', exportedAt: new Date().toISOString(), profile, settings: safeSettings, entries, customFoods, goalHistory, recentFoodIds, favoriteFoodIds, remoteFoods, savedMeals, savedPlans, workoutPlan, savedRecipes, coachChats, weights, exercises, measurements, routines, customExercises, workoutLogs, water, deleted };
+}
+
+// Look-only mode (sign-up code not entered yet): saving is blocked and the code sheet opens.
+{
+  const WRITES = ['addEntry', 'updateEntry', 'removeEntry', 'addExercise', 'updateExercise', 'logWeight', 'addMeasurement', 'saveMeal', 'savePlan', 'saveRecipe', 'upsertCustomFood', 'addWater', 'saveRoutine', 'saveCustomExercise', 'addProgressPhoto', 'toggleFavorite', 'setActiveWorkout', 'logSleep'] as const;
+  const s = useStore.getState() as unknown as Record<string, unknown>;
+  const patch: Record<string, unknown> = {};
+  for (const k of WRITES) {
+    const fn = s[k];
+    if (typeof fn === 'function') patch[k] = (...a: unknown[]) => { guardWrite(); return (fn as (...x: unknown[]) => unknown)(...a); };
+  }
+  useStore.setState(patch as never);
 }

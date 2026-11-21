@@ -74,7 +74,12 @@ export async function signOut() {
   const { data } = await supabase.auth.getSession();
   const userId = data.session?.user.id;
   if (userId && useStore.getState().ownerId === userId) {
-    try { await syncNow(userId); } catch { /* still sign out */ }
+    // Signing out clears this phone, so changes that haven't reached the account yet would be lost.
+    const unsynced = (useStore.getState().lastModified ?? 0) > status.syncedAt;
+    if (unsynced && typeof navigator !== 'undefined' && navigator.onLine === false) throw new Error('You’re offline, and some of what you logged hasn’t reached your account yet. Connect to the internet first, then sign out.');
+    try { await syncNow(userId); } catch {
+      if (unsynced) throw new Error('Couldn’t save your latest changes to your account. Check your connection and try again.');
+    }
   }
   await supabase.auth.signOut();
   if (userId) {
@@ -102,6 +107,22 @@ export async function accessToken(): Promise<string | undefined> {
 // ---------- cloud sync ----------
 
 let lastPushed = '';
+
+/** Sync status for the screen: when this phone last matched the cloud copy, and whether it's syncing now. */
+const SYNCED_KEY = 'nutivili-synced-at';
+type SyncStatus = { syncing: boolean; failed: boolean; syncedAt: number };
+let status: SyncStatus = { syncing: false, failed: false, syncedAt: (() => { try { return Number(localStorage.getItem(SYNCED_KEY)) || 0; } catch { return 0; } })() };
+const statusListeners = new Set<() => void>();
+function setStatus(p: Partial<SyncStatus>) {
+  status = { ...status, ...p };
+  if (p.syncedAt) try { localStorage.setItem(SYNCED_KEY, String(p.syncedAt)); } catch { /* storage blocked */ }
+  statusListeners.forEach((f) => f());
+}
+export function useSyncStatus(): SyncStatus {
+  const [s, set] = useState(status);
+  useEffect(() => { const f = () => set(status); statusListeners.add(f); return () => { statusListeners.delete(f); }; }, []);
+  return s;
+}
 let timer: ReturnType<typeof setTimeout> | undefined;
 let running: Promise<void> | null = null;
 
@@ -122,7 +143,18 @@ export function useFirstSyncDone(userId?: string): boolean {
   return !userId || synced.has(userId);
 }
 export function syncNow(userId: string): Promise<void> {
-  if (!running) running = doSync(userId).finally(() => { running = null; synced.add(userId); syncListeners.forEach((f) => f()); });
+  // Offline: nothing to do. Changes stay saved on this phone and go up when the connection returns.
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+    synced.add(userId); syncListeners.forEach((f) => f());
+    return Promise.resolve();
+  }
+  if (!running) {
+    setStatus({ syncing: true });
+    running = doSync(userId)
+      .then(() => setStatus({ syncing: false, failed: false, syncedAt: Date.now() }))
+      .catch((e) => { setStatus({ syncing: false, failed: true }); throw e; })
+      .finally(() => { running = null; synced.add(userId); syncListeners.forEach((f) => f()); });
+  }
   return running;
 }
 

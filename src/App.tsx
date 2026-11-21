@@ -11,6 +11,9 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import { useStore } from './store/useStore';
 import { useThemeSync } from './lib/hooks';
 import { Layout } from './components/Layout';
+import { VerifyGate } from './components/VerifyGate';
+import { NetStatus } from './components/NetStatus';
+import { ResumeRoute } from './lib/resume';
 import Today from './pages/Today';
 import AddFood from './pages/AddFood';
 import History from './pages/History';
@@ -58,6 +61,9 @@ export default function App() {
     <Suspense fallback={null}>
       <Toaster />
       <Confetti />
+      <VerifyGate />
+      <NetStatus />
+      <ResumeRoute />
       <Routes>
         <Route element={<Layout />}>
           <Route index element={<Today />} />

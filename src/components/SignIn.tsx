@@ -3,6 +3,7 @@ import { Loader2, Mail } from 'lucide-react';
 import { cleanPhone, validPhone, sendEmailCode, signInWithGoogle, verifyEmailCode } from '@/lib/account';
 import { GoogleIcon } from './BrandIcons';
 import { cx } from './ui';
+import { getAuthDraft, setAuthDraft, setPending } from '@/lib/gate';
 
 const validEmail = (e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e.trim());
 const SENT_KEY = 'nutivili-code-sent';
@@ -29,15 +30,14 @@ type Step = 'email' | 'code';
  * Email accounts use a 6-digit code — no passwords and no links to open in another tab.
  * New people agree to the terms first; whoever is new then goes through the setup questions.
  */
-export function EmailAuth({ start = 'signup', onBack }: { start?: 'signup' | 'login'; onBack?: () => void }) {
-  const saved = (() => { try { return JSON.parse(sessionStorage.getItem('nutivili-auth') ?? 'null') as { step: Step; email: string; signup: boolean } | null; } catch { return null; } })();
+export function EmailAuth({ start = 'signup', onBack, onPreview }: { start?: 'signup' | 'login'; onBack?: () => void; onPreview?: () => void }) {
+  const saved = getAuthDraft();
   const [signup, setSignup] = useState(saved?.step === 'code' ? saved.signup : start === 'signup');
   const [step, setStep] = useState<Step>(saved?.step === 'code' ? 'code' : 'email');
   const [email, setEmail] = useState(saved?.step === 'code' ? saved.email : '');
   const [phone, setPhone] = useState('');
   const tel = cleanPhone(phone);
   const phoneOk = !phone.trim() || validPhone(tel);
-  const [agreed, setAgreed] = useState(false);
   const [marketing, setMarketing] = useState(true);
   const [code, setCode] = useState('');
   const [busy, setBusy] = useState(false);
@@ -47,7 +47,7 @@ export function EmailAuth({ start = 'signup', onBack }: { start?: 'signup' | 'lo
 
   function toCode() {
     setStep('code'); setCode('');
-    try { sessionStorage.setItem('nutivili-auth', JSON.stringify({ step: 'code', email: addr, signup })); } catch { /* blocked */ }
+    setAuthDraft({ step: 'code', email: addr, signup });
   }
   async function send() {
     if (busy || wait > 0) return;
@@ -64,7 +64,7 @@ export function EmailAuth({ start = 'signup', onBack }: { start?: 'signup' | 'lo
   }
   async function verify() {
     setErr(''); setBusy(true);
-    try { await verifyEmailCode(addr, code); try { sessionStorage.removeItem('nutivili-auth'); } catch { /* blocked */ } }
+    try { await verifyEmailCode(addr, code); setAuthDraft(null); setPending(null); }
     catch (e) { setErr((e as Error).message); } finally { setBusy(false); }
   }
   const Spinner = busy ? <Loader2 size={18} className="animate-spin" /> : null;
@@ -83,12 +83,16 @@ export function EmailAuth({ start = 'signup', onBack }: { start?: 'signup' | 'lo
           {wait > 0 ? `Resend code in ${wait}s` : 'Resend code'}
         </button>
         <p className="text-center text-[13px] text-dim">Can’t find it? Check spam or promotions.</p>
-        <button type="button" onClick={() => { setStep('email'); setErr(''); try { sessionStorage.removeItem('nutivili-auth'); } catch { /* blocked */ } }} className="h-9 text-sm font-semibold text-silver">Use a different email</button>
+        <button type="button" onClick={() => { setStep('email'); setErr(''); setAuthDraft(null); }} className="h-9 text-sm font-semibold text-silver">Wrong email? Change it</button>
+        {onPreview && signup && (
+          <button type="button" onClick={() => { setPending(addr); onPreview(); }} className="btn-ghost mt-1 w-full">Look around first</button>
+        )}
+        {onPreview && signup && <p className="text-center text-[12px] text-dim">You can see the app now. Logging starts once you enter the code.</p>}
       </form>
     );
   }
 
-  const ready = validEmail(addr) && (!signup || (phoneOk && agreed));
+  const ready = validEmail(addr) && (!signup || phoneOk);
   return (
     <form className="grid gap-2.5" onSubmit={(e) => { e.preventDefault(); if (ready) void send(); }}>
       <p className="text-[19px] font-bold tracking-tight">{signup ? 'Create your account' : 'Welcome back'}</p>
@@ -97,16 +101,13 @@ export function EmailAuth({ start = 'signup', onBack }: { start?: 'signup' | 'lo
         <>
           <input type="tel" inputMode="tel" autoComplete="tel" aria-label="Phone number (optional)" className={cx('field', !phoneOk && '!ring-2 !ring-danger')} placeholder="Phone number (optional)" value={phone} onChange={(e) => setPhone(e.target.value)} />
           {!phoneOk && <p className="px-1 text-[13px] text-danger">Add your country code with + at the start.</p>}
-          <label className="flex items-start gap-3 px-1 py-1 text-[13px] leading-relaxed text-silver">
-            <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} className="mt-0.5 h-5 w-5 shrink-0 accent-[rgb(var(--accent))]" aria-label="I agree to the Terms and Privacy Policy" />
-            <span>I agree to the <a href="/terms" target="_blank" className="font-semibold text-accent underline">Terms</a> and <a href="/privacy" target="_blank" className="font-semibold text-accent underline">Privacy Policy</a>.</span>
-          </label>
           <label className="flex items-start gap-2.5 px-1 text-[13px] leading-snug text-silver">
             <input type="checkbox" checked={marketing} onChange={(e) => setMarketing(e.target.checked)} className="mt-0.5 h-5 w-5 shrink-0 accent-[rgb(var(--accent))]" aria-label="Email me tips and offers" />
             <span>Send me tips, recipes and offers. You can turn this off any time.</span>
           </label>
         </>
       )}
+      {signup && <p className="px-1 text-[12px] text-dim">You’ll read and accept the <a href="/terms" target="_blank" className="font-semibold underline">Terms</a> and <a href="/privacy" target="_blank" className="font-semibold underline">Privacy Policy</a> before you start.</p>}
       {error}
       <button type="submit" disabled={busy || !ready || wait > 0} className="btn-primary">{Spinner} {wait > 0 ? `Send code in ${wait}s` : 'Send me a code'}</button>
       <p className="text-center text-sm text-silver">

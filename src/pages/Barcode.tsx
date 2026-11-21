@@ -1,3 +1,4 @@
+import { useStore } from '@/store/useStore';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { ArrowLeft, Loader2, ScanBarcode } from 'lucide-react';
@@ -28,6 +29,10 @@ export default function Barcode() {
     if (c.length < 8 || busyRef.current) return;
     busyRef.current = true;
     setState({ busy: true });
+    // Scanned before: works offline from this phone's saved products.
+    const known = Object.values(useStore.getState().remoteFoods).find((f) => f.id === `off:${c}` || f.id === `off:${c.replace(/^0+/, '')}`);
+    if (known) { haptic([10, 30, 10]); setFood(known); setState({ busy: false }); busyRef.current = false; return; }
+    if (!navigator.onLine) { setState({ busy: false, error: 'You’re offline. New barcodes need internet to look up. Search the food by name instead, or add it yourself: both work offline.' }); busyRef.current = false; return; }
     try {
       const f = await productByBarcode(c);
       if (f) { haptic([10, 30, 10]); setFood(f); setState({ busy: false }); }

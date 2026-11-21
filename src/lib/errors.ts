@@ -24,9 +24,10 @@ function report(message: string, stack?: string) {
 
 export function installErrorReporting() {
   if (typeof window === 'undefined') return;
-  window.addEventListener('error', (e) => report(String(e.message || 'Error'), e.error instanceof Error ? e.error.stack : undefined));
+  window.addEventListener('error', (e) => { if ((e.error as Error | undefined)?.name === 'LockedError') { e.preventDefault(); return; } report(String(e.message || 'Error'), e.error instanceof Error ? e.error.stack : undefined); });
   window.addEventListener('unhandledrejection', (e) => {
     const r = e.reason;
+    if ((r as Error | undefined)?.name === 'LockedError') { e.preventDefault(); return; }
     // Network hiccups are expected on phones; only report real errors.
     if (r instanceof TypeError && /fetch|network|load failed/i.test(r.message)) return;
     report(r instanceof Error ? r.message : String(r), r instanceof Error ? r.stack : undefined);

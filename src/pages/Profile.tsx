@@ -4,12 +4,14 @@ import { SignInButtons } from '@/components/SignIn';
 import { useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useEffect } from 'react';
-import { Bell, Target, Utensils, ArrowLeft, CalendarDays, Palette, ChevronRight, Cloud, CreditCard, Crown, Database, Download, FileText, Flame, HeartHandshake, LifeBuoy, Lightbulb, Lock, LogOut, Mail, Moon, Receipt, RotateCcw, Scale, Settings as SettingsIcon, ShieldCheck, SlidersHorizontal, Smartphone, Sun, Table, Trash2, Upload, UserRound, XCircle } from 'lucide-react';
+import { Bell, Target, Utensils, ArrowLeft, CalendarDays, Palette, ChevronRight, Cloud, CreditCard, Crown, Database, Download, FileText, Flame, HeartHandshake, LifeBuoy, Lightbulb, Lock, LogOut, Mail, Moon, Receipt, RefreshCw, RotateCcw, Scale, Settings as SettingsIcon, ShieldCheck, SlidersHorizontal, Smartphone, Sun, Table, Trash2, Upload, UserRound, XCircle } from 'lucide-react';
 import { useStore, exportData } from '@/store/useStore';
 import { fetchBilling, isPremiumActive, manageSubscription, type Billing } from '@/lib/premium';
 import { SUPPORT_EMAIL } from '@/pages/Legal';
 import { setMarketingOptIn } from '@/lib/account';
-import { accountsEnabled, cleanPhone, deleteAccount, setPhoneNumber, signOut, useSession, validPhone } from '@/lib/account';
+import { accountsEnabled, cleanPhone, deleteAccount, setPhoneNumber, signOut, syncNow, useSession, useSyncStatus, validPhone } from '@/lib/account';
+import { useOnline } from '@/lib/online';
+import { usePendingSync } from '@/components/NetStatus';
 import { toast } from '@/components/fx';
 
 import { allPhotoIds, deletePhoto } from '@/lib/photos';
@@ -316,8 +318,9 @@ function AccountCard() {
       <Row icon={<ShieldCheck size={18} />} label="Sign-in method">
         <span className="text-sm font-semibold text-silver">{viaGoogle ? 'Google' : 'Email code'}</span>
       </Row>
+      <SyncRow userId={session.user.id} />
       <PhoneRow saved={(session.user.user_metadata?.phone_number as string | undefined) ?? ''} />
-      <button onClick={() => { if (confirm('Sign out? Your log is saved to your account and removed from this phone.')) void signOut(); }} className="w-full"><Row icon={<LogOut size={18} />} label="Sign out" chevron /></button>
+      <button onClick={() => { if (confirm('Sign out? Your log is saved to your account and removed from this phone.')) signOut().catch((e) => alert((e as Error).message)); }} className="w-full"><Row icon={<LogOut size={18} />} label="Sign out" chevron /></button>
       <button
         disabled={busy}
         onClick={() => {
@@ -480,5 +483,20 @@ function MarketingRow() {
       </Row>
       <p className="px-4 pb-2 text-xs leading-relaxed text-dim">Occasional recipes, tips and offers from Nutivili AI. Account emails (like confirming your email) are always sent.</p>
     </>
+  );
+}
+
+/** When this phone last matched the account, and a button to sync now. */
+function SyncRow({ userId }: { userId: string }) {
+  const online = useOnline();
+  const pending = usePendingSync();
+  const { syncing, failed, syncedAt } = useSyncStatus();
+  const label = !online ? (pending ? 'Offline · will sync later' : 'Offline') : syncing ? 'Syncing…' : failed ? 'Not synced · tap to retry' : pending ? 'Changes waiting' : syncedAt ? `Synced ${new Date(syncedAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}` : 'Not synced yet';
+  return (
+    <button disabled={!online || syncing} onClick={() => void syncNow(userId).catch(() => undefined)} className="w-full">
+      <Row icon={<RefreshCw size={18} className={syncing ? 'animate-spin' : ''} />} label="Sync">
+        <span className={`text-sm font-semibold ${failed || (!online && pending) ? 'text-danger' : 'text-silver'}`}>{label}</span>
+      </Row>
+    </button>
   );
 }

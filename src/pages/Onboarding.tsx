@@ -9,6 +9,7 @@ import { useStore } from '@/store/useStore';
 import { useFirstSyncDone } from '@/lib/account';
 import { accountsEnabled, sendPhoneCode, signInWithGoogle, toE164, useSession, verifyPhoneCode } from '@/lib/account';
 import { EmailAuth } from '@/components/SignIn';
+import { getAuthDraft, pendingEmail, setAuthDraft, setPending } from '@/lib/gate';
 import { DIAL_CODES } from '@/lib/dialCodes';
 import { COUNTRY_DATA } from '@/lib/countries';
 import { GoogleIcon } from '@/components/BrandIcons';
@@ -52,6 +53,20 @@ const PLAN_CHOICES = [
   { tier: 'pro' as const, name: 'Plus', badge: 'Everything included', perks: ['Unlimited AI food scans', 'Restaurant menus: photo, QR code or link', 'Smarter, personal AI nutrition coach', 'Personalized weekly & monthly meal plans', 'Plans adjust automatically to your progress', 'Daily meal suggestions', 'AI recipes and recipe import', 'AI workout guides', 'Advanced micronutrient analysis', 'Detailed nutrition reports', 'Adjusts to your cuisine & diet'] },
 ];
 
+/** Setup answers are kept on this phone until setup is finished, so leaving the app (to open the
+ * email with the code, say) and coming back carries on where the person stopped. */
+const DRAFT_KEY = 'nutivili-onboarding';
+let draft: Record<string, unknown> = (() => { try { return JSON.parse(localStorage.getItem(DRAFT_KEY) ?? '{}') as Record<string, unknown>; } catch { return {}; } })();
+function useSaved<T>(key: string, init: T | (() => T)): [T, (v: T | ((cur: T) => T)) => void] {
+  const [v, setV] = useState<T>(() => (key in draft ? (draft[key] as T) : typeof init === 'function' ? (init as () => T)() : init));
+  useEffect(() => {
+    draft = { ...draft, [key]: v };
+    try { localStorage.setItem(DRAFT_KEY, JSON.stringify(draft)); } catch { /* storage blocked */ }
+  }, [key, v]);
+  return [v, setV as (v: T | ((cur: T) => T)) => void];
+}
+export function clearOnboardingDraft() { draft = {}; try { localStorage.removeItem(DRAFT_KEY); } catch { /* blocked */ } }
+
 export default function Onboarding() {
   const navigate = useNavigate();
   const session = useSession();
@@ -61,25 +76,25 @@ export default function Onboarding() {
   const unit = useStore((s) => s.settings.bodyUnit);
   const updateSettings = useStore((s) => s.updateSettings);
 
-  const [step, setStep] = useState(0);
-  const [goals, setGoals] = useState<FitnessGoal[]>([]);
-  const [activity, setActivity] = useState<ActivityLevel>();
-  const [diets, setDiets] = useState<Diet[]>([]);
-  const [dietPrefs, setDietPrefs] = useState<string[]>([]);
+  const [step, setStep] = useSaved('step', 0);
+  const [goals, setGoals] = useSaved<FitnessGoal[]>('goals', []);
+  const [activity, setActivity] = useSaved<ActivityLevel | undefined>('activity', undefined);
+  const [diets, setDiets] = useSaved<Diet[]>('diets', []);
+  const [dietPrefs, setDietPrefs] = useSaved<string[]>('dietPrefs', []);
   // The most flexible style picked sets what we suggest (e.g. vegetarian + pescatarian → fish is fine).
   const diet: Diet | undefined = (['all', 'pescatarian', 'vegetarian', 'vegan'] as Diet[]).find((d) => diets.includes(d));
-  const [cuisines, setCuisines] = useState<string[]>([]);
-  const [avoid, setAvoid] = useState<string[]>([]);
-  const [name, setName] = useState('');
-  const [age, setAge] = useState('');
-  const [sex, setSex] = useState<'female' | 'male' | 'unspecified'>('unspecified');
-  const [pregnant, setPregnant] = useState(false);
-  const [country, setCountry] = useState(() => {
+  const [cuisines, setCuisines] = useSaved<string[]>('cuisines', []);
+  const [avoid, setAvoid] = useSaved<string[]>('avoid', []);
+  const [name, setName] = useSaved('name', '');
+  const [age, setAge] = useSaved('age', '');
+  const [sex, setSex] = useSaved<'female' | 'male' | 'unspecified'>('sex', 'unspecified');
+  const [pregnant, setPregnant] = useSaved('pregnant', false);
+  const [country, setCountry] = useSaved('country', () => {
     const region = (navigator.language.split('-')[1] ?? '').toUpperCase();
     return COUNTRY_DATA.find(([iso]) => iso === region)?.[1] ?? '';
   });
-  const [weight, setWeight] = useState('');
-  const [gPerKg, setGPerKg] = useState(1.6);
+  const [weight, setWeight] = useSaved('weight', '');
+  const [gPerKg, setGPerKg] = useSaved('gPerKg', 1.6);
 
   const weightNum = Number(weight.replace(',', '.'));
   const [minW, maxW] = unit === 'kg' ? [25, 300] : [55, 660];
@@ -87,9 +102,9 @@ export default function Onboarding() {
   const weightKg = weightOk ? toKg(weightNum, unit) : null;
   const weightError = weight && !weightOk ? `Enter a weight between ${minW} and ${maxW} ${unit}.` : '';
   // Height: cm, or feet + inches when the user weighs in pounds.
-  const [heightCm, setHeightCm] = useState('');
-  const [heightFt, setHeightFt] = useState('');
-  const [heightIn, setHeightIn] = useState('');
+  const [heightCm, setHeightCm] = useSaved('heightCm', '');
+  const [heightFt, setHeightFt] = useSaved('heightFt', '');
+  const [heightIn, setHeightIn] = useSaved('heightIn', '');
   const heightNum = unit === 'kg' ? Number(heightCm) : (Number(heightFt) * 12 + Number(heightIn || 0)) * 2.54;
   const heightOk = heightNum >= 100 && heightNum <= 250;
   const heightTyped = unit === 'kg' ? !!heightCm : !!heightFt;
@@ -98,21 +113,24 @@ export default function Onboarding() {
   const ageOk = !age || (ageNum >= 13 && ageNum <= 110);
   const person = { age: ageNum || undefined, pregnant: sex === 'female' && pregnant };
   // Extra answers (Cal AI-style interview).
-  const [goalWeight, setGoalWeight] = useState('');
-  const [pace, setPace] = useState(0.5);
-  const [training, setTraining] = useState<string[]>([]);
-  const [planChoice, setPlanChoice] = useState<'free' | 'plus' | 'pro'>('pro');
-  const [billing, setBilling] = useState<'monthly' | 'yearly'>('monthly');
-  const [obstacles, setObstacles] = useState<string[]>([]);
-  const [hasCoach, setHasCoach] = useState<boolean>();
-  const [kcalOverride, setKcalOverride] = useState<number>();
-  const [proteinOverride, setProteinOverride] = useState<number>();
+  const [goalWeight, setGoalWeight] = useSaved('goalWeight', '');
+  const [pace, setPace] = useSaved('pace', 0.5);
+  const [training, setTraining] = useSaved<string[]>('training', []);
+  const [planChoice, setPlanChoice] = useSaved<'free' | 'plus' | 'pro'>('planChoice', 'pro');
+  const [billing, setBilling] = useSaved<'monthly' | 'yearly'>('billing', 'monthly');
+  const [obstacles, setObstacles] = useSaved<string[]>('obstacles', []);
+  const [hasCoach, setHasCoach] = useSaved<boolean | undefined>('hasCoach', undefined);
+  const [kcalOverride, setKcalOverride] = useSaved<number | undefined>('kcalOverride', undefined);
+  const [proteinOverride, setProteinOverride] = useSaved<number | undefined>('proteinOverride', undefined);
   // Lose, gain or stay: asked after height and weight so we can show their healthy range.
-  const [direction, setDirection] = useState<'lose' | 'gain' | 'maintain'>();
+  const [termsAt, setTermsAt] = useSaved<number | undefined>('termsAt', undefined);
+  const [direction, setDirection] = useSaved<'lose' | 'gain' | 'maintain' | undefined>('direction', undefined);
   const wantsChange = direction ? direction !== 'maintain' : goals.includes('fatloss') || goals.includes('muscle');
   // Only what's needed for a good first plan. Training type, challenges and reminders can be set later in Profile.
-  const flow = ['welcome', 'goals', 'about', 'direction', ...(wantsChange ? ['goalweight'] : []), 'activity', 'diet', 'cuisines', 'plan', 'choose'];
-  const at = flow[step];
+  const flow = ['welcome', 'goals', 'about', 'direction', ...(wantsChange ? ['goalweight'] : []), 'activity', 'diet', 'cuisines', 'terms', 'plan', 'choose'];
+  // Signed out and not waiting for a code: start from the welcome screen.
+  useEffect(() => { if (accountsEnabled && session === null && !pendingEmail() && step > 0) setStep(0); }, [session]); // eslint-disable-line react-hooks/exhaustive-deps
+  const at = flow[Math.min(step, flow.length - 1)];
   // Signed in: wait until the account's saved data has loaded. If it has a profile, the app goes
   // straight to Home; only a brand-new account gets the setup questions.
   const synced = useFirstSyncDone(session?.user.id);
@@ -145,6 +163,7 @@ export default function Onboarding() {
   function finish() {
     if (!ageOk) return;
     if (!weightKg) return;
+    clearOnboardingDraft();
     saveProfile({
       name: name.trim() || session?.user.user_metadata?.full_name?.split(' ')[0] || '',
       bodyWeightKg: round1(weightKg),
@@ -172,6 +191,7 @@ export default function Onboarding() {
       obstacles: obstacles.length ? obstacles : undefined,
       training: training.length ? training : undefined,
       hasCoach,
+      termsAcceptedAt: termsAt ?? Date.now(),
     });
   }
 
@@ -264,6 +284,27 @@ export default function Onboarding() {
             <CustomAvoid avoid={avoid} setAvoid={setAvoid} known={AVOIDS} />
             <div className="flex-1" />
             <button onClick={next} className="btn-primary mt-6 w-full">{cuisines.length ? `Continue · ${cuisines.length} picked` : 'Skip for now'}</button>
+          </Question>
+        )}
+        {at === 'terms' && (
+          <Question title="Terms and privacy" sub="Please read this before you start.">
+            <div className="max-h-[46dvh] overflow-y-auto rounded-[22px] bg-surface p-5 text-[14px] leading-relaxed text-silver" style={{ boxShadow: 'var(--shadow)' }} tabIndex={0} aria-label="Summary of the terms">
+              <p className="font-bold text-ink">Not medical advice</p>
+              <p className="mt-1">Nutivili helps you track food, weight and exercise. It is for general information only and is not medical, dietary or treatment advice. Talk to a doctor or registered dietitian before changing your diet, especially if you are pregnant, under 18, have diabetes, kidney disease, an eating disorder or another medical condition.</p>
+              <p className="mt-4 font-bold text-ink">Estimates can be wrong</p>
+              <p className="mt-1">Nutrition values come from official food tables, product labels and standard recipes. Photo scans, voice logging and the coach use AI and give estimates that can be wrong. Check amounts and correct anything that looks off. You use the app at your own risk.</p>
+              <p className="mt-4 font-bold text-ink">Your data</p>
+              <p className="mt-1">Your food diary, weight and workouts are yours. They are saved on this phone and, when you have an account, in your private cloud copy. We never sell them. You can download everything (CSV or JSON) or delete your account at any time in Profile. Photos you scan are sent to our AI provider only to recognise the food.</p>
+              <p className="mt-4 font-bold text-ink">Plans</p>
+              <p className="mt-1">Free stays free. Plus costs $7.99 a month and you can cancel any time.</p>
+              <p className="mt-4">Full documents: <a href="/terms" target="_blank" className="font-semibold text-accent underline">Terms of Service</a> · <a href="/privacy" target="_blank" className="font-semibold text-accent underline">Privacy Policy</a></p>
+            </div>
+            <label className="mt-4 flex items-start gap-3 px-1 text-[14px] leading-relaxed">
+              <input type="checkbox" checked={!!termsAt} onChange={(e) => setTermsAt(e.target.checked ? Date.now() : undefined)} className="mt-0.5 h-5 w-5 shrink-0 accent-[rgb(var(--accent))]" aria-label="I agree to the Terms of Service and Privacy Policy" />
+              <span>I have read and agree to the Terms of Service and Privacy Policy, and I understand Nutivili is not medical advice.</span>
+            </label>
+            <div className="flex-1" />
+            <button onClick={next} disabled={!termsAt} className="btn-primary mt-6 w-full">I agree and continue</button>
           </Question>
         )}
         {at === 'about' && (
@@ -522,8 +563,8 @@ function Choice<T>({ option, selected, onClick, multi }: { option: Option<T>; se
 
 function Welcome({ signedIn, email, onStart }: { signedIn: boolean; email?: string; onStart: () => void }) {
   // Back on the "check your email" screen after a reload (e.g. while they opened their email).
-  const [mode, setMode] = useState<'choose' | 'signup' | 'login' | 'phone' | 'code'>(() => { try { return sessionStorage.getItem('nutivili-auth') ? 'signup' : 'choose'; } catch { return 'choose'; } });
-  useEffect(() => { if (signedIn) try { sessionStorage.removeItem('nutivili-auth'); } catch { /* storage blocked */ } }, [signedIn]);
+  const [mode, setMode] = useState<'choose' | 'signup' | 'login' | 'phone' | 'code'>(() => { const d = getAuthDraft(); return d ? (d.signup ? 'signup' : 'login') : 'choose'; });
+  useEffect(() => { if (signedIn) { setAuthDraft(null); setPending(null); } }, [signedIn]);
   // Default to the phone's region (e.g. en-GB → United Kingdom), else the United Kingdom.
   const [dialLabel, setDialLabel] = useState(() => {
     const region = (navigator.language.split('-')[1] ?? '').toUpperCase();
@@ -575,7 +616,7 @@ function Welcome({ signedIn, email, onStart }: { signedIn: boolean; email?: stri
           <p className="mt-4 text-center text-xs text-silver">Your data stays on this device. Export a backup any time from Profile.</p>
         </>
       ) : mode === 'signup' || mode === 'login' ? (
-        <EmailAuth key={mode} start={mode} onBack={() => { try { sessionStorage.removeItem('nutivili-auth'); } catch { /* blocked */ } setMode('choose'); }} />
+        <EmailAuth key={mode} start={mode} onPreview={onStart} onBack={() => { setAuthDraft(null); setMode('choose'); }} />
       ) : mode === 'phone' ? (
         <div className="grid gap-2">
           <div className="flex gap-2">

@@ -123,6 +123,8 @@ export const intervalLabel = (i: string) => ({ monthly: 'month', annually: 'year
 
 /** Headers for AI requests: who you are (account) and your plan (pass), if any. */
 export async function aiHeaders(): Promise<Record<string, string>> {
+  const { requireOnline } = await import('./online');
+  requireOnline();
   const { accessToken } = await import('./account');
   const token = useStore.getState().premium?.token;
   const user = await accessToken();
