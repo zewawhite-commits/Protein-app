@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useMemo, useState } from 'react';
 import { ArrowRight, Flag, Flame, Minus, Plus } from 'lucide-react';
 import { useStore } from '@/store/useStore';
@@ -330,7 +331,28 @@ export function SmartTarget() {
           <button onClick={() => { haptic([10, 30, 10]); saveProfile({ ...profile, calorieMode: 'fixed', calorieGoal: suggested }); toast('Calorie target updated'); }} className="btn-primary !h-11 !px-5 text-sm">Use this</button>
         )}
       </div>
+      <label className="mt-3 flex items-start gap-3 text-[14px] leading-snug">
+        <input type="checkbox" checked={!!profile.adaptiveTarget} onChange={(e) => { saveProfile({ ...profile, adaptiveTarget: e.target.checked, adaptiveCheckedAt: Date.now(), ...(e.target.checked ? { calorieMode: 'fixed' as const, calorieGoal: suggested } : {}) }); toast(e.target.checked ? 'Your target will update each week' : 'Weekly updates off'); }} className="mt-0.5 h-5 w-5 shrink-0 accent-[rgb(var(--accent))]" aria-label="Update my target automatically each week" />
+        <span>Update my target automatically each week<span className="block text-[12px] text-silver">Uses your logging and weigh-ins. We’ll tell you when it changes.</span></span>
+      </label>
       <p className="mt-2 text-xs leading-relaxed text-dim">Based on {m.loggedDays} logged days and {m.weighIns} weigh-ins. It gets more accurate the more completely you log. You can change your target any time in Settings.</p>
     </section>
   );
+}
+
+/** Weekly: if the person chose automatic updates, move their target to match their measured burn. */
+export function useAdaptiveTarget() {
+  const profile = useStore((s) => s.profile);
+  useEffect(() => {
+    if (!profile?.adaptiveTarget) return;
+    if (Date.now() - (profile.adaptiveCheckedAt ?? 0) < 7 * 864e5) return;
+    const { entries, weights, saveProfile } = useStore.getState();
+    const m = measuredBurn(entries, weights, todayKey(), maintenanceKcal(profile));
+    const current = calorieGoal(profile)?.kcal;
+    if (!m) { saveProfile({ ...profile, adaptiveCheckedAt: Date.now() }); return; }
+    const next = targetFromBurn(profile, m.kcal);
+    const changed = current == null || Math.abs(next - current) >= 50;
+    saveProfile({ ...profile, adaptiveCheckedAt: Date.now(), ...(changed ? { calorieMode: 'fixed' as const, calorieGoal: next } : {}) });
+    if (changed) toast(`Calorie target updated to ${fmt(next)} kcal, from what you really burn (${fmt(m.kcal)} kcal a day)`, { ms: 6000 });
+  }, [profile]);
 }

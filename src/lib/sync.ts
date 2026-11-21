@@ -30,6 +30,7 @@ export interface SyncSnapshot {
   remoteFoods?: Record<string, unknown>;
   workoutPlan?: unknown;
   water?: Record<string, number>;
+  sleep?: Record<string, { hours: number; updatedAt?: number }>;
   /** id (or "w:<date>" for a weigh-in) → when it was deleted. */
   deleted?: Record<string, number>;
   [k: string]: unknown;
@@ -45,6 +46,13 @@ function mergeList<T extends Stamped & { updatedAt?: number; loggedAt?: number; 
     if (!cur || stamp(x) > stamp(cur)) byId.set(x.id, x);
   }
   return [...byId.values()].filter((x) => !(deleted[x.id] && deleted[x.id] >= stamp(x)));
+}
+
+/** Day-keyed records (sleep): the later edit of each day wins. */
+function mergeByDay<T extends { updatedAt?: number }>(a: Record<string, T> = {}, b: Record<string, T> = {}): Record<string, T> {
+  const out: Record<string, T> = { ...a };
+  for (const [k, v] of Object.entries(b)) if (!out[k] || (v.updatedAt ?? 0) > (out[k].updatedAt ?? 0)) out[k] = v;
+  return out;
 }
 
 /** Merge this device's copy with the cloud copy. `localTime`/`remoteTime`: when each last changed. */
@@ -77,6 +85,7 @@ export function mergeSnapshots(local: SyncSnapshot, remote: SyncSnapshot, localT
     goalHistory: { ...(older.goalHistory ?? {}), ...(newer.goalHistory ?? {}) },
     remoteFoods: { ...(older.remoteFoods ?? {}), ...(newer.remoteFoods ?? {}) },
     water: { ...(older.water ?? {}), ...(newer.water ?? {}) },
+    sleep: mergeByDay(local.sleep, remote.sleep),
     recentFoodIds: [...new Set([...(newer.recentFoodIds ?? []), ...(older.recentFoodIds ?? [])])].slice(0, 24),
     profile: newer.profile ?? older.profile,
     deleted,

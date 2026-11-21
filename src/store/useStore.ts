@@ -7,7 +7,7 @@ import type { WorkoutPlan } from '@/lib/workout';
 import type { Recipe } from '@/lib/recipe';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { CustomFood, Food, LogEntry, Meal, Profile, ProgressPhoto, SavedMeal, SavedPlan, Settings, WeightEntry, MeasurementEntry } from '@/lib/types';
+import type { SleepEntry, CustomFood, Food, LogEntry, Meal, Profile, ProgressPhoto, SavedMeal, SavedPlan, Settings, WeightEntry, MeasurementEntry } from '@/lib/types';
 import { dailyGoal } from '@/lib/nutrition';
 import { todayKey } from '@/lib/dates';
 import { deletePhoto } from '@/lib/photos';
@@ -85,6 +85,9 @@ interface State {
   setServerTier: (t: State['serverTier']) => void;
   /** Water drunk, in ml, by day (YYYY-MM-DD). */
   water: Record<string, number>;
+  /** Sleep by day woken up (YYYY-MM-DD). */
+  sleep: Record<string, SleepEntry>;
+  logSleep: (date: string, hours: number | null, quality?: SleepEntry['quality']) => void;
   addWater: (date: string, ml: number) => void;
   /** Deleted items (id, or "w:<date>" for weigh-ins) → when, so a sync never brings them back. */
   deleted: Record<string, number>;
@@ -168,6 +171,7 @@ export const useStore = create<State>()(
       serverTier: null,
       picks: {},
       water: {},
+      sleep: {},
       deleted: {},
 
       addMeasurement: (m) => set((s) => ({ measurements: [...s.measurements, { ...m, id: crypto.randomUUID(), createdAt: Date.now() }] })),
@@ -223,6 +227,12 @@ export const useStore = create<State>()(
         const { [e.id]: _gone, ...deleted } = s.deleted ?? {};
         void _gone;
         return { entries: [...s.entries.filter((x) => x.id !== e.id), { ...e, updatedAt: Date.now() }], deleted };
+      }),
+      logSleep: (date, hours, quality) => set((s) => {
+        const next = { ...(s.sleep ?? {}) };
+        if (hours == null) delete next[date];
+        else next[date] = { hours: Math.max(0, Math.min(16, Math.round(hours * 4) / 4)), ...(quality ? { quality } : next[date]?.quality ? { quality: next[date].quality } : {}), updatedAt: Date.now() };
+        return { sleep: next };
       }),
       addWater: (date, ml) => set((s) => ({ water: { ...(s.water ?? {}), [date]: Math.max(0, Math.min(10000, (s.water?.[date] ?? 0) + ml)) } })),
       rememberPick: (key, foodId) => set((s) => {
@@ -333,12 +343,13 @@ export const useStore = create<State>()(
           customExercises: (d as { customExercises?: CustomExercise[] }).customExercises ?? [],
           workoutLogs: (d as { workoutLogs?: WorkoutLog[] }).workoutLogs ?? [],
           water: (d as { water?: Record<string, number> }).water ?? {},
+          sleep: (d as { sleep?: Record<string, SleepEntry> }).sleep ?? {},
           deleted: (d as { deleted?: Record<string, number> }).deleted ?? {},
         });
       },
 
       resetAll: () =>
-        set({ profile: null, settings: defaultSettings, entries: [], customFoods: [], goalHistory: {}, recentFoodIds: [], favoriteFoodIds: [], remoteFoods: {}, savedMeals: [], savedPlans: [], workoutPlan: null, savedRecipes: [], coachChats: [], weights: [], exercises: [], measurements: [], routines: [], customExercises: [], workoutLogs: [], activeWorkout: null, progressPhotos: [], premium: null, perks: null, serverTier: null, picks: {}, water: {}, deleted: {} }),
+        set({ profile: null, settings: defaultSettings, entries: [], customFoods: [], goalHistory: {}, recentFoodIds: [], favoriteFoodIds: [], remoteFoods: {}, savedMeals: [], savedPlans: [], workoutPlan: null, savedRecipes: [], coachChats: [], weights: [], exercises: [], measurements: [], routines: [], customExercises: [], workoutLogs: [], activeWorkout: null, progressPhotos: [], premium: null, perks: null, serverTier: null, picks: {}, water: {}, sleep: {}, deleted: {} }),
     }),
     {
       name: 'protein-app',
@@ -358,7 +369,7 @@ useStore.subscribe((s, prev) => {
   const changed =
     s.entries !== prev.entries || s.profile !== prev.profile || s.customFoods !== prev.customFoods ||
     s.goalHistory !== prev.goalHistory || s.favoriteFoodIds !== prev.favoriteFoodIds ||
-    s.savedMeals !== prev.savedMeals || s.savedPlans !== prev.savedPlans || s.workoutPlan !== prev.workoutPlan || s.savedRecipes !== prev.savedRecipes || s.coachChats !== prev.coachChats || s.measurements !== prev.measurements || s.routines !== prev.routines || s.customExercises !== prev.customExercises || s.workoutLogs !== prev.workoutLogs || s.weights !== prev.weights || s.exercises !== prev.exercises || s.water !== prev.water || s.deleted !== prev.deleted;
+    s.savedMeals !== prev.savedMeals || s.savedPlans !== prev.savedPlans || s.workoutPlan !== prev.workoutPlan || s.savedRecipes !== prev.savedRecipes || s.coachChats !== prev.coachChats || s.measurements !== prev.measurements || s.routines !== prev.routines || s.customExercises !== prev.customExercises || s.workoutLogs !== prev.workoutLogs || s.weights !== prev.weights || s.exercises !== prev.exercises || s.water !== prev.water || s.sleep !== prev.sleep || s.deleted !== prev.deleted;
   if (changed && s.lastModified === prev.lastModified) useStore.setState({ lastModified: Date.now() });
 });
 
@@ -373,9 +384,9 @@ export function goalOn(date: string, goalHistory: Record<string, number>, profil
 
 export function exportData() {
   // Premium passes and personal API keys are never written to backup files.
-  const { profile, settings, entries, customFoods, goalHistory, recentFoodIds, favoriteFoodIds, remoteFoods, savedMeals, savedPlans, workoutPlan, savedRecipes, coachChats, weights, exercises, measurements, routines, customExercises, workoutLogs, water, deleted } = useStore.getState();
+  const { profile, settings, entries, customFoods, goalHistory, recentFoodIds, favoriteFoodIds, remoteFoods, savedMeals, savedPlans, workoutPlan, savedRecipes, coachChats, weights, exercises, measurements, routines, customExercises, workoutLogs, water, sleep, deleted } = useStore.getState();
   const safeSettings = settings;
-  return { app: 'protein-app', exportedAt: new Date().toISOString(), profile, settings: safeSettings, entries, customFoods, goalHistory, recentFoodIds, favoriteFoodIds, remoteFoods, savedMeals, savedPlans, workoutPlan, savedRecipes, coachChats, weights, exercises, measurements, routines, customExercises, workoutLogs, water, deleted };
+  return { app: 'protein-app', exportedAt: new Date().toISOString(), profile, settings: safeSettings, entries, customFoods, goalHistory, recentFoodIds, favoriteFoodIds, remoteFoods, savedMeals, savedPlans, workoutPlan, savedRecipes, coachChats, weights, exercises, measurements, routines, customExercises, workoutLogs, water, sleep, deleted };
 }
 
 // Look-only mode (sign-up code not entered yet): saving is blocked and the code sheet opens.

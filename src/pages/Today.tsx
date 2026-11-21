@@ -12,6 +12,7 @@ import { sumEntries, type Totals } from '@/lib/nutrition';
 import { dailyTargets, type Targets } from '@/lib/energy';
 import { DV_NOTE, MacroBar, NutrientList } from '@/components/Nutrients';
 import type { Food, LogEntry } from '@/lib/types';
+import { SleepCard } from '@/components/Sleep';
 import { Pill, Ring, Sheet, cx, fmt } from '@/components/ui';
 import { BrandName, CountUp, haptic, toast } from '@/components/fx';
 import { EntryRow } from '@/components/EntryRow';
@@ -152,6 +153,7 @@ export default function Today() {
       <ExerciseList date={date} />
       {isToday && !quietAi && <div className="mt-2"><Suggestions remaining={Math.max(0, goal - totals.protein)} kcalLeft={targets ? targets.kcal - totals.kcal : undefined} /></div>}
       <WaterCard date={date} />
+      <SleepCard date={date} />
 
       <FoodSheet food={editing ? entryAsFood(editing, lookup) : null} entry={editing ?? undefined} date={date} onClose={() => setEditing(null)} />
     </div>
@@ -178,6 +180,10 @@ function Gauge({ pct, over, hasGoal }: { pct: number; over: boolean; hasGoal: bo
 function HeroCard({ totals, goal, targets, entries, burned = 0, addBurned }: { totals: Totals; goal: number; targets: Targets | null; entries: LogEntry[]; burned?: number; addBurned?: boolean }) {
   const [allNutrients, setAllNutrients] = useState(false);
   void entries;
+  // Show what's left (default) or what's been eaten; remembered.
+  const view = useStore((s) => s.settings.dashView) ?? 'left';
+  const updateSettings = useStore((s) => s.updateSettings);
+  const showLeft = !!targets && view === 'left';
   const kcalLeft = targets ? targets.kcal - totals.kcal : 0;
   const kcalPct = targets ? totals.kcal / targets.kcal : 0;
   const over = targets && kcalLeft < 0;
@@ -189,18 +195,27 @@ function HeroCard({ totals, goal, targets, entries, burned = 0, addBurned }: { t
       <div className="relative mx-auto w-[200px]">
         <Gauge pct={pct} over={!!over} hasGoal={!!targets} />
         <div className="absolute inset-x-0 bottom-0 text-center">
-          <CountUp value={targets ? Math.abs(Math.round(kcalLeft)) : Math.round(totals.kcal)} className={cx('num font-extrabold leading-none', Math.abs(kcalLeft) >= 10000 ? 'text-[30px]' : 'text-[36px]')} />
-          <p className="mt-0.5 text-[12px] font-semibold opacity-90">{targets ? (over ? 'kcal over' : 'kcal left') : 'kcal eaten'}</p>
+          <CountUp value={showLeft ? Math.abs(Math.round(kcalLeft)) : Math.round(totals.kcal)} className={cx('num font-extrabold leading-none', Math.abs(kcalLeft) >= 10000 ? 'text-[30px]' : 'text-[36px]')} />
+          <p className="mt-0.5 text-[12px] font-semibold opacity-90">{showLeft ? (over ? 'kcal over' : 'kcal left') : 'kcal eaten'}</p>
         </div>
       </div>
       {targets ? (
         <div className="mt-3 grid grid-cols-3 gap-2 text-center">
-          <div><p className="num text-[15px] font-bold leading-tight">{fmt(totals.kcal)}{totals.incomplete.kcal && '*'}</p><p className="text-xs opacity-85">Eaten</p></div>
+          {showLeft
+            ? <div><p className="num text-[15px] font-bold leading-tight">{fmt(totals.kcal)}{totals.incomplete.kcal && '*'}</p><p className="text-xs opacity-85">Eaten</p></div>
+            : <div><p className="num text-[15px] font-bold leading-tight">{fmt(Math.abs(kcalLeft))}</p><p className="text-xs opacity-85">{over ? 'Over' : 'Left'}</p></div>}
           <div className="border-x border-white/25"><p className="num text-[15px] font-bold leading-tight">{fmt(targets.kcal)}</p><p className="text-xs opacity-85">Goal</p></div>
           <div><p className="num text-[15px] font-bold leading-tight">{burned > 0 ? `${addBurned ? '+' : ''}${fmt(burned)}` : '0'}</p><p className="text-xs opacity-85">Burned</p></div>
         </div>
       ) : (
         <Link to="/profile?edit=1" className="mt-3 block text-center text-sm font-semibold underline">Add height & age for a calorie goal</Link>
+      )}
+      {targets && (
+        <div className="mx-auto mt-3 flex w-fit rounded-full bg-white/15 p-1" role="group" aria-label="Show calories">
+          {(['eaten', 'left'] as const).map((v) => (
+            <button key={v} onClick={() => updateSettings({ dashView: v })} aria-pressed={view === v} className={cx('h-8 rounded-full px-4 text-[13px] font-semibold transition', view === v ? 'bg-white text-[rgb(var(--hero-b))]' : 'text-white/90')}>{v === 'eaten' ? 'Consumed' : 'Remaining'}</button>
+          ))}
+        </div>
       )}
       {totals.incomplete.kcal && (
         <p className="mt-2 text-center text-[12px] leading-snug opacity-90">* Some food you logged has no calorie value in its source data, so this total may be low. Tap the food to check or add values.</p>
@@ -318,6 +333,7 @@ export const useStreak = () => useGoalStats().streak;
 
 /** Protein, carbs and fat as three bars in one card (grams left). */
 function MacroCards({ totals, goal, targets, simple }: { totals: Totals; goal: number; targets: Targets | null; simple?: boolean }) {
+  const eatenView = useStore((s) => s.settings.dashView) === 'eaten';
   const all = [
     { label: 'Protein', eaten: totals.protein, target: goal, color: 'rgb(var(--accent))', icon: Drumstick },
     { label: 'Carbs', eaten: totals.carbs, target: targets?.carbs ?? 0, color: 'rgb(var(--carbs))', icon: Wheat },
@@ -333,7 +349,9 @@ function MacroCards({ totals, goal, targets, simple }: { totals: Totals; goal: n
             <div className="flex items-center gap-2.5">
               <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full" style={{ background: `color-mix(in srgb, ${m.color} 14%, transparent)`, color: m.color }}><m.icon size={16} /></span>
               <p className="flex-1 text-[15px] font-semibold">{m.label}</p>
-              <p className="num text-[15px] font-bold">{m.target ? `${fmt(Math.abs(left))}g` : `${fmt(m.eaten)}g`}<span className="ml-1 text-[13px] font-medium text-silver">{m.target ? (left < 0 ? 'over' : 'left') : 'eaten'}</span></p>
+              {m.target && eatenView
+                ? <p className="num text-[15px] font-bold">{fmt(m.eaten)}<span className="text-[13px] font-medium text-silver"> / {fmt(m.target)}g</span></p>
+                : <p className="num text-[15px] font-bold">{m.target ? `${fmt(Math.abs(left))}g` : `${fmt(m.eaten)}g`}<span className="ml-1 text-[13px] font-medium text-silver">{m.target ? (left < 0 ? 'over' : 'left') : 'eaten'}</span></p>}
             </div>
             <div className="mt-2 h-2.5 overflow-hidden rounded-full bg-raised">
               <div className="h-full rounded-full transition-all duration-500" style={{ width: `${Math.min(100, m.target ? (m.eaten / m.target) * 100 : 0)}%`, backgroundColor: m.color }} />

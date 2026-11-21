@@ -157,6 +157,10 @@ export interface Profile {
   heightCm?: number;
   /** 'auto' (default) = estimated from body data; 'fixed' = calorieGoal. */
   calorieMode?: 'auto' | 'fixed';
+  /** Update the calorie target once a week from what the person really burns (food eaten vs weight change). */
+  adaptiveTarget?: boolean;
+  /** When the weekly check last ran. */
+  adaptiveCheckedAt?: number;
   calorieGoal?: number;
 }
 
@@ -201,6 +205,10 @@ export interface Settings {
   waterGoalMl?: number;
   /** Workouts per week to aim for (unset or 0 = no goal). */
   workoutsPerWeek?: number;
+  /** Home shows what's left (default) or what's been eaten. */
+  dashView?: 'left' | 'eaten';
+  /** Hours of sleep to aim for (default 8). */
+  sleepGoalH?: number;
 }
 
 /** A meal the user saved to log again in one tap (food snapshots + the grams they weighed). */
@@ -232,3 +240,6 @@ export interface ProgressPhoto { id: string; photoId: string; date: string; kg?:
 export type GoalKind = 'weight' | 'protein' | 'calories' | 'water' | 'workouts' | 'distance' | 'strength';
 export interface GoalSetting { on: boolean; paused?: boolean; done?: boolean; target?: number; deadline?: string; updatedAt?: number }
 export type GoalSettings = Partial<Record<GoalKind, GoalSetting>>;
+
+/** A night's sleep, logged for the day you woke up. */
+export interface SleepEntry { hours: number; quality?: 'poor' | 'ok' | 'good'; updatedAt: number }

@@ -5,8 +5,9 @@
  *  - Trial: once per account, 3 days of Plus, no card. Invited friends get 14 days.
  *  - Invites: when a new account (under 14 days old) joins with someone's link, the
  *    inviter gets 7 more days of Plus, up to 10 friends (70 days). Not your own link.
- *  - Free Plus time uses the "trial" limits in quota.ts — generous, but capped, so
- *    AI costs stay predictable.
+ *  - Trial time uses the "trial" limits in quota.ts — generous, but capped, so AI costs
+ *    stay predictable. Invite rewards (reward_until) use the "reward" limits: Plus features,
+ *    with coach messages kept at the Free allowance.
  */
 import { admin } from './accounts.js';
 
@@ -17,12 +18,12 @@ export const MAX_REFERRALS = 10;
 export const NEW_ACCOUNT_DAYS = 14;
 const DAY = 864e5;
 
-export interface Perks { proUntil: number; trialUsed: boolean; referredBy: string | null; referrals: number }
+export interface Perks { proUntil: number; trialUsed: boolean; referredBy: string | null; referrals: number; rewardUntil: number }
 
 export function perksFrom(meta: Record<string, unknown> | undefined | null): Perks {
   const m = meta ?? {};
   const n = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? v : 0);
-  return { proUntil: n(m.pro_until), trialUsed: m.trial_used === true, referredBy: typeof m.referred_by === 'string' ? m.referred_by : null, referrals: n(m.referrals) };
+  return { proUntil: n(m.pro_until), trialUsed: m.trial_used === true, referredBy: typeof m.referred_by === 'string' ? m.referred_by : null, referrals: n(m.referrals), rewardUntil: n(m.reward_until) };
 }
 
 /** Add days of Plus, starting from now or from the end of the time already given. */
@@ -95,7 +96,7 @@ export async function acceptInvite(user: { id: string; createdAt: number; perks:
   // The inviter.
   const theirs = perksFrom(data.user.app_metadata);
   if (theirs.referrals < MAX_REFERRALS) {
-    await setMeta(check.inviterId, { referrals: theirs.referrals + 1, pro_until: extend(theirs.proUntil, REFERRAL_DAYS, now) });
+    await setMeta(check.inviterId, { referrals: theirs.referrals + 1, reward_until: extend(theirs.rewardUntil, REFERRAL_DAYS, now) });
   }
   return trial.ok ? { ok: true, proUntil: trial.proUntil, days: trial.days } : { ok: true, proUntil: user.perks.proUntil, days: 0 };
 }

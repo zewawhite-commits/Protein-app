@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { checkReferral, extend, inviteCode, perksFrom, planTrial, userIdFromCode } from '../_lib/perks.js';
-import { limitFor } from '../_lib/quota.js';
+import { limitFor, usageKey } from '../_lib/quota.js';
 
 const DAY = 864e5;
 const now = Date.UTC(2026, 10, 16);
@@ -42,6 +42,13 @@ describe('free Pro time', () => {
     for (const f of ['scan', 'coach', 'workout', 'recipe', 'plan', 'ideas'] as const) {
       expect(limitFor('trial', f)).toBeGreaterThanOrEqual(900);
     }
+  });
+  it('invite rewards unlock Plus features, but the coach stays at the Free daily allowance', () => {
+    for (const f of ['scan', 'workout', 'recipe', 'plan', 'ideas'] as const) expect(limitFor('reward', f)).toBeGreaterThanOrEqual(900);
+    expect(limitFor('reward', 'coach')).toBe(limitFor('free', 'coach'));
+    expect(usageKey('coach', uid, 'reward')).toMatch(/:\d{4}-\d{2}-\d{2}$/);
+    expect(usageKey('scan', uid, 'reward')).toBe(`scan:${uid}`);
+    expect(perksFrom({ reward_until: 5, pro_until: 1 })).toMatchObject({ rewardUntil: 5, proUntil: 1 });
   });
 });
 

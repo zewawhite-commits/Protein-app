@@ -66,15 +66,15 @@ export function InviteCard({ className }: { className?: string }) {
       <div className="flex items-start gap-3">
         <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-accent/10 text-accent"><Gift size={20} /></span>
         <div className="min-w-0">
-          <p className="text-[17px] font-bold">Invite friends, get Plus</p>
+          <p className="text-[17px] font-bold">Invite friends, get Plus features</p>
           <p className="mt-0.5 text-[14px] leading-relaxed text-silver">
-            Friends who join with your link get 14 days of Plus free. You get {perks.referralDays} days of Plus for each one, up to {perks.maxReferrals} friends.
+            Friends who join with your link get 14 days of Plus free. You get {perks.referralDays} days of Plus features for each one, up to {perks.maxReferrals} friends.
           </p>
         </div>
       </div>
       {perks.referrals > 0 && (
         <p className="mt-3 rounded-2xl bg-raised px-4 py-2.5 text-[14px] font-semibold">
-          {perks.referrals} friend{perks.referrals === 1 ? '' : 's'} joined · {perks.referrals * perks.referralDays} days of Plus earned{left === 0 ? ' · that’s the maximum' : ''}
+          {perks.referrals} friend{perks.referrals === 1 ? '' : 's'} joined · {perks.referrals * perks.referralDays} days of Plus features earned{left === 0 ? ' · that’s the maximum' : ''}
         </p>
       )}
       <div className="mt-4 flex gap-2">

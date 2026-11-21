@@ -5,7 +5,8 @@
  *   free       3      5      0        0      0     0
  *   plus      ∞      ∞      ∞        ∞     30     ∞     ∞ = unlimited (with a hidden fair-use cap against abuse)
  *   pro       ∞      ∞      ∞        ∞      ∞     ∞     Plus: unlimited plans, smarter coach, advanced analysis & reports
- *   trial     ∞      ∞      ∞        ∞      ∞     ∞     3-day Plus trial and invite rewards: everything unlimited
+ *   trial     ∞      ∞      ∞        ∞      ∞     ∞     3-day Plus trial: everything unlimited
+ *   reward    ∞      5      ∞        ∞      ∞     ∞     invite rewards: Plus features, coach at the Free allowance (per day)
  *   (Free limits are per day; the others per month.)
  *
  * Rules:
@@ -19,15 +20,15 @@ import { bearer, readPass } from './premium.js';
 import { accountsConfigured, useScan, userFromToken } from './accounts.js';
 
 export type Feature = 'scan' | 'coach' | 'workout' | 'recipe' | 'plan' | 'ideas' | 'menu';
-export type PlanTier = 'free' | 'plus' | 'pro' | 'trial';
+export type PlanTier = 'free' | 'plus' | 'pro' | 'trial' | 'reward';
 
 const FAIR_USE = 900;
 
 /** Free limits reset every day (UTC); paid plans count per month. */
-const DAILY: Record<PlanTier, boolean> = { free: true, plus: false, pro: false, trial: false };
+const DAILY: Record<PlanTier, boolean> = { free: true, plus: false, pro: false, trial: false, reward: false };
 const today = () => new Date().toISOString().slice(0, 10);
 /** The counter for this feature: per day on Free, per month otherwise. */
-export const usageKey = (feature: string, userId: string, tier: PlanTier) => (DAILY[tier] ? `${feature}:${userId}:${today()}` : `${feature}:${userId}`);
+export const usageKey = (feature: string, userId: string, tier: PlanTier) => (DAILY[tier] || (tier === 'reward' && feature === 'coach') ? `${feature}:${userId}:${today()}` : `${feature}:${userId}`);
 
 const DEFAULTS: Record<PlanTier, Record<Feature, number>> = {
   free: { scan: 3, coach: 5, workout: 0, recipe: 0, plan: 0, ideas: 0, menu: 0 },
@@ -36,6 +37,8 @@ const DEFAULTS: Record<PlanTier, Record<Feature, number>> = {
   pro: { scan: FAIR_USE, coach: FAIR_USE * 3, workout: FAIR_USE, recipe: FAIR_USE, plan: FAIR_USE, ideas: FAIR_USE, menu: FAIR_USE },
   // The 3-day Plus trial: everything Plus has, unlimited (fair-use cap only).
   trial: { scan: FAIR_USE, coach: FAIR_USE * 3, workout: FAIR_USE, recipe: FAIR_USE, plan: FAIR_USE, ideas: FAIR_USE, menu: FAIR_USE },
+  // Days earned by inviting friends: Plus features, coach at the Free daily allowance.
+  reward: { scan: FAIR_USE, coach: 5, workout: FAIR_USE, recipe: FAIR_USE, plan: FAIR_USE, ideas: FAIR_USE, menu: FAIR_USE },
 };
 
 /** Limits at or above this are shown as "Unlimited" (a fair-use cap, ~30 a day). */
@@ -66,7 +69,8 @@ export async function whoIs(request: Request) {
   const pass = readPass(bearer(request));
   const paid = pass && pass.exp > Date.now() && (!pass.uid || !user || pass.uid === user.id) ? pass : null;
   const freePro = !!user && user.perks.proUntil > Date.now();
-  const tier: PlanTier = paid ? (paid.tier === 'pro' ? 'pro' : 'plus') : freePro ? 'trial' : 'free';
+  const reward = !!user && (user.perks.rewardUntil ?? 0) > Date.now();
+  const tier: PlanTier = paid ? (paid.tier === 'pro' ? 'pro' : 'plus') : freePro ? 'trial' : reward ? 'reward' : 'free';
   return { user, tier, pass, expired: !!pass && pass.exp <= Date.now() };
 }
 
@@ -102,7 +106,7 @@ export async function gate(request: Request, feature: Feature, count = 1): Promi
     }
     if (left < 0) {
       if (limit >= UNLIMITED) return { ok: false, status: 429, body: { error: 'You’ve hit the fair-use limit for this month. It resets on the 1st. Contact support if you need more.', limitReached: true, feature, tier } };
-      return { ok: false, status: 402, body: { error: tier === 'plus' ? `You’ve used your ${limit} ${NAMES[feature]} this month. Plus has unlimited.` : `You’ve used your ${limit} free ${NAMES[feature]} for today. They reset tomorrow, or upgrade to Plus for unlimited.`, premium: true, limitReached: true, feature, tier } };
+      return { ok: false, status: 402, body: { error: tier === 'plus' ? `You’ve used your ${limit} ${NAMES[feature]} this month. Plus has unlimited.` : tier === 'reward' ? `You’ve used your ${limit} ${NAMES[feature]} for today. They reset tomorrow, or upgrade to Plus for unlimited.` : `You’ve used your ${limit} free ${NAMES[feature]} for today. They reset tomorrow, or upgrade to Plus for unlimited.`, premium: true, limitReached: true, feature, tier } };
     }
     return { ok: true, tier, left, limit };
   } catch (e) {
@@ -126,10 +130,10 @@ export async function usage(request: Request) {
   const unlimited = isAdmin(user.email);
   const { inviteCode, MAX_REFERRALS, REFERRAL_DAYS } = await import('./perks.js');
   return {
-    tier: unlimited || tier === 'trial' ? 'pro' : tier,
+    tier: unlimited || tier === 'trial' ? 'pro' : tier === 'reward' ? 'plus' : tier,
     admin: unlimited,
     // Free Plus time (trial or invite rewards), and what the invite card needs.
-    perks: { proUntil: user.perks.proUntil, freePro: tier === 'trial', trialUsed: user.perks.trialUsed, referrals: user.perks.referrals, maxReferrals: MAX_REFERRALS, referralDays: REFERRAL_DAYS, code: inviteCode(user.id) },
+    perks: { proUntil: Math.max(user.perks.proUntil, user.perks.rewardUntil ?? 0), freePro: tier === 'trial' || tier === 'reward', trialUsed: user.perks.trialUsed, referrals: user.perks.referrals, maxReferrals: MAX_REFERRALS, referralDays: REFERRAL_DAYS, code: inviteCode(user.id) },
     // null = unlimited (admins, or a fair-use cap on paid plans).
     features: Object.fromEntries(features.map((f) => { const l = limitFor(tier, f); return [f, { used: used[f] ?? 0, limit: unlimited || l >= UNLIMITED ? null : l }]; })),
   };

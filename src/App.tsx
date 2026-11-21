@@ -2,6 +2,7 @@ import { backupToday } from './lib/backups';
 import { lazy, Suspense, useEffect } from 'react';
 import { refreshPremium } from './lib/premium';
 import { captureInvite, usePerksSync } from './lib/perks';
+import { useAdaptiveTarget } from './components/ProgressTop';
 
 captureInvite();
 import { useCloudSync } from './lib/account';
@@ -49,6 +50,7 @@ export default function App() {
   useCloudSync();
   usePerksSync();
   useMealReminders();
+  useAdaptiveTarget();
   const profile = useStore((s) => s.profile);
   // Legal pages open from the welcome screen too, before a profile exists.
   const path = typeof location !== 'undefined' ? location.pathname : '';
