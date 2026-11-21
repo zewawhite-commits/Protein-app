@@ -164,7 +164,7 @@ const PHRASES: [RegExp, string][] = [
 ];
 
 /** One-word everyday names that mean a specific food. */
-const EXACT: Record<string, string> = { dodo: 'plantain cooked with oil', 'garden egg': 'eggplant fruit raw', 'garden eggs': 'eggplant fruit raw', toast: 'bread white toasted', steak: 'beef steak lean', mash: 'potato mashed', chips: 'french fries', eggs: 'egg whole cooked', rice: 'rice white cooked', pasta: 'pasta cooked', chicken: 'chicken breast' };
+const EXACT: Record<string, string> = { dodo: 'plantain cooked with oil', 'garden egg': 'eggplant fruit raw', 'garden eggs': 'eggplant fruit raw', toast: 'bread white toasted', steak: 'beef steak lean', mash: 'potato mashed', chips: 'french fries', eggs: 'egg whole cooked', rice: 'rice white cooked', pasta: 'pasta cooked', chicken: 'chicken breast', 'pepper soup': 'goat pepper soup', 'boiled rice': 'rice white cooked', 'white rice': 'rice white cooked', 'plain rice': 'rice white cooked', 'ofada rice': 'rice brown cooked', 'ofada': 'rice brown cooked', 'plantain': 'plantain cooked', 'boiled plantain': 'plantain boiled', 'fried plantain': 'plantain cooked with oil' };
 
 export function searchFoods(query: string, opts: SearchOptions = {}): Food[] {
   const exact = EXACT[query.trim().toLowerCase()];
@@ -173,7 +173,10 @@ export function searchFoods(query: string, opts: SearchOptions = {}): Food[] {
   if (direct.length) return direct;
   let alt = query.toLowerCase();
   for (const [re, to] of PHRASES) alt = alt.replace(re, to);
-  return alt !== query.toLowerCase() ? searchWith(alt, opts) : [];
+  if (alt !== query.toLowerCase()) { const hit = searchWith(alt, opts); if (hit.length) return hit; }
+  // "jollof rice with chicken": find the main food, then the rest can be added separately.
+  const main = query.toLowerCase().split(/\s+(?:with|and|plus|\+|&)\s+/)[0];
+  return main !== query.toLowerCase() ? searchFoods(main, opts) : [];
 }
 
 function searchWith(query: string, opts: SearchOptions): Food[] {

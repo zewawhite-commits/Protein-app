@@ -13,7 +13,7 @@ import type { RecognitionResult } from './recognition';
 export interface SaidFood { text: string; qty: number | null; unit: string | null }
 
 const WORDS: Record<string, number> = { a: 1, an: 1, one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10, half: 0.5, quarter: 0.25, couple: 2, few: 3 };
-const UNIT = '(g|grams?|gram|kg|kilos?|kilograms?|oz|ounces?|lbs?|pounds?|ml|millilit(?:re|er)s?|l|lit(?:re|er)s?|cups?|tbsps?|tablespoons?|tsps?|teaspoons?|slices?|pieces?|pcs|wings?|drumsticks?|thighs?|legs?|breasts?|bowls?|plates?|servings?|portions?|scoops?|glass(?:es)?|cans?|bottles?|handfuls?|spoons?|wraps?|balls?|fillets?|eggs?)';
+const UNIT = '(g|grams?|gram|kg|kilos?|kilograms?|oz|ounces?|lbs?|pounds?|ml|millilit(?:re|er)s?|l|lit(?:re|er)s?|cups?|tbsps?|tablespoons?|tsps?|teaspoons?|slices?|pieces?|pcs|wings?|drumsticks?|thighs?|legs?|breasts?|bowls?|plates?|servings?|portions?|scoops?|glass(?:es)?|cans?|bottles?|handfuls?|spoons?|wraps?|balls?|fillets?|eggs?|sticks?|skewers?|ladles?|wraps?|handfuls?)';
 const LEAD = new RegExp(`^(?:about|around|roughly|like|maybe|some)?\\s*(\\d+(?:[.,]\\d+)?|${Object.keys(WORDS).join('|')})?\\s*(?:x\\s*)?${UNIT}?\\b\\s*(?:of\\s+)?(.*)$`, 'i');
 
 /** Split a sentence into foods with their amounts. */
@@ -61,7 +61,9 @@ export function gramsFor(food: Pick<Food, 'portions' | 'name'>, qty: number | nu
   if (/^cup/.test(u)) p = find(/\bcup\b/);
   else if (/^(tbsp|tablespoon)/.test(u)) p = find(/tbsp|tablespoon/);
   else if (/^(tsp|teaspoon)/.test(u)) p = find(/tsp|teaspoon/);
-  else if (PIECE.test(u)) p = find(new RegExp(`\\b${u}`)) ?? find(/\b(piece|medium|whole|large|1 (?!cup|tbsp|tsp|oz)\w+)\b/);
+  // A named unit ("2 slices", "a stick") only uses that unit's own size: never another serving (a slice isn't a wrap).
+  else if (/^(piece|pc)/.test(u)) p = find(/\b(piece|medium|whole|1 (?!cup|tbsp|tsp|oz|plate|bowl|wrap|ladle)\w+)\b/);
+  else if (PIECE.test(u) || /^(stick|skewer|ladle)/.test(u)) p = find(new RegExp(`\\b${u}`)) ?? (u === 'stick' ? find(/\bskewer/) : u === 'skewer' ? find(/\bstick/) : undefined);
   else if (!u && qty != null) p = find(/\b(piece|medium|whole|large|1 (?!cup|tbsp|tsp|oz)\w+)\b/);
   else if (!u) p = find(/serving|medium|piece/) ?? portions.find((x) => x.grams >= 25 && x.grams <= 400);
   if (!p) return null;
