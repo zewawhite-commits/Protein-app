@@ -18,3 +18,8 @@
    It scans 25 weighed Nutrition5k plates (CC BY 4.0, Google Research) plus the checked Nigerian dish photos,
    and writes `docs/scan-eval.md`: weighed vs estimated grams and calories for every plate, and what the
    scanner called each Nigerian dish. The scanner should not be called accurate until this has run.
+
+## Busy-day indexes (run once)
+
+Supabase → SQL editor → paste the contents of `supabase/scale.sql` → Run. It only adds indexes
+(safe to re-run) so the feed, profiles and messages stay fast as the tables grow.
