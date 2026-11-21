@@ -178,7 +178,7 @@ export default function Profile({ mode = 'profile' }: { mode?: 'profile' | 'sett
       <AccountCard />
 
       <Group title="Your data">
-        <p className="px-4 pb-1 pt-3 text-sm leading-relaxed text-silver">Your data is never sold and there are no ads. What you send to AI features is used only to answer you, not to train AI models.</p>
+        <p className="px-4 pb-1 pt-3 text-sm leading-relaxed text-silver">Your data is never sold. What you send to AI features is used only to answer you, not to train AI models.</p>
         <button onClick={downloadCsv} className="w-full"><Row icon={<Table size={18} />} label="Download food log" chevron /></button>
         <ShareReportRow Row={Row} />
         <button onClick={download} className="w-full"><Row icon={<Download size={18} />} label="Export backup" chevron /></button>
