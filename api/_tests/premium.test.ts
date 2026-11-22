@@ -202,6 +202,20 @@ describe('plan limits (quota)', () => {
         counts[p_key] = used + 1;
         return new Response(String(p_limit - used - 1), { status: 200 });
       }
+      // Plus AI credits ledger.
+      if (url.endsWith('/rest/v1/rpc/credit_spend')) {
+        const { p_key, p_cost, p_limit } = JSON.parse(String(init?.body));
+        const used = counts[p_key] ?? 0;
+        if (used + p_cost > p_limit) return new Response('-1', { status: 200 });
+        counts[p_key] = used + p_cost;
+        return new Response(String(counts[p_key]), { status: 200 });
+      }
+      if (url.endsWith('/rest/v1/rpc/credit_refund')) {
+        const { p_key, p_cost } = JSON.parse(String(init?.body));
+        counts[p_key] = Math.max(0, (counts[p_key] ?? 0) - p_cost);
+        return new Response('null', { status: 200 });
+      }
+      if (url.includes('/rest/v1/ai_config')) return new Response('null', { status: 406 });
       return new Response('{}', { status: 404 });
     });
   }
@@ -231,7 +245,8 @@ describe('plan limits (quota)', () => {
     if (!free.ok) expect(free.status).toBe(402);
     const pro = signPass({ email: 'me@example.com', cid: 1, plan: 'PLN_year', tier: 'pro', exp: Date.now() + 86400e3 });
     const ok = await gate(call({}, 'jwt', pro), 'plan');
-    expect(ok).toMatchObject({ ok: true, tier: 'pro', limit: limitFor('pro', 'plan'), left: limitFor('pro', 'plan') - 1 });
+    expect(ok).toMatchObject({ ok: true, tier: 'pro', credits: { left: 295, total: 300 } }); // a meal plan costs 5 credits
+    void limitFor;
     const expired = signPass({ email: 'me@example.com', cid: 1, plan: 'PLN_month', tier: 'plus', exp: Date.now() - 1 });
     const back = await gate(call({}, 'jwt', expired), 'plan');
     if (!back.ok) expect(back.body).toMatchObject({ renew: true, tier: 'free' });
@@ -259,6 +274,45 @@ describe('plan limits (quota)', () => {
     const oldPassOtherEmail = signPass({ email: 'other@example.com', cid: 2, plan: 'PLN_month', tier: 'plus', exp: Date.now() + 86400e3 });
     expect((await gate(call({}, 'jwt', oldPassOtherEmail), 'workout')).ok).toBe(false);
   });
+  it('Plus: credits per billing month, 4 photo scans a day, clear messages, refunds when the AI fails', async () => {
+    const { gate } = await import('../_lib/quota.js');
+    const counts: Record<string, number> = {};
+    fakeSupabase(counts);
+    const plus = signPass({ email: 'me@example.com', cid: 1, plan: 'PLN_month', tier: 'plus', exp: Date.now() + 20 * 86400e3 });
+    for (let i = 0; i < 4; i++) expect(await gate(call({}, 'jwt', plus), 'scan')).toMatchObject({ ok: true });
+    const fifth = await gate(call({}, 'jwt', plus), 'scan');
+    expect(fifth).toMatchObject({ ok: false, status: 429 });
+    if (!fifth.ok) expect(String(fifth.body.error)).toMatch(/today’s 4 photo scans/);
+    // 4 scans × 2 credits = 8 used; the coach still works.
+    const chat = await gate(call({}, 'jwt', plus), 'coach');
+    expect(chat).toMatchObject({ ok: true, credits: { left: 291, total: 300 } });
+    // A failed AI call gives the credit back.
+    if (chat.ok) await chat.refund!();
+    expect(Object.entries(counts).find(([k]) => k.startsWith('credits:'))![1]).toBe(8);
+    // Out of credits: told when they refresh, and that logging keeps working.
+    const key = Object.keys(counts).find((k) => k.startsWith('credits:'))!;
+    counts[key] = 299;
+    const out = await gate(call({}, 'jwt', plus), 'recipe');
+    expect(out).toMatchObject({ ok: false, status: 402 });
+    if (!out.ok) expect(String(out.body.error)).toMatch(/300 AI credits[\s\S]*refresh on[\s\S]*Logging, search/);
+  });
+
+  it('credits refresh with the billing date (monthly windows ending at renewal)', async () => {
+    const { creditCycle } = await import('../_lib/credits.js');
+    const now = Date.UTC(2026, 10, 22);
+    const exp = Date.UTC(2027, 3, 5); // yearly plan renewing 5 April
+    const c = creditCycle(exp, now);
+    expect(new Date(c.start).toISOString().slice(0, 10)).toBe('2026-11-05');
+    expect(new Date(c.end).toISOString().slice(0, 10)).toBe('2026-12-05');
+    expect(new Date(creditCycle(null, now).start).toISOString().slice(0, 10)).toBe('2026-11-01');
+  });
+
+  it('owner credit settings only accept sensible numbers', async () => {
+    const { cleanConfig, DEFAULT_CREDITS } = await import('../_lib/credits.js');
+    expect(cleanConfig({ monthlyCredits: 400, scansPerDay: 5, costs: { scan: 3, coach: -1 } })).toMatchObject({ monthlyCredits: 400, scansPerDay: 5, costs: { scan: 3, coach: DEFAULT_CREDITS.costs.coach } });
+    expect(cleanConfig({ monthlyCredits: 'lots' }).monthlyCredits).toBe(300);
+  });
+
   it('lets admins test without limits', async () => {
     const { gate } = await import('../_lib/quota.js');
     fakeSupabase({ [`scan:${U}`]: 999 }, 'boss@example.com');

@@ -30,7 +30,6 @@ export function costOf(model: string, u: Usage): number {
   return (n(u.input_tokens) * p.in + n(u.output_tokens) * p.out + n(u.cache_read_input_tokens) * p.cacheRead + n(u.cache_creation_input_tokens) * p.in * 1.25) / 1e6;
 }
 
-const LABEL: Record<string, string> = { scan: 'AI photo scans', menu: 'menu scans', label: 'label scans', coach: 'coach messages', import: 'recipe imports', recipe: 'AI recipes', plan: 'meal plans', workout: 'workout guides', ideas: 'meal ideas' };
 export type AiFeature = 'scan' | 'menu' | 'label' | 'coach' | 'import' | 'recipe' | 'plan' | 'workout' | 'ideas';
 export interface Caller { userId: string; tier: string; device?: string | null }
 
@@ -39,7 +38,7 @@ export const BURST_PER_10MIN = 80;
 export const DUP_SECONDS = 15;
 /** Per day, per account. REVIEW: owner gets an alert. CEILING: AI pauses until tomorrow (bulk/automated use). */
 export const REVIEW: Partial<Record<AiFeature, number>> = { scan: 25, menu: 7, coach: 75, import: 10, recipe: 10, plan: 5, workout: 5, ideas: 15 };
-/** Plus daily limits (published in the Terms). Far above what one person eating normally uses. */
+/** A second, louder alert level for the owner (paid use is capped by the monthly credits). */
 export const CEILING: Partial<Record<AiFeature, number>> = { scan: 50, menu: 15, coach: 150, import: 20, recipe: 20, plan: 10, workout: 10, ideas: 30 };
 
 async function record(feature: AiFeature, who: Caller, model: string, u: Usage | undefined) {
@@ -107,10 +106,7 @@ export async function fairUse(feature: AiFeature, who: Caller, paid: boolean, to
   const day = await hit(`d:${feature}:${who.userId}:${today}`, 26 * 3600);
   if (day == null) return { ok: true };
   if (day === (REVIEW[feature] ?? Infinity) + 1) await alert(who.userId, `daily:${feature}`, `${day} today`);
-  if (day > (CEILING[feature] ?? Infinity)) {
-    if (day === (CEILING[feature] ?? 0) + 1) await alert(who.userId, `ceiling:${feature}`, `${day} today`);
-    return { ok: false, status: 429, error: `You’ve reached today’s fair-use limit for ${LABEL[feature]} (${CEILING[feature]} a day). It resets tomorrow. Everything else, like searching and logging food, keeps working. If you need more, contact support.` };
-  }
+  if (day === (CEILING[feature] ?? Infinity) + 1) await alert(who.userId, `heavy:${feature}`, `${day} today`);
   return { ok: true };
 }
 
@@ -137,4 +133,10 @@ export async function cacheSet(key: string, value: unknown, ttlSeconds: number) 
     await admin()?.from('ai_cache').upsert({ key, value, expires: new Date(Date.now() + ttlSeconds * 1000).toISOString() });
     if (Math.random() < 0.01) await admin()?.from('ai_cache').delete().lt('expires', new Date().toISOString());
   } catch { /* caching is optional */ }
+}
+
+/** A failed or refused request after credits were spent: give them back, then answer. */
+export async function refundOnError(g: { refund?: () => Promise<void> } | null | undefined, r: Response): Promise<Response> {
+  if (r.status >= 400) await g?.refund?.();
+  return r;
 }

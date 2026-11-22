@@ -130,19 +130,20 @@ export function Terms() {
         <li>Cancellations and refunds are covered by our <Link to="/refunds" className="font-semibold text-accent">Cancellation & Refund Policy</Link>.</li>
       </ul>
 
-      <H>Fair use of AI features</H>
+      <H>AI credits and fair use</H>
       <ul className="list-disc space-y-2 pl-5">
-        <li>Plus includes generous daily AI allowances for your own personal use: up to 50 photo scans, 150 coach messages, 20 recipe imports, 20 AI recipes, 10 meal plans and 10 workout guides a day. Coach voice replies use your phone’s own voice and have no limit. Searching, logging food, saved meals and everything else are never limited.</li>
-        <li>Not personal use: automated or scripted requests, bulk scanning (for example hundreds of photos in a day), sharing one account between several people, or using {APP_NAME}’s AI for a business or for other people.</li>
-        <li>If an account sends requests faster than a person could, we ask it to wait a minute. If you reach a daily allowance, that AI feature pauses until the next day and the app tells you when it happens. Nothing else on your account is affected.</li>
-        <li>We watch for unusual use so the price can stay low for everyone. If we think an account is being misused we’ll contact you first, and support can always lift a pause made by mistake.</li>
+        <li>Plus includes a monthly allowance of AI credits (currently 300), which refreshes on your billing date each month, also on yearly plans. Each AI feature uses credits: a food photo scan 2, a coach message 1, an AI recipe 3, a meal plan 5, a workout guide 3. Up to 4 photo scans a day. Profile shows your balance and the current costs.</li>
+        <li>Unused credits don’t roll over. If the AI fails to answer, the credits are returned. Sending the same photo or recipe again uses no credits.</li>
+        <li>Never limited and never use credits: logging food, searching the food database, barcode scanning, voice logging, saved meals, your own foods, and coach voice replies.</li>
+        <li>We may change the allowance or the cost of a feature for future billing months; we’ll tell you in the app first.</li>
+        <li>Not personal use: automated or scripted requests, sharing one account between several people, or using {APP_NAME}’s AI for a business. If an account sends requests faster than a person could, we ask it to wait a minute.</li>
       </ul>
 
       <H>Free trial and invites</H>
       <ul className="list-disc space-y-2 pl-5">
         <li>Each person can have one free 3-day Plus trial. No card is needed and it ends on its own; nothing is charged when it ends.</li>
         <li>Friends who join with your invite link get 14 days of Plus free, and you get 7 days of Plus for each friend who joins, up to 10 friends. Invites are for real people; we may remove free time earned with fake or duplicate accounts.</li>
-        <li>Free Plus time includes Plus features under the same fair use (invite rewards keep the coach at the Free allowance), has no cash value and can’t be exchanged or transferred.</li>
+        <li>Free Plus time includes Plus features with the same monthly AI credits (invite rewards keep the coach at the Free allowance), has no cash value and can’t be exchanged or transferred.</li>
       </ul>
 
       <H>Acceptable use and community rules</H>

@@ -19,6 +19,7 @@ import type { Theme } from '@/lib/types';
 import { ProfileForm } from '@/components/ProfileForm';
 import { ProfileHero } from '@/components/ProfileHero';
 import { InviteCard, TrialCard } from '@/components/FreePro';
+import { CreditsCard } from '@/components/CreditsCard';
 import { PageHeader, Segmented, Sheet, cx, fmt } from '@/components/ui';
 import { ReminderSettings } from '@/components/Notifications';
 import { calorieGoal } from '@/lib/energy';
@@ -113,6 +114,7 @@ export default function Profile({ mode = 'profile' }: { mode?: 'profile' | 'sett
           <PersonalDetails profile={profile} unit={settings.bodyUnit} dailyKcal={dailyKcal} onEdit={() => setEditing(true)} />
           <PreferencesCard onEdit={() => setEditing(true)} />
           <SubscriptionGroup />
+          <CreditsCard />
           <TrialCard className="mt-5" />
           <InviteCard className="mt-5" />
           <OwnerLink />
@@ -387,10 +389,10 @@ function SubscriptionGroup() {
             </div>
             <div className="rounded-2xl bg-accent/10 p-3">
               <p className="font-bold">Plus <span className="font-medium text-silver">· $8.99/mo</span></p>
-              <ul className="mt-1.5 space-y-1 text-silver"><li>Up to 50 AI scans a day and the coach</li><li>Coach talks back</li><li>Meal plans, recipes, workouts</li><li>Vitamin and eating-pattern reports</li></ul>
+              <ul className="mt-1.5 space-y-1 text-silver"><li>300 AI credits a month (scans, coach, recipes)</li><li>Coach talks back</li><li>Meal plans, recipes, workouts</li><li>Vitamin and eating-pattern reports</li></ul>
             </div>
           </div>
-          <Link to="/premium" className="block"><Row icon={<CreditCard size={18} />} label="See Plus" chevron><span className="text-sm font-semibold text-accent">$8.99/mo or $37.76/yr</span></Row></Link>
+          <Link to="/premium" className="block"><Row icon={<CreditCard size={18} />} label="See Plus" chevron><span className="text-sm font-semibold text-accent">$8.99/mo or $59.99/yr</span></Row></Link>
           <Link to="/premium?restore=1" className="block"><Row icon={<RotateCcw size={18} />} label="Restore purchase" chevron /></Link>
         </>
       )}

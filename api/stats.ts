@@ -24,7 +24,10 @@ export async function GET(request: Request): Promise<Response> {
     }
     return new Response(lines.join('\n'), { headers: { 'content-type': 'text/csv; charset=utf-8', 'content-disposition': 'attachment; filename="nutivili-mailing-list.csv"', 'cache-control': 'no-store' } });
   }
-  if (new URL(request.url).searchParams.get('ai') === '1') return json(await aiDashboard(db));
+  if (new URL(request.url).searchParams.get('ai') === '1') {
+    const { creditConfig } = await import('./_lib/credits.js');
+    return json({ ...(await aiDashboard(db)), credits: await creditConfig() });
+  }
   const rows: Row[] = [];
   for (let from = 0; from < 20000; from += 1000) {
     const { data, error } = await db.from('user_data').select('data, updated_at').range(from, from + 999);
@@ -114,4 +117,19 @@ async function aiDashboard(db: NonNullable<ReturnType<typeof admin>>) {
     alerts: (alerts.data ?? []).map((a: { at: string; user_id: string; kind: string; detail: string }) => ({ ...a, email: emails[a.user_id] ?? '' })),
     revenue, paymentFeePct: feePct * 100, margin,
   };
+}
+
+/** POST /api/stats {credits} (owner only): change the Plus credit allowance and the cost of each feature. */
+export async function POST(request: Request): Promise<Response> {
+  const user = await userFromToken(request.headers.get('x-user-token'));
+  if (!user) return json({ error: 'Sign in first.' }, 401);
+  if (!isAdmin(user.email)) return json({ error: 'Not available.' }, 403);
+  const body = (await request.json().catch(() => null)) as { credits?: unknown } | null;
+  if (!body?.credits) return json({ error: 'Nothing to save.' }, 400);
+  try {
+    const { saveCreditConfig } = await import('./_lib/credits.js');
+    return json({ credits: await saveCreditConfig(body.credits) });
+  } catch (e) {
+    return json({ error: `Couldn’t save: ${(e as Error).message}. Run supabase/ai-usage.sql first.` }, 500);
+  }
 }

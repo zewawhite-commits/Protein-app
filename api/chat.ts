@@ -29,12 +29,14 @@ export async function POST(request: Request): Promise<Response> {
   const coach = await gate(request, 'coach');
   if (!coach.ok) return json(coach.body, coach.status);
   // A photo in the chat also counts as one AI scan.
+  let scanGate: { refund?: () => Promise<void> } | null = null;
   if (image) {
     const scan = await gate(request, 'scan');
-    if (!scan.ok) return json({ ...scan.body, error: `${scan.body.error} You can still chat without photos.` }, scan.status);
+    if (!scan.ok) { await coach.refund?.(); return json({ ...scan.body, error: `${scan.body.error} You can still chat without photos.` }, scan.status); }
+    scanGate = scan;
   }
   // The same message sent twice in a few seconds is answered once.
-  if (await isDuplicate(coach.who.userId, JSON.stringify(turns.slice(-2)) + (image?.data.slice(0, 2048) ?? ''))) return json({ error: 'Already answering that. Give it a moment.', duplicate: true }, 409);
+  if (await isDuplicate(coach.who.userId, JSON.stringify(turns.slice(-2)) + (image?.data.slice(0, 2048) ?? ''))) { await coach.refund?.(); await scanGate?.refund?.(); return json({ error: 'Already answering that. Give it a moment.', duplicate: true }, 409); }
   const pro = coach.tier === 'pro' || coach.tier === 'trial';
   const quota = { left: coach.left, limit: coach.limit, tier: coach.tier };
   // Streaming (?stream=1): newline-separated JSON — {"t": piece} while writing, then {"done": reply}.
@@ -58,6 +60,7 @@ export async function POST(request: Request): Promise<Response> {
           send({ done: { ...reply, quota } });
         } catch (e) {
     await logAiError('chat', e);
+          await coach.refund?.(); await scanGate?.refund?.();
           if (e instanceof Anthropic.APIError) console.error('[ai]', e.status, e.message);
           send({ error: e instanceof Anthropic.RateLimitError ? 'Busy, try again in a moment.' : e instanceof Anthropic.APIError ? busyMessage(e) : (e as Error).message || 'Could not reply.' });
         } finally {
@@ -71,6 +74,7 @@ export async function POST(request: Request): Promise<Response> {
     return json({ ...(await coachWithClient(aiClient('coach', coach.who), turns, cleanContext(body?.context), image, { pro })), quota });
   } catch (e) {
     await logAiError('chat', e);
+    await coach.refund?.(); await scanGate?.refund?.();
     if (e instanceof Anthropic.RateLimitError) return json({ error: 'Busy — try again in a moment.' }, 429);
     if (e instanceof Anthropic.APIError) console.error('[ai]', e.status, e.message);
     if (e instanceof Anthropic.APIError) return json({ error: busyMessage(e) }, 502);

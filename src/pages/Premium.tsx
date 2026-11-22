@@ -14,13 +14,13 @@ import { Segmented, cx } from '@/components/ui';
 /** Planned prices, shown until live plans load from the payment provider (which sets the real charge). */
 const PREVIEW = [
   { tier: null, name: 'Free', perks: ['Calories, macros & 18,000+ foods', 'Barcode, exercise, progress & feed', '3 AI scans + 5 coach messages a day'], best: false },
-  { tier: 'pro' as Tier, name: 'Plus', perks: ['Up to 50 AI food scans a day', 'Restaurant menus: photo, QR code or link', 'Smarter, personal AI nutrition coach', 'Personalized weekly & monthly meal plans', 'Plans adjust automatically to your progress', 'Daily meal suggestions', 'AI recipes and recipe imports', 'AI workout guides', 'Advanced micronutrient analysis', 'Detailed nutrition reports', 'Adjusts to your cuisine & diet'], best: true },
+  { tier: 'pro' as Tier, name: 'Plus', perks: ['300 AI credits a month for scans, coach, recipes and plans', 'Restaurant menus: photo, QR code or link', 'Smarter, personal AI nutrition coach', 'Personalized weekly & monthly meal plans', 'Plans adjust automatically to your progress', 'Daily meal suggestions', 'AI recipes and recipe imports', 'AI workout guides', 'Advanced micronutrient analysis', 'Detailed nutrition reports', 'Adjusts to your cuisine & diet'], best: true },
 ];
 
 const TIER_INFO: Record<'free' | Tier, { name: string; perks: string[] }> = {
   free: { name: 'Free', perks: ['18,000+ foods, barcode, exercise & progress', 'Feed and groups', '3 AI scans + 5 coach messages a day', '1 recipe import a day'] },
-  plus: { name: 'Plus', perks: ['Up to 50 AI food scans a day', 'Restaurant menus: photo, QR code or link', 'Smarter, personal AI nutrition coach', 'Personalized weekly & monthly meal plans', 'Plans adjust automatically to your progress', 'Daily meal suggestions', 'AI recipes and recipe imports', 'AI workout guides', 'Advanced micronutrient analysis', 'Detailed nutrition reports', 'Adjusts to your cuisine & diet', 'No ads'] },
-  pro: { name: 'Plus', perks: ['Up to 50 AI food scans a day', 'Restaurant menus: photo, QR code or link', 'Smarter, personal AI nutrition coach', 'Personalized weekly & monthly meal plans', 'Plans adjust automatically to your progress', 'Daily meal suggestions', 'AI recipes and recipe imports', 'AI workout guides', 'Advanced micronutrient analysis', 'Detailed nutrition reports', 'Adjusts to your cuisine & diet', 'No ads'] },
+  plus: { name: 'Plus', perks: ['300 AI credits a month for scans, coach, recipes and plans', 'Restaurant menus: photo, QR code or link', 'Smarter, personal AI nutrition coach', 'Personalized weekly & monthly meal plans', 'Plans adjust automatically to your progress', 'Daily meal suggestions', 'AI recipes and recipe imports', 'AI workout guides', 'Advanced micronutrient analysis', 'Detailed nutrition reports', 'Adjusts to your cuisine & diet', 'No ads'] },
+  pro: { name: 'Plus', perks: ['300 AI credits a month for scans, coach, recipes and plans', 'Restaurant menus: photo, QR code or link', 'Smarter, personal AI nutrition coach', 'Personalized weekly & monthly meal plans', 'Plans adjust automatically to your progress', 'Daily meal suggestions', 'AI recipes and recipe imports', 'AI workout guides', 'Advanced micronutrient analysis', 'Detailed nutrition reports', 'Adjusts to your cuisine & diet', 'No ads'] },
 };
 
 type Billing = 'monthly' | 'yearly';
@@ -133,7 +133,7 @@ export default function Premium() {
             </div>
           )}
           <div className="mb-4 flex justify-center">
-            <Segmented<Billing> value={billing} onChange={setBilling} options={[{ value: 'monthly', label: 'Monthly' }, { value: 'yearly', label: 'Yearly · save 65%' }]} />
+            <Segmented<Billing> value={billing} onChange={setBilling} options={[{ value: 'monthly', label: 'Monthly' }, { value: 'yearly', label: 'Yearly · save 44%' }]} />
           </div>
           <div className="grid gap-2.5">
             {PREVIEW.map((t) => { const pr = t.tier ? plannedPrice(t.tier, billing) : { price: '$0', sub: 'forever', save: 0 }; return (
@@ -160,7 +160,7 @@ export default function Premium() {
           <TrialCard className="mt-6" />
           {hasYearly && plans.some((p) => p.id.endsWith('monthly')) && (
             <div className="mt-6 flex justify-center">
-              <Segmented<Billing> value={billing} onChange={setBilling} options={[{ value: 'monthly', label: 'Monthly' }, { value: 'yearly', label: 'Yearly · save 65%' }]} />
+              <Segmented<Billing> value={billing} onChange={setBilling} options={[{ value: 'monthly', label: 'Monthly' }, { value: 'yearly', label: 'Yearly · save 44%' }]} />
             </div>
           )}
 

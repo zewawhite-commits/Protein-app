@@ -10,7 +10,7 @@
 export const maxDuration = 60;
 import { busyMessage, logAiError } from './_lib/aiErrors.js';
 import Anthropic from '@anthropic-ai/sdk';
-import { aiClient, cacheGet, cacheKey, cacheSet, isDuplicate } from './_lib/metering.js';
+import { aiClient, cacheGet, cacheKey, cacheSet, isDuplicate, refundOnError } from './_lib/metering.js';
 import { recognizeWithClient } from '../src/lib/recognition.js';
 import { gate, whoIs } from './_lib/quota.js';
 import { pageText, safeRecipeUrl } from '../src/lib/recipeImport.js';
@@ -36,42 +36,42 @@ export async function POST(request: Request): Promise<Response> {
   if (!g.ok) return json(g.body, g.status);
   if (Number.isFinite(g.left)) scansLeft = g.left;
   // The same photo or text sent twice in a few seconds (double tap, retry): answered once.
-  if (await isDuplicate(g.who.userId, `${body.image?.slice(0, 4096) ?? ''}|${body.image?.length ?? 0}|${body.text ?? ''}|${body.menuUrl ?? ''}|${body.label ? 1 : 0}`)) return json({ error: 'Already working on that one. Give it a moment.', duplicate: true }, 409);
+  if (await isDuplicate(g.who.userId, `${body.image?.slice(0, 4096) ?? ''}|${body.image?.length ?? 0}|${body.text ?? ''}|${body.menuUrl ?? ''}|${body.label ? 1 : 0}`)) return refundOnError(g, json({ error: 'Already working on that one. Give it a moment.', duplicate: true }, 409));
   // A menu behind a QR code or link: read the page, then list its dishes like a menu photo.
   if (typeof body.menuUrl === 'string') {
     const url = safeRecipeUrl(body.menuUrl);
-    if (!url) return json({ error: 'That QR code or link doesn’t open a normal web page.' }, 400);
+    if (!url) return refundOnError(g, json({ error: 'That QR code or link doesn’t open a normal web page.' }, 400));
     try {
       const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), 8000);
       const res = await fetch(url, { signal: ctl.signal, redirect: 'follow', headers: { 'user-agent': 'Mozilla/5.0 (compatible; MenuReader/1.0)', accept: 'text/html,application/pdf,image/*' } }).finally(() => clearTimeout(t));
       const type = res.headers.get('content-type') ?? '';
-      if (!res.ok || !safeRecipeUrl(res.url)) return json({ error: 'Couldn’t open that menu. Take a photo of it instead.' }, 422);
+      if (!res.ok || !safeRecipeUrl(res.url)) return refundOnError(g, json({ error: 'Couldn’t open that menu. Take a photo of it instead.' }, 422));
       // Menus that open as a PDF or a picture are read directly.
       const fileType = type.includes('pdf') ? 'application/pdf' : (['image/jpeg', 'image/png', 'image/webp', 'image/gif'].find((t) => type.includes(t)) ?? '');
       if (fileType) {
         const buf = Buffer.from(await res.arrayBuffer());
-        if (buf.length > (fileType === 'application/pdf' ? 15 : 5) * 1024 * 1024) return json({ error: 'That menu file is too big to read. Take a photo of the page you want instead.' }, 413);
+        if (buf.length > (fileType === 'application/pdf' ? 15 : 5) * 1024 * 1024) return refundOnError(g, json({ error: 'That menu file is too big to read. Take a photo of the page you want instead.' }, 413));
         const recognized = await recognizeWithClient(aiClient('menu', g.who), buf.toString('base64'), fileType, undefined, { menu: true });
         return json(scansLeft != null ? { ...recognized, popular: {}, scansLeft, scanLimit: g.limit } : { ...recognized, popular: {} }, 200);
       }
-      if (!type.includes('html')) return json({ error: 'Couldn’t read that kind of menu. Take a photo of it instead.' }, 422);
+      if (!type.includes('html')) return refundOnError(g, json({ error: 'Couldn’t read that kind of menu. Take a photo of it instead.' }, 422));
       const text = pageText((await res.text()).slice(0, 2_000_000));
-      if (text.length < 40) return json({ error: 'That page has no readable menu (it may load with an app). Take a photo of the menu instead.' }, 422);
+      if (text.length < 40) return refundOnError(g, json({ error: 'That page has no readable menu (it may load with an app). Take a photo of the menu instead.' }, 422));
       const recognized = await recognizeWithClient(aiClient('menu', g.who), null, 'text/plain', text, { menu: true });
       return json(scansLeft != null ? { ...recognized, popular: {}, scansLeft, scanLimit: g.limit } : { ...recognized, popular: {} }, 200);
     } catch (e) {
     await logAiError('recognize', e);
-      if ((e as Error).name === 'AbortError') return json({ error: 'That menu took too long to open. Take a photo of it instead.' }, 504);
-      if (e instanceof Anthropic.APIError) return json({ error: busyMessage(e) }, 502);
-      return json({ error: (e as Error).message || 'Couldn’t read that menu.' }, 500);
+      if ((e as Error).name === 'AbortError') return refundOnError(g, json({ error: 'That menu took too long to open. Take a photo of it instead.' }, 504));
+      if (e instanceof Anthropic.APIError) return refundOnError(g, json({ error: busyMessage(e) }, 502));
+      return refundOnError(g, json({ error: (e as Error).message || 'Couldn’t read that menu.' }, 500));
     }
   }
   const { image, mediaType = 'image/jpeg' } = body;
   const text = typeof body.text === 'string' ? body.text.trim().slice(0, 500) : '';
   if (!text) {
-    if (!image || typeof image !== 'string') return json({ error: 'Missing image.' }, 400);
-    if (!TYPES.has(mediaType)) return json({ error: 'Unsupported image type.' }, 415);
-    if ((image.length * 3) / 4 > MAX_BYTES) return json({ error: 'Image too large (max 5 MB).' }, 413);
+    if (!image || typeof image !== 'string') return refundOnError(g, json({ error: 'Missing image.' }, 400));
+    if (!TYPES.has(mediaType)) return refundOnError(g, json({ error: 'Unsupported image type.' }, 415));
+    if ((image.length * 3) / 4 > MAX_BYTES) return refundOnError(g, json({ error: 'Image too large (max 5 MB).' }, 413));
   }
 
   try {
@@ -89,11 +89,11 @@ export async function POST(request: Request): Promise<Response> {
     return json(scansLeft != null ? { ...result, scansLeft, scanLimit: g.limit } : result, 200);
   } catch (e) {
     await logAiError('recognize', e);
-    if (e instanceof Anthropic.RateLimitError) return json({ error: 'Busy — try again in a moment.' }, 429);
+    if (e instanceof Anthropic.RateLimitError) return refundOnError(g, json({ error: 'Busy — try again in a moment.' }, 429));
     if (e instanceof Anthropic.APIError) console.error('[ai]', e.status, e.message);
-    if (e instanceof Anthropic.APIError) return json({ error: busyMessage(e) }, 502);
+    if (e instanceof Anthropic.APIError) return refundOnError(g, json({ error: busyMessage(e) }, 502));
     console.error('[recognize]', (e as Error)?.message ?? e);
-    return json({ error: (e as Error).message || 'Recognition failed.' }, 500);
+    return refundOnError(g, json({ error: (e as Error).message || 'Recognition failed.' }, 500));
   }
 }
 

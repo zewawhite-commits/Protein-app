@@ -4,7 +4,7 @@ import { busyMessage } from './_lib/aiErrors.js';
  * AI meal ideas (food names only). Requires a Premium pass when payments are configured.
  */
 import Anthropic from '@anthropic-ai/sdk';
-import { aiClient } from './_lib/metering.js';
+import { aiClient, refundOnError } from './_lib/metering.js';
 import { ideasWithClient, type IdeaRequest } from '../src/lib/recommendation.js';
 import { json } from './_lib/premium.js';
 import { gate } from './_lib/quota.js';
@@ -16,7 +16,7 @@ export async function POST(request: Request): Promise<Response> {
   if (!g.ok) return json(g.body, g.status);
   const body = (await request.json().catch(() => null)) as IdeaRequest | null;
   if (!body || typeof body.remainingGrams !== 'number' || body.remainingGrams < 0 || body.remainingGrams > 1000) {
-    return json({ error: 'Invalid request.' }, 400);
+    return refundOnError(g, json({ error: 'Invalid request.' }, 400));
   }
   const req: IdeaRequest = {
     country: typeof body.country === 'string' ? body.country.slice(0, 60) : undefined,
@@ -45,10 +45,10 @@ export async function POST(request: Request): Promise<Response> {
       .map((i) => (allergensIn(i.swap, avoid).length ? { ...i, swap: '' } : i));
     return json({ ideas });
   } catch (e) {
-    if (e instanceof Anthropic.RateLimitError) return json({ error: 'Busy — try again in a moment.' }, 429);
+    if (e instanceof Anthropic.RateLimitError) return refundOnError(g, json({ error: 'Busy — try again in a moment.' }, 429));
     if (e instanceof Anthropic.APIError) console.error('[ai]', e.status, e.message);
-    if (e instanceof Anthropic.APIError) return json({ error: busyMessage(e) }, 502);
+    if (e instanceof Anthropic.APIError) return refundOnError(g, json({ error: busyMessage(e) }, 502));
     console.error('[recommend]', (e as Error)?.message ?? e);
-    return json({ error: (e as Error).message || 'Could not get suggestions.' }, 500);
+    return refundOnError(g, json({ error: (e as Error).message || 'Could not get suggestions.' }, 500));
   }
 }

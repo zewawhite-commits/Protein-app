@@ -12,6 +12,7 @@ interface Dash {
   alerts: { at: string; user_id: string; email: string; kind: string; detail: string }[];
   revenue: { monthlyUsd: number | null; subscribers: number; currency: string; note?: string };
   paymentFeePct: number; margin: number | null;
+  credits?: { monthlyCredits: number; scansPerDay: number; costs: Record<string, number> };
 }
 const NAME: Record<string, string> = { scan: 'Photo scans', menu: 'Menu scans', label: 'Label scans', coach: 'Coach', import: 'Recipe imports', recipe: 'AI recipes', plan: 'Meal plans', workout: 'Workouts', ideas: 'Meal ideas' };
 const usd = (n: number) => `$${n < 1 ? n.toFixed(3) : fmt(n, 2)}`;
@@ -52,6 +53,8 @@ export function AiCosts() {
         {features.map((f) => <div key={f.feature} className="flex justify-between py-1.5"><span>{NAME[f.feature] ?? f.feature} <span className="text-silver">· {fmt(f.requests)} requests</span></span><span className="num font-semibold">{usd(f.cost)} <span className="text-xs font-normal text-silver">({usd(f.requests ? f.cost / f.requests : 0)} each)</span></span></div>)}
       </div>
 
+      {d.credits && <CreditSettings initial={d.credits} perRequest={Object.fromEntries(features.map((f) => [f.feature, f.requests ? f.cost / f.requests : 0]))} />}
+
       <p className="mt-4 font-semibold">Highest-cost accounts</p>
       <div className="mt-1 divide-y divide-line text-sm">
         {d.top.map((t) => <div key={t.user_id} className="flex justify-between gap-2 py-1.5"><span className="min-w-0 truncate">{t.email || t.user_id.slice(0, 8)} <span className="text-silver">· {t.tier} · {t.requests} requests · {t.scans} scans · {t.coach} coach{t.devices > 3 ? ` · ${t.devices} devices (check)` : ''}</span></span><span className="num font-semibold">{usd(t.cost)}</span></div>)}
@@ -68,5 +71,38 @@ export function AiCosts() {
       ) : <p className="text-sm text-silver">No alerts.</p>}
       <p className="mt-3 text-xs leading-relaxed text-dim">Alerts: very fast bursts, unusually heavy days (for review only, nobody is blocked) and the fair-use ceiling being reached. Accounts used from more than 3 devices are marked “check”.</p>
     </section>
+  );
+}
+
+/** Owner: change the Plus credit allowance and costs (provisional until real costs are measured). */
+function CreditSettings({ initial, perRequest }: { initial: NonNullable<Dash['credits']>; perRequest: Record<string, number> }) {
+  const [cfg, setCfg] = useState(initial);
+  const [msg, setMsg] = useState('');
+  const set = (k: string, v: string) => setCfg((c) => ({ ...c, costs: { ...c.costs, [k]: Math.max(0, Math.round(Number(v) || 0)) } }));
+  // What one credit costs you at worst, per feature, from this month's real spend.
+  const worst = Math.max(0, ...Object.entries(cfg.costs).map(([k, n]) => (n && perRequest[k] ? perRequest[k] / n : 0)));
+  const save = async () => {
+    setMsg('Saving…');
+    try {
+      const res = await fetch('/api/stats', { method: 'POST', headers: await aiHeaders(), body: JSON.stringify({ credits: cfg }) });
+      const j = (await res.json()) as { credits?: typeof cfg; error?: string };
+      if (!res.ok) throw new Error(j.error ?? 'Failed');
+      setCfg(j.credits!); setMsg('Saved. New values apply within a minute.');
+    } catch (e) { setMsg((e as Error).message); }
+  };
+  return (
+    <div className="mt-4 rounded-2xl bg-raised p-4">
+      <p className="font-semibold">Plus AI credits</p>
+      <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
+        <label className="flex items-center justify-between gap-2">Credits a month<input className="field !h-9 !w-20 text-right" inputMode="numeric" value={cfg.monthlyCredits} onChange={(e) => setCfg({ ...cfg, monthlyCredits: Math.max(0, Math.round(Number(e.target.value) || 0)) })} /></label>
+        <label className="flex items-center justify-between gap-2">Photo scans a day<input className="field !h-9 !w-20 text-right" inputMode="numeric" value={cfg.scansPerDay} onChange={(e) => setCfg({ ...cfg, scansPerDay: Math.max(0, Math.round(Number(e.target.value) || 0)) })} /></label>
+        {Object.keys(cfg.costs).map((k) => (
+          <label key={k} className="flex items-center justify-between gap-2">{NAME[k] ?? k}<span className="flex items-center gap-1"><input className="field !h-9 !w-14 text-right" inputMode="numeric" value={cfg.costs[k]} onChange={(e) => set(k, e.target.value)} />{perRequest[k] ? <span className="text-[11px] text-dim">{usd(perRequest[k])}</span> : null}</span></label>
+        ))}
+      </div>
+      <p className="mt-2 text-xs text-silver">Grey numbers: this month’s real average cost of one request. A full month of credits costs you at most about <b className="num">{usd(worst * cfg.monthlyCredits)}</b> per member{worst ? '' : ' (no data yet)'}.</p>
+      <button onClick={save} className="btn-primary mt-3 !h-10 w-full text-sm">Save credit settings</button>
+      {msg && <p className="mt-2 text-xs text-silver">{msg}</p>}
+    </div>
   );
 }

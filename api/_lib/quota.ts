@@ -18,6 +18,7 @@
 import { bearer, readPass } from './premium.js';
 import { accountsConfigured, useScan, userFromToken } from './accounts.js';
 import { fairUse, type AiFeature, type Caller } from './metering.js';
+import { creditConfig, creditCycle, creditKey, refund, scanDayKey, SCAN_FEATURES, spend, usedNow } from './credits.js';
 
 export type Feature = 'scan' | 'coach' | 'workout' | 'recipe' | 'plan' | 'ideas' | 'menu' | 'import';
 export type PlanTier = 'free' | 'plus' | 'pro' | 'trial' | 'reward';
@@ -62,7 +63,7 @@ export function limitFor(tier: PlanTier, feature: Feature): number {
 export const isAdmin = (email: string) =>
   (process.env.ADMIN_EMAILS ?? '').split(',').map((e) => e.trim().toLowerCase()).filter(Boolean).includes(email.toLowerCase());
 
-export interface Allowed { ok: true; tier: PlanTier; left: number; limit: number; who: Caller }
+export interface Allowed { ok: true; tier: PlanTier; left: number; limit: number; who: Caller; /** Give back what this request spent (the AI call failed). */ refund?: () => Promise<void>; credits?: { left: number; total: number } }
 export interface Denied { ok: false; status: number; body: Record<string, unknown> }
 
 /** Who is calling and what plan they're on (no counting). */
@@ -75,7 +76,7 @@ export async function whoIs(request: Request) {
   const freePro = !!user && user.perks.proUntil > Date.now();
   const reward = !!user && (user.perks.rewardUntil ?? 0) > Date.now();
   const tier: PlanTier = paid ? (paid.tier === 'pro' ? 'pro' : 'plus') : freePro ? 'trial' : reward ? 'reward' : 'free';
-  return { user, tier, pass, expired: !!pass && pass.exp <= Date.now() };
+  return { user, tier, pass, paid, expired: !!pass && pass.exp <= Date.now() };
 }
 
 /** Check and count one use of a feature. */
@@ -103,6 +104,8 @@ export async function gate(request: Request, feature: Feature, count = 1): Promi
   // Throttling for everyone; fair-use review and far-out ceiling for unlimited (paid) use.
   const fair = await fairUse(feature as AiFeature, caller, tier !== 'free');
   if (!fair.ok) return { ok: false, status: fair.status, body: { error: fair.error, fairUse: true, feature, tier } };
+  // Paid plans (and the trial / invite rewards): a monthly AI credit allowance plus a daily photo-scan cap.
+  if (tier !== 'free' && !(tier === 'reward' && feature === 'coach')) return spendCredits(feature, caller, who.paid?.exp ?? null, count);
   const limit = limitFor(tier, feature);
   if (limit <= 0) {
     return { ok: false, status: 402, body: { error: `${NAMES[feature][0].toUpperCase()}${NAMES[feature].slice(1)} come with Plus.`, premium: true, feature, tier, renew: expired } };
@@ -114,7 +117,7 @@ export async function gate(request: Request, feature: Feature, count = 1): Promi
       if (left < 0) break;
     }
     if (left < 0) {
-      return { ok: false, status: 402, body: { error: tier === 'plus' ? `You’ve used your ${limit} ${NAMES[feature]} for now.` : tier === 'reward' ? `You’ve used your ${limit} ${NAMES[feature]} for today. They reset tomorrow, or upgrade to Plus for unlimited.` : `You’ve used your ${limit} free ${limit === 1 ? NAMES[feature].replace(/s$/, '') : NAMES[feature]} for today. They reset tomorrow, or upgrade to Plus for unlimited.`, premium: true, limitReached: true, feature, tier } };
+      return { ok: false, status: 402, body: { error: tier === 'reward' ? `You’ve used your ${limit} ${NAMES[feature]} for today. They reset tomorrow, or upgrade to Plus for unlimited.` : `You’ve used your ${limit} free ${limit === 1 ? NAMES[feature].replace(/s$/, '') : NAMES[feature]} for today. They reset tomorrow, or upgrade to Plus for unlimited.`, premium: true, limitReached: true, feature, tier } };
     }
     return { ok: true, tier, left, limit, who: caller };
   } catch (e) {
@@ -145,4 +148,46 @@ export async function usage(request: Request) {
     // null = unlimited (admins, or a fair-use cap on paid plans).
     features: Object.fromEntries(features.map((f) => { const l = limitFor(tier, f); return [f, { used: used[f] ?? 0, limit: unlimited || l >= UNLIMITED ? null : l }]; })),
   };
+}
+
+const fmtDate = (t: number) => new Date(t).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', timeZone: 'UTC' });
+
+/** Deduct this feature's credits (and a daily photo scan) for a paid plan, atomically, before the AI call. */
+async function spendCredits(feature: Feature, who: Caller, passExp: number | null, count = 1): Promise<Allowed | Denied> {
+  const cfg = await creditConfig();
+  const cost = (cfg.costs[feature] ?? 1) * count;
+  const cycle = creditCycle(passExp);
+  const ck = creditKey(who.userId, cycle.start);
+  let dayKey: string | null = null;
+  if (SCAN_FEATURES.has(feature)) {
+    dayKey = scanDayKey(who.userId);
+    const day = await spend(dayKey, count, cfg.scansPerDay);
+    if (day === -1) {
+      const left = Math.max(0, cfg.monthlyCredits - (await usedNow(ck)));
+      return { ok: false, status: 429, body: { error: `You’ve used today’s ${cfg.scansPerDay} photo scans. More tomorrow. You still have ${left} AI credits for the coach and recipes, and logging by search, barcode or voice always works.`, limitReached: true, scanDay: true, feature, tier: who.tier } };
+    }
+    if (day == null) dayKey = null; // ledger not set up: never block
+  }
+  const used = await spend(ck, cost, cfg.monthlyCredits);
+  if (used === -1) {
+    if (dayKey) await refund(dayKey, count);
+    return { ok: false, status: 402, body: { error: `You’ve used this month’s ${cfg.monthlyCredits} AI credits. They refresh on ${fmtDate(cycle.end)}. Logging, search, barcode, voice and saved meals keep working.`, limitReached: true, creditsOut: true, resetsAt: cycle.end, feature, tier: who.tier } };
+  }
+  const left = used == null ? cfg.monthlyCredits : cfg.monthlyCredits - used;
+  return {
+    ok: true, tier: who.tier as PlanTier, left: Infinity, limit: Infinity, who,
+    credits: { left, total: cfg.monthlyCredits },
+    refund: async () => { if (used != null) await refund(ck, cost); if (dayKey) await refund(dayKey, count); },
+  };
+}
+
+/** Credit balance for Profile (paid plans only). */
+export async function creditBalance(request: Request) {
+  const { user, tier, paid } = await whoIs(request);
+  if (!user || tier === 'free') return null;
+  const cfg = await creditConfig();
+  const cycle = creditCycle(paid?.exp ?? null);
+  const used = await usedNow(creditKey(user.id, cycle.start));
+  const scansToday = await usedNow(scanDayKey(user.id));
+  return { total: cfg.monthlyCredits, used, left: Math.max(0, cfg.monthlyCredits - used), resetsAt: cycle.end, costs: cfg.costs, scansPerDay: cfg.scansPerDay, scansToday };
 }

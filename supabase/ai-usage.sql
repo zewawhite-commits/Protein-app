@@ -88,3 +88,37 @@ create table if not exists public.ai_cache (
 );
 create index if not exists ai_cache_expires on public.ai_cache (expires);
 alter table public.ai_cache enable row level security;
+
+-- Plus AI credits: credits used per billing month (key = credits:<user>:<cycle start>) and the
+-- daily photo-scan count for paid plans (key = scanday:<user>:<date>).
+create table if not exists public.ai_credits (
+  key   text primary key,
+  used  integer not null default 0,
+  at    timestamptz not null default now()
+);
+alter table public.ai_credits enable row level security;
+
+-- Spend p_cost if it fits under p_limit. Returns the new total used, or -1 if it doesn't fit.
+create or replace function public.credit_spend(p_key text, p_cost integer, p_limit integer)
+returns integer language plpgsql security definer set search_path = public as $$
+declare v integer;
+begin
+  insert into ai_credits (key, used) values (p_key, 0) on conflict (key) do nothing;
+  update ai_credits set used = used + p_cost, at = now() where key = p_key and used + p_cost <= p_limit returning used into v;
+  return coalesce(v, -1);
+end $$;
+-- Give credits back when the AI call failed.
+create or replace function public.credit_refund(p_key text, p_cost integer)
+returns void language sql security definer set search_path = public as $$
+  update ai_credits set used = greatest(0, used - p_cost), at = now() where key = p_key
+$$;
+revoke all on function public.credit_spend(text, integer, integer) from public, anon, authenticated;
+revoke all on function public.credit_refund(text, integer) from public, anon, authenticated;
+
+-- Owner-editable settings (credit allowance and costs), changed from the owner dashboard.
+create table if not exists public.ai_config (
+  key    text primary key,
+  value  jsonb not null,
+  at     timestamptz not null default now()
+);
+alter table public.ai_config enable row level security;

@@ -36,11 +36,9 @@ describe('fair use decisions', () => {
     const m = await withCounts({ b1: 13 });
     expect(await m.fairUse('coach', { ...who, tier: 'free' }, false)).toMatchObject({ ok: false, status: 429 });
   });
-  it('bulk use far beyond personal use pauses that feature for the day, with a clear reason', async () => {
+  it('heavy paid use only alerts the owner (monthly credits are the limit)', async () => {
     const m = await withCounts({ 'd:scan': 201 });
-    const v = await m.fairUse('scan', who, true);
-    expect(v).toMatchObject({ ok: false, status: 429 });
-    expect((v as { error: string }).error).toMatch(/fair-use limit for AI photo scans \(50 a day\)[\s\S]*resets tomorrow/);
+    expect(await m.fairUse('scan', who, true)).toEqual({ ok: true });
   });
   it('counters unavailable → never blocks', async () => {
     vi.doMock('../_lib/accounts.js', () => ({ admin: () => ({ rpc: async () => ({ data: null, error: { message: 'missing' } }), from: () => ({ insert: async () => ({}) }) }) }));

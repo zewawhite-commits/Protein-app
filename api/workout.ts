@@ -5,7 +5,7 @@
 export const maxDuration = 60;
 import { busyMessage, logAiError } from './_lib/aiErrors.js';
 import Anthropic from '@anthropic-ai/sdk';
-import { aiClient } from './_lib/metering.js';
+import { aiClient, refundOnError } from './_lib/metering.js';
 import { contextText } from '../src/lib/coach.js';
 import { cleanWorkoutRequest, workoutWithClient } from '../src/lib/workout.js';
 import { json } from './_lib/premium.js';
@@ -21,10 +21,10 @@ export async function POST(request: Request): Promise<Response> {
     return json(await workoutWithClient(aiClient('workout', g.who), cleanContext(body?.context), cleanWorkoutRequest(body?.request), contextText));
   } catch (e) {
     await logAiError('workout', e);
-    if (e instanceof Anthropic.RateLimitError) return json({ error: 'Busy — try again in a moment.' }, 429);
+    if (e instanceof Anthropic.RateLimitError) return refundOnError(g, json({ error: 'Busy — try again in a moment.' }, 429));
     if (e instanceof Anthropic.APIError) console.error('[ai]', e.status, e.message);
-    if (e instanceof Anthropic.APIError) return json({ error: busyMessage(e) }, 502);
+    if (e instanceof Anthropic.APIError) return refundOnError(g, json({ error: busyMessage(e) }, 502));
     console.error('[workout]', (e as Error)?.message ?? e);
-    return json({ error: (e as Error).message || 'Could not make a workout guide.' }, 500);
+    return refundOnError(g, json({ error: (e as Error).message || 'Could not make a workout guide.' }, 500));
   }
 }

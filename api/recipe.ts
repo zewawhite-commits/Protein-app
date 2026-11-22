@@ -5,7 +5,7 @@
 export const maxDuration = 60;
 import { busyMessage, logAiError } from './_lib/aiErrors.js';
 import Anthropic from '@anthropic-ai/sdk';
-import { aiClient, cacheGet, cacheKey, cacheSet, isDuplicate } from './_lib/metering.js';
+import { aiClient, cacheGet, cacheKey, cacheSet, isDuplicate, refundOnError } from './_lib/metering.js';
 import { contextText } from '../src/lib/coach.js';
 import { recipeWithClient } from '../src/lib/recipe.js';
 import { importRecipeWithClient, pageText, safeRecipeUrl } from '../src/lib/recipeImport.js';
@@ -32,11 +32,11 @@ export async function POST(request: Request): Promise<Response> {
     return json({ ...r, allergens: found(r) });
   } catch (e) {
     await logAiError('recipe', e);
-    if (e instanceof Anthropic.RateLimitError) return json({ error: 'Busy — try again in a moment.' }, 429);
+    if (e instanceof Anthropic.RateLimitError) return refundOnError(g, json({ error: 'Busy — try again in a moment.' }, 429));
     if (e instanceof Anthropic.APIError) console.error('[ai]', e.status, e.message);
-    if (e instanceof Anthropic.APIError) return json({ error: busyMessage(e) }, 502);
+    if (e instanceof Anthropic.APIError) return refundOnError(g, json({ error: busyMessage(e) }, 502));
     console.error('[recipe]', (e as Error)?.message ?? e);
-    return json({ error: (e as Error).message || 'Could not make a recipe.' }, 500);
+    return refundOnError(g, json({ error: (e as Error).message || 'Could not make a recipe.' }, 500));
   }
 }
 
@@ -47,30 +47,30 @@ async function importRecipe(request: Request, input: { text?: unknown; url?: unk
   if (ck) { const saved = await cacheGet<Record<string, unknown>>(ck); if (saved) return json({ ...saved, cached: true }); }
   const g = await gate(request, 'import'); // Free: 1 recipe import a day, separate from the 3 photo scans.
   if (!g.ok) return json(g.body, g.status);
-  if (await isDuplicate(g.who.userId, JSON.stringify({ t: input.text, u: input.url, i: typeof input.image?.data === 'string' ? input.image.data.slice(0, 4096) : '' }))) return json({ error: 'Already reading that recipe. Give it a moment.', duplicate: true }, 409);
+  if (await isDuplicate(g.who.userId, JSON.stringify({ t: input.text, u: input.url, i: typeof input.image?.data === 'string' ? input.image.data.slice(0, 4096) : '' }))) return refundOnError(g, json({ error: 'Already reading that recipe. Give it a moment.', duplicate: true }, 409));
   try {
     let text = typeof input.text === 'string' ? input.text.trim() : '';
     if (!text && typeof input.url === 'string') {
       const url = safeRecipeUrl(input.url);
-      if (!url) return json({ error: 'That link doesn’t look right. Use a normal https:// recipe page.' }, 400);
+      if (!url) return refundOnError(g, json({ error: 'That link doesn’t look right. Use a normal https:// recipe page.' }, 400));
       const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), 8000);
       const res = await fetch(url, { signal: ctl.signal, redirect: 'follow', headers: { 'user-agent': 'Mozilla/5.0 (compatible; RecipeReader/1.0)', accept: 'text/html' } }).finally(() => clearTimeout(t));
-      if (!res.ok || !(res.headers.get('content-type') ?? '').includes('html')) return json({ error: 'Couldn’t open that page. Copy the recipe text and paste it instead.' }, 422);
-      if (!safeRecipeUrl(res.url)) return json({ error: 'That page redirected somewhere we can’t open.' }, 422);
+      if (!res.ok || !(res.headers.get('content-type') ?? '').includes('html')) return refundOnError(g, json({ error: 'Couldn’t open that page. Copy the recipe text and paste it instead.' }, 422));
+      if (!safeRecipeUrl(res.url)) return refundOnError(g, json({ error: 'That page redirected somewhere we can’t open.' }, 422));
       text = pageText((await res.text()).slice(0, 2_000_000));
     }
     const img = input.image;
     const image = img && typeof img.data === 'string' && ['image/jpeg', 'image/png', 'image/webp'].includes(String(img.mediaType)) && img.data.length < 7_000_000
       ? { data: img.data, mediaType: img.mediaType as 'image/jpeg' } : undefined;
-    if (!text && !image) return json({ error: 'Paste a recipe, add a link or a photo.' }, 400);
+    if (!text && !image) return refundOnError(g, json({ error: 'Paste a recipe, add a link or a photo.' }, 400));
     const imported = await importRecipeWithClient(aiClient('import', g.who), { text, image });
     if (ck && imported.isRecipe) await cacheSet(ck, imported, 7 * 24 * 3600);
     return json(imported);
   } catch (e) {
     await logAiError('recipe', e);
-    if (e instanceof Anthropic.RateLimitError) return json({ error: 'Busy, try again in a moment.' }, 429);
-    if (e instanceof Anthropic.APIError) return json({ error: busyMessage(e) }, 502);
-    if ((e as Error).name === 'AbortError') return json({ error: 'That page took too long. Paste the recipe text instead.' }, 504);
-    return json({ error: (e as Error).message || 'Couldn’t read that recipe.' }, 500);
+    if (e instanceof Anthropic.RateLimitError) return refundOnError(g, json({ error: 'Busy, try again in a moment.' }, 429));
+    if (e instanceof Anthropic.APIError) return refundOnError(g, json({ error: busyMessage(e) }, 502));
+    if ((e as Error).name === 'AbortError') return refundOnError(g, json({ error: 'That page took too long. Paste the recipe text instead.' }, 504));
+    return refundOnError(g, json({ error: (e as Error).message || 'Couldn’t read that recipe.' }, 500));
   }
 }
