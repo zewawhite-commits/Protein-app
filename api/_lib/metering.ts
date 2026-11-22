@@ -30,7 +30,7 @@ export function costOf(model: string, u: Usage): number {
   return (n(u.input_tokens) * p.in + n(u.output_tokens) * p.out + n(u.cache_read_input_tokens) * p.cacheRead + n(u.cache_creation_input_tokens) * p.in * 1.25) / 1e6;
 }
 
-export type AiFeature = 'scan' | 'menu' | 'label' | 'coach' | 'import' | 'recipe' | 'plan' | 'workout' | 'ideas';
+export type AiFeature = 'scan' | 'menu' | 'label' | 'coach' | 'import' | 'recipe' | 'plan' | 'workout' | 'ideas' | 'followup';
 export interface Caller { userId: string; tier: string; device?: string | null }
 
 export const BURST_PER_MIN = 12;

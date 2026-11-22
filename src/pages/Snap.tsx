@@ -9,7 +9,7 @@ import { ArrowLeft, BookOpen, Check, ChevronRight, CircleCheck, Crown, Droplet, 
 import { useStore } from '@/store/useStore';
 import { useFoodDb, usePhotoUrl } from '@/lib/hooks';
 import { deletePhoto, getPhoto, resizeImage, savePhoto } from '@/lib/photos';
-import { recognizeLeftovers, recognizeMenuUrl, matchItem, matchItems, pickKey, portionConfidence, recognizeMenu, sendFeedback, PremiumRequiredError, SignInRequiredError, readLabelPhoto, recognizePhoto, recognizeText, RecognitionUnavailableError, ScanLimitError, type MatchedItem } from '@/lib/recognize-client';
+import { recognizeFollowUp, recognizeLeftovers, recognizeMenuUrl, matchItem, matchItems, pickKey, portionConfidence, recognizeMenu, sendFeedback, PremiumRequiredError, SignInRequiredError, readLabelPhoto, recognizePhoto, recognizeText, RecognitionUnavailableError, ScanLimitError, type MatchedItem } from '@/lib/recognize-client';
 import { refreshPremium } from '@/lib/premium';
 import { SOURCE_SHORT, searchFoods, splitName } from '@/lib/foods';
 import { mealForNow, todayKey } from '@/lib/dates';
@@ -337,6 +337,19 @@ export default function Snap() {
         note={note}
         onClose={back}
         onRetake={retake}
+        onFollowUp={async (said) => {
+          try {
+            const r = await recognizeFollowUp(matches.map((m) => ({ name: m.item.name, grams: m.item.estimatedGrams })), said);
+            if (!r.isFood || !r.items.length) { toast(r.note || 'Couldn’t apply that. Try saying it another way.'); return false; }
+            setMatches(matchItems(r, custom, useStore.getState().picks));
+            if (r.note) setNote(r.note);
+            toast('Updated');
+            return true;
+          } catch (e) {
+            toast(e instanceof SignInRequiredError ? 'Sign in to ask about your meal.' : e instanceof RecognitionUnavailableError ? 'Follow-ups need a connection to the server.' : (e as Error).message || 'Couldn’t update. Try again.');
+            return false;
+          }
+        }}
         onFix={(servings) => {
           haptic();
           if (servings !== 1) setMatches((ms) => ms.map((m) => ({ ...m, item: { ...m.item, estimatedGrams: Math.round(m.item.estimatedGrams * servings), gramsLow: Math.round(m.item.gramsLow * servings), gramsHigh: Math.round(m.item.gramsHigh * servings) } })));
@@ -1122,12 +1135,15 @@ function dishName(names: string[]): string {
  * then Fix results (every food, weight and hidden extra) or Done (logs it all).
  * Numbers come from the matched database records × the AI's weight estimate.
  */
-function QuickResult({ matches, photoUrl, quality, note, onClose, onRetake, onFix, onDone }: {
+function QuickResult({ matches, photoUrl, quality, note, onClose, onRetake, onFix, onDone, onFollowUp }: {
   matches: MatchedItem[]; photoUrl?: string; quality: 'good' | 'fair' | 'poor'; note: string;
-  onClose: () => void; onRetake: () => void; onFix: (servings: number) => void;
+  onClose: () => void; onRetake: () => void; onFix: (servings: number) => void; onFollowUp: (said: string) => Promise<boolean>;
   onDone: (rows: { food: Food; grams: number }[], extras: { food: Food; grams: number; dish: string }[]) => void;
 }) {
   const [servings, setServings] = useState(1);
+  const [said, setSaid] = useState('');
+  const [asking, setAsking] = useState(false);
+  const ask = async () => { if (!said.trim() || asking) return; haptic(); setAsking(true); if (await onFollowUp(said.trim())) setSaid(''); setAsking(false); };
   const time = useMemo(() => new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }), []);
   const rows = matches.map((m) => ({ name: m.item.name, food: m.candidates[0] as Food | undefined, grams: Math.round(m.item.estimatedGrams * servings) }));
   const extras = matches.flatMap((m) => m.hidden.map((h) => ({ food: h.food, grams: Math.round(h.extra.usual * servings), dish: m.item.name, name: h.extra.name }))).filter((x) => x.grams > 0);
@@ -1193,6 +1209,13 @@ function QuickResult({ matches, photoUrl, quality, note, onClose, onRetake, onFi
             </li>
           ))}
         </ul>
+        <div className="mt-4">
+          <p className="text-[15px] font-semibold">Anything to add or fix?</p>
+          <div className="mt-2 flex gap-2">
+            <input value={said} onChange={(e) => setSaid(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && void ask()} maxLength={300} disabled={asking} placeholder="e.g. no oil · it was 2 eggs · I also had a Coke" className="field min-w-0 flex-1" aria-label="Add or fix something about this meal" />
+            <button onClick={() => void ask()} disabled={!said.trim() || asking} className="btn-primary !h-14 shrink-0 !px-5" aria-label="Update meal">{asking ? <Loader2 size={18} className="animate-spin" /> : 'Update'}</button>
+          </div>
+        </div>
         {note && <p className="mt-3 text-[13px] leading-relaxed text-silver">{note}</p>}
         <p className="mt-3 text-[12px] leading-relaxed text-dim">AI names the food and guesses the weight; nutrition comes from the food database. Weights marked ~ are estimates — Fix results to weigh or change anything.</p>
       </div>

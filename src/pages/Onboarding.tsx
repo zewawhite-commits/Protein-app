@@ -23,6 +23,7 @@ import { Segmented, cx, fmt } from '@/components/ui';
 import { plannedPrice } from '@/lib/premium';
 import { BrandName, haptic, toast } from '@/components/fx';
 import { DEFAULT_REMINDERS } from '@/components/Notifications';
+import { FoodVisual } from '@/components/FoodIcon';
 import { useFoodDb } from '@/lib/hooks';
 import { searchFoods } from '@/lib/foods';
 
@@ -57,8 +58,8 @@ const AIMS: Option<string>[] = [
 ];
 
 const PLAN_CHOICES = [
-  { tier: 'free' as const, name: 'Free', badge: '', perks: ['Unlimited diary, food search, barcode & voice logging', 'Recipe imports, saved meals, workout diary & exercise library', '3 AI photo scans + 5 coach messages a day', '2 AI recipes + 1 AI meal plan a month'] },
-  { tier: 'pro' as const, name: 'Plus', badge: 'Everything included', perks: ['Unlimited AI photo scans', '300 AI credits a month for the coach, recipes and plans', 'Personal AI nutrition coach that talks back', '12 AI recipes made for your calories and protein', '4 personalised AI meal plans and 8 AI workout plans a month', 'Weekly nutrition progress report', 'Restaurant menus: photo, QR code or link', 'Smart calorie target that adjusts to your progress', 'Advanced micronutrient analysis and nutrition reports', 'Adjusts to your cuisine & diet', 'No ads'] },
+  { tier: 'free' as const, name: 'Free', badge: '', perks: ['Unlimited diary, food search, barcode & voice logging', 'World recipe library, recipe imports, saved meals & exercise library', '3 AI photo scans + 5 coach messages a day', '2 AI recipes + 1 AI meal plan a month'] },
+  { tier: 'pro' as const, name: 'Plus', badge: 'Everything included', perks: ['Unlimited AI photo scans and meal follow-ups', '300 AI credits a month for the coach, recipes and plans', 'Personal AI nutrition coach that talks back', '12 AI recipes made for your calories and protein', '4 personalised AI meal plans and 8 AI workout plans a month', 'Weekly nutrition progress report', 'Restaurant menus: photo, QR code or link', 'Smart calorie target that adjusts to your progress', 'Advanced micronutrient analysis and nutrition reports', 'Adjusts to your cuisine & diet', 'No ads'] },
 ];
 
 /** Setup answers are kept on this phone until setup is finished, so leaving the app (to open the
@@ -789,7 +790,7 @@ function ScanPreview() {
   return (
     <div className="mx-auto mt-6 w-[250px] rounded-[38px] border-[7px] border-ink bg-surface p-2.5 shadow-xl animate-fade-up" aria-label="Example scan">
       <div className="grid h-[130px] place-items-center rounded-[26px] bg-raised">
-        <div className="flex -space-x-2">{['poultry_leg', 'cooked_rice', 'green_salad'].map((n) => <span key={n} className="grid h-[72px] w-[72px] place-items-center rounded-full bg-surface ring-4 ring-raised"><img src={`/food/${n}.svg`} alt="" className="h-12 w-12" /></span>)}</div>
+        <div className="flex -space-x-3">{['Chicken breast, grilled', 'Rice, white, cooked', 'Salad, mixed'].map((n) => <FoodVisual key={n} name={n} size={76} className="!rounded-full ring-4 ring-raised" />)}</div>
       </div>
       <div className="px-1.5 pb-2 pt-3">
         <p className="text-[10px] font-semibold text-silver">Example</p>

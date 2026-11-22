@@ -33,7 +33,11 @@ export function Ring({
   const v = Math.max(0, Math.min(1, value));
   return (
     <div className={cx('relative grid shrink-0 place-items-center', className)} style={{ width: size, height: size }}>
-      <svg width={size} height={size} className="-rotate-90" aria-hidden>
+      <svg width={size} height={size} className="-rotate-90 overflow-visible" aria-hidden>
+        {/* Depth: a sunken track, a shaded tube and a light highlight along the top edge. */}
+        <defs>
+          <filter id={`ring-shadow-${color}`} x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy={Math.max(1.5, stroke / 4)} stdDeviation={Math.max(1.5, stroke / 3.5)} floodColor="#000" floodOpacity="0.28" /></filter>
+        </defs>
         <circle
           cx={size / 2}
           cy={size / 2}
@@ -54,8 +58,13 @@ export function Ring({
             strokeLinecap="round"
             strokeDasharray={c}
             strokeDashoffset={c * (1 - v)}
+            filter={`url(#ring-shadow-${color})`}
             style={{ transition: 'stroke-dashoffset .7s cubic-bezier(.2,.8,.2,1)' }}
           />
+        )}
+        {v > 0 && stroke >= 6 && (
+          <circle cx={size / 2} cy={size / 2} r={r - stroke * 0.18} fill="none" stroke="#fff" strokeOpacity="0.32" strokeWidth={stroke * 0.28} strokeLinecap="round"
+            strokeDasharray={2 * Math.PI * (r - stroke * 0.18)} strokeDashoffset={2 * Math.PI * (r - stroke * 0.18) * (1 - v)} style={{ transition: 'stroke-dashoffset .7s cubic-bezier(.2,.8,.2,1)' }} />
         )}
       </svg>
       {children && <div className="absolute inset-0 grid place-items-center">{children}</div>}

@@ -18,7 +18,7 @@ export const DEFAULT_CREDITS: CreditConfig = {
   // Photo scans are unlimited on Plus (0 = no daily cap, cost 0, no monthly cap). Owner can turn limits back on.
   // Recipe imports use no credits (unlimited for everyone; only the burst throttle applies).
   scansPerDay: 0,
-  costs: { scan: 0, menu: 0, label: 0, coach: 1, import: 0, recipe: 3, plan: 5, workout: 3, ideas: 1 },
+  costs: { scan: 0, menu: 0, label: 0, followup: 0, coach: 1, import: 0, recipe: 3, plan: 5, workout: 3, ideas: 1 },
   monthlyCaps: { recipe: 12, workout: 8, plan: 4 },
 };
 /** Features that can have a monthly cap (photo, menu and label scans share the "scan" cap). */

@@ -157,7 +157,7 @@ export function WeightChart() {
             {[0.25, 0.5, 0.75].map((f) => <line key={f} x1={P} x2={W - P} y1={P + f * (H - 2 * P)} y2={P + f * (H - 2 * P)} stroke="rgb(var(--line))" strokeDasharray="3 4" />)}
             {goal != null && <line x1={P} x2={W - P} y1={y(goal)} y2={y(goal)} stroke="rgb(var(--silver))" strokeDasharray="5 5" />}
             {pts.length > 1 && <path d={`${line} L${x(pts[pts.length - 1].date)},${H - P} L${x(pts[0].date)},${H - P} Z`} fill="url(#wg)" />}
-            <path d={line} fill="none" stroke="rgb(var(--accent))" strokeWidth="2.75" strokeLinejoin="round" strokeLinecap="round" />
+            <path d={line} fill="none" stroke="rgb(var(--accent))" strokeWidth="3.25" strokeLinejoin="round" strokeLinecap="round" style={{ filter: 'drop-shadow(0 5px 4px rgb(0 0 0 / .22))' }} />
             {pts.map((p, i) => (
               <g key={p.date} onClick={() => { haptic(); setActive(i); }} onMouseEnter={() => setActive(i)} className="cursor-pointer">
                 <circle cx={x(p.date)} cy={y(vals[i])} r={14} fill="transparent" />

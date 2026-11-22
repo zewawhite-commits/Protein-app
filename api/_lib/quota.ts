@@ -1,7 +1,7 @@
 /**
  * Plan limits for every AI feature, enforced on the server so they can't be bypassed.
  *
- *   free: 3 photo scans and 5 coach messages a day; 2 AI recipes and 1 meal plan a month; no AI workouts
+ *   free: 3 photo scans, 5 meal follow-ups and 5 coach messages a day; 2 AI recipes and 1 meal plan a month; no AI workouts
  *         or meal ideas. Recipe imports are unlimited for everyone (burst throttle only, no credits).
  *   plus / trial / reward: unlimited photo scans (personal use; burst throttle and review alerts only), and
  *         300 AI credits per billing month (credits.ts, owner-editable) for the coach, AI recipes, meal plans and
@@ -20,7 +20,7 @@ import { accountsConfigured, useScan, userFromToken } from './accounts.js';
 import { fairUse, type AiFeature, type Caller } from './metering.js';
 import { capGroup, capKey, creditConfig, creditCycle, creditKey, refund, scanDayKey, SCAN_FEATURES, spend, usedNow } from './credits.js';
 
-export type Feature = 'scan' | 'coach' | 'workout' | 'recipe' | 'plan' | 'ideas' | 'menu' | 'import';
+export type Feature = 'scan' | 'coach' | 'workout' | 'recipe' | 'plan' | 'ideas' | 'menu' | 'import' | 'followup';
 export type PlanTier = 'free' | 'plus' | 'pro' | 'trial' | 'reward';
 
 // Plus is unlimited for personal use: these are counters, not caps. Fair use (bots, bulk, sharing)
@@ -37,21 +37,21 @@ const daily = (feature: string, tier: PlanTier) => (DAILY[tier] && !FREE_MONTHLY
 export const usageKey = (feature: string, userId: string, tier: PlanTier) => (daily(feature, tier) ? `${feature}:${userId}:${today()}` : `${feature}:${userId}`);
 
 const DEFAULTS: Record<PlanTier, Record<Feature, number>> = {
-  free: { scan: 3, coach: 5, workout: 0, recipe: 2, plan: 1, ideas: 0, menu: 0, import: FAIR_USE },
+  free: { scan: 3, coach: 5, workout: 0, recipe: 2, plan: 1, ideas: 0, menu: 0, import: FAIR_USE, followup: 5 },
   // There is only one paid plan now (Plus); any older Plus subscription gets everything Plus has.
-  plus: { scan: FAIR_USE, coach: FAIR_USE * 3, workout: FAIR_USE, recipe: FAIR_USE, plan: FAIR_USE, ideas: FAIR_USE, menu: FAIR_USE, import: FAIR_USE },
-  pro: { scan: FAIR_USE, coach: FAIR_USE * 3, workout: FAIR_USE, recipe: FAIR_USE, plan: FAIR_USE, ideas: FAIR_USE, menu: FAIR_USE, import: FAIR_USE },
+  plus: { scan: FAIR_USE, coach: FAIR_USE * 3, workout: FAIR_USE, recipe: FAIR_USE, plan: FAIR_USE, ideas: FAIR_USE, menu: FAIR_USE, import: FAIR_USE, followup: FAIR_USE },
+  pro: { scan: FAIR_USE, coach: FAIR_USE * 3, workout: FAIR_USE, recipe: FAIR_USE, plan: FAIR_USE, ideas: FAIR_USE, menu: FAIR_USE, import: FAIR_USE, followup: FAIR_USE },
   // The 3-day Plus trial: everything Plus has (same daily fair-use limits).
-  trial: { scan: FAIR_USE, coach: FAIR_USE * 3, workout: FAIR_USE, recipe: FAIR_USE, plan: FAIR_USE, ideas: FAIR_USE, menu: FAIR_USE, import: FAIR_USE },
+  trial: { scan: FAIR_USE, coach: FAIR_USE * 3, workout: FAIR_USE, recipe: FAIR_USE, plan: FAIR_USE, ideas: FAIR_USE, menu: FAIR_USE, import: FAIR_USE, followup: FAIR_USE },
   // Days earned by inviting friends: Plus features, coach at the Free daily allowance.
-  reward: { scan: FAIR_USE, coach: 5, workout: FAIR_USE, recipe: FAIR_USE, plan: FAIR_USE, ideas: FAIR_USE, menu: FAIR_USE, import: FAIR_USE },
+  reward: { scan: FAIR_USE, coach: 5, workout: FAIR_USE, recipe: FAIR_USE, plan: FAIR_USE, ideas: FAIR_USE, menu: FAIR_USE, import: FAIR_USE, followup: FAIR_USE },
 };
 
 /** Limits at or above this are shown as "Unlimited" (a fair-use cap, ~30 a day). */
 export const UNLIMITED = 900;
 
-const NAMES: Record<Feature, string> = { scan: 'AI scans', coach: 'coach messages', workout: 'AI workout plans', recipe: 'AI recipes', plan: 'AI meal plans', ideas: 'AI meal ideas', menu: 'Restaurant menu scans', import: 'recipe imports' };
-const ONE: Record<Feature, string> = { scan: 'AI scan', coach: 'coach message', workout: 'AI workout plan', recipe: 'AI recipe', plan: 'AI meal plan', ideas: 'AI meal idea', menu: 'Restaurant menu scan', import: 'recipe import' };
+const NAMES: Record<Feature, string> = { scan: 'AI scans', coach: 'coach messages', workout: 'AI workout plans', recipe: 'AI recipes', plan: 'AI meal plans', ideas: 'AI meal ideas', menu: 'Restaurant menu scans', import: 'recipe imports', followup: 'meal follow-ups' };
+const ONE: Record<Feature, string> = { scan: 'AI scan', coach: 'coach message', workout: 'AI workout plan', recipe: 'AI recipe', plan: 'AI meal plan', ideas: 'AI meal idea', menu: 'Restaurant menu scan', import: 'recipe import', followup: 'meal follow-up' };
 
 export function limitFor(tier: PlanTier, feature: Feature): number {
   const v = Number(process.env[`LIMIT_${tier.toUpperCase()}_${feature.toUpperCase()}`]);

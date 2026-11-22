@@ -326,6 +326,17 @@ describe('plan limits (quota)', () => {
     expect(await gate(call({}, 'jwt', plus), 'scan')).toMatchObject({ ok: true });
   });
 
+  it('meal follow-ups: 5 a day on Free, unlimited and free of credits on Plus', async () => {
+    const { gate } = await import('../_lib/quota.js');
+    const counts: Record<string, number> = {};
+    fakeSupabase(counts);
+    for (let i = 0; i < 5; i++) expect((await gate(call({}, 'jwt'), 'followup')).ok).toBe(true);
+    expect((await gate(call({}, 'jwt'), 'followup')).ok).toBe(false);
+    const plus = signPass({ email: 'me@example.com', cid: 1, plan: 'PLN_month', tier: 'plus', exp: Date.now() + 20 * 86400e3 });
+    for (let i = 0; i < 12; i++) expect((await gate(call({}, 'jwt', plus), 'followup')).ok).toBe(true);
+    expect(Object.keys(counts).some((k) => k.startsWith('credits:'))).toBe(false);
+  });
+
   it('credits refresh with the billing date (monthly windows ending at renewal)', async () => {
     const { creditCycle } = await import('../_lib/credits.js');
     const now = Date.UTC(2026, 10, 22);

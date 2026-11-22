@@ -56,6 +56,11 @@ export async function recognizeLeftovers(photo: Blob, before: { name: string; gr
   });
 }
 
+/** A follow-up about a scanned meal ("no oil", "2 eggs not 3"): the corrected list of foods. */
+export async function recognizeFollowUp(items: { name: string; grams: number }[], text: string): Promise<RecognitionResult> {
+  return send({ followup: { items: items.map((i) => `${i.name}, about ${Math.round(i.grams)} g`), text } });
+}
+
 /** Read a nutrition label from a photo (uses one AI scan). */
 export async function readLabelPhoto(photo: Blob): Promise<LabelRead> {
   return (await send({ image: await toBase64(photo), mediaType: photo.type || 'image/jpeg', label: true })) as unknown as LabelRead;
@@ -71,7 +76,7 @@ export async function recognizeMenuUrl(url: string): Promise<RecognitionResult> 
   return send({ menuUrl: url });
 }
 
-async function send(payload: { image?: string; mediaType?: string; text?: string; label?: boolean; menu?: boolean; menuUrl?: string; leftovers?: string[] }, premiumToken?: string): Promise<RecognitionResult> {
+async function send(payload: { image?: string; mediaType?: string; text?: string; label?: boolean; menu?: boolean; menuUrl?: string; leftovers?: string[]; followup?: { items: string[]; text: string } }, premiumToken?: string): Promise<RecognitionResult> {
   void premiumToken;
   let res: Response;
   try {

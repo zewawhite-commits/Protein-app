@@ -23,16 +23,21 @@ const TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
 export async function POST(request: Request): Promise<Response> {
   let scansLeft: number | undefined;
   if (!process.env.ANTHROPIC_API_KEY) return json({ error: 'Recognition is not configured on this server.' }, 501);
-  let body: { image?: string; mediaType?: string; text?: string; label?: boolean; menu?: boolean; menuUrl?: string; leftovers?: unknown } | null;
+  let body: { image?: string; mediaType?: string; text?: string; label?: boolean; menu?: boolean; menuUrl?: string; leftovers?: unknown; followup?: { items?: unknown; text?: unknown } } | null;
   body = (await request.json().catch(() => null)) as typeof body;
   if (!body || typeof body !== 'object') return json({ error: 'Invalid JSON body.' }, 400);
+  // A follow-up about a meal already scanned ("no oil", "it was 2 eggs"): the AI corrects the whole list from text (no photo).
+  const followup = body.followup && typeof body.followup.text === 'string' && body.followup.text.trim() && Array.isArray(body.followup.items)
+    ? `This meal was identified from a photo as: ${(body.followup.items as unknown[]).slice(0, 14).map((x) => String(x).slice(0, 100)).join('; ')}. The person says: "${body.followup.text.trim().slice(0, 300)}". Return the full corrected list of everything in the meal, with weights, applying what they said and keeping everything else as it was.`
+    : null;
+  if (followup) { body.text = followup; body.image = undefined; body.menu = false; body.label = false; body.menuUrl = undefined; body.leftovers = undefined; }
   // The exact same photo or text from this account recently: the saved answer, free (no AI call, not counted).
   const sameAs = `${body.mediaType ?? ''}|${body.image ?? ''}|${body.text ?? ''}|${body.menuUrl ?? ''}|${body.label ? 1 : 0}|${body.menu ? 1 : 0}|${JSON.stringify(body.leftovers ?? null)}`;
   const me = (await whoIs(request)).user;
   const ck = me ? cacheKey(me.id, 'scan', sameAs) : null;
   if (ck) { const saved = await cacheGet<Record<string, unknown>>(ck); if (saved) return json({ ...saved, cached: true }, 200); }
   // Restaurant menus are a Plus feature with their own allowance; plate and label photos are AI scans.
-  const g = await gate(request, (body.menu === true && !body.text) || typeof body.menuUrl === 'string' ? 'menu' : 'scan');
+  const g = await gate(request, followup ? 'followup' : (body.menu === true && !body.text) || typeof body.menuUrl === 'string' ? 'menu' : 'scan');
   if (!g.ok) return json(g.body, g.status);
   if (Number.isFinite(g.left)) scansLeft = g.left;
   // The same photo or text sent twice in a few seconds (double tap, retry): answered once.
@@ -67,7 +72,7 @@ export async function POST(request: Request): Promise<Response> {
     }
   }
   const { image, mediaType = 'image/jpeg' } = body;
-  const text = typeof body.text === 'string' ? body.text.trim().slice(0, 500) : '';
+  const text = typeof body.text === 'string' ? body.text.trim().slice(0, followup ? 2200 : 500) : '';
   if (!text) {
     if (!image || typeof image !== 'string') return refundOnError(g, json({ error: 'Missing image.' }, 400));
     if (!TYPES.has(mediaType)) return refundOnError(g, json({ error: 'Unsupported image type.' }, 415));
@@ -80,7 +85,7 @@ export async function POST(request: Request): Promise<Response> {
       if (ck) await cacheSet(ck, label, 24 * 3600);
       return json(scansLeft != null ? { ...label, scansLeft, scanLimit: g.limit } : label, 200);
     }
-    const recognized = await recognizeWithClient(aiClient(body.menu === true && !text ? 'menu' : 'scan', g.who), text ? null : image!, mediaType, text || undefined, { menu: body.menu === true && !text, leftovers: !text && Array.isArray(body.leftovers) ? body.leftovers.slice(0, 14).map((x) => String(x).slice(0, 100)) : undefined });
+    const recognized = await recognizeWithClient(aiClient(followup ? 'followup' : body.menu === true && !text ? 'menu' : 'scan', g.who), text ? null : image!, mediaType, text || undefined, { menu: body.menu === true && !text, leftovers: !text && Array.isArray(body.leftovers) ? body.leftovers.slice(0, 14).map((x) => String(x).slice(0, 100)) : undefined });
     // What most people chose for these names before, so the right record can go first.
     // Never let this optional lookup slow the answer down.
     const popular = await Promise.race([popularPicks(recognized.items.flatMap((i) => [i.name, i.localName])), new Promise<Record<string, string>>((r) => setTimeout(() => r({}), 700))]);

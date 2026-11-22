@@ -122,7 +122,7 @@ export function Terms() {
 
       <H>Plans and payments</H>
       <ul className="list-disc space-y-2 pl-5">
-        <li><b>Free</b> costs nothing and includes 3 AI photo scans and 5 coach messages each day, and 2 AI recipes and 1 AI meal plan each calendar month. Recipe imports are unlimited. Free may show advertising.</li>
+        <li><b>Free</b> costs nothing and includes 3 AI photo scans, 5 meal follow-ups and 5 coach messages each day, and 2 AI recipes and 1 AI meal plan each calendar month. Recipe imports are unlimited. Free may show advertising.</li>
         <li><b>Plus</b> costs {money('pro_monthly')} a month or {money('pro_yearly')} a year. The price is shown before you pay.</li>
         <li>Paid plans are billed in advance through Paystack and renew automatically at the end of each month or year until you cancel.</li>
         <li>Prices are shown in US dollars. If you’re charged in another currency, your bank or card provider sets the exchange rate and may add fees.</li>
@@ -132,7 +132,7 @@ export function Terms() {
 
       <H>AI credits and fair use</H>
       <ul className="list-disc space-y-2 pl-5">
-        <li>Plus includes a monthly allowance of AI credits (currently 300), which refreshes on your billing date each month, also on yearly plans. AI photo scans (food, menu and label) are unlimited for personal use and don’t use credits. Other AI features use credits: a coach message 1, an AI recipe 3, a meal plan 5, a workout plan 3. Within the credits, each month: up to 12 AI recipes, 4 meal plans and 8 workout plans. Profile shows your balance and the current costs.</li>
+        <li>Plus includes a monthly allowance of AI credits (currently 300), which refreshes on your billing date each month, also on yearly plans. AI photo scans (food, menu and label) and follow-up questions about a scanned meal are unlimited for personal use and don’t use credits. Other AI features use credits: a coach message 1, an AI recipe 3, a meal plan 5, a workout plan 3. Within the credits, each month: up to 12 AI recipes, 4 meal plans and 8 workout plans. Profile shows your balance and the current costs.</li>
         <li>Unused credits don’t roll over. If the AI fails to answer, the credits are returned. Sending the same request again uses no credits.</li>
         <li>Never limited and never use credits: logging food, searching the food database, barcode scanning, voice logging, recipe imports, saved meals, your own foods and recipes, the exercise library and workout diary, and coach voice replies.</li>
         <li>We may change the allowance or the cost of a feature for future billing months; we’ll tell you in the app first.</li>

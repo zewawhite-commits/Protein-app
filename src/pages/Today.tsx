@@ -174,7 +174,7 @@ function Gauge({ pct, over, hasGoal }: { pct: number; over: boolean; hasGoal: bo
     <svg viewBox="0 0 200 112" className="w-full" aria-hidden>
       <path d={arc} fill="none" stroke="rgb(255 255 255 / 0.24)" strokeWidth="14" strokeLinecap="round" strokeDasharray={hasGoal ? undefined : '0.1 14.5'} />
       {hasGoal && pct > 0 && (
-        <path d={arc} fill="none" stroke={over ? 'rgb(255 214 120)' : '#fff'} strokeWidth="14" strokeLinecap="round" strokeDasharray={`${C * pct} ${C}`} style={{ transition: 'stroke-dasharray .6s ease' }} />
+        <path d={arc} fill="none" stroke={over ? 'rgb(255 214 120)' : '#fff'} strokeWidth="14" strokeLinecap="round" strokeDasharray={`${C * pct} ${C}`} style={{ filter: 'drop-shadow(0 3px 3px rgb(0 0 0 / .28))', transition: 'stroke-dasharray .6s ease' }} />
       )}
     </svg>
   );

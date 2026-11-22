@@ -13,6 +13,7 @@ import { useCoachContext } from '@/pages/Coach';
 import { SignInButtons } from './SignIn';
 import { PlanBadge } from './PlanBadge';
 import { FoodVisual } from './FoodIcon';
+import { RecipeLibrary } from './RecipeLibrary';
 import { cx, fmt } from './ui';
 import { haptic, toast } from './fx';
 
@@ -84,11 +85,12 @@ export function RecipeView() {
           <span className="text-[13px] text-silver">Link, photo or text</span>
         </Link>
       </div>
+      <RecipeLibrary />
       <MyRecipes />
-      <PlanBadge needs="plus" what="AI recipes with full nutrition" free="2 a month on Free" />
+      <PlanBadge needs="plus" what="AI recipes made for your goals" free="2 a month on Free" />
       <section className="card p-5">
-        <p className="text-[19px] font-bold tracking-tight">What are you cooking?</p>
-        <p className="mt-0.5 text-sm text-silver">Any dish, any cuisine. Nutrition comes from real food data.</p>
+        <p className="text-[19px] font-bold tracking-tight">Create a recipe with AI</p>
+        <p className="mt-0.5 text-sm text-silver">Tell it what you have or fancy. It’s built around your targets and diet; nutrition comes from real food data.</p>
         <label className="relative mt-4 block">
           <Search size={18} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-silver" />
           <input value={ask} onChange={(e) => setAsk(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && ask.trim() && make()} maxLength={300} placeholder="e.g. chicken jollof rice" className="field !pl-11" aria-label="What do you want to cook?" />

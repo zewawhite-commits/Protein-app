@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "typecheck": "tsc -b --noEmit",
-    "build:foods": "node scripts/build-foods.mjs"
+    "build:foods": "node scripts/build-foods.mjs",
+    "build:recipe-library": "node scripts/build-recipe-library.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.8.0",

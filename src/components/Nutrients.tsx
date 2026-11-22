@@ -17,8 +17,8 @@ export function MacroBar({ label, value, target, color, incomplete }: { label: s
           <span className="text-silver">{target ? ` / ${fmt(target)} g` : ' g'}</span>
         </span>
       </div>
-      <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-raised">
-        <div className={cx('h-full rounded-full transition-all duration-700', MACRO_COLOR[color])} style={{ width: `${Math.min(100, (target ? pct : 0) * 100)}%` }} />
+      <div className="depth-track mt-1.5 h-2.5 overflow-hidden rounded-full bg-raised">
+        <div className={cx('depth-row h-full rounded-full transition-all duration-700', MACRO_COLOR[color])} style={{ width: `${Math.min(100, (target ? pct : 0) * 100)}%` }} />
       </div>
     </div>
   );
