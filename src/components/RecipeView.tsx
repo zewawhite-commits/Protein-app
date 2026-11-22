@@ -85,7 +85,7 @@ export function RecipeView() {
         </Link>
       </div>
       <MyRecipes />
-      <PlanBadge needs="plus" what="AI recipes with full nutrition" />
+      <PlanBadge needs="plus" what="AI recipes with full nutrition" free="2 a month on Free" />
       <section className="card p-5">
         <p className="text-[19px] font-bold tracking-tight">What are you cooking?</p>
         <p className="mt-0.5 text-sm text-silver">Any dish, any cuisine. Nutrition comes from real food data.</p>

@@ -45,7 +45,7 @@ async function importRecipe(request: Request, input: { text?: unknown; url?: unk
   const me = (await whoIs(request)).user;
   const ck = me ? cacheKey(me.id, 'import', JSON.stringify({ t: input.text, u: input.url, i: typeof input.image?.data === 'string' ? input.image.data : '' })) : null;
   if (ck) { const saved = await cacheGet<Record<string, unknown>>(ck); if (saved) return json({ ...saved, cached: true }); }
-  const g = await gate(request, 'import'); // Free: 1 recipe import a day, separate from the 3 photo scans.
+  const g = await gate(request, 'import'); // Unlimited for everyone, no credits: only the burst throttle and duplicate guard.
   if (!g.ok) return json(g.body, g.status);
   if (await isDuplicate(g.who.userId, JSON.stringify({ t: input.text, u: input.url, i: typeof input.image?.data === 'string' ? input.image.data.slice(0, 4096) : '' }))) return refundOnError(g, json({ error: 'Already reading that recipe. Give it a moment.', duplicate: true }, 409));
   try {

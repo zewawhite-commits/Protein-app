@@ -4,7 +4,7 @@ import { Logo } from '@/components/Logo';
 import { useNavigate } from 'react-router-dom';
 import { DIET_PREFS, TRAINING } from '@/lib/cuisines';
 import { useState, type ReactNode, useEffect, useRef } from 'react';
-import { ArrowLeft, Check, Bike, Coffee, Droplet, Drumstick, Dumbbell, Flame, HeartPulse, Leaf, Loader2, Mail, Pencil, Phone, Rabbit, Scale, Sofa, Soup, ThumbsDown, ThumbsUp, Trophy, Turtle, Fish, Salad, Utensils, Wheat, Zap, Footprints } from 'lucide-react';
+import { Apple, BarChart3, CalendarClock, HandHeart, Lightbulb, Smile, Sun, ArrowLeft, Check, Bike, Coffee, Droplet, Drumstick, Dumbbell, Flame, HeartPulse, Leaf, Loader2, Mail, Pencil, Phone, Rabbit, Scale, Sofa, Soup, ThumbsDown, ThumbsUp, Trophy, Turtle, Fish, Salad, Utensils, Wheat, Zap, Footprints } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 import { useFirstSyncDone } from '@/lib/account';
 import { accountsEnabled, sendPhoneCode, signInWithGoogle, toE164, useSession, verifyPhoneCode } from '@/lib/account';
@@ -23,6 +23,8 @@ import { Segmented, cx, fmt } from '@/components/ui';
 import { plannedPrice } from '@/lib/premium';
 import { BrandName, haptic, toast } from '@/components/fx';
 import { DEFAULT_REMINDERS } from '@/components/Notifications';
+import { useFoodDb } from '@/lib/hooks';
+import { searchFoods } from '@/lib/foods';
 
 type Option<T> = { value: T; label: string; sub: string; icon: typeof Dumbbell };
 
@@ -46,11 +48,17 @@ const DIETS: Option<Diet>[] = [
   { value: 'vegan', label: 'Vegan', sub: 'Plants only', icon: Leaf },
 ];
 
-const OBSTACLES = ['Lack of consistency', 'Busy schedule', 'Unhealthy eating habits', 'No meal ideas', 'Lack of support', 'Cravings & snacking', 'Eating out a lot', 'Don’t know what to eat'];
+const OBSTACLES: [string, typeof Dumbbell][] = [['Lack of consistency', BarChart3], ['Busy schedule', CalendarClock], ['Unhealthy eating habits', Utensils], ['No meal ideas', Lightbulb], ['Lack of support', HandHeart], ['Cravings & snacking', Coffee], ['Eating out a lot', Soup], ['Don’t know what to eat', Salad]];
+const AIMS: Option<string>[] = [
+  { value: 'Eat and live healthier', label: 'Eat and live healthier', sub: 'Better food, most days', icon: Apple },
+  { value: 'More energy and a better mood', label: 'More energy, better mood', sub: 'Feel good through the day', icon: Sun },
+  { value: 'Stay motivated and consistent', label: 'Stay motivated and consistent', sub: 'Keep going when life gets busy', icon: Zap },
+  { value: 'Feel better about my body', label: 'Feel better about my body', sub: 'Confidence, at your own pace', icon: Smile },
+];
 
 const PLAN_CHOICES = [
-  { tier: 'free' as const, name: 'Free', badge: '', perks: ['Calories, macros & 18,000+ foods', 'Barcode, exercise, progress & feed', '3 AI scans + 5 coach messages a day', '1 recipe import a day'] },
-  { tier: 'pro' as const, name: 'Plus', badge: 'Everything included', perks: ['300 AI credits a month for scans, coach, recipes and plans', 'Restaurant menus: photo, QR code or link', 'Smarter, personal AI nutrition coach', 'Personalized weekly & monthly meal plans', 'Plans adjust automatically to your progress', 'Daily meal suggestions', 'AI recipes and recipe imports', 'AI workout guides', 'Advanced micronutrient analysis', 'Detailed nutrition reports', 'Adjusts to your cuisine & diet', 'No ads'] },
+  { tier: 'free' as const, name: 'Free', badge: '', perks: ['Unlimited diary, food search, barcode & voice logging', 'Recipe imports, saved meals, workout diary & exercise library', '3 AI photo scans + 5 coach messages a day', '2 AI recipes + 1 AI meal plan a month'] },
+  { tier: 'pro' as const, name: 'Plus', badge: 'Everything included', perks: ['300 AI credits a month: up to 4 photo scans a day', 'Personal AI nutrition coach that talks back', '12 AI recipes made for your calories and protein', '4 personalised AI meal plans and 8 AI workout plans a month', 'Weekly nutrition progress report', 'Restaurant menus: photo, QR code or link', 'Smart calorie target that adjusts to your progress', 'Advanced micronutrient analysis and nutrition reports', 'Adjusts to your cuisine & diet', 'No ads'] },
 ];
 
 /** Setup answers are kept on this phone until setup is finished, so leaving the app (to open the
@@ -119,6 +127,7 @@ export default function Onboarding() {
   const [planChoice, setPlanChoice] = useSaved<'free' | 'plus' | 'pro'>('planChoice', 'free');
   const [billing, setBilling] = useSaved<'monthly' | 'yearly'>('billing', 'monthly');
   const [obstacles, setObstacles] = useSaved<string[]>('obstacles', []);
+  const [aim, setAim] = useSaved<string | undefined>('aim', undefined);
   const [hasCoach, setHasCoach] = useSaved<boolean | undefined>('hasCoach', undefined);
   const [kcalOverride, setKcalOverride] = useSaved<number | undefined>('kcalOverride', undefined);
   const [proteinOverride, setProteinOverride] = useSaved<number | undefined>('proteinOverride', undefined);
@@ -127,7 +136,7 @@ export default function Onboarding() {
   const [direction, setDirection] = useSaved<'lose' | 'gain' | 'maintain' | undefined>('direction', undefined);
   const wantsChange = direction ? direction !== 'maintain' : goals.includes('fatloss') || goals.includes('muscle');
   // Only what's needed for a good first plan. Training type, challenges and reminders can be set later in Profile.
-  const flow = ['welcome', 'goals', 'about', 'direction', ...(wantsChange ? ['goalweight'] : []), 'activity', 'diet', 'cuisines', 'terms', 'plan', 'choose'];
+  const flow = ['welcome', 'goals', 'about', 'direction', ...(wantsChange ? ['goalweight'] : []), 'activity', 'diet', 'cuisines', 'aim', 'obstacles', 'terms', 'building', 'plan', ...(accountsEnabled ? ['tryfree'] : []), 'choose'];
   // Signed out and not waiting for a code: start from the welcome screen.
   useEffect(() => { if (accountsEnabled && session === null && !pendingEmail() && step > 0) setStep(0); }, [session]); // eslint-disable-line react-hooks/exhaustive-deps
   const at = flow[Math.min(step, flow.length - 1)];
@@ -189,6 +198,7 @@ export default function Onboarding() {
       goalWeightKg: goalWeightKg ? round1(goalWeightKg) : undefined,
       paceKgPerWeek: goalWeightKg ? pace : undefined,
       obstacles: obstacles.length ? obstacles : undefined,
+      aim,
       training: training.length ? training : undefined,
       hasCoach,
       termsAcceptedAt: termsAt ?? Date.now(),
@@ -425,16 +435,32 @@ export default function Onboarding() {
             <button onClick={() => { if (!losing && pace > 0.5) setPace(0.25); next(); }} disabled={goalTooLow} className="btn-primary mt-6 w-full">{goalWeightKg ? 'Continue' : goalTooLow ? 'Choose a higher goal' : 'Skip for now'}</button>
           </Question>
         )}
+        {at === 'aim' && (
+          <Question title="What would you like to accomplish?" sub="Your coach and tips will focus on this.">
+            {AIMS.map((o) => <Choice key={o.value} option={o} radio selected={aim === o.value} onClick={() => setAim(o.value)} />)}
+            <div className="flex-1" />
+            <button onClick={next} disabled={!aim} className="btn-primary mt-6 w-full">Continue</button>
+          </Question>
+        )}
         {at === 'obstacles' && (
-          <Question title="What’s stopping you from reaching your goals?" sub="Pick any — your coach will help with these.">
-            {OBSTACLES.map((o) => (
-              <button key={o} onClick={() => { haptic(); setObstacles((cur) => (cur.includes(o) ? cur.filter((x) => x !== o) : [...cur, o])); }} className={cx('flex min-h-[60px] items-center justify-between rounded-[20px] px-5 text-left text-[16px] font-bold transition active:scale-[.99]', obstacles.includes(o) ? 'bg-primary text-on-primary' : 'bg-surface')} style={obstacles.includes(o) ? undefined : { boxShadow: 'var(--shadow)' }}>
-                {o} {obstacles.includes(o) && <Check size={18} strokeWidth={3} />}
-              </button>
-            ))}
+          <Question title="What’s stopping you from reaching your goals?" sub="Pick any. Your coach will help with these.">
+            {OBSTACLES.map(([o, Icon]) => <Choice key={o} option={{ value: o, label: o, sub: '', icon: Icon }} multi selected={obstacles.includes(o)} onClick={() => setObstacles((cur) => (cur.includes(o) ? cur.filter((x) => x !== o) : [...cur, o]))} />)}
             <div className="flex-1" />
             <button onClick={next} className="btn-primary mt-6 w-full">{obstacles.length ? 'Continue' : 'Skip'}</button>
           </Question>
+        )}
+        {at === 'building' && <Building onDone={next} hasGoalWeight={!!goalWeightKg} />}
+        {at === 'tryfree' && (
+          <div className="flex flex-1 flex-col">
+            <h1 className="text-center text-[30px] font-extrabold leading-[1.15] tracking-tight">Try Plus free<br />for 3 days</h1>
+            <p className="mt-2 text-center text-[15px] text-silver">Snap a meal and see its calories and protein in seconds.</p>
+            <ScanPreview />
+            <div className="flex-1" />
+            <p className="mt-6 flex items-center justify-center gap-2 text-[15px] font-semibold"><Check size={18} strokeWidth={3} className="text-accent" /> No payment due. No card needed.</p>
+            <button onClick={() => { haptic([10, 40, 10]); setPlanChoice('free'); finish(); }} className="btn-primary mt-3 w-full">Start my free trial</button>
+            <button onClick={() => { haptic(); next(); }} className="mt-2 h-12 w-full font-bold text-silver">See plans and prices</button>
+            <p className="text-center text-xs text-dim">The trial starts with your first AI scan or coach message and ends on its own after 3 days. Then you’re on Free unless you choose Plus.</p>
+          </div>
         )}
         {at === 'coach' && (
           <Question title="Do you work with a personal trainer or dietitian?" sub="Your plan stays yours either way — share it with them anytime.">
@@ -492,7 +518,7 @@ export default function Onboarding() {
         {at === 'choose' && (
           <Question title="Choose your plan" sub="Start free and upgrade any time. Cancel whenever you like.">
             <div className="mb-3 flex justify-center">
-              <Segmented<'monthly' | 'yearly'> value={billing} onChange={(v) => { haptic(); setBilling(v); }} options={[{ value: 'monthly', label: 'Monthly' }, { value: 'yearly', label: 'Yearly · save 44%' }]} />
+              <Segmented<'monthly' | 'yearly'> value={billing} onChange={(v) => { haptic(); setBilling(v); }} options={[{ value: 'monthly', label: 'Monthly' }, { value: 'yearly', label: 'Yearly · save 58%' }]} />
             </div>
             <div className="space-y-3">
               {PLAN_CHOICES.map((p) => { const pr = p.tier === 'free' ? { price: '$0', sub: 'forever', save: 0 } : plannedPrice(p.tier, billing); return (
@@ -538,7 +564,7 @@ function Question({ title, sub, children }: { title: string; sub: string; childr
   );
 }
 
-function Choice<T>({ option, selected, onClick, multi }: { option: Option<T>; selected: boolean; onClick: () => void; multi?: boolean }) {
+function Choice<T>({ option, selected, onClick, multi, radio }: { option: Option<T>; selected: boolean; onClick: () => void; multi?: boolean; radio?: boolean }) {
   const Icon = option.icon;
   return (
     <button
@@ -550,8 +576,9 @@ function Choice<T>({ option, selected, onClick, multi }: { option: Option<T>; se
       <span className={cx('grid h-12 w-12 shrink-0 place-items-center rounded-2xl', selected ? 'bg-accent text-white' : 'bg-raised')}><Icon size={22} /></span>
       <span className="flex-1">
         <span className="block font-semibold">{option.label}</span>
-        <span className="block text-sm text-silver">{option.sub}</span>
+        {option.sub && <span className="block text-sm text-silver">{option.sub}</span>}
       </span>
+      {radio && <span className={cx('grid h-6 w-6 shrink-0 place-items-center rounded-full border-2', selected ? 'border-accent' : 'border-line')}>{selected && <span className="h-3 w-3 rounded-full bg-accent" />}</span>}
       {multi && (
         <span className={cx('grid h-6 w-6 shrink-0 place-items-center rounded-md border-2', selected ? 'border-accent bg-accent text-white' : 'border-line')}>
           {selected && <Check size={15} strokeWidth={3} />}
@@ -656,7 +683,7 @@ function Welcome({ signedIn, email, onStart }: { signedIn: boolean; email?: stri
           </button>
           <p className="text-center text-[15px] text-silver">Already have an account? <button onClick={() => setMode('login')} className="font-semibold text-accent">Log in</button></p>
           <p className="text-center text-xs text-dim">An account saves your data so you can use it on any phone.</p>
-          <p className="mb-2 text-center text-[13px] text-silver">Free to start, no card. Plus is $8.99/mo, or save 44% yearly · <a href="/premium" className="font-semibold text-accent underline">See what’s included</a></p>
+          <p className="mb-2 text-center text-[13px] text-silver">Free to start, no card. Plus is $8.99/mo, or save 58% yearly · <a href="/premium" className="font-semibold text-accent underline">See what’s included</a></p>
           <p className="text-center text-xs text-dim">By continuing you agree to our <a href="/terms" className="underline">Terms</a>, <a href="/privacy" className="underline">Privacy Policy</a> and <a href="/refunds" className="underline">Refund Policy</a>.</p>
         </div>
       )}
@@ -720,6 +747,59 @@ function EditTile({ icon: Icon, tone, label, unit, value, onChange, min = 0, max
           </button>
         )}
         <p className="text-sm font-semibold text-silver">{label}{unit === 'kcal' ? ' (kcal)' : ''}</p>
+      </div>
+    </div>
+  );
+}
+
+/** "Setting up your plan": a short progress screen while the targets are worked out (they're instant; this shows what goes into them). */
+function Building({ onDone, hasGoalWeight }: { onDone: () => void; hasGoalWeight: boolean }) {
+  const [pct, setPct] = useState(0);
+  const steps = ['Estimating your daily energy (Mifflin–St Jeor)…', 'Adding your activity level…', hasGoalWeight ? 'Setting a safe pace to your goal weight…' : 'Keeping your weight steady…', 'Setting protein from your weight and goals…', 'Splitting carbs and fat…', 'Choosing foods from your cuisines…'];
+  const items = ['Calories', 'Protein', 'Carbs', 'Fat', 'Water'];
+  useEffect(() => {
+    const t = setInterval(() => setPct((p) => { const n = Math.min(100, p + 2); if (n === 100) clearInterval(t); return n; }), 60);
+    return () => clearInterval(t);
+  }, []);
+  useEffect(() => { if (pct === 100) { haptic([10, 40, 10]); const t = setTimeout(onDone, 500); return () => clearTimeout(t); } }, [pct]); // eslint-disable-line react-hooks/exhaustive-deps
+  return (
+    <div className="flex flex-1 flex-col items-center justify-center text-center" role="status" aria-live="polite">
+      <p className="num text-[64px] font-extrabold leading-none tracking-tight">{pct}%</p>
+      <h1 className="mt-4 text-[26px] font-extrabold leading-tight tracking-tight">We’re setting everything<br />up for you</h1>
+      <div className="mt-6 h-2.5 w-full overflow-hidden rounded-full bg-line"><div className="h-full rounded-full bg-gradient-to-r from-accent/60 to-accent transition-[width] duration-100" style={{ width: `${pct}%` }} /></div>
+      <p className="mt-4 h-5 text-[15px] text-silver">{steps[Math.min(steps.length - 1, Math.floor((pct / 100) * steps.length))]}</p>
+      <div className="card mt-8 w-full p-5 text-left">
+        <p className="font-bold">Daily targets for</p>
+        <ul className="mt-2 space-y-2.5">
+          {items.map((x, i) => { const done = pct >= ((i + 1) / items.length) * 100 - 1; return (
+            <li key={x} className="flex items-center justify-between text-[16px]"><span>· {x}</span>{done ? <span className="grid h-6 w-6 place-items-center rounded-full bg-ink text-bg"><Check size={14} strokeWidth={3} /></span> : <Loader2 size={18} className="animate-spin text-dim" />}</li>
+          ); })}
+        </ul>
+      </div>
+      <button onClick={onDone} className="mt-4 text-sm font-semibold text-silver">Skip</button>
+    </div>
+  );
+}
+
+/** An example scan inside a phone frame. The numbers are real database values for these foods and weights. */
+function ScanPreview() {
+  const { db } = useFoodDb();
+  const plate = db ? ([['chicken breast grilled', 150], ['rice white boiled', 180], ['salad mixed', 80]] as const).map(([q, g]) => ({ food: searchFoods(q, { limit: 1 })[0], g })).filter((x) => x.food) : [];
+  const t = plate.reduce((a, { food, g }) => ({ kcal: a.kcal + ((food.per100.kcal ?? 0) * g) / 100, protein: a.protein + (food.per100.protein * g) / 100, carbs: a.carbs + ((food.per100.carbs ?? 0) * g) / 100, fat: a.fat + ((food.per100.fat ?? 0) * g) / 100 }), { kcal: 0, protein: 0, carbs: 0, fat: 0 });
+  return (
+    <div className="mx-auto mt-6 w-[250px] rounded-[38px] border-[7px] border-ink bg-surface p-2.5 shadow-xl animate-fade-up" aria-label="Example scan">
+      <div className="grid h-[130px] place-items-center rounded-[26px] bg-raised">
+        <div className="flex -space-x-2">{['poultry_leg', 'cooked_rice', 'green_salad'].map((n) => <span key={n} className="grid h-[72px] w-[72px] place-items-center rounded-full bg-surface ring-4 ring-raised"><img src={`/food/${n}.svg`} alt="" className="h-12 w-12" /></span>)}</div>
+      </div>
+      <div className="px-1.5 pb-2 pt-3">
+        <p className="text-[10px] font-semibold text-silver">Example</p>
+        <p className="text-[14px] font-extrabold leading-tight">Grilled chicken with rice and salad</p>
+        <div className="mt-2 grid grid-cols-2 gap-1.5">
+          {([['Calories', fmt(t.kcal), Flame], ['Carbs', `${fmt(t.carbs)}g`, Wheat], ['Protein', `${fmt(t.protein)}g`, Drumstick], ['Fat', `${fmt(t.fat)}g`, Droplet]] as const).map(([l, v, Icon]) => (
+            <div key={l} className="flex items-center gap-1.5 rounded-xl bg-raised px-2 py-1.5"><Icon size={13} className="text-silver" /><span><span className="block text-[9px] text-silver">{l}</span><span className="num block text-[12px] font-bold">{db ? v : '…'}</span></span></div>
+          ))}
+        </div>
+        <div className="mt-2 flex gap-1.5"><span className="flex-1 rounded-full border border-line py-1.5 text-center text-[10px] font-semibold">Fix results</span><span className="flex-1 rounded-full bg-ink py-1.5 text-center text-[10px] font-semibold text-bg">Done</span></div>
       </div>
     </div>
   );

@@ -385,14 +385,14 @@ function SubscriptionGroup() {
           <div className="mx-3 my-2 grid grid-cols-2 gap-2 text-[13px] leading-snug">
             <div className="rounded-2xl bg-raised p-3">
               <p className="font-bold">Free <span className="font-medium text-silver">· your plan</span></p>
-              <ul className="mt-1.5 space-y-1 text-silver"><li>Food search, barcode and diary</li><li>Voice logging</li><li>3 AI scans a day</li><li>5 coach messages a day</li></ul>
+              <ul className="mt-1.5 space-y-1 text-silver"><li>Diary, search, barcode, voice</li><li>Recipe imports, exercises</li><li>3 AI scans + 5 coach messages a day</li><li>2 AI recipes, 1 meal plan a month</li></ul>
             </div>
             <div className="rounded-2xl bg-accent/10 p-3">
               <p className="font-bold">Plus <span className="font-medium text-silver">· $8.99/mo</span></p>
-              <ul className="mt-1.5 space-y-1 text-silver"><li>300 AI credits a month (scans, coach, recipes)</li><li>Coach talks back</li><li>Meal plans, recipes, workouts</li><li>Vitamin and eating-pattern reports</li></ul>
+              <ul className="mt-1.5 space-y-1 text-silver"><li>300 AI credits a month (scans, coach, recipes)</li><li>Coach talks back</li><li>AI meal plans, recipes, workouts</li><li>Weekly progress report</li></ul>
             </div>
           </div>
-          <Link to="/premium" className="block"><Row icon={<CreditCard size={18} />} label="See Plus" chevron><span className="text-sm font-semibold text-accent">$8.99/mo or $59.99/yr</span></Row></Link>
+          <Link to="/premium" className="block"><Row icon={<CreditCard size={18} />} label="See Plus" chevron><span className="text-sm font-semibold text-accent">$8.99/mo or $44.99/yr</span></Row></Link>
           <Link to="/premium?restore=1" className="block"><Row icon={<RotateCcw size={18} />} label="Restore purchase" chevron /></Link>
         </>
       )}

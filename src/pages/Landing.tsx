@@ -89,7 +89,7 @@ export default function Landing() {
                 <p className="text-[20px] font-extrabold">Free</p>
                 <p className="mt-1"><span className="text-[34px] font-extrabold">$0</span> <span className="text-silver">for ever</span></p>
                 <ul className="mt-4 space-y-2 text-[15px]">
-                  {['Calories, protein, carbs, fat, vitamins & minerals', '18,000+ foods, barcode scanning, voice logging', 'Diary, saved meals, recipes, weight, sleep, workouts', 'Progress charts and reports, works offline', '3 AI photo scans, 5 coach messages and 1 recipe import a day'].map((x) => <li key={x} className="flex gap-2"><Check size={18} className="mt-0.5 shrink-0 text-accent" />{x}</li>)}
+                  {['Calories, protein, carbs, fat, vitamins & minerals', '18,000+ foods, barcode scanning, voice logging', 'Diary, saved meals, recipes, weight, sleep, workouts', 'Unlimited recipe imports, exercise library, works offline', '3 AI photo scans and 5 coach messages a day, 2 AI recipes and 1 AI meal plan a month'].map((x) => <li key={x} className="flex gap-2"><Check size={18} className="mt-0.5 shrink-0 text-accent" />{x}</li>)}
                 </ul>
                 <Link to="/start" className="btn-ghost mt-6 w-full">Start free</Link>
               </div>
@@ -98,10 +98,10 @@ export default function Landing() {
                 <p className="mt-1"><span className="text-[34px] font-extrabold">{usd(M)}</span> <span className="text-silver">a month</span></p>
                 <p className="text-[14px] text-silver">or {usd(Y)} a year, <b className="text-accent">save {Math.round((1 - Y / (M * 12)) * 100)}%</b> (about {usd(Y / 12)} a month)</p>
                 <ul className="mt-4 space-y-2 text-[15px]">
-                  {['300 AI credits a month: photo scans (up to 4 a day), coach, recipes, plans', 'AI coach that can talk back', 'AI meal plans, recipes and workout guides', 'Smart calorie target that learns from your progress', 'Vitamin gaps and eating-pattern reports', 'No ads'].map((x) => <li key={x} className="flex gap-2"><Check size={18} className="mt-0.5 shrink-0 text-accent" />{x}</li>)}
+                  {['300 AI credits a month: photo scans (up to 4 a day), coach, recipes, plans', 'AI coach that can talk back', 'Personalised AI meal plans, recipes and workout plans', 'Weekly nutrition progress report', 'Smart calorie target that learns from your progress', 'Vitamin gaps and eating-pattern reports', 'No ads'].map((x) => <li key={x} className="flex gap-2"><Check size={18} className="mt-0.5 shrink-0 text-accent" />{x}</li>)}
                 </ul>
                 <Link to="/start" className="btn-primary mt-6 w-full">Try Plus free for 3 days</Link>
-                <p className="mt-2 text-center text-[12px] text-dim">Logging, search, barcode and voice never use credits. Cancel any time.</p>
+                <p className="mt-2 text-center text-[12px] text-dim">Logging, search, barcode, voice and recipe imports never use credits. Cancel any time.</p>
               </div>
             </div>
           </div>

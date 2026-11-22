@@ -89,7 +89,7 @@ export async function refreshPremium(force = false): Promise<void> {
 }
 
 /** Prices shown in the app (always US dollars), by plan id. */
-/** Text for a planned price: "$8.99" / "per month", or "$59.99" / "per year · $5.00 a month" with the saving. */
+/** Text for a planned price: "$8.99" / "per month", or "$44.99" / "per year · $3.75 a month" with the saving. */
 export function plannedPrice(tier: Tier, billing: 'monthly' | 'yearly'): { price: string; sub: string; save: number } {
   const m = USD_PRICES[`${tier}_monthly`], y = USD_PRICES[`${tier}_yearly`];
   if (billing === 'monthly') return { price: `$${m.toFixed(2)}`, sub: `per month · or $${y.toFixed(2)} a year (save ${Math.round((1 - y / (m * 12)) * 100)}%)`, save: 0 };
@@ -140,7 +140,7 @@ export async function aiHeaders(): Promise<Record<string, string>> {
   return { 'content-type': 'application/json', 'x-device-id': deviceId(), ...(token && { authorization: `Bearer ${token}` }), ...(user && { 'x-user-token': user }) };
 }
 
-export interface Usage { tier: 'free' | 'plus' | 'pro'; admin: boolean; perks?: { proUntil: number; freePro: boolean; trialUsed: boolean; referrals: number; maxReferrals: number; referralDays: number; code: string }; features: Record<'scan' | 'coach' | 'workout' | 'recipe' | 'plan' | 'ideas', { used: number; limit: number | null }>; credits?: { total: number; used: number; left: number; resetsAt: number; costs: Record<string, number>; scansPerDay: number; scansToday: number } }
+export interface Usage { tier: 'free' | 'plus' | 'pro'; admin: boolean; perks?: { proUntil: number; freePro: boolean; trialUsed: boolean; referrals: number; maxReferrals: number; referralDays: number; code: string }; features: Record<'scan' | 'coach' | 'workout' | 'recipe' | 'plan' | 'ideas', { used: number; limit: number | null }>; credits?: { total: number; used: number; left: number; resetsAt: number; costs: Record<string, number>; scansPerDay: number; scansToday: number; monthlyCaps?: Record<string, number> } }
 
 /** This month's AI usage for the signed-in user, or null. */
 export async function fetchUsage(): Promise<Usage | null> {

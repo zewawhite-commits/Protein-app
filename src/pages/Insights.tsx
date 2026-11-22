@@ -6,6 +6,7 @@ import { ActivitySummary } from '@/components/ActivitySummary';
 import { WeightHistory } from '@/components/WeightHistory';
 import { Measurements } from '@/components/Measurements';
 import { ProMore, ProOnly } from '@/components/ProOnly';
+import { WeeklyReport } from '@/components/WeeklyReport';
 import { EatingPatterns, NutrientGaps, TargetCheck } from '@/components/NutritionInsights';
 import { useMemo, useState } from 'react';
 import { MessageCircle } from 'lucide-react';
@@ -179,6 +180,7 @@ export default function Insights() {
       )}
       {/* 3. How you're eating, beyond the chart. */}
       <div className="mt-4 space-y-4">
+        <ProOnly quiet><WeeklyReport /></ProOnly>
         <TargetCheck />
         <ProOnly quiet><NutrientGaps /></ProOnly>
         <ProOnly quiet><EatingPatterns /></ProOnly>

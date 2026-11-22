@@ -10,12 +10,19 @@ export interface CreditConfig {
   monthlyCredits: number;
   scansPerDay: number;
   costs: Record<string, number>;
+  /** Most uses of a feature per credit month (inside the credits). Missing = only the credits limit it. */
+  monthlyCaps: Record<string, number>;
 }
 export const DEFAULT_CREDITS: CreditConfig = {
   monthlyCredits: 300,
   scansPerDay: 4,
-  costs: { scan: 2, menu: 2, label: 2, coach: 1, import: 2, recipe: 3, plan: 5, workout: 3, ideas: 1 },
+  // Recipe imports use no credits (unlimited for everyone; only the burst throttle applies).
+  costs: { scan: 2, menu: 2, label: 2, coach: 1, import: 0, recipe: 3, plan: 5, workout: 3, ideas: 1 },
+  monthlyCaps: { scan: 120, recipe: 12, workout: 8, plan: 4 },
 };
+/** Features that can have a monthly cap (photo, menu and label scans share the "scan" cap). */
+export const CAP_FEATURES = ['scan', 'coach', 'recipe', 'plan', 'workout', 'ideas'];
+export const capGroup = (feature: string) => (SCAN_FEATURES.has(feature) ? 'scan' : feature);
 /** Features that count as a photo scan for the daily cap. */
 export const SCAN_FEATURES = new Set(['scan', 'menu', 'label']);
 
@@ -27,7 +34,16 @@ export function cleanConfig(v: unknown): CreditConfig {
   const int = (x: unknown, d: number, max: number) => (Number.isInteger(x) && (x as number) >= 0 && (x as number) <= max ? (x as number) : d);
   const costs = { ...DEFAULT_CREDITS.costs };
   for (const k of Object.keys(costs)) costs[k] = int(o.costs?.[k], costs[k], 100);
-  return { monthlyCredits: int(o.monthlyCredits, DEFAULT_CREDITS.monthlyCredits, 100000), scansPerDay: int(o.scansPerDay, DEFAULT_CREDITS.scansPerDay, 1000), costs };
+  // Caps: a whole number from 1 up keeps it; null/0/blank removes it; anything else keeps the default.
+  const monthlyCaps: Record<string, number> = {};
+  const given = o.monthlyCaps && typeof o.monthlyCaps === 'object' ? o.monthlyCaps : undefined;
+  for (const k of CAP_FEATURES) {
+    const v = given ? given[k] : DEFAULT_CREDITS.monthlyCaps[k];
+    if (given && (v == null || v === 0)) continue;
+    const n = int(v, DEFAULT_CREDITS.monthlyCaps[k] ?? 0, 100000);
+    if (n > 0) monthlyCaps[k] = n;
+  }
+  return { monthlyCredits: int(o.monthlyCredits, DEFAULT_CREDITS.monthlyCredits, 100000), scansPerDay: int(o.scansPerDay, DEFAULT_CREDITS.scansPerDay, 1000), costs, monthlyCaps };
 }
 
 export async function creditConfig(): Promise<CreditConfig> {
@@ -67,6 +83,7 @@ export function creditCycle(passExp: number | null, now = Date.now()): { start: 
 }
 
 export const creditKey = (userId: string, cycleStart: number) => `credits:${userId}:${new Date(cycleStart).toISOString().slice(0, 10)}`;
+export const capKey = (feature: string, userId: string, cycleStart: number) => `cap:${capGroup(feature)}:${userId}:${new Date(cycleStart).toISOString().slice(0, 10)}`;
 export const scanDayKey = (userId: string, now = Date.now()) => `scanday:${userId}:${new Date(now).toISOString().slice(0, 10)}`;
 
 /** Spend if it fits. New total used, -1 if not enough left, or null if the ledger isn't set up (never blocks). */

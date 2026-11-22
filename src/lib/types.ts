@@ -151,6 +151,8 @@ export interface Profile {
   paceKgPerWeek?: number;
   /** What gets in the way (from onboarding); shared with the AI coach. */
   obstacles?: string[];
+  /** What they most want from the app (onboarding). */
+  aim?: string;
   /** Kinds of exercise they do or want to try (onboarding); used for the workout guide. */
   training?: string[];
   /** Works with a trainer or dietitian. */

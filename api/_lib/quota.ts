@@ -1,12 +1,11 @@
 /**
  * Plan limits for every AI feature, enforced on the server so they can't be bypassed.
  *
- *            scan  coach  workout  recipe  plan  ideas   (per calendar month, UTC)
- *   free       3      5      0        0      0     0     + 1 recipe import a day
- *   plus / trial / reward: generous daily fair-use limits (metering.ts CEILING, published in the Terms):
- *              50 photo scans, 150 coach messages, 20 recipe imports, 20 AI recipes, 10 plans, 10 workouts, 30 ideas a day
- *   reward    ∞      5      ∞        ∞      ∞     ∞     invite rewards: Plus features, coach at the Free allowance (per day)
- *   (Free limits are per day; the others per month.)
+ *   free: 3 photo scans and 5 coach messages a day; 2 AI recipes and 1 meal plan a month; no AI workouts
+ *         or meal ideas. Recipe imports are unlimited for everyone (burst throttle only, no credits).
+ *   plus / trial / reward: 300 AI credits per billing month (credits.ts, owner-editable), up to 4 photo
+ *         scans a day, and monthly caps per feature (120 scans, 12 AI recipes, 8 workouts, 4 meal plans).
+ *   reward: invite rewards — Plus features, coach at the Free daily allowance.
  *
  * Rules:
  *  - AI features need a signed-in account (x-user-token: Supabase access token).
@@ -18,7 +17,7 @@
 import { bearer, readPass } from './premium.js';
 import { accountsConfigured, useScan, userFromToken } from './accounts.js';
 import { fairUse, type AiFeature, type Caller } from './metering.js';
-import { creditConfig, creditCycle, creditKey, refund, scanDayKey, SCAN_FEATURES, spend, usedNow } from './credits.js';
+import { capGroup, capKey, creditConfig, creditCycle, creditKey, refund, scanDayKey, SCAN_FEATURES, spend, usedNow } from './credits.js';
 
 export type Feature = 'scan' | 'coach' | 'workout' | 'recipe' | 'plan' | 'ideas' | 'menu' | 'import';
 export type PlanTier = 'free' | 'plus' | 'pro' | 'trial' | 'reward';
@@ -29,12 +28,15 @@ const FAIR_USE = 1_000_000;
 
 /** Free limits reset every day (UTC); paid plans count per month. */
 const DAILY: Record<PlanTier, boolean> = { free: true, plus: false, pro: false, trial: false, reward: false };
+/** Free features counted per month instead of per day. */
+const FREE_MONTHLY = new Set(['recipe', 'plan', 'workout']);
 const today = () => new Date().toISOString().slice(0, 10);
-/** The counter for this feature: per day on Free, per month otherwise. */
-export const usageKey = (feature: string, userId: string, tier: PlanTier) => (DAILY[tier] || (tier === 'reward' && feature === 'coach') ? `${feature}:${userId}:${today()}` : `${feature}:${userId}`);
+const daily = (feature: string, tier: PlanTier) => (DAILY[tier] && !FREE_MONTHLY.has(feature)) || (tier === 'reward' && feature === 'coach');
+/** The counter for this feature: per day on Free (AI recipes and plans per month), per month otherwise. */
+export const usageKey = (feature: string, userId: string, tier: PlanTier) => (daily(feature, tier) ? `${feature}:${userId}:${today()}` : `${feature}:${userId}`);
 
 const DEFAULTS: Record<PlanTier, Record<Feature, number>> = {
-  free: { scan: 3, coach: 5, workout: 0, recipe: 0, plan: 0, ideas: 0, menu: 0, import: 1 },
+  free: { scan: 3, coach: 5, workout: 0, recipe: 2, plan: 1, ideas: 0, menu: 0, import: FAIR_USE },
   // There is only one paid plan now (Plus); any older Plus subscription gets everything Plus has.
   plus: { scan: FAIR_USE, coach: FAIR_USE * 3, workout: FAIR_USE, recipe: FAIR_USE, plan: FAIR_USE, ideas: FAIR_USE, menu: FAIR_USE, import: FAIR_USE },
   pro: { scan: FAIR_USE, coach: FAIR_USE * 3, workout: FAIR_USE, recipe: FAIR_USE, plan: FAIR_USE, ideas: FAIR_USE, menu: FAIR_USE, import: FAIR_USE },
@@ -47,7 +49,8 @@ const DEFAULTS: Record<PlanTier, Record<Feature, number>> = {
 /** Limits at or above this are shown as "Unlimited" (a fair-use cap, ~30 a day). */
 export const UNLIMITED = 900;
 
-const NAMES: Record<Feature, string> = { scan: 'AI scans', coach: 'coach messages', workout: 'workout guides', recipe: 'AI recipes', plan: 'eating plans', ideas: 'AI meal ideas', menu: 'Restaurant menu scans', import: 'recipe imports' };
+const NAMES: Record<Feature, string> = { scan: 'AI scans', coach: 'coach messages', workout: 'AI workout plans', recipe: 'AI recipes', plan: 'AI meal plans', ideas: 'AI meal ideas', menu: 'Restaurant menu scans', import: 'recipe imports' };
+const ONE: Record<Feature, string> = { scan: 'AI scan', coach: 'coach message', workout: 'AI workout plan', recipe: 'AI recipe', plan: 'AI meal plan', ideas: 'AI meal idea', menu: 'Restaurant menu scan', import: 'recipe import' };
 
 export function limitFor(tier: PlanTier, feature: Feature): number {
   const v = Number(process.env[`LIMIT_${tier.toUpperCase()}_${feature.toUpperCase()}`]);
@@ -117,7 +120,9 @@ export async function gate(request: Request, feature: Feature, count = 1): Promi
       if (left < 0) break;
     }
     if (left < 0) {
-      return { ok: false, status: 402, body: { error: tier === 'reward' ? `You’ve used your ${limit} ${NAMES[feature]} for today. They reset tomorrow, or upgrade to Plus for unlimited.` : `You’ve used your ${limit} free ${limit === 1 ? NAMES[feature].replace(/s$/, '') : NAMES[feature]} for today. They reset tomorrow, or upgrade to Plus for unlimited.`, premium: true, limitReached: true, feature, tier } };
+      const n = limit === 1 ? ONE[feature] : NAMES[feature];
+      const when = daily(feature, tier) ? 'for today. More tomorrow' : 'for this month. More on the 1st';
+      return { ok: false, status: 402, body: { error: tier === 'reward' ? `You’ve used your ${limit} ${n} ${when}.` : `You’ve used your ${limit} free ${n} ${when}, or get more with Plus.`, premium: true, limitReached: true, feature, tier } };
     }
     return { ok: true, tier, left, limit, who: caller };
   } catch (e) {
@@ -158,7 +163,10 @@ async function spendCredits(feature: Feature, who: Caller, passExp: number | nul
   const cost = (cfg.costs[feature] ?? 1) * count;
   const cycle = creditCycle(passExp);
   const ck = creditKey(who.userId, cycle.start);
+  // Free of credits (recipe imports): nothing to count.
+  if (cost === 0 && !SCAN_FEATURES.has(feature)) return { ok: true, tier: who.tier as PlanTier, left: Infinity, limit: Infinity, who };
   let dayKey: string | null = null;
+  let capK: string | null = null;
   if (SCAN_FEATURES.has(feature)) {
     dayKey = scanDayKey(who.userId);
     const day = await spend(dayKey, count, cfg.scansPerDay);
@@ -168,16 +176,29 @@ async function spendCredits(feature: Feature, who: Caller, passExp: number | nul
     }
     if (day == null) dayKey = null; // ledger not set up: never block
   }
+  // Monthly cap for this feature (inside the credits).
+  const cap = cfg.monthlyCaps[capGroup(feature)];
+  if (cap) {
+    capK = capKey(feature, who.userId, cycle.start);
+    const n = await spend(capK, count, cap);
+    if (n === -1) {
+      if (dayKey) await refund(dayKey, count);
+      const g = capGroup(feature) as Feature;
+      return { ok: false, status: 429, body: { error: `You’ve used this month’s ${cap} ${cap === 1 ? ONE[g] : NAMES[g]}. More on ${fmtDate(cycle.end)}. Your other AI features and all logging keep working.`, limitReached: true, monthlyCap: true, resetsAt: cycle.end, feature, tier: who.tier } };
+    }
+    if (n == null) capK = null;
+  }
   const used = await spend(ck, cost, cfg.monthlyCredits);
   if (used === -1) {
     if (dayKey) await refund(dayKey, count);
+    if (capK) await refund(capK, count);
     return { ok: false, status: 402, body: { error: `You’ve used this month’s ${cfg.monthlyCredits} AI credits. They refresh on ${fmtDate(cycle.end)}. Logging, search, barcode, voice and saved meals keep working.`, limitReached: true, creditsOut: true, resetsAt: cycle.end, feature, tier: who.tier } };
   }
   const left = used == null ? cfg.monthlyCredits : cfg.monthlyCredits - used;
   return {
     ok: true, tier: who.tier as PlanTier, left: Infinity, limit: Infinity, who,
     credits: { left, total: cfg.monthlyCredits },
-    refund: async () => { if (used != null) await refund(ck, cost); if (dayKey) await refund(dayKey, count); },
+    refund: async () => { if (used != null) await refund(ck, cost); if (dayKey) await refund(dayKey, count); if (capK) await refund(capK, count); },
   };
 }
 
@@ -189,5 +210,5 @@ export async function creditBalance(request: Request) {
   const cycle = creditCycle(paid?.exp ?? null);
   const used = await usedNow(creditKey(user.id, cycle.start));
   const scansToday = await usedNow(scanDayKey(user.id));
-  return { total: cfg.monthlyCredits, used, left: Math.max(0, cfg.monthlyCredits - used), resetsAt: cycle.end, costs: cfg.costs, scansPerDay: cfg.scansPerDay, scansToday };
+  return { total: cfg.monthlyCredits, used, left: Math.max(0, cfg.monthlyCredits - used), resetsAt: cycle.end, costs: cfg.costs, scansPerDay: cfg.scansPerDay, scansToday, monthlyCaps: cfg.monthlyCaps };
 }

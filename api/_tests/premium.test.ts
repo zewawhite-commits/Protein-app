@@ -237,10 +237,42 @@ describe('plan limits (quota)', () => {
     expect(await res.json()).toMatchObject({ limitReached: true, premium: true, tier: 'free' });
   });
 
+  it('Free: 1 AI meal plan and 2 AI recipes a month, no AI workouts, unlimited recipe imports', async () => {
+    const { gate } = await import('../_lib/quota.js');
+    const counts: Record<string, number> = {};
+    fakeSupabase(counts);
+    expect((await gate(call({}, 'jwt'), 'plan')).ok).toBe(true);
+    const second = await gate(call({}, 'jwt'), 'plan');
+    expect(second).toMatchObject({ ok: false, status: 402 });
+    if (!second.ok) expect(String(second.body.error)).toMatch(/1 free AI meal plan for this month/);
+    expect((await gate(call({}, 'jwt'), 'recipe')).ok).toBe(true);
+    expect((await gate(call({}, 'jwt'), 'recipe')).ok).toBe(true);
+    expect((await gate(call({}, 'jwt'), 'recipe')).ok).toBe(false);
+    expect((await gate(call({}, 'jwt'), 'workout')).ok).toBe(false);
+    for (let i = 0; i < 8; i++) expect((await gate(call({}, 'jwt'), 'import')).ok).toBe(true);
+    // Monthly, not daily: the counter key has no date.
+    expect(Object.keys(counts).some((k) => /^plan:[^:]+$/.test(k))).toBe(true);
+  });
+
+  it('Plus: monthly caps inside the credits (12 AI recipes), imports use no credits', async () => {
+    const { gate } = await import('../_lib/quota.js');
+    const counts: Record<string, number> = {};
+    fakeSupabase(counts);
+    const plus = signPass({ email: 'me@example.com', cid: 1, plan: 'PLN_month', tier: 'plus', exp: Date.now() + 20 * 86400e3 });
+    expect(await gate(call({}, 'jwt', plus), 'import')).toMatchObject({ ok: true });
+    expect(Object.keys(counts).some((k) => k.startsWith('credits:'))).toBe(false);
+    for (let i = 0; i < 12; i++) expect((await gate(call({}, 'jwt', plus), 'recipe')).ok).toBe(true);
+    const over = await gate(call({}, 'jwt', plus), 'recipe');
+    expect(over).toMatchObject({ ok: false, status: 429 });
+    if (!over.ok) expect(String(over.body.error)).toMatch(/this month’s 12 AI recipes/);
+    // The refused recipe spent no credits: 12 × 3 = 36.
+    expect(Object.entries(counts).find(([k]) => k.startsWith('credits:'))![1]).toBe(36);
+  });
+
   it('keeps plans and ideas for paid tiers, and uses the pass tier limits', async () => {
     const { gate, limitFor } = await import('../_lib/quota.js');
     fakeSupabase({});
-    const free = await gate(call({}, 'jwt'), 'plan');
+    const free = await gate(call({}, 'jwt'), 'workout');
     expect(free.ok).toBe(false);
     if (!free.ok) expect(free.status).toBe(402);
     const pro = signPass({ email: 'me@example.com', cid: 1, plan: 'PLN_year', tier: 'pro', exp: Date.now() + 86400e3 });
@@ -248,7 +280,7 @@ describe('plan limits (quota)', () => {
     expect(ok).toMatchObject({ ok: true, tier: 'pro', credits: { left: 295, total: 300 } }); // a meal plan costs 5 credits
     void limitFor;
     const expired = signPass({ email: 'me@example.com', cid: 1, plan: 'PLN_month', tier: 'plus', exp: Date.now() - 1 });
-    const back = await gate(call({}, 'jwt', expired), 'plan');
+    const back = await gate(call({}, 'jwt', expired), 'workout');
     if (!back.ok) expect(back.body).toMatchObject({ renew: true, tier: 'free' });
   });
 

@@ -12,7 +12,7 @@ interface Dash {
   alerts: { at: string; user_id: string; email: string; kind: string; detail: string }[];
   revenue: { monthlyUsd: number | null; subscribers: number; currency: string; note?: string };
   paymentFeePct: number; margin: number | null;
-  credits?: { monthlyCredits: number; scansPerDay: number; costs: Record<string, number> };
+  credits?: { monthlyCredits: number; scansPerDay: number; costs: Record<string, number>; monthlyCaps: Record<string, number> };
 }
 const NAME: Record<string, string> = { scan: 'Photo scans', menu: 'Menu scans', label: 'Label scans', coach: 'Coach', import: 'Recipe imports', recipe: 'AI recipes', plan: 'Meal plans', workout: 'Workouts', ideas: 'Meal ideas' };
 const usd = (n: number) => `$${n < 1 ? n.toFixed(3) : fmt(n, 2)}`;
@@ -84,7 +84,7 @@ function CreditSettings({ initial, perRequest }: { initial: NonNullable<Dash['cr
   const save = async () => {
     setMsg('Saving…');
     try {
-      const res = await fetch('/api/stats', { method: 'POST', headers: await aiHeaders(), body: JSON.stringify({ credits: cfg }) });
+      const res = await fetch('/api/stats', { method: 'POST', headers: await aiHeaders(), body: JSON.stringify({ credits: { ...cfg, monthlyCaps: cfg.monthlyCaps ?? {} } }) });
       const j = (await res.json()) as { credits?: typeof cfg; error?: string };
       if (!res.ok) throw new Error(j.error ?? 'Failed');
       setCfg(j.credits!); setMsg('Saved. New values apply within a minute.');
@@ -98,6 +98,12 @@ function CreditSettings({ initial, perRequest }: { initial: NonNullable<Dash['cr
         <label className="flex items-center justify-between gap-2">Photo scans a day<input className="field !h-9 !w-20 text-right" inputMode="numeric" value={cfg.scansPerDay} onChange={(e) => setCfg({ ...cfg, scansPerDay: Math.max(0, Math.round(Number(e.target.value) || 0)) })} /></label>
         {Object.keys(cfg.costs).map((k) => (
           <label key={k} className="flex items-center justify-between gap-2">{NAME[k] ?? k}<span className="flex items-center gap-1"><input className="field !h-9 !w-14 text-right" inputMode="numeric" value={cfg.costs[k]} onChange={(e) => set(k, e.target.value)} />{perRequest[k] ? <span className="text-[11px] text-dim">{usd(perRequest[k])}</span> : null}</span></label>
+        ))}
+      </div>
+      <p className="mt-4 text-sm font-semibold">Most per member a month <span className="font-normal text-silver">(blank = only credits limit it)</span></p>
+      <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
+        {(['scan', 'coach', 'recipe', 'plan', 'workout', 'ideas'] as const).map((k) => (
+          <label key={k} className="flex items-center justify-between gap-2">{NAME[k] ?? k}<input className="field !h-9 !w-16 text-right" inputMode="numeric" placeholder="–" value={cfg.monthlyCaps?.[k] ?? ''} onChange={(e) => { const n = Math.round(Number(e.target.value.replace(/\D/g, '')) || 0); setCfg((c) => { const caps = { ...c.monthlyCaps }; if (n > 0) caps[k] = n; else delete caps[k]; return { ...c, monthlyCaps: caps }; }); }} /></label>
         ))}
       </div>
       <p className="mt-2 text-xs text-silver">Grey numbers: this month’s real average cost of one request. A full month of credits costs you at most about <b className="num">{usd(worst * cfg.monthlyCredits)}</b> per member{worst ? '' : ' (no data yet)'}.</p>

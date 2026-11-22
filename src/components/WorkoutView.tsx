@@ -77,7 +77,7 @@ export function WorkoutView() {
 
   return (
     <div className="space-y-4 pb-6">
-      <PlanBadge needs="plus" what="Your AI workout guide" />
+      <PlanBadge needs="plus" what="Personalised AI workout plans" />
       {editing ? (
         <section className="card p-5">
           <p className="flex items-center gap-2 text-[17px] font-bold"><Dumbbell size={18} className="text-accent" /> Your workout guide</p>

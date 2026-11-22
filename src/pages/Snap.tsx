@@ -5,7 +5,7 @@ import { MenuFits } from '@/components/MenuFits';
 import { PHOTO_ONLY } from '@/lib/photoDiary';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, BookOpen, Check, ChevronRight, CircleCheck, Crown, Focus, ImagePlus, Loader2, Mic, RotateCcw, ScanBarcode, ScanLine, ScanSearch, ScanText, Search, X, Zap } from 'lucide-react';
+import { ArrowLeft, BookOpen, Check, ChevronRight, CircleCheck, Crown, Droplet, Drumstick, Flame, Minus, Pencil, Plus, Wheat, Focus, ImagePlus, Loader2, Mic, RotateCcw, ScanBarcode, ScanLine, ScanSearch, ScanText, Search, X, Zap } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 import { useFoodDb, usePhotoUrl } from '@/lib/hooks';
 import { deletePhoto, getPhoto, resizeImage, savePhoto } from '@/lib/photos';
@@ -52,6 +52,8 @@ export default function Snap() {
   const [matches, setMatches] = useState<MatchedItem[]>([]);
   const [pick, setPick] = useState<{ food: Food; grams?: number; label: string; index: number } | null>(null);
   const [logged, setLogged] = useState<Set<number>>(new Set());
+  // Results open as a simple summary; "Fix results" shows every food, weight and extra.
+  const [fixing, setFixing] = useState(false);
   const [labelMode, setLabelMode] = useState(params.get('mode') === 'label');
   const [menuMode, setMenuMode] = useState(params.get('mode') === 'menu');
   // The results came from a restaurant menu, not a plate.
@@ -160,6 +162,7 @@ export default function Snap() {
       setNote(result.note);
       setQuality(result.photoQuality ?? 'good');
       setMatches(matchItems(result, custom, useStore.getState().picks));
+      setFixing(false);
       setPhase('results');
     } catch (e) {
       if (e instanceof SignInRequiredError) setPhase('signin');
@@ -322,6 +325,32 @@ export default function Snap() {
         </div>
         {canListen && <p className="mt-2 text-xs text-dim">{listening ? 'Listening… say what you ate, then tap the mic again.' : 'Tap the mic to say it instead of typing.'}</p>}
       </div>
+    );
+  }
+
+  if (phase === 'results' && !isMenu && !fixing && matches.length > 0 && logged.size === 0) {
+    return (
+      <QuickResult
+        matches={matches}
+        photoUrl={photoUrl}
+        quality={quality}
+        note={note}
+        onClose={back}
+        onRetake={retake}
+        onFix={(servings) => {
+          haptic();
+          if (servings !== 1) setMatches((ms) => ms.map((m) => ({ ...m, item: { ...m.item, estimatedGrams: Math.round(m.item.estimatedGrams * servings), gramsLow: Math.round(m.item.gramsLow * servings), gramsHigh: Math.round(m.item.gramsHigh * servings) } })));
+          setFixing(true);
+        }}
+        onDone={(rows, extras) => {
+          haptic([10, 30, 10]);
+          dropDiaryEntry();
+          rows.forEach((r, k) => addEntry({ date, meal: mealForNow(), food: r.food, grams: r.grams, photoId: k === 0 ? photoId : undefined, note: 'Portion estimated by AI — edit to your real weight' }));
+          extras.forEach((x) => addEntry({ date, meal: mealForNow(), food: x.food, grams: x.grams, note: `Hidden extra in ${x.dish} — usual amount (estimate)` }));
+          toast(`Logged ${rows.length} food${rows.length > 1 ? 's' : ''} — tap any to set the real weight`);
+          back();
+        }}
+      />
     );
   }
 
@@ -1076,6 +1105,101 @@ function PlateWeight({ matches, onApply, onLeftovers }: { matches: MatchedItem[]
           </div>
         </>
       )}
+    </div>
+  );
+}
+
+/** "Chicken, rice and salad" / "Turkey sandwich with crisps". */
+function dishName(names: string[]): string {
+  const n = names.map((x, i) => (i ? x.charAt(0).toLowerCase() + x.slice(1) : x));
+  if (n.length <= 1) return n[0] ?? 'Your meal';
+  if (n.length === 2) return `${n[0]} with ${n[1]}`;
+  return `${n.slice(0, -1).join(', ')} and ${n[n.length - 1]}`;
+}
+
+/**
+ * The first thing after a scan: the photo, the meal's name, servings and its four main numbers,
+ * then Fix results (every food, weight and hidden extra) or Done (logs it all).
+ * Numbers come from the matched database records × the AI's weight estimate.
+ */
+function QuickResult({ matches, photoUrl, quality, note, onClose, onRetake, onFix, onDone }: {
+  matches: MatchedItem[]; photoUrl?: string; quality: 'good' | 'fair' | 'poor'; note: string;
+  onClose: () => void; onRetake: () => void; onFix: (servings: number) => void;
+  onDone: (rows: { food: Food; grams: number }[], extras: { food: Food; grams: number; dish: string }[]) => void;
+}) {
+  const [servings, setServings] = useState(1);
+  const time = useMemo(() => new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }), []);
+  const rows = matches.map((m) => ({ name: m.item.name, food: m.candidates[0] as Food | undefined, grams: Math.round(m.item.estimatedGrams * servings) }));
+  const extras = matches.flatMap((m) => m.hidden.map((h) => ({ food: h.food, grams: Math.round(h.extra.usual * servings), dish: m.item.name, name: h.extra.name }))).filter((x) => x.grams > 0);
+  const usable = rows.filter((r): r is { name: string; food: Food; grams: number } => !!r.food && r.grams > 0);
+  const missing = rows.length - usable.length;
+  const t = [...usable, ...extras].reduce((a, r) => {
+    const k = r.grams / 100;
+    return { kcal: a.kcal + (r.food.per100.kcal ?? 0) * k, protein: a.protein + r.food.per100.protein * k, carbs: a.carbs + (r.food.per100.carbs ?? 0) * k, fat: a.fat + (r.food.per100.fat ?? 0) * k };
+  }, { kcal: 0, protein: 0, carbs: 0, fat: 0 });
+  const step = (d: number) => { haptic(); setServings((x) => Math.min(10, Math.max(0.5, Math.round((x + d) * 2) / 2))); };
+  const tiles = [
+    { label: 'Calories', value: fmt(t.kcal), icon: Flame, tone: 'text-ink' },
+    { label: 'Carbs', value: `${fmt(t.carbs)}g`, icon: Wheat, tone: 'text-[rgb(var(--carbs))]' },
+    { label: 'Protein', value: `${fmt(t.protein)}g`, icon: Drumstick, tone: 'text-accent' },
+    { label: 'Fat', value: `${fmt(t.fat)}g`, icon: Droplet, tone: 'text-[rgb(var(--fat))]' },
+  ];
+  const glass = 'grid h-11 w-11 place-items-center rounded-full bg-black/35 text-white backdrop-blur-md';
+  return (
+    <div className="mx-auto flex min-h-dvh max-w-lg flex-col md:max-w-2xl" aria-label="Scan result">
+      <div className="relative h-[44vh] min-h-[260px] w-full overflow-hidden bg-raised">
+        {photoUrl && <img src={photoUrl} alt="Your meal" className="h-full w-full object-cover" />}
+        <div className="pt-safe absolute inset-x-0 top-0 flex items-center justify-between px-4 pt-3">
+          <button onClick={onClose} className={glass} aria-label="Close"><X size={20} strokeWidth={2.4} /></button>
+          <p className="text-[16px] font-semibold text-white drop-shadow">Nutrition</p>
+          <button onClick={onRetake} className={glass} aria-label="Retake"><RotateCcw size={18} /></button>
+        </div>
+      </div>
+      <div className="relative -mt-7 flex flex-1 animate-fade-up flex-col rounded-t-[28px] bg-bg px-5 pb-32 pt-5">
+        <div className="flex items-center gap-2">
+          <span className="rounded-full bg-raised px-2.5 py-1 text-[12px] font-semibold text-silver">{time}</span>
+          {quality !== 'good' && <span className="rounded-full border border-dashed border-silver/60 px-2.5 py-1 text-[12px] font-semibold text-silver">{quality === 'poor' ? 'Hard photo · rough estimate' : 'Estimate'}</span>}
+        </div>
+        <div className="mt-2 flex items-start justify-between gap-3">
+          <h1 className="min-w-0 flex-1 text-[22px] font-extrabold leading-tight tracking-tight">{dishName(matches.map((m) => m.item.name))}</h1>
+          <div className="flex shrink-0 items-center rounded-full border-2 border-line" role="group" aria-label="Servings">
+            <button onClick={() => step(-0.5)} disabled={servings <= 0.5} className="grid h-10 w-10 place-items-center disabled:opacity-30" aria-label="Less"><Minus size={16} strokeWidth={2.6} /></button>
+            <span className="num min-w-[2ch] text-center text-[16px] font-bold" aria-live="polite">{servings}</span>
+            <button onClick={() => step(0.5)} className="grid h-10 w-10 place-items-center" aria-label="More"><Plus size={16} strokeWidth={2.6} /></button>
+          </div>
+        </div>
+        <div className="mt-4 grid grid-cols-2 gap-2.5">
+          {tiles.map(({ label, value, icon: Icon, tone }) => (
+            <button key={label} onClick={() => onFix(servings)} className="card flex items-center gap-3 p-3.5 text-left transition active:scale-[.98]">
+              <span className={cx('grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-raised', tone)}><Icon size={19} strokeWidth={2.2} /></span>
+              <span className="min-w-0 flex-1"><span className="block text-[13px] text-silver">{label}</span><span className="num block text-[19px] font-extrabold">{value}</span></span>
+              <Pencil size={13} className="self-end text-dim" />
+            </button>
+          ))}
+        </div>
+        <p className="mt-5 text-[15px] font-semibold">Ingredients</p>
+        <ul className="card mt-2 divide-y divide-line px-4">
+          {rows.map((r, i) => (
+            <li key={i} className="flex items-center gap-3 py-3 text-[14px]">
+              {r.food && <FoodVisual name={r.food.name} size={34} className="!rounded-full" />}
+              <span className="min-w-0 flex-1"><span className="block truncate font-semibold">{r.name}</span><span className="block truncate text-[12px] text-silver">{r.food ? splitName(r.food.name).title : 'Needs a match — tap Fix results'}</span></span>
+              {r.food && <span className="num shrink-0 text-right"><span className="block font-semibold">~{fmt(r.grams)} g</span><span className="block text-[12px] text-silver">{fmt(((r.food.per100.kcal ?? 0) * r.grams) / 100)} kcal</span></span>}
+            </li>
+          ))}
+          {extras.map((x, i) => (
+            <li key={`x${i}`} className="flex items-center justify-between gap-3 py-3 text-[14px]">
+              <span className="min-w-0 flex-1"><span className="block truncate font-semibold">{x.name}</span><span className="block text-[12px] text-silver">Not visible in photos · usual amount</span></span>
+              <span className="num shrink-0 text-right"><span className="block font-semibold">~{fmt(x.grams)} g</span><span className="block text-[12px] text-silver">{fmt(((x.food.per100.kcal ?? 0) * x.grams) / 100)} kcal</span></span>
+            </li>
+          ))}
+        </ul>
+        {note && <p className="mt-3 text-[13px] leading-relaxed text-silver">{note}</p>}
+        <p className="mt-3 text-[12px] leading-relaxed text-dim">AI names the food and guesses the weight; nutrition comes from the food database. Weights marked ~ are estimates — Fix results to weigh or change anything.</p>
+      </div>
+      <div className="pb-safe fixed inset-x-0 bottom-0 z-20 mx-auto flex max-w-lg gap-2.5 border-t border-line bg-bg/95 px-5 pt-3 backdrop-blur md:max-w-2xl" style={{ paddingBottom: 'max(14px, env(safe-area-inset-bottom))' }}>
+        <button onClick={() => onFix(servings)} className="btn-ghost flex-1 !border-2 !border-line"><Pencil size={16} /> Fix results</button>
+        <button onClick={() => (missing ? onFix(servings) : onDone(usable, extras))} className="btn-primary flex-1">{missing ? 'Pick matches' : 'Done'}</button>
+      </div>
     </div>
   );
 }

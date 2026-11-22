@@ -102,7 +102,8 @@ export async function fairUse(feature: AiFeature, who: Caller, paid: boolean, to
     if ((perMin ?? 0) === BURST_PER_MIN + 1 || (per10 ?? 0) === BURST_PER_10MIN + 1) await alert(who.userId, 'burst', `${perMin}/min, ${per10}/10min (${feature})`);
     return { ok: false, status: 429, error: 'That’s a lot of requests in a short time. Please wait a minute and try again.' };
   }
-  if (!paid) return { ok: true }; // Free has its own small daily allowance (quota.ts).
+  // Free has its own small allowances (quota.ts); unlimited recipe imports are still watched for heavy use.
+  if (!paid && feature !== 'import') return { ok: true };
   const day = await hit(`d:${feature}:${who.userId}:${today}`, 26 * 3600);
   if (day == null) return { ok: true };
   if (day === (REVIEW[feature] ?? Infinity) + 1) await alert(who.userId, `daily:${feature}`, `${day} today`);
