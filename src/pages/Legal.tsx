@@ -132,8 +132,8 @@ export function Terms() {
 
       <H>AI credits and fair use</H>
       <ul className="list-disc space-y-2 pl-5">
-        <li>Plus includes a monthly allowance of AI credits (currently 300), which refreshes on your billing date each month, also on yearly plans. Each AI feature uses credits: a food photo scan 2, a coach message 1, an AI recipe 3, a meal plan 5, a workout plan 3. Within the credits: up to 4 photo scans a day and, each month, up to 120 photo scans, 12 AI recipes, 4 meal plans and 8 workout plans. Profile shows your balance and the current costs.</li>
-        <li>Unused credits don’t roll over. If the AI fails to answer, the credits are returned. Sending the same photo or recipe again uses no credits.</li>
+        <li>Plus includes a monthly allowance of AI credits (currently 300), which refreshes on your billing date each month, also on yearly plans. AI photo scans (food, menu and label) are unlimited for personal use and don’t use credits. Other AI features use credits: a coach message 1, an AI recipe 3, a meal plan 5, a workout plan 3. Within the credits, each month: up to 12 AI recipes, 4 meal plans and 8 workout plans. Profile shows your balance and the current costs.</li>
+        <li>Unused credits don’t roll over. If the AI fails to answer, the credits are returned. Sending the same request again uses no credits.</li>
         <li>Never limited and never use credits: logging food, searching the food database, barcode scanning, voice logging, recipe imports, saved meals, your own foods and recipes, the exercise library and workout diary, and coach voice replies.</li>
         <li>We may change the allowance or the cost of a feature for future billing months; we’ll tell you in the app first.</li>
         <li>Not personal use: automated or scripted requests, sharing one account between several people, or using {APP_NAME}’s AI for a business. If an account sends requests faster than a person could, we ask it to wait a minute.</li>

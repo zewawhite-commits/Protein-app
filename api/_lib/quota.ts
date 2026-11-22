@@ -3,8 +3,9 @@
  *
  *   free: 3 photo scans and 5 coach messages a day; 2 AI recipes and 1 meal plan a month; no AI workouts
  *         or meal ideas. Recipe imports are unlimited for everyone (burst throttle only, no credits).
- *   plus / trial / reward: 300 AI credits per billing month (credits.ts, owner-editable), up to 4 photo
- *         scans a day, and monthly caps per feature (120 scans, 12 AI recipes, 8 workouts, 4 meal plans).
+ *   plus / trial / reward: unlimited photo scans (personal use; burst throttle and review alerts only), and
+ *         300 AI credits per billing month (credits.ts, owner-editable) for the coach, AI recipes, meal plans and
+ *         workouts, with monthly caps inside the credits (12 AI recipes, 8 workouts, 4 meal plans).
  *   reward: invite rewards — Plus features, coach at the Free daily allowance.
  *
  * Rules:
@@ -163,11 +164,12 @@ async function spendCredits(feature: Feature, who: Caller, passExp: number | nul
   const cost = (cfg.costs[feature] ?? 1) * count;
   const cycle = creditCycle(passExp);
   const ck = creditKey(who.userId, cycle.start);
-  // Free of credits (recipe imports): nothing to count.
-  if (cost === 0 && !SCAN_FEATURES.has(feature)) return { ok: true, tier: who.tier as PlanTier, left: Infinity, limit: Infinity, who };
+  const dailyCap = SCAN_FEATURES.has(feature) && cfg.scansPerDay > 0;
+  // Free of credits and not capped (photo scans, recipe imports on Plus): nothing to count.
+  if (cost === 0 && !dailyCap && !cfg.monthlyCaps[capGroup(feature)]) return { ok: true, tier: who.tier as PlanTier, left: Infinity, limit: Infinity, who };
   let dayKey: string | null = null;
   let capK: string | null = null;
-  if (SCAN_FEATURES.has(feature)) {
+  if (dailyCap) {
     dayKey = scanDayKey(who.userId);
     const day = await spend(dayKey, count, cfg.scansPerDay);
     if (day === -1) {
@@ -188,7 +190,7 @@ async function spendCredits(feature: Feature, who: Caller, passExp: number | nul
     }
     if (n == null) capK = null;
   }
-  const used = await spend(ck, cost, cfg.monthlyCredits);
+  const used = cost > 0 ? await spend(ck, cost, cfg.monthlyCredits) : null;
   if (used === -1) {
     if (dayKey) await refund(dayKey, count);
     if (capK) await refund(capK, count);
@@ -197,7 +199,7 @@ async function spendCredits(feature: Feature, who: Caller, passExp: number | nul
   const left = used == null ? cfg.monthlyCredits : cfg.monthlyCredits - used;
   return {
     ok: true, tier: who.tier as PlanTier, left: Infinity, limit: Infinity, who,
-    credits: { left, total: cfg.monthlyCredits },
+    ...(cost > 0 && { credits: { left, total: cfg.monthlyCredits } }),
     refund: async () => { if (used != null) await refund(ck, cost); if (dayKey) await refund(dayKey, count); if (capK) await refund(capK, count); },
   };
 }

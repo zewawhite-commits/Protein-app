@@ -18,11 +18,11 @@ export function CreditsCard() {
         <p className="num text-[15px] font-bold">{fmt(c.left)} <span className="text-[13px] font-medium text-silver">of {fmt(c.total)} left</span></p>
       </div>
       <div className="mt-3 h-2 overflow-hidden rounded-full bg-raised"><div className="h-full rounded-full bg-accent" style={{ width: `${pct * 100}%` }} /></div>
-      <p className="mt-2 text-[13px] text-silver">Refreshes on {new Date(c.resetsAt).toLocaleDateString(undefined, { day: 'numeric', month: 'long' })}. Up to {c.scansPerDay} photo scans a day. Logging, search, barcode, voice, recipe imports and saved meals never use credits.</p>
+      <p className="mt-2 text-[13px] text-silver">Refreshes on {new Date(c.resetsAt).toLocaleDateString(undefined, { day: 'numeric', month: 'long' })}. {c.scansPerDay ? `Up to ${c.scansPerDay} photo scans a day.` : 'Photo scans are unlimited.'} Scans, logging, search, barcode, voice, recipe imports and saved meals never use credits.</p>
       <button onClick={() => setOpen(!open)} className="mt-2 text-[13px] font-semibold text-accent">{open ? 'Hide' : 'What uses credits?'}</button>
       {open && (
         <ul className="mt-2 divide-y divide-line text-[14px]">
-          {NAMES.map(([k, n]) => c.costs[k] != null && <li key={k} className="flex justify-between gap-3 py-1.5"><span>{n}{c.monthlyCaps?.[k] ? <span className="text-silver"> · up to {c.monthlyCaps[k]} a month</span> : null}</span><span className="num shrink-0 font-semibold">{c.costs[k] ? `${c.costs[k]} credit${c.costs[k] === 1 ? '' : 's'}` : 'Free'}</span></li>)}
+          {NAMES.map(([k, n]) => c.costs[k] != null && <li key={k} className="flex justify-between gap-3 py-1.5"><span>{n}{c.monthlyCaps?.[k] ? <span className="text-silver"> · up to {c.monthlyCaps[k]} a month</span> : null}</span><span className="num shrink-0 font-semibold">{c.costs[k] ? `${c.costs[k]} credit${c.costs[k] === 1 ? '' : 's'}` : k === 'scan' ? 'Unlimited' : 'Free'}</span></li>)}
         </ul>
       )}
     </section>

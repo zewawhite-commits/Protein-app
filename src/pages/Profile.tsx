@@ -389,7 +389,7 @@ function SubscriptionGroup() {
             </div>
             <div className="rounded-2xl bg-accent/10 p-3">
               <p className="font-bold">Plus <span className="font-medium text-silver">· $8.99/mo</span></p>
-              <ul className="mt-1.5 space-y-1 text-silver"><li>300 AI credits a month (scans, coach, recipes)</li><li>Coach talks back</li><li>AI meal plans, recipes, workouts</li><li>Weekly progress report</li></ul>
+              <ul className="mt-1.5 space-y-1 text-silver"><li>Unlimited AI photo scans</li><li>300 AI credits for coach, recipes, plans</li><li>Coach talks back</li><li>AI meal plans, recipes, workouts</li><li>Weekly progress report</li></ul>
             </div>
           </div>
           <Link to="/premium" className="block"><Row icon={<CreditCard size={18} />} label="See Plus" chevron><span className="text-sm font-semibold text-accent">$8.99/mo or $44.99/yr</span></Row></Link>

@@ -95,7 +95,7 @@ function CreditSettings({ initial, perRequest }: { initial: NonNullable<Dash['cr
       <p className="font-semibold">Plus AI credits</p>
       <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
         <label className="flex items-center justify-between gap-2">Credits a month<input className="field !h-9 !w-20 text-right" inputMode="numeric" value={cfg.monthlyCredits} onChange={(e) => setCfg({ ...cfg, monthlyCredits: Math.max(0, Math.round(Number(e.target.value) || 0)) })} /></label>
-        <label className="flex items-center justify-between gap-2">Photo scans a day<input className="field !h-9 !w-20 text-right" inputMode="numeric" value={cfg.scansPerDay} onChange={(e) => setCfg({ ...cfg, scansPerDay: Math.max(0, Math.round(Number(e.target.value) || 0)) })} /></label>
+        <label className="flex items-center justify-between gap-2">Photo scans a day (0 = unlimited)<input className="field !h-9 !w-20 text-right" inputMode="numeric" value={cfg.scansPerDay} onChange={(e) => setCfg({ ...cfg, scansPerDay: Math.max(0, Math.round(Number(e.target.value) || 0)) })} /></label>
         {Object.keys(cfg.costs).map((k) => (
           <label key={k} className="flex items-center justify-between gap-2">{NAME[k] ?? k}<span className="flex items-center gap-1"><input className="field !h-9 !w-14 text-right" inputMode="numeric" value={cfg.costs[k]} onChange={(e) => set(k, e.target.value)} />{perRequest[k] ? <span className="text-[11px] text-dim">{usd(perRequest[k])}</span> : null}</span></label>
         ))}

@@ -306,27 +306,24 @@ describe('plan limits (quota)', () => {
     const oldPassOtherEmail = signPass({ email: 'other@example.com', cid: 2, plan: 'PLN_month', tier: 'plus', exp: Date.now() + 86400e3 });
     expect((await gate(call({}, 'jwt', oldPassOtherEmail), 'workout')).ok).toBe(false);
   });
-  it('Plus: credits per billing month, 4 photo scans a day, clear messages, refunds when the AI fails', async () => {
+  it('Plus: unlimited photo scans (no credits), credits for the coach, refunds when the AI fails', async () => {
     const { gate } = await import('../_lib/quota.js');
     const counts: Record<string, number> = {};
     fakeSupabase(counts);
     const plus = signPass({ email: 'me@example.com', cid: 1, plan: 'PLN_month', tier: 'plus', exp: Date.now() + 20 * 86400e3 });
-    for (let i = 0; i < 4; i++) expect(await gate(call({}, 'jwt', plus), 'scan')).toMatchObject({ ok: true });
-    const fifth = await gate(call({}, 'jwt', plus), 'scan');
-    expect(fifth).toMatchObject({ ok: false, status: 429 });
-    if (!fifth.ok) expect(String(fifth.body.error)).toMatch(/today’s 4 photo scans/);
-    // 4 scans × 2 credits = 8 used; the coach still works.
+    for (let i = 0; i < 10; i++) expect(await gate(call({}, 'jwt', plus), 'scan')).toMatchObject({ ok: true });
+    expect(Object.keys(counts).some((k) => k.startsWith('credits:') || k.startsWith('scanday:') || k.startsWith('cap:scan'))).toBe(false);
     const chat = await gate(call({}, 'jwt', plus), 'coach');
-    expect(chat).toMatchObject({ ok: true, credits: { left: 291, total: 300 } });
-    // A failed AI call gives the credit back.
+    expect(chat).toMatchObject({ ok: true, credits: { left: 299, total: 300 } });
     if (chat.ok) await chat.refund!();
-    expect(Object.entries(counts).find(([k]) => k.startsWith('credits:'))![1]).toBe(8);
-    // Out of credits: told when they refresh, and that logging keeps working.
     const key = Object.keys(counts).find((k) => k.startsWith('credits:'))!;
+    expect(counts[key]).toBe(0);
+    // Out of credits: told when they refresh; scans still work.
     counts[key] = 299;
     const out = await gate(call({}, 'jwt', plus), 'recipe');
     expect(out).toMatchObject({ ok: false, status: 402 });
     if (!out.ok) expect(String(out.body.error)).toMatch(/300 AI credits[\s\S]*refresh on[\s\S]*Logging, search/);
+    expect(await gate(call({}, 'jwt', plus), 'scan')).toMatchObject({ ok: true });
   });
 
   it('credits refresh with the billing date (monthly windows ending at renewal)', async () => {
