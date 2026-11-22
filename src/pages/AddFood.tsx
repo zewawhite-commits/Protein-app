@@ -255,7 +255,7 @@ export default function AddFood() {
       )}
 
       {added.count > 0 && !selected && (
-        <div className="fixed inset-x-0 bottom-0 z-40 mx-auto max-w-lg px-5 pb-[max(env(safe-area-inset-bottom),1rem)] md:max-w-2xl">
+        <div className="fixed inset-x-0 bottom-0 z-40 mx-auto max-w-lg px-5 pb-[max(env(safe-area-inset-bottom),1rem)]">
           <div className="flex items-center gap-3 rounded-[22px] bg-surface p-3 pl-4" style={{ boxShadow: 'var(--shadow)' }}>
             <p className="min-w-0 flex-1 text-[14px] font-semibold">{added.count} food{added.count > 1 ? 's' : ''} added{added.meal ? ` to ${mealLabel(added.meal)}` : ''}<span className="block text-[12px] font-normal text-silver">Search for the next one, or finish.</span></p>
             <button onClick={back} className="btn-primary !h-11 !px-5">Done</button>

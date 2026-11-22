@@ -27,7 +27,7 @@ export function Layout() {
   return (
     <div className="relative min-h-dvh">
       {/* Side menu (large screens) */}
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-line/60 bg-surface px-4 py-6 lg:flex">
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-line/60 bg-surface px-4 py-6">
         <div className="flex items-center gap-2.5 px-3">
           <Logo size={30} />
           <BrandName className="text-xl" />
@@ -49,14 +49,14 @@ export function Layout() {
         </nav>
       </aside>
 
-      <main className="relative mx-auto max-w-lg px-5 pb-nav md:max-w-2xl md:px-8 lg:ml-64 lg:max-w-5xl lg:px-12 lg:pb-12">
+      <main className="relative mx-auto max-w-lg px-5 pb-nav">
         <Outlet />
       </main>
 
       {/* Bottom bar (phones and tablets) */}
-      <div className="pointer-events-none fixed inset-x-0 bottom-0 z-30 h-32 bg-gradient-to-t from-bg via-bg/80 to-transparent lg:hidden" />
+      <div className="pointer-events-none fixed inset-x-0 bottom-0 z-30 h-32 bg-gradient-to-t from-bg via-bg/80 to-transparent" />
       <nav
-        className="fixed inset-x-0 bottom-0 z-40 mx-auto flex max-w-lg items-center gap-3 px-5 md:max-w-2xl lg:hidden"
+        className="fixed inset-x-0 bottom-0 z-40 mx-auto flex max-w-lg items-center gap-3 px-5"
         style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 1rem)' }}
         aria-label="Main"
       >

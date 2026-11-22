@@ -1,3 +1,4 @@
+import { ChevronRight } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Check, ChevronDown, Dumbbell, Lightbulb, Loader2, RotateCcw, Timer } from 'lucide-react';
@@ -77,6 +78,11 @@ export function WorkoutView() {
 
   return (
     <div className="space-y-4 pb-6">
+      <Link to="/train" className="card flex items-center gap-3 p-4 transition active:scale-[.99]">
+        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-primary text-on-primary"><Dumbbell size={20} /></span>
+        <span className="min-w-0 flex-1"><span className="block font-bold">Workouts and exercise library</span><span className="block text-[13px] text-silver">Ready-made workouts, 900+ exercises with photos, your history. Free.</span></span>
+        <ChevronRight size={18} className="shrink-0 text-dim" />
+      </Link>
       <PlanBadge needs="plus" what="Personalised AI workout plans" />
       {editing ? (
         <section className="card p-5">

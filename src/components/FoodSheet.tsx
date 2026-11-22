@@ -19,6 +19,8 @@ import { useFoodDb, usePhotoUrl, useDay } from '@/lib/hooks';
 import { dailyTargets } from '@/lib/energy';
 import { useStore } from '@/store/useStore';
 import { boneInQuery, gramsFor, lastAmount, parseAmount } from '@/lib/describe';
+import { poultryVariants, weighGuide } from '@/lib/variants';
+import { allFoods } from '@/lib/foods';
 import { standardRecipe } from '@/lib/recipe';
 import { AllergyBanner } from './Allergy';
 import { fromKey, mealForNow, todayKey } from '@/lib/dates';
@@ -77,7 +79,8 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
   const [unit, setUnitState] = useState<Unit>(() => { try { const u = localStorage.getItem('provora-unit') as Unit | null; return u === 'oz' || ((u === 'kg' || u === 'lb') && !liquid) || (u === 'ml' && liquid) ? u : 'g'; } catch { return 'g'; } });
   // What they had last time is their own number, so a new entry starts there (they can change it).
   const [usual] = useState(() => (entry ? null : lastAmount(useStore.getState().entries, food)));
-  const [grams, setGrams] = useState(entry ? toUnit(entry.grams, unit) : usual ? toUnit(usual, unit) : '');
+  // A new entry starts empty: "Last time" is a shortcut to tap, never assumed as today's portion.
+  const [grams, setGrams] = useState(entry ? toUnit(entry.grams, unit) : '');
   const [meal, setMeal] = useState<Meal>(entry?.meal ?? preset?.meal ?? defaultMeal(mealForNow()));
   const MEALS = useMealOptions(meal);
   const [photoId, setPhotoId] = useState<string | undefined>(entry?.photoId ?? preset?.photoId);
@@ -197,6 +200,7 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
     onClose();
   }
 
+  const variants = useMemo(() => poultryVariants(food, allFoods()), [food, db]); // eslint-disable-line react-hooks/exhaustive-deps
   const weighHint = food.state === 'cooked' ? 'Weigh after cooking' : food.state === 'dry' ? 'Weigh dry, before cooking' : food.state === 'raw' ? 'Weigh raw, before cooking' : null;
 
   return (
@@ -219,10 +223,26 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
 
       {/* Weight */}
       <div className="card p-5">
+        {!entry && variants && onSwitchFood && (
+          <div className="mb-4 space-y-2">
+            {variants.skin.meatOnly && variants.skin.withSkin && (
+              <div role="group" aria-label="Skin" className="grid grid-cols-2 gap-1.5 rounded-full bg-raised p-1">
+                {([['Meat only', variants.skin.meatOnly, false], ['Meat and skin', variants.skin.withSkin, true]] as const).map(([l, f, sk]) => (
+                  <button key={l} aria-pressed={variants.current.skin === sk} onClick={() => { haptic(); if (f.id !== food.id) onSwitchFood(f); }} className={cx('h-10 rounded-full text-[14px] font-semibold', variants.current.skin === sk ? 'bg-surface text-ink shadow' : 'text-silver')}>{l}</button>
+                ))}
+              </div>
+            )}
+            {variants.methods.length > 1 && (
+              <div role="group" aria-label="Raw or cooked" className="flex gap-1.5 overflow-x-auto no-scrollbar">
+                {variants.methods.map(({ method, food: f }) => (
+                  <button key={method} aria-pressed={variants.current.method === method} onClick={() => { haptic(); if (f.id !== food.id) onSwitchFood(f); }} className={cx('chip !h-9 shrink-0', variants.current.method === method && 'chip-on')}>{method === 'raw' ? 'Raw (weighed before cooking)' : method.charAt(0).toUpperCase() + method.slice(1)}</button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
         {!entry && (
-          <p className="mb-3 text-center text-[14px] font-medium text-silver">
-            Weigh the <span className="font-semibold text-ink">edible part</span> — no bones, shells, skins or packaging.
-          </p>
+          <p className="mb-3 text-center text-[14px] font-medium text-silver">{weighGuide(food.name)}</p>
         )}
         {!entry && onSwitchFood && boneIn && (
           <button onClick={() => { haptic(); onSwitchFood(boneIn); }} className="mx-auto -mt-1 mb-3 block text-center text-[13px] font-semibold text-accent">Weighed it with the bones? Use the bone-in values</button>

@@ -1,4 +1,5 @@
-import { useMemo, useState, useSyncExternalStore } from 'react';
+import { loadExercises } from '@/lib/exerciseDb';
+import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import { ChevronRight, Dumbbell, Search } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 import { photoFor, sizedPhoto, subscribePhoto } from '@/data/foodPhotos';
@@ -9,9 +10,31 @@ import { Segmented, Sheet, cx } from './ui';
  * The exercise's picture: a real photo only once someone has checked it shows exactly this
  * exercise; otherwise a clean tile that says the written guide is below. Never a video player.
  */
+/** Start and end photos from the exercise database, when it has this exact movement. */
+function useDbImages(id: string): string[] {
+  const [imgs, setImgs] = useState<string[]>([]);
+  useEffect(() => { let live = true; loadExercises().then((all) => { if (live) setImgs(all.find((e) => e.id === id)?.images ?? []); }).catch(() => undefined); return () => { live = false; }; }, [id]);
+  return imgs;
+}
+
 export function ExerciseVisual({ ex, size = 'card' }: { ex: LibExercise; size?: 'card' | 'thumb' }) {
   const key = exercisePhotoKey(ex);
-  const photo = useSyncExternalStore((f) => subscribePhoto(key, f), () => photoFor(key));
+  const checked = useSyncExternalStore((f) => subscribePhoto(key, f), () => photoFor(key));
+  const db = useDbImages(ex.id);
+  const [pos, setPos] = useState(0);
+  if (!checked && db.length) {
+    if (size === 'thumb') return <span className="grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-[14px] bg-raised"><img src={db[0]} alt="" className="h-full w-full object-cover" /></span>;
+    return (
+      <figure className="overflow-hidden rounded-[22px] bg-raised">
+        <img src={db[pos]} alt={`${ex.name}: ${pos === 0 ? 'start' : 'end'} position`} className="aspect-[3/2] w-full object-cover" loading="lazy" />
+        <figcaption className="flex items-center justify-between gap-2 px-3 py-1.5 text-[12px] text-dim">
+          <span>{pos === 0 ? 'Start' : 'End'} position · Free Exercise DB</span>
+          {db.length > 1 && <span className="flex gap-1">{db.map((_, i) => <button key={i} onClick={() => setPos(i)} aria-pressed={pos === i} className={cx('rounded-full px-2 py-0.5 font-semibold', pos === i ? 'bg-ink text-bg' : 'bg-surface text-ink')}>{i === 0 ? 'Start' : 'End'}</button>)}</span>}
+        </figcaption>
+      </figure>
+    );
+  }
+  const photo = checked;
   if (size === 'thumb') {
     return (
       <span className="grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-[14px] bg-raised">

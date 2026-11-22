@@ -53,7 +53,7 @@ export function WeightHistory() {
                   </div>
                 </div>
               ) : (
-                <button onClick={() => { setEditing(w.date); setVal(show(w.kg).replace(/,/g, '')); setNote(w.note ?? ''); }} className="flex w-full items-center gap-3 text-left">
+                <button onClick={() => { setEditing(w.date); setVal(show(w.kg).replace(/,/g, '')); setNote(w.note ?? ''); }} className="flex min-h-11 w-full items-center gap-3 text-left">
                   <span className="min-w-0 flex-1">
                     <span className="block text-[15px] font-semibold">{new Date(`${w.date}T12:00`).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}</span>
                     {w.note && <span className="block truncate text-xs text-silver">{w.note}</span>}

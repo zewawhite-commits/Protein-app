@@ -289,7 +289,7 @@ export default function Snap() {
   // Signed out: say so before they take a photo, not after.
   if (accountsEnabled && session === null && phase === 'camera') {
     return (
-      <div className="mx-auto min-h-dvh max-w-lg animate-fade-up px-5 pb-12 md:max-w-2xl md:px-8">
+      <div className="mx-auto min-h-dvh max-w-lg animate-fade-up px-5 pb-12">
         <header className="pt-safe flex items-center pb-4">
           <button onClick={back} className="grid h-11 w-11 place-items-center rounded-full bg-surface" style={{ boxShadow: 'var(--shadow)' }} aria-label="Back"><ArrowLeft size={20} /></button>
         </header>
@@ -303,7 +303,7 @@ export default function Snap() {
   if (phase === 'camera') return <Camera onClose={back} onCaptureMany={(fs) => void analyseMany(fs)} onCapture={(b) => (photoDiary && !labelMode && !menuMode ? saveToDiary(b) : analyse(b)).catch((e: Error) => { setError(e.message || 'Something went wrong. Try again.'); setRetryable(true); setPhase('error'); })} mode={labelMode ? 'label' : menuMode ? 'menu' : 'food'} onMode={(m) => { haptic(); setLabelMode(m === 'label'); setMenuMode(m === 'menu'); }} onBarcode={() => nav(`/barcode${date !== todayKey() ? `?date=${date}` : ''}`)} onMenuUrl={(u) => void analyseMenuUrl(u)} />;
   if (phase === 'describe') {
     return (
-      <div className="mx-auto min-h-dvh max-w-lg animate-fade-up px-5 pb-12 md:max-w-2xl md:px-8">
+      <div className="mx-auto min-h-dvh max-w-lg animate-fade-up px-5 pb-12">
         <header className="pt-safe flex items-center pb-4">
           <button onClick={back} className="grid h-11 w-11 place-items-center rounded-full bg-surface" style={{ boxShadow: 'var(--shadow)' }} aria-label="Back"><ArrowLeft size={20} /></button>
         </header>
@@ -359,7 +359,7 @@ export default function Snap() {
           haptic([10, 30, 10]);
           dropDiaryEntry();
           rows.forEach((r, k) => addEntry({ date, meal: mealForNow(), food: r.food, grams: r.grams, photoId: k === 0 ? photoId : undefined, note: 'Portion estimated by AI — edit to your real weight' }));
-          extras.forEach((x) => addEntry({ date, meal: mealForNow(), food: x.food, grams: x.grams, note: `Hidden extra in ${x.dish} — usual amount (estimate)` }));
+          extras.forEach((x) => addEntry({ date, meal: mealForNow(), food: x.food, grams: x.grams, note: `Added by you to ${x.dish} — usual amount (estimate)` }));
           toast(`Logged ${rows.length} food${rows.length > 1 ? 's' : ''} — tap any to set the real weight`);
           back();
         }}
@@ -368,7 +368,7 @@ export default function Snap() {
   }
 
   return (
-    <div className="mx-auto min-h-dvh max-w-lg animate-fade-up px-5 md:max-w-2xl md:px-8 pb-12">
+    <div className="mx-auto min-h-dvh max-w-lg animate-fade-up px-5 pb-12">
       <header className="pt-safe flex items-center justify-between pb-4">
         <button onClick={back} className="grid h-11 w-11 place-items-center rounded-full bg-surface" style={{ boxShadow: 'var(--shadow)' }} aria-label="Close">
           <X size={20} strokeWidth={2.4} />
@@ -907,7 +907,8 @@ function PlateSummary({ matches, logged, date, onLogAll, onAddExtra }: { matches
   const [where, setWhere] = useState<'home' | 'out'>('home');
   const [amount, setAmount] = useState<Record<string, Amount>>({});
   const hidden = matches.flatMap((m, i) => (logged.has(i) ? [] : m.hidden.map((h, k) => ({ key: `${i}:${k}`, index: i, dish: m.item.name, ...h }))));
-  const amountOf = (key: string): Amount => amount[key] ?? (where === 'out' ? 'lot' : 'usual');
+  // Nothing is added unless the person says so: a photo can't show oil or butter, so we ask, never assume.
+  const amountOf = (key: string): Amount => amount[key] ?? 'none';
   const hiddenGrams = (h: (typeof hidden)[number], a: Amount = amountOf(h.key)) => (a === 'none' ? 0 : h.extra[a]);
   // Grams taken from the portion coach (not weighed, so still an estimate).
   const [suggested, setSuggested] = useState<Set<number>>(new Set());
@@ -1146,7 +1147,10 @@ function QuickResult({ matches, photoUrl, quality, note, onClose, onRetake, onFi
   const ask = async () => { if (!said.trim() || asking) return; haptic(); setAsking(true); if (await onFollowUp(said.trim())) setSaid(''); setAsking(false); };
   const time = useMemo(() => new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }), []);
   const rows = matches.map((m) => ({ name: m.item.name, food: m.candidates[0] as Food | undefined, grams: Math.round(m.item.estimatedGrams * servings) }));
-  const extras = matches.flatMap((m) => m.hidden.map((h) => ({ food: h.food, grams: Math.round(h.extra.usual * servings), dish: m.item.name, name: h.extra.name }))).filter((x) => x.grams > 0);
+  const [chosen, setChosen] = useState<Set<number>>(new Set());
+  const allExtras = matches.flatMap((m) => m.hidden.map((h) => ({ food: h.food, grams: Math.round(h.extra.usual * servings), dish: m.item.name, name: h.extra.name }))).filter((x) => x.grams > 0);
+  // Oil, butter, sauces: only counted when the person says they were used.
+  const extras = allExtras.filter((_, i) => chosen.has(i));
   const usable = rows.filter((r): r is { name: string; food: Food; grams: number } => !!r.food && r.grams > 0);
   const missing = rows.length - usable.length;
   const t = [...usable, ...extras].reduce((a, r) => {
@@ -1162,7 +1166,7 @@ function QuickResult({ matches, photoUrl, quality, note, onClose, onRetake, onFi
   ];
   const glass = 'grid h-11 w-11 place-items-center rounded-full bg-black/35 text-white backdrop-blur-md';
   return (
-    <div className="mx-auto flex min-h-dvh max-w-lg flex-col md:max-w-2xl" aria-label="Scan result">
+    <div className="mx-auto flex min-h-dvh max-w-lg flex-col" aria-label="Scan result">
       <div className="relative h-[44vh] min-h-[260px] w-full overflow-hidden bg-raised">
         {photoUrl && <img src={photoUrl} alt="Your meal" className="h-full w-full object-cover" />}
         <div className="pt-safe absolute inset-x-0 top-0 flex items-center justify-between px-4 pt-3">
@@ -1204,11 +1208,23 @@ function QuickResult({ matches, photoUrl, quality, note, onClose, onRetake, onFi
           ))}
           {extras.map((x, i) => (
             <li key={`x${i}`} className="flex items-center justify-between gap-3 py-3 text-[14px]">
-              <span className="min-w-0 flex-1"><span className="block truncate font-semibold">{x.name}</span><span className="block text-[12px] text-silver">Not visible in photos · usual amount</span></span>
+              <span className="min-w-0 flex-1"><span className="block truncate font-semibold">{x.name}</span><span className="block text-[12px] text-silver">Added by you · usual amount</span></span>
               <span className="num shrink-0 text-right"><span className="block font-semibold">~{fmt(x.grams)} g</span><span className="block text-[12px] text-silver">{fmt(((x.food.per100.kcal ?? 0) * x.grams) / 100)} kcal</span></span>
             </li>
           ))}
         </ul>
+        {allExtras.length > 0 && (
+          <div className="mt-3">
+            <p className="text-[14px] font-semibold">Used any of these? <span className="font-normal text-silver">Photos can’t show them.</span></p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {allExtras.map((x, i) => (
+                <button key={i} aria-pressed={chosen.has(i)} onClick={() => { haptic(); setChosen((c) => { const n = new Set(c); if (n.has(i)) n.delete(i); else n.add(i); return n; }); }} className={cx('chip !h-10 text-[14px]', chosen.has(i) && 'chip-on')}>
+                  {chosen.has(i) ? <Check size={14} strokeWidth={3} /> : <Plus size={14} />} {x.name} · ~{fmt(x.grams)} g
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
         <div className="mt-4">
           <p className="text-[15px] font-semibold">Anything to add or fix?</p>
           <div className="mt-2 flex gap-2">
@@ -1219,7 +1235,7 @@ function QuickResult({ matches, photoUrl, quality, note, onClose, onRetake, onFi
         {note && <p className="mt-3 text-[13px] leading-relaxed text-silver">{note}</p>}
         <p className="mt-3 text-[12px] leading-relaxed text-dim">AI names the food and guesses the weight; nutrition comes from the food database. Weights marked ~ are estimates — Fix results to weigh or change anything.</p>
       </div>
-      <div className="pb-safe fixed inset-x-0 bottom-0 z-20 mx-auto flex max-w-lg gap-2.5 border-t border-line bg-bg/95 px-5 pt-3 backdrop-blur md:max-w-2xl" style={{ paddingBottom: 'max(14px, env(safe-area-inset-bottom))' }}>
+      <div className="pb-safe fixed inset-x-0 bottom-0 z-20 mx-auto flex max-w-lg gap-2.5 border-t border-line bg-bg/95 px-5 pt-3 backdrop-blur" style={{ paddingBottom: 'max(14px, env(safe-area-inset-bottom))' }}>
         <button onClick={() => onFix(servings)} className="btn-ghost flex-1 !border-2 !border-line"><Pencil size={16} /> Fix results</button>
         <button onClick={() => (missing ? onFix(servings) : onDone(usable, extras))} className="btn-primary flex-1">{missing ? 'Pick matches' : 'Done'}</button>
       </div>

@@ -221,7 +221,7 @@ export default function Onboarding() {
   const goalDate = weeks ? new Date(Date.now() + weeks * 7 * 86400000) : null;
 
   return (
-    <div className="mx-auto flex min-h-dvh max-w-lg flex-col px-5 md:max-w-xl pb-8">
+    <div className="mx-auto flex min-h-dvh max-w-lg flex-col px-5 pb-8">
       <header className="pt-safe flex items-center gap-4 pb-6">
         <button onClick={back} className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-surface" style={{ boxShadow: 'var(--shadow)' }} aria-label="Back">
           <ArrowLeft size={20} />
@@ -619,7 +619,7 @@ function Welcome({ signedIn, email, onStart }: { signedIn: boolean; email?: stri
   };
 
   return (
-    <div className="relative mx-auto flex min-h-dvh max-w-lg flex-col px-5 md:max-w-xl pb-8">
+    <div className="relative mx-auto flex min-h-dvh max-w-lg flex-col px-5 pb-8">
       <div className="pt-safe mt-10 flex items-center gap-3 animate-fade-up">
         <Logo size={44} />
         <BrandName className="text-lg" />

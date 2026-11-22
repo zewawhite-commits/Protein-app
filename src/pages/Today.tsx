@@ -70,7 +70,7 @@ export default function Today() {
     <div className="animate-fade-up">
       <header className="pt-safe pb-4">
         <div className="flex items-center justify-between">
-          <span className="flex items-center gap-2 lg:invisible">
+          <span className="flex items-center gap-2">
             <Logo size={30} />
             <BrandName className="text-[22px]" />
           </span>
@@ -97,7 +97,7 @@ export default function Today() {
 
       <div className="mb-2 flex items-center justify-between px-1">
         <p className="text-[14px] font-semibold text-silver">{fromKey(date).toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}</p>
-        <Link to="/history?view=calendar" className="text-[14px] font-semibold text-accent">View all</Link>
+        <Link to="/history?view=calendar" className="hit text-[14px] font-semibold text-accent">View all</Link>
       </div>
       <WeekStrip date={date} onSelect={setDate} />
       {!isToday && (
@@ -112,25 +112,25 @@ export default function Today() {
       {isToday && <WelcomeBack />}
       {isToday && <InstallBanner className="mt-4" />}
 
-      <div className="lg:grid lg:grid-cols-[1.1fr_1fr] lg:items-start lg:gap-8">
+      <div className="">
       <div>
       {photoDiary ? <PhotoDiary entries={entries} date={date} /> : (
         <>
           <HeroCard totals={totals} goal={goal} targets={targets} entries={entries} burned={burned} addBurned={addBurned} />
           <MacroCards totals={totals} goal={goal} targets={targets} simple={simple} />
           {isToday && <HomeInsights />}
-          <div className="mt-2 flex justify-end px-1"><Link to="/settings?edit=1" className="text-sm font-semibold text-accent">Edit targets</Link></div>
+          <div className="mt-2 flex justify-end px-1"><Link to="/settings?edit=1" className="hit text-sm font-semibold text-accent">Edit targets</Link></div>
         </>
       )}
       </div>
 
-      <section className="mt-8 lg:mt-5">
+      <section className="mt-8">
         <div className="mb-3 flex items-baseline justify-between px-1">
           <h2 className="text-[20px] font-bold tracking-tight">{isToday ? 'Recently eaten' : `${relativeDay(date)}`}</h2>
           {entries.length > 0 && (
             <span className="flex items-center gap-4">
               <SaveMealButton entries={entries} />
-              <Link to={`/history?date=${date}`} className="text-sm font-semibold text-accent">Diary</Link>
+              <Link to={`/history?date=${date}`} className="hit text-sm font-semibold text-accent">Diary</Link>
             </span>
           )}
         </div>
@@ -355,7 +355,7 @@ function MacroCards({ totals, goal, targets, simple }: { totals: Totals; goal: n
     <div className="card mt-3 space-y-4 p-5">
       {!simple && (
         <>
-          <button onClick={() => setPicking(true)} className="-mb-2 ml-auto block text-[13px] font-semibold text-accent">Choose what shows</button>
+          <button onClick={() => setPicking(true)} className="hit -mb-2 ml-auto block text-[13px] font-semibold text-accent">Choose what shows</button>
           <Sheet open={picking} onClose={() => setPicking(false)} title="Nutrients on Home">
             <p className="text-sm text-silver">Pick up to 4. Everything else stays in “Vitamins, minerals & more”.</p>
             <div className="mt-3 flex flex-wrap gap-2">

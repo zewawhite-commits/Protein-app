@@ -11,7 +11,7 @@ const M = USD_PRICES.plus_monthly, Y = USD_PRICES.plus_yearly;
 
 const WAYS = [
   { icon: Camera, title: 'Snap it', text: 'Take a photo of your plate. Nutivili names each food and estimates the portion. You check it before it’s saved.' },
-  { icon: Mic, title: 'Say it', text: '“Jollof rice, two wraps of eba and egusi soup.” It asks only what it needs, like how many wraps.' },
+  { icon: Mic, title: 'Say it', text: '“Two scrambled eggs, a slice of toast and a latte.” It asks only what it needs, like how big the latte was.' },
   { icon: Search, title: 'Search it', text: '18,000+ foods from official food tables, plus dishes from around the world. Typos and local names welcome.' },
   { icon: Scale, title: 'Weigh it', text: 'Type the grams from your kitchen scale for exact numbers. Raw and cooked are kept separate.' },
 ];
@@ -24,6 +24,9 @@ const FAQ: [string, string][] = [
   ['Does it know African food?', 'Yes. Jollof, egusi, efo riro, eba, amala, moi moi, suya, waakye, kenkey, ugali, injera and many more, measured the way they’re served: wraps, ladles, plates.'],
   ['Are photo scans exact?', 'No photo can weigh food, so scans are estimates. You see every food and amount and can change anything before saving. For exact numbers, weigh it.'],
   ['Does it work without internet?', 'Yes. Search and logging work offline and sync when you’re back online. AI scans and the coach need internet.'],
+  ['How do I sign up?', 'Tap Start free, then Continue with Google or Create account with email. With email we send a 6-digit code to confirm it’s you; type it in and you’re in. You can look around the app before you enter the code.'],
+  ['How do I log in on a new phone?', 'Open Nutivili, tap Log in and enter your email. We send a new 6-digit code (no password to remember). Your diary, weight and workouts sync back automatically.'],
+  ['I didn’t get the code. What now?', 'Check your spam or promotions folder, make sure the email is spelt right (you can change it on the code screen), then tap Resend code after the countdown.'],
   ['Can I cancel Plus?', 'Any time, in Profile. You keep Plus until the end of the period you paid for.'],
 ];
 

@@ -121,7 +121,7 @@ export default function Reports() {
   };
 
   return (
-    <div className="mx-auto min-h-dvh max-w-lg animate-fade-up px-5 pb-16 md:max-w-2xl md:px-8 print:max-w-none">
+    <div className="mx-auto min-h-dvh max-w-lg animate-fade-up px-5 pb-16 print:max-w-none">
       <header className="pt-safe flex items-center gap-3 pb-4 print:hidden">
         <button onClick={() => nav(-1)} className="grid h-11 w-11 place-items-center rounded-full bg-surface" style={{ boxShadow: 'var(--shadow)' }} aria-label="Back"><ArrowLeft size={20} /></button>
         <h1 className="flex-1 text-[26px] font-extrabold tracking-tight">Reports</h1>

@@ -80,7 +80,7 @@ export default function Barcode() {
   }, []);
 
   return (
-    <div className="mx-auto min-h-dvh max-w-lg animate-fade-up px-5 pb-12 md:max-w-2xl md:px-8">
+    <div className="mx-auto min-h-dvh max-w-lg animate-fade-up px-5 pb-12">
       <header className="pt-safe flex items-center pb-4">
         <button onClick={back} className="grid h-11 w-11 place-items-center rounded-full bg-surface" style={{ boxShadow: 'var(--shadow)' }} aria-label="Back"><ArrowLeft size={20} /></button>
       </header>

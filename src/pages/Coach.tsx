@@ -1,3 +1,4 @@
+import { utter } from '@/lib/voice';
 import { FoodVisual } from '@/components/FoodIcon';
 import { goalsForCoach } from '@/lib/myGoals';
 import { archiveChat, pastChats, removeChat, type PastChat } from '@/lib/chats';
@@ -218,8 +219,7 @@ function Chat() {
     if (!('speechSynthesis' in window)) return;
     try {
       window.speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(text.replace(/[*_#`>]/g, '').replace(/\s+/g, ' ').slice(0, 1200));
-      u.lang = navigator.language || 'en-GB';
+      const u = utter(text.replace(/[*_#`>]/g, '').replace(/\s+/g, ' ').slice(0, 1200));
       // A spoken conversation keeps going: listen for the next question once the answer ends.
       u.onend = () => { if (spokeLast.current && document.visibilityState === 'visible') listen(true); };
       window.speechSynthesis.speak(u);
@@ -380,7 +380,7 @@ function Chat() {
       </div>
 
       {pending && (
-        <div className="sticky bottom-[calc(env(safe-area-inset-bottom)+10.5rem)] z-20 mb-2 flex items-center gap-3 self-start rounded-[20px] bg-surface p-2 pr-3 lg:bottom-24" style={{ boxShadow: 'var(--shadow)' }}>
+        <div className="sticky bottom-[calc(env(safe-area-inset-bottom)+10.5rem)] z-20 mb-2 flex items-center gap-3 self-start rounded-[20px] bg-surface p-2 pr-3" style={{ boxShadow: 'var(--shadow)' }}>
           <img src={pending.thumb} alt="Photo to send" className="h-14 w-14 rounded-2xl object-cover" />
           <span className="text-sm font-medium text-silver">Photo ready — add a question or just send</span>
           <button onClick={() => setPending(null)} className="grid h-8 w-8 place-items-center rounded-full bg-raised" aria-label="Remove photo"><X size={15} /></button>
@@ -388,7 +388,7 @@ function Chat() {
       )}
       <form
         onSubmit={(e) => { e.preventDefault(); spokeLast.current = false; void send(text); }}
-        className="sticky bottom-[calc(env(safe-area-inset-bottom)+6.5rem)] z-20 flex items-end gap-2 pt-6 lg:bottom-6"
+        className="sticky bottom-[calc(env(safe-area-inset-bottom)+6.5rem)] z-20 flex items-end gap-2 pt-6"
         // Messages scroll behind the box: fade them out so the box always sits on a clean background.
         style={{ background: 'linear-gradient(to top, rgb(var(--bg)) 0%, rgb(var(--bg)) 72%, rgb(var(--bg) / 0) 100%)' }}
       >

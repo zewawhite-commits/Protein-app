@@ -8,13 +8,24 @@ import { fmt } from './ui';
 
 /** A tiny line chart (no axes) for the Home cards. */
 function Spark({ values, color }: { values: number[]; color: string }) {
-  if (values.length < 2) return <div className="mt-3 h-8 rounded-full border-t-2 border-dashed border-line" aria-hidden />;
+  if (values.length < 2) return <div className="mt-3 h-10 rounded-full border-t-2 border-dashed border-line" aria-hidden />;
   const min = Math.min(...values), max = Math.max(...values), span = max - min || 1;
-  const pts = values.map((v, i) => [4 + (i * 112) / (values.length - 1), 28 - ((v - min) / span) * 22]);
+  const W = 120, H = 40;
+  const pts = values.map((v, i) => [3 + (i * (W - 6)) / (values.length - 1), 6 + (1 - (v - min) / span) * (H - 14)]);
+  // Smooth curve through the points (Catmull-Rom → Bézier), with a soft fill underneath.
+  let d = `M${pts[0][0]},${pts[0][1]}`;
+  for (let i = 0; i < pts.length - 1; i++) {
+    const [p0, p1, p2, p3] = [pts[i - 1] ?? pts[i], pts[i], pts[i + 1], pts[i + 2] ?? pts[i + 1]];
+    d += ` C${p1[0] + (p2[0] - p0[0]) / 6},${p1[1] + (p2[1] - p0[1]) / 6} ${p2[0] - (p3[0] - p1[0]) / 6},${p2[1] - (p3[1] - p1[1]) / 6} ${p2[0]},${p2[1]}`;
+  }
+  const last = pts[pts.length - 1];
+  const id = `sp${color.replace(/[^a-z0-9]/gi, '')}`;
   return (
-    <svg viewBox="0 0 120 32" className="mt-2 h-8 w-full" aria-hidden>
-      <polyline points={pts.map((p) => p.join(',')).join(' ')} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-      {pts.map(([x, y], i) => <circle key={i} cx={x} cy={y} r="2.2" fill="rgb(var(--surface))" stroke={color} strokeWidth="1.6" />)}
+    <svg viewBox={`0 0 ${W} ${H}`} className="mt-2 h-10 w-full overflow-visible" aria-hidden>
+      <defs><linearGradient id={id} x1="0" x2="0" y1="0" y2="1"><stop offset="0" stopColor={color} stopOpacity="0.28" /><stop offset="1" stopColor={color} stopOpacity="0" /></linearGradient></defs>
+      <path d={`${d} L${last[0]},${H} L${pts[0][0]},${H} Z`} fill={`url(#${id})`} />
+      <path d={d} fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx={last[0]} cy={last[1]} r="3.5" fill={color} stroke="rgb(var(--surface))" strokeWidth="2" />
     </svg>
   );
 }
@@ -52,7 +63,7 @@ export function HomeInsights() {
         <p className="text-[12px] text-silver">Last 30 days</p>
         <p className="num mt-1 text-[20px] font-extrabold leading-tight">{recent.length ? fmt(fromKg(recent[recent.length - 1].kg, unit), 1) : '–'}<span className="ml-1 text-[12px] font-semibold text-silver">{unit}</span></p>
         {recent.length >= 2
-          ? <><Spark values={recent.map((w) => w.kg)} color="#7C6BD6" /><p className="num text-[12px] text-silver">{change! > 0 ? '+' : ''}{fmt(fromKg(change!, unit), 1)} {unit}</p></>
+          ? <><Spark values={recent.map((w) => w.kg)} color="rgb(var(--accent))" /><p className="num text-[12px] text-silver">{change! > 0 ? '+' : ''}{fmt(fromKg(change!, unit), 1)} {unit}</p></>
           : <p className="mt-1 text-[12px] leading-snug text-dim">{recent.length ? 'Weigh in again to see your trend.' : 'Log your weight to see a trend.'}</p>}
       </Link>
     </div>

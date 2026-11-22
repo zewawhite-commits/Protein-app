@@ -22,7 +22,7 @@ export default function Routines() {
   if (logging) return <LogSession routine={logging} onDone={() => setLogging(null)} />;
 
   return (
-    <div className="mx-auto min-h-dvh max-w-lg animate-fade-up px-5 pb-16 md:max-w-2xl">
+    <div className="mx-auto min-h-dvh max-w-lg animate-fade-up px-5 pb-16">
       <header className="pt-safe flex items-center gap-3 pb-4">
         <button onClick={() => nav(-1)} className="grid h-11 w-11 place-items-center rounded-full bg-surface" style={{ boxShadow: 'var(--shadow)' }} aria-label="Back"><ArrowLeft size={20} /></button>
         <h1 className="flex-1 text-[26px] font-extrabold tracking-tight">My routines</h1>
@@ -66,7 +66,7 @@ function Editor({ initial, onDone }: { initial: Routine | null; onDone: () => vo
   const set = (i: number, patch: Partial<RoutineExercise & { w: string }>) => setList((l) => l.map((x, k) => (k === i ? { ...x, ...patch } : x)));
   const ok = name.trim().length >= 2 && list.length > 0;
   return (
-    <div className="mx-auto min-h-dvh max-w-lg animate-fade-up px-5 pb-16 md:max-w-2xl">
+    <div className="mx-auto min-h-dvh max-w-lg animate-fade-up px-5 pb-16">
       <header className="pt-safe flex items-center gap-3 pb-4">
         <button onClick={onDone} className="grid h-11 w-11 place-items-center rounded-full bg-surface" style={{ boxShadow: 'var(--shadow)' }} aria-label="Back"><ArrowLeft size={20} /></button>
         <h1 className="text-[26px] font-extrabold tracking-tight">{initial ? 'Edit routine' : 'New routine'}</h1>
@@ -121,7 +121,7 @@ function LogSession({ routine, onDone }: { routine: Routine; onDone: () => void 
   const mins = Number(minutes) || 0;
   const picked = routine.exercises.filter((_, i) => done[i]);
   return (
-    <div className="mx-auto min-h-dvh max-w-lg animate-fade-up px-5 pb-16 md:max-w-2xl">
+    <div className="mx-auto min-h-dvh max-w-lg animate-fade-up px-5 pb-16">
       <header className="pt-safe flex items-center gap-3 pb-4">
         <button onClick={onDone} className="grid h-11 w-11 place-items-center rounded-full bg-surface" style={{ boxShadow: 'var(--shadow)' }} aria-label="Back"><ArrowLeft size={20} /></button>
         <h1 className="text-[24px] font-extrabold tracking-tight">{routine.name}</h1>

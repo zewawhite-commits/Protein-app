@@ -50,6 +50,8 @@ export function RecipeLibrary() {
   const [region, setRegion] = useState('All');
   const [quick, setQuick] = useState<string[]>([]);
   const [open, setOpen] = useState<LibraryRecipe | null>(null);
+  const [shown, setShown] = useState(12);
+  useEffect(() => setShown(12), [q, region, quick]);
   useEffect(() => { loadLibrary().then(setAll, () => setErr(true)); }, []);
 
   const list = useMemo(() => {
@@ -85,8 +87,8 @@ export function RecipeLibrary() {
       </div>
       {err && <p className="mt-4 text-sm text-silver">Couldn’t load recipes. Check your connection and try again.</p>}
       {!all && !err && <p className="mt-4 text-sm text-silver">Loading recipes…</p>}
-      <ul className="mt-3 grid gap-2.5 sm:grid-cols-2">
-        {list.slice(0, 60).map((r) => {
+      <ul className="mt-3 grid gap-2.5">
+        {list.slice(0, shown).map((r) => {
           const n = db ? perServing(r, foodById(`recipe:${r.id}`)) : null;
           return (
             <li key={r.id}>
@@ -102,7 +104,7 @@ export function RecipeLibrary() {
           );
         })}
       </ul>
-      {list.length > 60 && <p className="mt-2 text-center text-xs text-silver">Showing 60. Search or pick a region to see the rest.</p>}
+      {list.length > shown && <button onClick={() => { haptic(); setShown((n) => n + 24); }} className="btn-ghost mt-3 w-full">Show more recipes ({list.length - shown} more)</button>}
       {all && !list.length && <p className="mt-4 text-sm text-silver">No recipes match. Try fewer filters.</p>}
       <RecipeSheet recipe={open} onClose={() => setOpen(null)} />
     </section>

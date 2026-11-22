@@ -87,6 +87,8 @@ let loadedById: Map<string, Food> | undefined;
 /** A database food by id, once the database has loaded. */
 /** Records merged into an identical twin keep working through this (old id → kept id). */
 let redirectIds: Map<string, string> | null = null;
+/** Every database food (after load). */
+export const allFoods = (): Food[] => (loadedById ? [...loadedById.values()] : []);
 export const foodById = (id: string): Food | undefined => loadedById?.get(id) ?? (redirectIds?.get(id) ? loadedById?.get(redirectIds.get(id)!) : undefined);
 
 export function loadFoodDb(): Promise<FoodDb> {

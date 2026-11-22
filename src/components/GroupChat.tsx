@@ -62,7 +62,7 @@ export function GroupChat({ groupId, me }: { groupId: string; me?: string }) {
         )}
         <div ref={endRef} />
       </div>
-      <form onSubmit={(e) => { e.preventDefault(); void send(); }} className="sticky bottom-[calc(env(safe-area-inset-bottom)+6.5rem)] z-20 flex items-end gap-2 lg:bottom-6">
+      <form onSubmit={(e) => { e.preventDefault(); void send(); }} className="sticky bottom-[calc(env(safe-area-inset-bottom)+6.5rem)] z-20 flex items-end gap-2">
         <textarea
           value={text} onChange={(e) => setText(e.target.value)} rows={1} maxLength={1000} placeholder="Message the group…"
           onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); void send(); } }}

@@ -250,7 +250,7 @@ function BarChart({ series, unit, highlight }: { series: { date: string; protein
                 aria-label={`${s.date}: ${Math.round(s.protein)} ${unit}`}
               >
                 <div
-                  className={cx('depth-col w-full transition-all', hit ? 'bg-accent' : 'bg-ink', active != null && active !== i && 'opacity-30')}
+                  className={cx('w-full bg-gradient-to-t transition-all', hit ? 'from-accent to-accent/70' : 'from-silver/70 to-silver/40', active === i && 'ring-2 ring-ink/20', active != null && active !== i && 'opacity-40')}
                   style={{ height: `${Math.max(s.protein > 0 ? 2 : 0, (s.protein / max) * 100)}%`, borderRadius: n > 30 ? 3 : n > 7 ? 6 : 12 }}
                 />
               </button>

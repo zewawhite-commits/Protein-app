@@ -22,7 +22,7 @@ export default function Goals() {
   const on = GOAL_KINDS.filter((k) => goals[k]?.on);
   const off = GOAL_KINDS.filter((k) => !goals[k]?.on);
   return (
-    <div className="mx-auto min-h-dvh max-w-lg animate-fade-up px-5 pb-28 md:max-w-2xl">
+    <div className="mx-auto min-h-dvh max-w-lg animate-fade-up px-5 pb-28">
       <header className="pt-safe flex items-center gap-3 pb-2">
         <button onClick={() => nav(-1)} className="grid h-11 w-11 place-items-center rounded-full bg-surface" style={{ boxShadow: 'var(--shadow)' }} aria-label="Back"><ArrowLeft size={20} /></button>
         <h1 className="text-[28px] font-extrabold tracking-tight">My goals</h1>
@@ -156,7 +156,7 @@ export function GoalsSummary() {
     <section className="card mb-5 p-4">
       <div className="flex items-center justify-between">
         <p className="text-[16px] font-bold">Your goals</p>
-        <button onClick={() => nav('/goals')} className="text-sm font-semibold text-accent">{on.length ? 'Manage' : 'Set goals'}</button>
+        <button onClick={() => nav('/goals')} className="hit text-sm font-semibold text-accent">{on.length ? 'Manage' : 'Set goals'}</button>
       </div>
       {on.length === 0 ? <p className="mt-1 text-sm text-silver">Pick what you’re working on — weight, protein, water, workouts and more. Optional.</p> : (
         <div className="mt-2 space-y-2.5">

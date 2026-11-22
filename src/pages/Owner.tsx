@@ -10,7 +10,7 @@ export default function Owner() {
   const [admin, setAdmin] = useState<boolean | null>(null);
   useEffect(() => { void fetchUsage().then((u) => setAdmin(!!u?.admin)).catch(() => setAdmin(false)); }, []);
   return (
-    <div className="mx-auto max-w-lg px-5 pb-16 md:max-w-2xl">
+    <div className="mx-auto max-w-lg px-5 pb-16">
       <header className="pt-safe flex items-center gap-3 pb-4">
         <Link to="/profile" className="grid h-11 w-11 place-items-center rounded-full bg-surface" style={{ boxShadow: 'var(--shadow)' }} aria-label="Back"><ArrowLeft size={20} /></Link>
         <h1 className="text-2xl font-extrabold tracking-tight">Owner dashboard</h1>

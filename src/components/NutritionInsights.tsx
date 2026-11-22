@@ -90,7 +90,7 @@ export function TargetCheck() {
     <section role="note" className="mt-4 rounded-[22px] bg-warn/10 p-4 text-ink">
       <p className="flex items-center gap-2 font-semibold text-warn"><TriangleAlert size={17} /> Check your targets</p>
       <ul className="mt-1.5 list-disc space-y-1 pl-5 text-[14px] leading-relaxed">{warnings.map((w) => <li key={w}>{w}</li>)}</ul>
-      <Link to="/profile?edit=1" className="mt-2 inline-block text-[14px] font-semibold text-accent">Edit targets</Link>
+      <Link to="/profile?edit=1" className="hit mt-2 inline-block text-[14px] font-semibold text-accent">Edit targets</Link>
     </section>
   );
 }

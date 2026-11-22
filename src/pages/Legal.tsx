@@ -21,7 +21,7 @@ function Page({ title, children }: { title: string; children: React.ReactNode })
   const navigate = useNavigate();
   const { pathname } = useLocation();
   return (
-    <div className="mx-auto min-h-dvh max-w-lg animate-fade-up px-5 pb-16 md:max-w-2xl md:px-8">
+    <div className="mx-auto min-h-dvh max-w-lg animate-fade-up px-5 pb-16">
       <header className="pt-safe flex items-center pb-4">
         <button onClick={() => (history.length > 1 ? navigate(-1) : navigate('/'))} className="grid h-11 w-11 place-items-center rounded-full bg-surface" style={{ boxShadow: 'var(--shadow)' }} aria-label="Back"><ArrowLeft size={20} /></button>
       </header>
@@ -220,7 +220,7 @@ export function Credits() {
   return (
     <Page title="Photo credits">
       <p>Food photos are from <a className="text-accent underline" href="https://unsplash.com/?utm_source=nutivili_ai&utm_medium=referral" target="_blank" rel="noreferrer">Unsplash</a>, with some from Pexels and Wikimedia Commons (free licences shown). Thank you to the photographers below.</p>
-      <p>Food illustrations (shown where there’s no photo): Microsoft Fluent Emoji (MIT licence).</p>
+      <p>Exercise photos and many exercise instructions: <a className="text-accent underline" href="https://github.com/yuhonas/free-exercise-db" target="_blank" rel="noreferrer">Free Exercise DB</a> (public domain, Unlicense).</p>
       {list === null ? <p className="text-sm text-silver">Loading…</p> : (
         <ul className="space-y-2">
           {list.map(([key, c]) => (

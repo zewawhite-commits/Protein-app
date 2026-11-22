@@ -32,6 +32,10 @@ const BLENDED = /^(.*?)\b(smoothie|protein shake|milkshake|milk shake|shake|parf
 /** Ingredients that often run together when spoken ("banana milk and peanut butter"). */
 const BLEND_ITEMS = ['peanut butter', 'protein powder', 'greek yogurt', 'yogurt', 'yoghurt', 'oats', 'banana', 'bananas', 'milk', 'almond milk', 'honey', 'strawberries', 'strawberry', 'blueberries', 'berries', 'mango', 'pineapple', 'spinach', 'dates', 'apple', 'avocado', 'chia seeds', 'flax seeds', 'ice', 'water', 'cocoa', 'whey', 'kale', 'ginger', 'orange juice', 'coconut milk', 'coconut water', 'cinnamon'];
 
+/** "I made / cooked / prepared …" says nothing about the food; "I fried …" says how it was cooked. */
+const MADE = /\bi (?:just |also )?(?:made|cooked|prepared|fixed|whipped up|put together)(?: myself| some| me)?\b/g;
+const DID = /\bi (?:just |also )?(fried|grilled|roasted|baked|boiled|steamed|stewed|scrambled|poached)\b/g;
+
 export function parseSaid(text: string): SaidFood[] {
   const blend = BLENDED.exec(text.toLowerCase().replace(/[.!?]/g, ' ').trim());
   if (blend) {
@@ -41,7 +45,7 @@ export function parseSaid(text: string): SaidFood[] {
     const list = blend[3].replace(new RegExp(`\\b(${names})\\b(?=\\s+(?:${names})\\b)`, 'g'), '$1,');
     return parseSaid(list).map((f) => ({ ...f, partOf: drink }));
   }
-  const clean = text.toLowerCase().replace(/[.!?]/g, ' ').replace(FILLER, ' ').replace(/\b(half|quarter)( of)? an? /g, '$1 ').replace(/\s+/g, ' ').trim();
+  const clean = text.toLowerCase().replace(/[.!?]/g, ' ').replace(MADE, ' ').replace(DID, ' $1').replace(FILLER, ' ').replace(/\b(half|quarter)( of)? an? /g, '$1 ').replace(/\s+/g, ' ').trim();
   return clean
     .split(/,|;|\band then\b|\band\b|\bwith\b|\bplus\b|\balso\b|\n/)
     .flatMap((p) => p.trim().split(NEW_ITEM).map((x) => x.trim()).filter(Boolean)
@@ -268,9 +272,19 @@ const FISH_ONLY = new RegExp(`^(?:(?:fried|grilled|roast(?:ed)?|baked|boiled|ste
 const methodOf = (t: string) => METHODS.find(([re]) => re.test(t))?.[1] ?? null;
 const skinOf = (t: string): boolean | null => (/\b(no skin|without (the )?skin|skinless|skin off|removed the skin|didn'?t eat the skin)\b/.test(t) ? false : /\b(with (the )?skin|skin on|ate the skin|skin eaten|yes)\b/.test(t) ? true : null);
 
-/** A question to ask before the amount, when "chicken" or "fish" was said without what matters. */
-export function detailQuestion(said: string): { kind: 'chicken' | 'fish'; q: string } | null {
+export type DetailKind = 'chicken' | 'fish' | 'rice' | 'egg' | 'pasta' | 'smoothie';
+const RICE_ONLY = /^(?:(?:some|the|plain|a|bowl|plate|cup|of|cooked|boiled|white)\s*)*rice$/;
+const EGG_ONLY = /^(?:(?:some|the|a|an|two|three|of)\s*)*eggs?$/;
+const PASTA_ONLY = /^(?:(?:some|the|a|bowl|plate|of)\s*)*(pasta|spaghetti|noodles|macaroni)$/;
+const SMOOTHIE_ONLY = /^(?:(?:a|some|the|my|glass|cup|of)\s*)*(smoothie|shake|protein shake)$/;
+
+/** A question to ask before the amount, when a food was said without what changes its numbers. */
+export function detailQuestion(said: string): { kind: DetailKind; q: string } | null {
   const t = said.toLowerCase().trim();
+  if (RICE_ONLY.test(t)) return { kind: 'rice', q: 'Which rice: white, brown, jollof, fried or coconut rice?' };
+  if (EGG_ONLY.test(t)) return { kind: 'egg', q: 'How were the eggs cooked: boiled, fried, scrambled or poached?' };
+  if (PASTA_ONLY.test(t)) return { kind: 'pasta', q: `Was it plain ${PASTA_ONLY.exec(t)![1]}, or a dish? Say for example “plain”, “bolognese” or “jollof spaghetti”.` };
+  if (SMOOTHIE_ONLY.test(t)) return { kind: 'smoothie', q: 'What went in it? For example “banana, milk and oats”.' };
   if (/\bchicken\b/.test(t) && CHICKEN_ONLY.test(t)) {
     const need = [!PARTS.test(t) && 'which part (breast, thigh, drumstick or wing)', !methodOf(t) && 'how it was cooked (fried, grilled, roasted or boiled)', skinOf(t) === null && 'did you eat the skin'].filter(Boolean) as string[];
     return need.length >= 2 || (need.length === 1 && !need[0].startsWith('did')) ? { kind: 'chicken', q: `For the chicken: ${need.join(', ')}?` } : null;
@@ -283,8 +297,13 @@ export function detailQuestion(said: string): { kind: 'chicken' | 'fish'; q: str
 }
 
 /** The search to run once the person answered the detail question. */
-export function detailQuery(kind: 'chicken' | 'fish', said: string, answer: string): string[] {
+export function detailQuery(kind: DetailKind, said: string, answer: string): string[] {
   const t = `${said} ${answer}`.toLowerCase();
+  const a = answer.toLowerCase().replace(/[.!?,]/g, ' ').trim();
+  if (kind === 'rice') { const type = /\b(brown|jollof|fried|coconut|basmati|jasmine|ofada|white)\b/.exec(a)?.[1] ?? 'white'; return type === 'jollof' || type === 'fried' || type === 'coconut' || type === 'ofada' ? [`${type} rice`] : [`rice ${type} cooked`, `${type} rice cooked`, 'rice white cooked']; }
+  if (kind === 'egg') { const m = /\b(boiled|fried|scrambled|poached|omelette)\b/.exec(a)?.[1] ?? 'boiled'; return m === 'omelette' ? ['omelette'] : [`egg ${m}`, `egg whole ${m}`, `${m} egg`]; }
+  if (kind === 'pasta') { const base = /(pasta|spaghetti|noodles|macaroni)/.exec(said.toLowerCase())?.[1] ?? 'pasta'; return /\bplain\b/.test(a) || !a ? [`${base} cooked`, `${base} plain cooked`] : [`${base} ${a}`, a]; }
+  if (kind === 'smoothie') return [];
   if (kind === 'chicken') {
     const part = PARTS.exec(t)?.[1] ?? 'breast';
     const part2 = part === 'leg' ? 'drumstick' : part;

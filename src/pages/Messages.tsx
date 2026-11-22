@@ -81,7 +81,7 @@ const shown = (list: Conversation[], tab: 'chats' | 'requests') => list.filter((
 
 function Shell({ children, back, title = 'Messages' }: { children: React.ReactNode; back: () => void; title?: string }) {
   return (
-    <div className="mx-auto min-h-dvh max-w-lg animate-fade-up px-5 pb-28 md:max-w-2xl">
+    <div className="mx-auto min-h-dvh max-w-lg animate-fade-up px-5 pb-28">
       <header className="pt-safe flex items-center gap-3 pb-4">
         <button onClick={back} className="grid h-11 w-11 place-items-center rounded-full bg-surface" style={{ boxShadow: 'var(--shadow)' }} aria-label="Back"><ArrowLeft size={20} /></button>
         <h1 className="min-w-0 flex-1 truncate text-[24px] font-extrabold tracking-tight">{title}</h1>
@@ -158,7 +158,7 @@ function Thread({ other, profile, onBack, preRecipe, request }: { other: string;
             : <p className="text-sm text-silver">No recipes yet. Create one from Add food → My recipes.</p>}
         </div>
       )}
-      {(!request || accepted) && <div className="fixed inset-x-0 bottom-0 z-30 mx-auto flex max-w-lg gap-2 bg-bg/95 px-5 pb-[max(env(safe-area-inset-bottom),1rem)] pt-2 backdrop-blur-xl md:max-w-2xl">
+      {(!request || accepted) && <div className="fixed inset-x-0 bottom-0 z-30 mx-auto flex max-w-lg gap-2 bg-bg/95 px-5 pb-[max(env(safe-area-inset-bottom),1rem)] pt-2 backdrop-blur-xl">
         <button onClick={() => setPicking((v) => !v)} className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-surface" style={{ boxShadow: 'var(--shadow)' }} aria-label="Share a recipe"><ChefHat size={19} /></button>
         <input className="field flex-1" maxLength={2000} placeholder="Message" value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && void send()} aria-label="Message" />
         <button disabled={busy || !text.trim()} onClick={() => void send()} className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-primary text-on-primary" aria-label="Send">{busy ? <Loader2 size={18} className="animate-spin" /> : <ArrowUp size={19} />}</button>

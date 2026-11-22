@@ -269,9 +269,9 @@ function Group({ title, children }: { title: string; children: React.ReactNode }
 function Row({ icon, label, children, chevron, danger }: { icon: React.ReactNode; label: string; children?: React.ReactNode; chevron?: boolean; danger?: boolean }) {
   return (
     <div className={cx('flex min-h-[60px] items-center gap-3.5 rounded-[22px] px-3 py-2 text-left', danger && 'text-danger')}>
-      <span className={cx('grid h-10 w-10 place-items-center rounded-full bg-raised', danger ? 'text-danger' : 'text-ink')}>{icon}</span>
-      <span className="flex-1 font-semibold">{label}</span>
-      {children}
+      <span className={cx('grid h-10 w-10 shrink-0 place-items-center rounded-full bg-raised', danger ? 'text-danger' : 'text-ink')}>{icon}</span>
+      <span className="shrink-0 whitespace-nowrap font-semibold">{label}</span>
+      <span className="flex min-w-0 flex-1 justify-end text-right">{children}</span>
       {chevron && <ChevronRight size={16} className="text-dim" />}
     </div>
   );
@@ -420,7 +420,7 @@ function PreferencesCard({ onEdit }: { onEdit: () => void }) {
     <section className="mt-6">
       <div className="mb-3 flex items-center justify-between px-1">
         <p className="text-sm font-semibold text-silver">How you eat and train</p>
-        <button onClick={onEdit} className="text-sm font-semibold text-accent">Edit</button>
+        <button onClick={onEdit} className="hit text-sm font-semibold text-accent">Edit</button>
       </div>
       <div className="card space-y-4 p-5">
         {rows.map(([label, items, tone]) => (
@@ -431,7 +431,7 @@ function PreferencesCard({ onEdit }: { onEdit: () => void }) {
                 {items.map((i) => <span key={i} className={cx('rounded-full px-3 py-1 text-[13px] font-semibold', tone ? 'bg-danger/10 text-danger' : 'bg-raised')}>{i}</span>)}
               </div>
             ) : (
-              <button onClick={onEdit} className="mt-1 text-sm text-silver">Not set — add</button>
+              <button onClick={onEdit} className="hit mt-1 text-sm text-silver">Not set — add</button>
             )}
           </div>
         ))}

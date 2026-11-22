@@ -1,3 +1,4 @@
+import { utter } from '@/lib/voice';
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Check, Minus, Mic, Pencil, Plus, Search, Trash2, Volume2, VolumeX, X } from 'lucide-react';
@@ -80,8 +81,7 @@ export function VoiceSheet({ onClose, onSearch, date }: { onClose: () => void; o
     if (!speak || !('speechSynthesis' in window)) { then?.(); return; }
     try {
       window.speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(text);
-      u.lang = navigator.language || 'en-GB';
+      const u = utter(text);
       u.onend = () => { if (!closed.current) then?.(); };
       window.speechSynthesis.speak(u);
     } catch { then?.(); }
@@ -167,11 +167,15 @@ export function VoiceSheet({ onClose, onSearch, date }: { onClose: () => void; o
       return;
     }
     // 1. How it was cooked, for chicken and fish said without it: it changes the numbers.
-    const det = all.find((x) => x.food && !x.asked?.detail && detailQuestion(x.said.text));
+    // "Rice and stew" is white rice with stew: don't ask which rice when a stew or sauce was said with it.
+    const withStew = all.some((x) => /\b(stew|sauce|ayamase|ofada|curry|beans)\b/.test(x.said.text));
+    const det = all.find((x) => x.food && !x.asked?.detail && detailQuestion(x.said.text) && !(withStew && detailQuestion(x.said.text)?.kind === 'rice'));
     if (det) {
       const dq = detailQuestion(det.said.text)!;
       setAsking(dq.q);
       say(dq.q, () => listen((answer) => {
+        // "A smoothie": log what went in, never a made-up recipe.
+        if (dq.kind === 'smoothie') { setLines((cur) => cur.filter((x) => x.key !== det.key)); understand(`${det.said.text} with ${answer}`); return; }
         const found = detailQuery(dq.kind, det.said.text, answer).map((q) => searchFoods(q, { custom })[0]).find(Boolean);
         patchAndContinue(det.key, (x) => {
           if (!found) return { asked: { ...x.asked, detail: true } };
@@ -324,7 +328,7 @@ export function VoiceSheet({ onClose, onSearch, date }: { onClose: () => void; o
 
         <div className="mt-4 grid grid-cols-[auto_1fr] gap-2">
           <button disabled={!said} onClick={() => { onSearch(said); close(); }} className="btn bg-surface !px-4 text-ink" style={{ boxShadow: 'var(--shadow)' }} aria-label="Search instead"><Search size={17} /></button>
-          <button disabled={!ready} onClick={addAll} className="btn-primary"><Check size={18} /> {lines.length ? `Add ${lines.length} to ${MEAL_LABELS[meal]} · ${fmt(kcal)} kcal, ${fmt(protein)} g protein` : 'Add to diary'}</button>
+          <button disabled={!ready} onClick={addAll} className="btn-primary"><Check size={18} /> {!lines.length ? 'Add to diary' : ready ? `Add ${lines.length} to ${MEAL_LABELS[meal]} · ${fmt(kcal)} kcal, ${fmt(protein)} g protein` : 'Answer the question above first'}</button>
         </div>
       </div>
     </div>,

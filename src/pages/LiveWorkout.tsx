@@ -8,6 +8,7 @@ import { CATEGORY_LABEL, clock, elapsed, est1rm, type ActiveWorkout, type Exerci
 import { fromKey } from '@/lib/dates';
 import { Segmented, Sheet, cx, fmt } from '@/components/ui';
 import { haptic, toast } from '@/components/fx';
+import { seconds as timedSeconds } from '@/lib/exerciseDb';
 
 const RESTS = [30, 45, 60, 90, 120];
 const key = () => crypto.randomUUID().slice(0, 8);
@@ -72,11 +73,11 @@ function Start() {
   const week = logs.filter((l) => Date.now() - l.startedAt < 7 * 864e5);
   const prs = usePRs();
   return (
-    <div className="mx-auto min-h-dvh max-w-lg animate-fade-up px-5 pb-16 md:max-w-2xl">
+    <div className="mx-auto min-h-dvh max-w-lg animate-fade-up px-5 pb-16">
       <header className="pt-safe flex items-center gap-3 pb-4">
         <button onClick={() => nav(-1)} className="grid h-11 w-11 place-items-center rounded-full bg-surface" style={{ boxShadow: 'var(--shadow)' }} aria-label="Back"><ArrowLeft size={20} /></button>
         <h1 className="flex-1 text-[26px] font-extrabold tracking-tight">Workout</h1>
-        <button onClick={() => setBrowse(true)} className="chip !h-10"><BookOpen size={15} /> Exercises</button>
+        <Link to="/train" className="chip !h-10"><BookOpen size={15} /> Workouts & exercises</Link>
       </header>
 
       <button onClick={() => start('Workout', [])} className="btn-primary w-full !h-14 text-[17px]"><Play size={20} /> Start an empty workout</button>
@@ -215,6 +216,7 @@ function Active({ w }: { w: ActiveWorkout }) {
                   <p className="truncate text-[16px] font-bold text-accent">{e.name}</p>
                   <p className="text-xs text-silver">{[e.muscle, CATEGORY_LABEL[e.kind]].filter(Boolean).join(' · ')} · tap for how-to</p>
                 </button>
+                <ExerciseTimer k={e.key} seconds={e.kind === 'time' ? (e.sets.find((x) => !x.done)?.seconds ?? e.sets[0]?.seconds ?? (lib ? timedSeconds({ kind: lib.kind, level: lib.level, guide: lib }) : null) ?? 30) : null} />
                 <button onClick={() => move(i, -1)} disabled={i === 0} className="grid h-8 w-8 place-items-center rounded-full bg-raised disabled:opacity-30" aria-label={`Move ${e.name} up`}><ArrowUp size={14} /></button>
                 <button onClick={() => move(i, 1)} disabled={i === w.exercises.length - 1} className="grid h-8 w-8 place-items-center rounded-full bg-raised disabled:opacity-30" aria-label={`Move ${e.name} down`}><ArrowDown size={14} /></button>
               </div>
@@ -270,7 +272,7 @@ function Active({ w }: { w: ActiveWorkout }) {
   }
 
   return (
-    <div className="mx-auto min-h-dvh max-w-lg px-5 pb-40 md:max-w-2xl">
+    <div className="mx-auto min-h-dvh max-w-lg px-5 pb-40">
       <header className="pt-safe sticky top-0 z-10 -mx-5 bg-bg/95 px-5 pb-3 backdrop-blur">
         <div className="flex items-center gap-2">
           <input value={w.name} onChange={(e) => set((c) => ({ ...c, name: e.target.value.slice(0, 50) }))} aria-label="Workout name" className="min-w-0 flex-1 bg-transparent text-[22px] font-extrabold outline-none" />
@@ -338,7 +340,7 @@ function RestBar({ rest, restLength, onLength, onAdjust, onSkip }: { rest: { unt
     onSkip();
   }, [left, rest, onSkip]);
   return (
-    <div className="fixed inset-x-0 bottom-0 z-20 mx-auto max-w-lg px-5 md:max-w-2xl" style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 1rem)' }}>
+    <div className="fixed inset-x-0 bottom-0 z-20 mx-auto max-w-lg px-5" style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 1rem)' }}>
       <div className="card p-3">
         {rest ? (
           <div className="flex items-center gap-2">
@@ -351,7 +353,7 @@ function RestBar({ rest, restLength, onLength, onAdjust, onSkip }: { rest: { unt
         ) : (
           <div className="flex items-center justify-between gap-2">
             <span className="flex items-center gap-1.5 text-sm font-semibold"><Timer size={15} /> Rest</span>
-            <Segmented<string> value={String(restLength)} onChange={(v) => onLength(Number(v))} options={RESTS.map((r) => ({ value: String(r), label: r < 60 ? `${r}s` : `${r / 60}${r % 60 ? '.5' : ''}m` }))} />
+            <Segmented<string> value={String(restLength)} onChange={(v) => onLength(Number(v))} options={RESTS.map((r) => ({ value: String(r), label: r < 60 ? `${r}s` : `${r / 60}m` }))} />
           </div>
         )}
       </div>
@@ -391,5 +393,48 @@ function AddExercise({ open, onClose, onPick }: { open: boolean; onClose: () => 
         </>
       )}
     </Sheet>
+  );
+}
+
+/** Per-exercise timers live outside React, so they keep exact time while you move between exercises
+ * or the phone sleeps (they're worked out from the clock, not counted tick by tick). */
+const timers = new Map<string, { total: number; spent: number; startedAt?: number; rang?: boolean }>();
+
+/** Top-right timer on each exercise: a countdown for timed moves (planks, holds), a stopwatch otherwise. */
+function ExerciseTimer({ k, seconds }: { k: string; seconds: number | null }) {
+  const [, tick] = useState(0);
+  const [open, setOpen] = useState(false);
+  const t = timers.get(k) ?? { total: seconds ?? 0, spent: 0 };
+  if (!timers.has(k)) timers.set(k, t);
+  if (seconds != null && !t.startedAt && t.spent === 0 && t.total !== seconds) t.total = seconds;
+  const running = t.startedAt != null;
+  useEffect(() => { if (!running) return; const i = setInterval(() => tick((n) => n + 1), 250); return () => clearInterval(i); }, [running]);
+  const used = t.spent + (t.startedAt ? (Date.now() - t.startedAt) / 1000 : 0);
+  const countdown = seconds != null;
+  const left = Math.max(0, Math.ceil(t.total - used));
+  if (countdown && running && left === 0 && !t.rang) {
+    t.rang = true; t.spent = t.total; t.startedAt = undefined;
+    try { navigator.vibrate?.([200, 100, 200]); } catch { /* none */ }
+    try { const a = new AudioContext(); const o = a.createOscillator(); o.frequency.value = 880; o.connect(a.destination); o.start(); setTimeout(() => { o.stop(); void a.close(); }, 350); } catch { /* none */ }
+    toast('Time’s up');
+  }
+  const shown = countdown ? left : Math.floor(used);
+  const toggle = () => { haptic(); if (running) { t.spent = used; t.startedAt = undefined; } else { if (countdown && left === 0) { t.spent = 0; t.rang = false; } t.startedAt = Date.now(); } setOpen(true); tick((n) => n + 1); };
+  const adjust = (d: number) => { haptic(); if (countdown) { t.total += d; t.rang = false; } else t.spent = Math.max(0, t.spent - d); tick((n) => n + 1); };
+  const reset = () => { haptic(); t.spent = 0; t.startedAt = undefined; t.rang = false; if (seconds != null) t.total = seconds; tick((n) => n + 1); };
+  return (
+    <div className="relative shrink-0">
+      <button onClick={toggle} aria-label={`${countdown ? 'Countdown' : 'Stopwatch'} ${clock(shown)}, ${running ? 'pause' : 'start'}`} className={cx('num flex h-9 items-center gap-1.5 rounded-full px-3 text-[15px] font-bold tabular-nums', running ? 'bg-accent text-white' : countdown && left === 0 ? 'bg-danger/15 text-danger' : 'bg-raised')}>
+        {running ? <Pause size={13} /> : <Timer size={14} />} {clock(shown).padStart(5, '0')}
+      </button>
+      {open && (
+        <div className="absolute right-0 top-11 z-20 flex gap-1 rounded-2xl bg-surface p-1.5" style={{ boxShadow: 'var(--shadow)' }}>
+          {countdown && <button onClick={() => adjust(15)} className="chip !h-8 !px-2.5 text-[13px]">+15s</button>}
+          {countdown && <button onClick={() => adjust(30)} className="chip !h-8 !px-2.5 text-[13px]">+30s</button>}
+          <button onClick={reset} className="chip !h-8 !px-2.5 text-[13px]">Reset</button>
+          <button onClick={() => setOpen(false)} className="chip !h-8 !px-2.5 text-[13px]" aria-label="Hide timer controls">✕</button>
+        </div>
+      )}
+    </div>
   );
 }

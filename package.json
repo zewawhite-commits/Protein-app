@@ -10,7 +10,8 @@
     "test": "vitest run",
     "typecheck": "tsc -b --noEmit",
     "build:foods": "node scripts/build-foods.mjs",
-    "build:recipe-library": "node scripts/build-recipe-library.mjs"
+    "build:recipe-library": "node scripts/build-recipe-library.mjs",
+    "build:exercises": "node scripts/build-exercise-db.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.8.0",

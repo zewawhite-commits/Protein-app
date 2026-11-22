@@ -28,7 +28,7 @@ export function SaveMealButton({ entries }: { entries: LogEntry[] }) {
   const t = sum(items);
   return (
     <>
-      <button onClick={() => { haptic(); setMeal(meals[0].value); setName(''); setOpen(true); }} className="flex items-center gap-1 text-sm font-semibold text-accent"><Bookmark size={15} /> Save meal</button>
+      <button onClick={() => { haptic(); setMeal(meals[0].value); setName(''); setOpen(true); }} className="hit flex items-center gap-1 text-sm font-semibold text-accent"><Bookmark size={15} /> Save meal</button>
       <Sheet open={open} onClose={() => setOpen(false)} title="Save a meal">
         <p className="mb-3 text-sm text-silver">Keep a meal you eat often and log it again in one tap.</p>
         {meals.length > 1 && <Segmented full value={meal} onChange={setMeal} options={meals} />}
