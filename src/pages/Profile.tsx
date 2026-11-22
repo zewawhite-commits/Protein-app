@@ -18,7 +18,6 @@ import { allPhotoIds, deletePhoto } from '@/lib/photos';
 import type { Theme } from '@/lib/types';
 import { ProfileForm } from '@/components/ProfileForm';
 import { ProfileHero } from '@/components/ProfileHero';
-import { UsageCard } from '@/components/UsageCard';
 import { InviteCard, TrialCard } from '@/components/FreePro';
 import { PageHeader, Segmented, Sheet, cx, fmt } from '@/components/ui';
 import { ReminderSettings } from '@/components/Notifications';
@@ -38,7 +37,8 @@ export default function Profile({ mode = 'profile' }: { mode?: 'profile' | 'sett
   const [editing, setEditingState] = useState(params.get('edit') === '1');
   const setEditing = (v: boolean) => { setEditingState(v); if (!v && params.get('edit')) setParams({}, { replace: true }); };
   const [msg, setMsg] = useState<string | null>(null);
-  const [adminTaps, setAdminTaps] = useState(0);
+  // Admin tools only for the owner account (the server decides, from ADMIN_EMAILS).
+  const isOwner = useIsOwner();
   const dailyKcal = calorieGoal(profile)?.kcal;
   const goalCount = useStore((s) => Object.values(s.settings.goals ?? {}).filter((g) => g?.on && !g.paused && !g.done).length);
 
@@ -113,7 +113,6 @@ export default function Profile({ mode = 'profile' }: { mode?: 'profile' | 'sett
           <PersonalDetails profile={profile} unit={settings.bodyUnit} dailyKcal={dailyKcal} onEdit={() => setEditing(true)} />
           <PreferencesCard onEdit={() => setEditing(true)} />
           <SubscriptionGroup />
-          <UsageCard />
           <TrialCard className="mt-5" />
           <InviteCard className="mt-5" />
           <OwnerLink />
@@ -201,7 +200,7 @@ export default function Profile({ mode = 'profile' }: { mode?: 'profile' | 'sett
         <Link to="/refunds" className="block"><Row icon={<FileText size={18} />} label="Cancellation and refunds" chevron /></Link>
       </Group>
 
-      {(settings.adminMode || adminTaps >= 7) && (
+      {isOwner && (
         <Group title="Administration">
           <Row icon={<ShieldCheck size={18} />} label="Admin mode">
             <Toggle on={settings.adminMode} onChange={(v) => updateSettings({ adminMode: v })} label="Admin mode" />
@@ -222,8 +221,7 @@ export default function Profile({ mode = 'profile' }: { mode?: 'profile' | 'sett
         </div>
       </Group>
 
-      {/* Tap the version 7 times to show admin tools (hidden from normal users). */}
-      <button onClick={() => setAdminTaps((n) => n + 1)} className="mt-8 w-full pb-4 text-center text-xs font-medium text-dim">Nutivili AI {__APP_VERSION__}</button>
+      <p className="mt-8 w-full pb-4 text-center text-xs font-medium text-dim">Nutivili AI {__APP_VERSION__}</p>
         </>
       )}
 
@@ -389,10 +387,10 @@ function SubscriptionGroup() {
             </div>
             <div className="rounded-2xl bg-accent/10 p-3">
               <p className="font-bold">Plus <span className="font-medium text-silver">· $8.99/mo</span></p>
-              <ul className="mt-1.5 space-y-1 text-silver"><li>Unlimited AI scans and coach</li><li>Coach talks back</li><li>Meal plans, recipes, workouts</li><li>Vitamin and eating-pattern reports</li></ul>
+              <ul className="mt-1.5 space-y-1 text-silver"><li>Up to 50 AI scans a day and the coach</li><li>Coach talks back</li><li>Meal plans, recipes, workouts</li><li>Vitamin and eating-pattern reports</li></ul>
             </div>
           </div>
-          <Link to="/premium" className="block"><Row icon={<CreditCard size={18} />} label="See Plus" chevron><span className="text-sm font-semibold text-accent">$8.99/mo or $43.15/yr</span></Row></Link>
+          <Link to="/premium" className="block"><Row icon={<CreditCard size={18} />} label="See Plus" chevron><span className="text-sm font-semibold text-accent">$8.99/mo or $37.76/yr</span></Row></Link>
           <Link to="/premium?restore=1" className="block"><Row icon={<RotateCcw size={18} />} label="Restore purchase" chevron /></Link>
         </>
       )}
@@ -500,10 +498,16 @@ function SyncRow({ userId }: { userId: string }) {
   );
 }
 
-/** Only the owner (server says admin) sees the link to their dashboard. */
-function OwnerLink() {
+/** True only for the owner account (server says admin). */
+function useIsOwner(): boolean {
   const [admin, setAdmin] = useState(false);
   useEffect(() => { void import('@/lib/premium').then((m) => m.fetchUsage()).then((u) => setAdmin(!!u?.admin)).catch(() => undefined); }, []);
+  return admin;
+}
+
+/** Only the owner sees the link to their dashboard. */
+function OwnerLink() {
+  const admin = useIsOwner();
   if (!admin) return null;
   return (
     <Group title="Owner">

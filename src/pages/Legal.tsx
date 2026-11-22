@@ -130,11 +130,11 @@ export function Terms() {
         <li>Cancellations and refunds are covered by our <Link to="/refunds" className="font-semibold text-accent">Cancellation & Refund Policy</Link>.</li>
       </ul>
 
-      <H>Fair use of unlimited AI</H>
+      <H>Fair use of AI features</H>
       <ul className="list-disc space-y-2 pl-5">
-        <li>Plus includes unlimited AI photo scans, coach conversations, recipe imports and voice replies for your own personal use. There are no daily caps for normal use.</li>
+        <li>Plus includes generous daily AI allowances for your own personal use: up to 50 photo scans, 150 coach messages, 20 recipe imports, 20 AI recipes, 10 meal plans and 10 workout guides a day. Coach voice replies use your phone’s own voice and have no limit. Searching, logging food, saved meals and everything else are never limited.</li>
         <li>Not personal use: automated or scripted requests, bulk scanning (for example hundreds of photos in a day), sharing one account between several people, or using {APP_NAME}’s AI for a business or for other people.</li>
-        <li>If an account sends requests faster than a person could, we ask it to wait a minute. If use goes far beyond personal use in a day, that AI feature pauses until the next day and we tell you why. Nothing else on your account is affected.</li>
+        <li>If an account sends requests faster than a person could, we ask it to wait a minute. If you reach a daily allowance, that AI feature pauses until the next day and the app tells you when it happens. Nothing else on your account is affected.</li>
         <li>We watch for unusual use so the price can stay low for everyone. If we think an account is being misused we’ll contact you first, and support can always lift a pause made by mistake.</li>
       </ul>
 

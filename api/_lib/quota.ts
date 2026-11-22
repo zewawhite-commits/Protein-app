@@ -3,9 +3,8 @@
  *
  *            scan  coach  workout  recipe  plan  ideas   (per calendar month, UTC)
  *   free       3      5      0        0      0     0     + 1 recipe import a day
- *   plus      ∞      ∞      ∞        ∞     30     ∞     ∞ = unlimited (with a hidden fair-use cap against abuse)
- *   pro       ∞      ∞      ∞        ∞      ∞     ∞     Plus: unlimited plans, smarter coach, advanced analysis & reports
- *   trial     ∞      ∞      ∞        ∞      ∞     ∞     3-day Plus trial: everything unlimited
+ *   plus / trial / reward: generous daily fair-use limits (metering.ts CEILING, published in the Terms):
+ *              50 photo scans, 150 coach messages, 20 recipe imports, 20 AI recipes, 10 plans, 10 workouts, 30 ideas a day
  *   reward    ∞      5      ∞        ∞      ∞     ∞     invite rewards: Plus features, coach at the Free allowance (per day)
  *   (Free limits are per day; the others per month.)
  *
@@ -38,7 +37,7 @@ const DEFAULTS: Record<PlanTier, Record<Feature, number>> = {
   // There is only one paid plan now (Plus); any older Plus subscription gets everything Plus has.
   plus: { scan: FAIR_USE, coach: FAIR_USE * 3, workout: FAIR_USE, recipe: FAIR_USE, plan: FAIR_USE, ideas: FAIR_USE, menu: FAIR_USE, import: FAIR_USE },
   pro: { scan: FAIR_USE, coach: FAIR_USE * 3, workout: FAIR_USE, recipe: FAIR_USE, plan: FAIR_USE, ideas: FAIR_USE, menu: FAIR_USE, import: FAIR_USE },
-  // The 3-day Plus trial: everything Plus has, unlimited (fair-use cap only).
+  // The 3-day Plus trial: everything Plus has (same daily fair-use limits).
   trial: { scan: FAIR_USE, coach: FAIR_USE * 3, workout: FAIR_USE, recipe: FAIR_USE, plan: FAIR_USE, ideas: FAIR_USE, menu: FAIR_USE, import: FAIR_USE },
   // Days earned by inviting friends: Plus features, coach at the Free daily allowance.
   reward: { scan: FAIR_USE, coach: 5, workout: FAIR_USE, recipe: FAIR_USE, plan: FAIR_USE, ideas: FAIR_USE, menu: FAIR_USE, import: FAIR_USE },
@@ -115,7 +114,7 @@ export async function gate(request: Request, feature: Feature, count = 1): Promi
       if (left < 0) break;
     }
     if (left < 0) {
-      return { ok: false, status: 402, body: { error: tier === 'plus' ? `You’ve used your ${limit} ${NAMES[feature]} this month. Plus has unlimited.` : tier === 'reward' ? `You’ve used your ${limit} ${NAMES[feature]} for today. They reset tomorrow, or upgrade to Plus for unlimited.` : `You’ve used your ${limit} free ${limit === 1 ? NAMES[feature].replace(/s$/, '') : NAMES[feature]} for today. They reset tomorrow, or upgrade to Plus for unlimited.`, premium: true, limitReached: true, feature, tier } };
+      return { ok: false, status: 402, body: { error: tier === 'plus' ? `You’ve used your ${limit} ${NAMES[feature]} for now.` : tier === 'reward' ? `You’ve used your ${limit} ${NAMES[feature]} for today. They reset tomorrow, or upgrade to Plus for unlimited.` : `You’ve used your ${limit} free ${limit === 1 ? NAMES[feature].replace(/s$/, '') : NAMES[feature]} for today. They reset tomorrow, or upgrade to Plus for unlimited.`, premium: true, limitReached: true, feature, tier } };
     }
     return { ok: true, tier, left, limit, who: caller };
   } catch (e) {

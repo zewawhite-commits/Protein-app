@@ -35,7 +35,7 @@ export function UsageCard() {
         })}
       </div>
       {u.tier !== 'pro' && !u.admin && (
-        <Link to="/premium" className="btn-primary mt-4 w-full">Go unlimited with Plus — $8.99/month</Link>
+        <Link to="/premium" className="btn-primary mt-4 w-full">Get more with Plus — $8.99/month</Link>
       )}
     </div>
   );

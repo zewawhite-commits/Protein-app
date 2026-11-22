@@ -255,7 +255,7 @@ function Chat() {
         // Errors (and older servers) answer with plain JSON.
         const data = (await res.json()) as CoachReply & { error?: string };
         if (res.status === 401 || res.status === 402) {
-          setMsgs((m) => [...m, { role: 'assistant', content: data.error ?? 'Unlimited coach chat comes with Plus.', error: true, premium: res.status === 402, signIn: res.status === 401 }]);
+          setMsgs((m) => [...m, { role: 'assistant', content: data.error ?? 'More coach messages come with Plus.', error: true, premium: res.status === 402, signIn: res.status === 401 }]);
           return;
         }
         if (!res.ok) throw new Error(data.error || 'Could not reply.');

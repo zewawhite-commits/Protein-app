@@ -6,9 +6,9 @@
  *  - Throttling: more than BURST_PER_MIN AI requests a minute (or BURST_PER_10MIN in ten minutes)
  *    from one account is bot-like; the person is asked to slow down for a moment. Applies to every plan.
  *  - Duplicates: the same request from the same account within DUP_SECONDS is answered once.
- *  - Plus is unlimited for personal use. Crossing a review threshold in a day (REVIEW) only creates an
- *    alert for the owner. Only far beyond normal use (CEILING, published in the Terms as an example of
- *    bulk/automated use) are AI features paused for the day, with a clear message and support contact.
+ *  - Plus has generous daily limits (CEILING, published in the Terms), far above normal personal use.
+ *    Crossing a review threshold (REVIEW) only creates an alert for the owner. People hear about a limit
+ *    only when they reach it.
  * Every check fails open: if the counters are unavailable, people are never blocked by mistake.
  */
 import Anthropic from '@anthropic-ai/sdk';
@@ -30,6 +30,7 @@ export function costOf(model: string, u: Usage): number {
   return (n(u.input_tokens) * p.in + n(u.output_tokens) * p.out + n(u.cache_read_input_tokens) * p.cacheRead + n(u.cache_creation_input_tokens) * p.in * 1.25) / 1e6;
 }
 
+const LABEL: Record<string, string> = { scan: 'AI photo scans', menu: 'menu scans', label: 'label scans', coach: 'coach messages', import: 'recipe imports', recipe: 'AI recipes', plan: 'meal plans', workout: 'workout guides', ideas: 'meal ideas' };
 export type AiFeature = 'scan' | 'menu' | 'label' | 'coach' | 'import' | 'recipe' | 'plan' | 'workout' | 'ideas';
 export interface Caller { userId: string; tier: string; device?: string | null }
 
@@ -37,8 +38,9 @@ export const BURST_PER_MIN = 12;
 export const BURST_PER_10MIN = 80;
 export const DUP_SECONDS = 15;
 /** Per day, per account. REVIEW: owner gets an alert. CEILING: AI pauses until tomorrow (bulk/automated use). */
-export const REVIEW: Partial<Record<AiFeature, number>> = { scan: 40, menu: 15, coach: 200, import: 25, recipe: 30, plan: 15, workout: 15, ideas: 40 };
-export const CEILING: Partial<Record<AiFeature, number>> = { scan: 200, menu: 60, coach: 1000, import: 100, recipe: 120, plan: 60, workout: 60, ideas: 200 };
+export const REVIEW: Partial<Record<AiFeature, number>> = { scan: 25, menu: 7, coach: 75, import: 10, recipe: 10, plan: 5, workout: 5, ideas: 15 };
+/** Plus daily limits (published in the Terms). Far above what one person eating normally uses. */
+export const CEILING: Partial<Record<AiFeature, number>> = { scan: 50, menu: 15, coach: 150, import: 20, recipe: 20, plan: 10, workout: 10, ideas: 30 };
 
 async function record(feature: AiFeature, who: Caller, model: string, u: Usage | undefined) {
   if (!u) return;
@@ -107,7 +109,7 @@ export async function fairUse(feature: AiFeature, who: Caller, paid: boolean, to
   if (day === (REVIEW[feature] ?? Infinity) + 1) await alert(who.userId, `daily:${feature}`, `${day} today`);
   if (day > (CEILING[feature] ?? Infinity)) {
     if (day === (CEILING[feature] ?? 0) + 1) await alert(who.userId, `ceiling:${feature}`, `${day} today`);
-    return { ok: false, status: 429, error: 'This is far beyond normal personal use today, so this AI feature is paused until tomorrow (see Fair use in our Terms). If this is a mistake, contact support and we’ll sort it out.' };
+    return { ok: false, status: 429, error: `You’ve reached today’s fair-use limit for ${LABEL[feature]} (${CEILING[feature]} a day). It resets tomorrow. Everything else, like searching and logging food, keeps working. If you need more, contact support.` };
   }
   return { ok: true };
 }
@@ -117,4 +119,22 @@ export async function isDuplicate(userId: string, payload: string): Promise<bool
   const h = createHash('sha256').update(payload).digest('hex').slice(0, 32);
   const n = await hit(`dup:${userId}:${h}`, DUP_SECONDS);
   return (n ?? 1) > 1;
+}
+
+/** Key for a saved answer: this account + exactly what was sent. */
+export const cacheKey = (userId: string, kind: string, payload: string) => `${kind}:${userId}:${createHash('sha256').update(payload).digest('hex').slice(0, 40)}`;
+
+/** A saved answer for an identical request, if it hasn't expired. */
+export async function cacheGet<T>(key: string): Promise<T | null> {
+  try {
+    const { data } = await admin()!.from('ai_cache').select('value, expires').eq('key', key).maybeSingle();
+    return data && new Date(data.expires as string).getTime() > Date.now() ? (data.value as T) : null;
+  } catch { return null; }
+}
+
+export async function cacheSet(key: string, value: unknown, ttlSeconds: number) {
+  try {
+    await admin()?.from('ai_cache').upsert({ key, value, expires: new Date(Date.now() + ttlSeconds * 1000).toISOString() });
+    if (Math.random() < 0.01) await admin()?.from('ai_cache').delete().lt('expires', new Date().toISOString());
+  } catch { /* caching is optional */ }
 }

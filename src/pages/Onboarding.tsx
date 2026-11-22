@@ -50,7 +50,7 @@ const OBSTACLES = ['Lack of consistency', 'Busy schedule', 'Unhealthy eating hab
 
 const PLAN_CHOICES = [
   { tier: 'free' as const, name: 'Free', badge: '', perks: ['Calories, macros & 18,000+ foods', 'Barcode, exercise, progress & feed', '3 AI scans + 5 coach messages a day', '1 recipe import a day'] },
-  { tier: 'pro' as const, name: 'Plus', badge: 'Everything included', perks: ['Unlimited AI food scans for personal use', 'Restaurant menus: photo, QR code or link', 'Smarter, personal AI nutrition coach', 'Personalized weekly & monthly meal plans', 'Plans adjust automatically to your progress', 'Daily meal suggestions', 'Unlimited AI recipes and recipe imports', 'AI workout guides', 'Advanced micronutrient analysis', 'Detailed nutrition reports', 'Adjusts to your cuisine & diet', 'No ads'] },
+  { tier: 'pro' as const, name: 'Plus', badge: 'Everything included', perks: ['Up to 50 AI food scans a day', 'Restaurant menus: photo, QR code or link', 'Smarter, personal AI nutrition coach', 'Personalized weekly & monthly meal plans', 'Plans adjust automatically to your progress', 'Daily meal suggestions', 'AI recipes and recipe imports', 'AI workout guides', 'Advanced micronutrient analysis', 'Detailed nutrition reports', 'Adjusts to your cuisine & diet', 'No ads'] },
 ];
 
 /** Setup answers are kept on this phone until setup is finished, so leaving the app (to open the
@@ -492,7 +492,7 @@ export default function Onboarding() {
         {at === 'choose' && (
           <Question title="Choose your plan" sub="Start free and upgrade any time. Cancel whenever you like.">
             <div className="mb-3 flex justify-center">
-              <Segmented<'monthly' | 'yearly'> value={billing} onChange={(v) => { haptic(); setBilling(v); }} options={[{ value: 'monthly', label: 'Monthly' }, { value: 'yearly', label: 'Yearly · save 60%' }]} />
+              <Segmented<'monthly' | 'yearly'> value={billing} onChange={(v) => { haptic(); setBilling(v); }} options={[{ value: 'monthly', label: 'Monthly' }, { value: 'yearly', label: 'Yearly · save 65%' }]} />
             </div>
             <div className="space-y-3">
               {PLAN_CHOICES.map((p) => { const pr = p.tier === 'free' ? { price: '$0', sub: 'forever', save: 0 } : plannedPrice(p.tier, billing); return (
@@ -656,7 +656,7 @@ function Welcome({ signedIn, email, onStart }: { signedIn: boolean; email?: stri
           </button>
           <p className="text-center text-[15px] text-silver">Already have an account? <button onClick={() => setMode('login')} className="font-semibold text-accent">Log in</button></p>
           <p className="text-center text-xs text-dim">An account saves your data so you can use it on any phone.</p>
-          <p className="mb-2 text-center text-[13px] text-silver">Free to start, no card. Plus is $8.99/mo, or save 60% yearly · <a href="/premium" className="font-semibold text-accent underline">See what’s included</a></p>
+          <p className="mb-2 text-center text-[13px] text-silver">Free to start, no card. Plus is $8.99/mo, or save 65% yearly · <a href="/premium" className="font-semibold text-accent underline">See what’s included</a></p>
           <p className="text-center text-xs text-dim">By continuing you agree to our <a href="/terms" className="underline">Terms</a>, <a href="/privacy" className="underline">Privacy Policy</a> and <a href="/refunds" className="underline">Refund Policy</a>.</p>
         </div>
       )}

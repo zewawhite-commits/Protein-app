@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { fetchUsage } from '@/lib/premium';
 import { Link, Navigate } from 'react-router-dom';
 import { Archive, ArchiveRestore, ArrowLeft, ExternalLink, Lock, Pencil, Plus, Search, Trash2 } from 'lucide-react';
 import { useStore } from '@/store/useStore';
@@ -27,7 +28,10 @@ export default function Admin() {
 
   const usdaResults = useMemo(() => (db && q.trim() ? searchFoods(q, { limit: 40 }) : []), [db, q]);
 
-  if (!admin) return <Navigate to="/profile" replace />;
+  const [owner, setOwner] = useState<boolean | null>(null);
+  useEffect(() => { void fetchUsage().then((u) => setOwner(!!u?.admin)).catch(() => setOwner(false)); }, []);
+  if (!admin || owner === false) return <Navigate to="/profile" replace />;
+  if (owner === null) return null;
 
   return (
     <div className="animate-fade-up">

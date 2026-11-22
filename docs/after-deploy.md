@@ -30,3 +30,5 @@ Supabase → SQL editor → paste the contents of `supabase/ai-usage.sql` → Ru
 works normally but AI costs aren't recorded and the fair-use checks stay off (they fail open).
 The owner dashboard is Profile → Owner dashboard (/owner), for emails in ADMIN_EMAILS. Optional: set
 `PAYMENT_FEE_PCT` in Vercel (default 3.9) so the margin uses your real Paystack fee.
+(`supabase/ai-usage.sql` also creates `ai_cache`, the saved answers for identical scans and recipe imports.
+If you ran an earlier version, run it again: it's safe to re-run.)

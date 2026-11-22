@@ -10,9 +10,9 @@
 export const maxDuration = 60;
 import { busyMessage, logAiError } from './_lib/aiErrors.js';
 import Anthropic from '@anthropic-ai/sdk';
-import { aiClient, isDuplicate } from './_lib/metering.js';
+import { aiClient, cacheGet, cacheKey, cacheSet, isDuplicate } from './_lib/metering.js';
 import { recognizeWithClient } from '../src/lib/recognition.js';
-import { gate } from './_lib/quota.js';
+import { gate, whoIs } from './_lib/quota.js';
 import { pageText, safeRecipeUrl } from '../src/lib/recipeImport.js';
 import { popularPicks } from './_lib/popular.js';
 import { readLabelWithClient } from '../src/lib/label.js';
@@ -26,6 +26,11 @@ export async function POST(request: Request): Promise<Response> {
   let body: { image?: string; mediaType?: string; text?: string; label?: boolean; menu?: boolean; menuUrl?: string; leftovers?: unknown } | null;
   body = (await request.json().catch(() => null)) as typeof body;
   if (!body || typeof body !== 'object') return json({ error: 'Invalid JSON body.' }, 400);
+  // The exact same photo or text from this account recently: the saved answer, free (no AI call, not counted).
+  const sameAs = `${body.mediaType ?? ''}|${body.image ?? ''}|${body.text ?? ''}|${body.menuUrl ?? ''}|${body.label ? 1 : 0}|${body.menu ? 1 : 0}|${JSON.stringify(body.leftovers ?? null)}`;
+  const me = (await whoIs(request)).user;
+  const ck = me ? cacheKey(me.id, 'scan', sameAs) : null;
+  if (ck) { const saved = await cacheGet<Record<string, unknown>>(ck); if (saved) return json({ ...saved, cached: true }, 200); }
   // Restaurant menus are a Plus feature with their own allowance; plate and label photos are AI scans.
   const g = await gate(request, (body.menu === true && !body.text) || typeof body.menuUrl === 'string' ? 'menu' : 'scan');
   if (!g.ok) return json(g.body, g.status);
@@ -72,6 +77,7 @@ export async function POST(request: Request): Promise<Response> {
   try {
     if (body.label === true && !text) {
       const label = await readLabelWithClient(aiClient('label', g.who), image!, mediaType);
+      if (ck) await cacheSet(ck, label, 24 * 3600);
       return json(scansLeft != null ? { ...label, scansLeft, scanLimit: g.limit } : label, 200);
     }
     const recognized = await recognizeWithClient(aiClient(body.menu === true && !text ? 'menu' : 'scan', g.who), text ? null : image!, mediaType, text || undefined, { menu: body.menu === true && !text, leftovers: !text && Array.isArray(body.leftovers) ? body.leftovers.slice(0, 14).map((x) => String(x).slice(0, 100)) : undefined });
@@ -79,6 +85,7 @@ export async function POST(request: Request): Promise<Response> {
     // Never let this optional lookup slow the answer down.
     const popular = await Promise.race([popularPicks(recognized.items.flatMap((i) => [i.name, i.localName])), new Promise<Record<string, string>>((r) => setTimeout(() => r({}), 700))]);
     const result = { ...recognized, popular };
+    if (ck) await cacheSet(ck, result, 24 * 3600);
     return json(scansLeft != null ? { ...result, scansLeft, scanLimit: g.limit } : result, 200);
   } catch (e) {
     await logAiError('recognize', e);

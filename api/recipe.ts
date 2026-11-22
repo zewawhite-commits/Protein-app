@@ -5,13 +5,13 @@
 export const maxDuration = 60;
 import { busyMessage, logAiError } from './_lib/aiErrors.js';
 import Anthropic from '@anthropic-ai/sdk';
-import { aiClient, isDuplicate } from './_lib/metering.js';
+import { aiClient, cacheGet, cacheKey, cacheSet, isDuplicate } from './_lib/metering.js';
 import { contextText } from '../src/lib/coach.js';
 import { recipeWithClient } from '../src/lib/recipe.js';
 import { importRecipeWithClient, pageText, safeRecipeUrl } from '../src/lib/recipeImport.js';
 import { json } from './_lib/premium.js';
 import { allergensInAll, avoidSet } from '../src/lib/allergens.js';
-import { gate } from './_lib/quota.js';
+import { gate, whoIs } from './_lib/quota.js';
 import { cleanContext } from './_lib/context.js';
 
 export async function POST(request: Request): Promise<Response> {
@@ -41,6 +41,10 @@ export async function POST(request: Request): Promise<Response> {
 }
 
 async function importRecipe(request: Request, input: { text?: unknown; url?: unknown; image?: { data?: unknown; mediaType?: unknown } }): Promise<Response> {
+  // The same recipe (text, link or photo) imported again recently: the saved answer, free and not counted.
+  const me = (await whoIs(request)).user;
+  const ck = me ? cacheKey(me.id, 'import', JSON.stringify({ t: input.text, u: input.url, i: typeof input.image?.data === 'string' ? input.image.data : '' })) : null;
+  if (ck) { const saved = await cacheGet<Record<string, unknown>>(ck); if (saved) return json({ ...saved, cached: true }); }
   const g = await gate(request, 'import'); // Free: 1 recipe import a day, separate from the 3 photo scans.
   if (!g.ok) return json(g.body, g.status);
   if (await isDuplicate(g.who.userId, JSON.stringify({ t: input.text, u: input.url, i: typeof input.image?.data === 'string' ? input.image.data.slice(0, 4096) : '' }))) return json({ error: 'Already reading that recipe. Give it a moment.', duplicate: true }, 409);
@@ -59,7 +63,9 @@ async function importRecipe(request: Request, input: { text?: unknown; url?: unk
     const image = img && typeof img.data === 'string' && ['image/jpeg', 'image/png', 'image/webp'].includes(String(img.mediaType)) && img.data.length < 7_000_000
       ? { data: img.data, mediaType: img.mediaType as 'image/jpeg' } : undefined;
     if (!text && !image) return json({ error: 'Paste a recipe, add a link or a photo.' }, 400);
-    return json(await importRecipeWithClient(aiClient('import', g.who), { text, image }));
+    const imported = await importRecipeWithClient(aiClient('import', g.who), { text, image });
+    if (ck && imported.isRecipe) await cacheSet(ck, imported, 7 * 24 * 3600);
+    return json(imported);
   } catch (e) {
     await logAiError('recipe', e);
     if (e instanceof Anthropic.RateLimitError) return json({ error: 'Busy, try again in a moment.' }, 429);

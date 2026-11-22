@@ -78,3 +78,13 @@ $$;
 revoke all on function public.ai_cost_by_feature(timestamptz, timestamptz) from public, anon, authenticated;
 revoke all on function public.ai_top_accounts(timestamptz, timestamptz, integer) from public, anon, authenticated;
 revoke all on function public.ai_monthly(integer) from public, anon, authenticated;
+
+-- Saved answers for identical requests from the same account (same photo, same recipe link), so
+-- sending the same thing again costs nothing. Personal answers (coach, plans) are never cached.
+create table if not exists public.ai_cache (
+  key      text primary key,
+  value    jsonb not null,
+  expires  timestamptz not null
+);
+create index if not exists ai_cache_expires on public.ai_cache (expires);
+alter table public.ai_cache enable row level security;
