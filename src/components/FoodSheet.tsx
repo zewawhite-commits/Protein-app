@@ -136,7 +136,9 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
   // Whole items first (1 egg, 1 wing, 1 slice, 1 fillet), then servings (plate, bowl, cup), then the rest.
   const rank = (label: string) => (/\b(plate|bowl|cup|ladle|glass|bottle|can|tbsp|tsp|spoon|litre|portion|serving|chopped|diced|sliced|mashed)\b/i.test(label) ? 1
     : /\b(piece|wing|drumstick|thigh|leg|egg|slice|fillet|ball|whole|large|medium|small|extra large|jumbo|breast|steak|chop|link|patty|roll|bun|muffin|bar|biscuit|cookie|wrap)\b/i.test(label) ? 2 : 0);
-  const countable = measures.filter((p) => p.grams > 0).sort((a, b) => rank(b.label) - rank(a.label));
+  // Within the same kind, start at a medium/regular size and a single whole item ("1 breast", not "0.5 breast").
+  const size = (l: string) => (/\bmedium|regular|any size\b/i.test(l) ? 2 : /^1 \w/.test(l) && !/\b(small|large|extra|jumbo)\b/i.test(l) ? 1 : /^0?\.\d|^0\.5/.test(l) ? -1 : 0);
+  const countable = measures.filter((p) => p.grams > 0).sort((a, b) => rank(b.label) - rank(a.label) || size(b.label) - size(a.label));
   const pieceFirst = !!countable[0] && rank(countable[0].label) === 2;
   const usualCount = usual && countable[0] ? Math.round((usual / countable[0].grams) * 2) / 2 : null;
   const usualFits = !!usualCount && Math.abs(usualCount * countable[0].grams - usual!) < 1;

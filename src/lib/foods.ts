@@ -185,6 +185,11 @@ const COOKED: [RegExp, string][] = [
   [/^(scrambled eggs?|eggs? scrambled)$/, 'egg whole cooked scrambled'],
   [/^(poached eggs?|eggs? poached)$/, 'egg whole cooked poached'],
   [/^(boiled|stewed) chicken$|^chicken (boiled|stewed)$/, 'chicken breast meat only cooked stewed'],
+  // Plain cooked pieces first; coated, fast-food and frozen-meal versions come after.
+  [/^(chicken )?drumsticks?( chicken)?$/, 'chicken drumstick baked broiled or roasted skin eaten from raw'],
+  [/^(chicken )?thighs?( chicken)?$/, 'chicken thigh baked broiled or roasted skin eaten from raw'],
+  [/^(fried chicken|chicken fried|deep fried chicken)$/, 'fast foods fried chicken drumstick meat and skin with breading'],
+  [/^(grilled|roast|roasted|baked) chicken( breast)?$|^chicken (breast )?(grilled|roasted|baked)$/, 'chicken broilers or fryers breast meat only cooked roasted'],
   [/^(porridge|oat porridge|porridge oats|oatmeal|cooked oats|oats cooked|cooked oatmeal|oatmeal cooked|quaker oats)$/, 'oats cooked with water'],
   [/^(fried potato(es)?|potato(es)? fried|fried irish potato(es)?|chips)$/, 'french fries'],
   [/^(uncooked|raw|dry|dried) (pasta|spaghetti|macaroni|noodles)$|^(pasta|spaghetti|macaroni) (uncooked|raw|dry)$/, 'pasta dry enriched'],

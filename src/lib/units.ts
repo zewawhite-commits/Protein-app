@@ -74,6 +74,12 @@ export function measuresFor(food: Food): Measure[] {
     if (seen.has(key)) continue;
     seen.add(key);
     out.push({ label, grams: p.grams, verified: !isEstimated(food, p.label) });
+    // "0.5 breast" in the record → also offer "1 breast" (double the weighed half, so still verified).
+    const half = /^0\.5 (\w+)(.*)$/i.exec(label);
+    if (half && !seen.has(`1 ${half[1]}${half[2]}`.toLowerCase())) {
+      seen.add(`1 ${half[1]}${half[2]}`.toLowerCase());
+      out.push({ label: `1 ${half[1]}${half[2]}`, grams: Math.round(p.grams * 2 * 10) / 10, verified: !isEstimated(food, p.label) });
+    }
   }
   const d = densityOf(food);
   if (d) {
