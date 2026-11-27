@@ -75,6 +75,17 @@ Environment variables only apply to new deployments.
 
 The live app's key is separate: Vercel → Settings → Environment Variables → `ANTHROPIC_API_KEY` (probably already set).
 
+## Food photos (you approve each one)
+
+Photos only appear once you pick them, so a photo always shows exactly that food.
+
+1. Get a free key at **unsplash.com/developers** → New application → copy the **Access Key**.
+2. Vercel → Settings → Environment Variables → add `UNSPLASH_ACCESS_KEY` = that key → redeploy.
+3. Supabase → SQL editor → run `supabase/food-photos.sql` (adds the `verified` column).
+4. In the app, sign in with your owner email → Profile → **Owner dashboard** → **Food photos**.
+   Tap a food under "Need a photo", tap the picture that shows exactly that food,
+   or "None of these fit". It moves to the next food automatically.
+
 ## After launch: watch the first month
 
 Profile → Owner dashboard → **AI costs**: real cost per feature, per subscriber, and your margin.

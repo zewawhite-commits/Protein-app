@@ -294,7 +294,7 @@ export default function Snap() {
           <button onClick={back} className="grid h-11 w-11 place-items-center rounded-full bg-surface" style={{ boxShadow: 'var(--shadow)' }} aria-label="Back"><ArrowLeft size={20} /></button>
         </header>
         <h1 className="text-[30px] font-extrabold leading-tight tracking-tight">Sign in to use AI</h1>
-        <p className="mt-2 text-[15px] leading-relaxed text-silver">A free account gets 3 AI scans and 5 coach messages a day, and keeps your log safe on any phone.</p>
+        <p className="mt-2 text-[15px] leading-relaxed text-silver">A free account gets 3 AI scans a day, and keeps your log safe on any phone.</p>
         <div className="card mt-6 p-5"><SignInButtons /></div>
         <Link to={manualUrl()} className="btn-ghost mt-3 w-full">Search foods instead — always free</Link>
       </div>

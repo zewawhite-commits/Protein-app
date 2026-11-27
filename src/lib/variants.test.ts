@@ -33,3 +33,20 @@ describe('chicken variants come from real records', () => {
     expect(weighGuide('Bananas, raw')).toMatch(/without peel/);
   });
 });
+
+describe('chicken parts', () => {
+  const mk = (name: string) => ({ id: name, name, per100: {}, portions: [] } as never);
+  const all = ['Chicken drumstick, fried, coated, skin / coating eaten, from raw', 'Chicken drumstick, baked, broiled, or roasted, skin eaten, from raw', 'Chicken drumstick, baked, broiled, or roasted, skin not eaten, from raw',
+    'Chicken thigh, fried, coated, skin / coating eaten, from raw', 'Chicken wing, fried, coated, from raw', 'Chicken breast, baked, broiled, or roasted, skin eaten, from raw'].map(mk);
+  it('switches part keeping the cooking, and skin/method within a part', () => {
+    const v = poultryVariants(all[0], all)!;
+    expect(v.parts.find((p) => p.part === 'thigh')?.food.name).toMatch(/thigh, fried/);
+    expect(v.methods.map((m) => m.method)).toEqual(expect.arrayContaining(['Roasted', 'Fried']));
+    const r = poultryVariants(all[1], all)!;
+    expect(r.skin.meatOnly?.name).toMatch(/skin not eaten/);
+  });
+  it('coated chicken: weigh with skin and coating', () => {
+    expect(weighGuide('Chicken drumstick, fried, coated, skin / coating eaten, from raw')).toMatch(/skin and coating/);
+    expect(weighGuide('Chicken drumstick, fried, coated, skin / coating not eaten, from raw')).toMatch(/without bones, skin or coating/);
+  });
+});

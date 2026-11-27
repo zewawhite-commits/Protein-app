@@ -6,7 +6,8 @@
  * credited (their API rules). Every photo is picked by a person who checked it shows exactly that
  * food (see review below); nothing is chosen automatically. Needs UNSPLASH_ACCESS_KEY.
  */
-import { admin } from './_lib/accounts.js';
+import { admin, userFromToken } from './_lib/accounts.js';
+import { isAdmin } from './_lib/quota.js';
 import { PHOTO_QUERIES } from '../src/data/photoQueries.js';
 
 interface Row { key: string; url: string | null; author: string | null; author_url: string | null; photo_page: string | null; blur_color: string | null; tried_at: string }
@@ -20,16 +21,15 @@ const out = (r: Row) => (r.url ? { url: r.url, author: r.author, authorUrl: r.au
 type UnsplashPhoto = { urls: { raw: string }; user: { name: string; links: { html: string } }; links: { html: string; download_location: string }; color?: string; alt_description?: string | null };
 
 /**
- * Photo review (owner only, with the review token saved in Supabase app_config):
+ * Photo review (owner only: signed in with an email in ADMIN_EMAILS; Profile → Owner dashboard → Food photos):
  *   ?review=candidates&key=egg[&q=…]  → Unsplash results to look at
  *   ?review=pick&key=egg&id=<photo id> → use that photo (marked verified)
  *   ?review=clear&key=egg              → no photo for this food
  * Only photos a person has looked at and approved are ever shown in the app.
  */
 async function review(request: Request, db: NonNullable<ReturnType<typeof admin>>, params: URLSearchParams): Promise<Response> {
-  const token = request.headers.get('x-review-token') ?? '';
-  const { data: cfg } = await db.from('app_config').select('value').eq('key', 'photo_review_token').maybeSingle();
-  if (!cfg?.value || token.length < 20 || token !== cfg.value) return json({ error: 'forbidden' }, 403, 'no-store');
+  const user = await userFromToken(request.headers.get('x-user-token'));
+  if (!user || !isAdmin(user.email)) return json({ error: 'forbidden' }, 403, 'no-store');
   const key = params.get('key') ?? '';
   if (!PHOTO_QUERIES[key]) return json({ error: 'unknown key' }, 400, 'no-store');
   const headers = { authorization: `Client-ID ${process.env.UNSPLASH_ACCESS_KEY}`, 'accept-version': 'v1' };

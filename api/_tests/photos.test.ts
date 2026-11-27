@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const rows = new Map<string, Record<string, unknown>>();
 const TOKEN = 'review-token-0123456789abcdef';
 vi.mock('../_lib/accounts.js', () => ({
+  userFromToken: async (t: string | null) => (t === TOKEN ? { id: 'o', email: 'owner@example.com' } : t ? { id: 'u', email: 'someone@example.com' } : null),
   admin: () => ({
     from: (table: string) => {
       const f: Record<string, unknown> = {};
@@ -45,14 +46,15 @@ describe('food photos API', () => {
     expect('nonsense' in d.photos).toBe(false);
     expect(calls).not.toHaveBeenCalled();
   });
-  it('review needs the token', async () => {
+  it('review is for the owner account only', async () => {
     const { GET } = await import('../photos.js');
     expect((await GET(new Request('https://x/api/photos?review=candidates&key=egg'))).status).toBe(403);
-    expect((await GET(new Request('https://x/api/photos?review=candidates&key=egg', { headers: { 'x-review-token': 'wrong-token-0123456789abc' } }))).status).toBe(403);
+    expect((await GET(new Request('https://x/api/photos?review=candidates&key=egg', { headers: { 'x-user-token': 'not-the-owner' } }))).status).toBe(403);
   });
   it('picking a reviewed photo saves it with credit, marks it verified and reports the download', async () => {
     const { GET } = await import('../photos.js');
-    const h = { headers: { 'x-review-token': TOKEN } };
+    process.env.ADMIN_EMAILS = 'owner@example.com';
+    const h = { headers: { 'x-user-token': TOKEN } };
     const c = await (await GET(new Request('https://x/api/photos?review=candidates&key=egg', h))).json();
     expect(c.results[0]).toMatchObject({ id: 'b', alt: 'boiled eggs' });
     await GET(new Request('https://x/api/photos?review=pick&key=egg&id=b', h));

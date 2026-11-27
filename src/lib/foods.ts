@@ -188,7 +188,12 @@ const COOKED: [RegExp, string][] = [
   // Plain cooked pieces first; coated, fast-food and frozen-meal versions come after.
   [/^(chicken )?drumsticks?( chicken)?$/, 'chicken drumstick baked broiled or roasted skin eaten from raw'],
   [/^(chicken )?thighs?( chicken)?$/, 'chicken thigh baked broiled or roasted skin eaten from raw'],
-  [/^(fried chicken|chicken fried|deep fried chicken)$/, 'fast foods fried chicken drumstick meat and skin with breading'],
+  [/^(fried chicken|chicken fried|deep fried chicken|fried drumsticks?|fried chicken drumsticks?)$/, 'chicken drumstick fried coated skin coating eaten from raw'],
+  [/^(fried chicken thighs?|fried thighs?)$/, 'chicken thigh fried coated skin coating eaten from raw'],
+  [/^(fried chicken wings?|fried wings?)$/, 'chicken wing fried coated from raw'],
+  [/^(grilled|roast(ed)?|baked) (chicken )?drumsticks?$/, 'chicken drumstick baked broiled or roasted skin eaten from raw'],
+  [/^(chicken )?legs?( chicken)?$|^chicken leg quarters?$/, 'chicken leg drumstick and thigh baked or broiled skin eaten'],
+  [/^(chicken )?wings?( chicken)?$/, 'chicken wing baked broiled or roasted from raw'],
   [/^(grilled|roast|roasted|baked) chicken( breast)?$|^chicken (breast )?(grilled|roasted|baked)$/, 'chicken broilers or fryers breast meat only cooked roasted'],
   [/^(porridge|oat porridge|porridge oats|oatmeal|cooked oats|oats cooked|cooked oatmeal|oatmeal cooked|quaker oats)$/, 'oats cooked with water'],
   [/^(fried potato(es)?|potato(es)? fried|fried irish potato(es)?|chips)$/, 'french fries'],

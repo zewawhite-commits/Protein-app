@@ -202,6 +202,8 @@ function Chat() {
   const paid = useStore((s) => isPremiumActive(s.premium) || s.serverTier === 'pro' || s.serverTier === 'plus');
   const freePro = useFreePro().on;
   const isPro = paid || freePro;
+  // The AI coach is a Plus feature (Free has 0 coach messages).
+  const locked = !isPro;
   const sendRef = useRef<(t: string) => Promise<void>>(async () => undefined);
   const [talk, setTalk] = useState(() => { try { return localStorage.getItem('nutivili-coach-talk') === 'on'; } catch { return false; } });
   const [listening, setListening] = useState(false);
@@ -251,7 +253,7 @@ function Chat() {
   async function send(content: string) {
     const photo = pending;
     const q = content.trim() || (photo ? PHOTO_PROMPT : '');
-    if (!q || busy) return;
+    if (!q || busy || locked) return;
     haptic();
     // Earlier photos aren't re-sent; the text notes that one was there.
     const history = [...msgs.filter((m) => !m.error).map((m) => (m.thumb ? { ...m, content: `[photo] ${m.content}` } : m)), { role: 'user' as const, content: q }];
@@ -354,7 +356,7 @@ function Chat() {
             </div>
             {accountsEnabled && session === null && (
               <div className="mt-5 border-t border-line pt-4">
-                <p className="mb-3 text-sm font-semibold">Sign in free to chat — 5 coach messages a month</p>
+                <p className="mb-3 text-sm font-semibold">Sign in to keep your diary safe. The coach comes with Plus</p>
                 <SignInButtons />
               </div>
             )}
@@ -407,6 +409,15 @@ function Chat() {
           <button onClick={() => setPending(null)} className="grid h-8 w-8 place-items-center rounded-full bg-raised" aria-label="Remove photo"><X size={15} /></button>
         </div>
       )}
+      {locked ? (
+        <div className="sticky bottom-[calc(env(safe-area-inset-bottom)+6.5rem)] z-20 pt-6" style={{ background: 'linear-gradient(to top, rgb(var(--bg)) 0%, rgb(var(--bg)) 72%, rgb(var(--bg) / 0) 100%)' }}>
+          <div className="card p-5 text-center">
+            <p className="text-[17px] font-bold">The AI coach comes with Plus</p>
+            <p className="mt-1 text-sm text-silver">Ask anything about your food, goals and training, send photos, and get meal ideas built from your diary. Everything else stays free.</p>
+            <Link to="/premium" className="btn-primary mt-4 w-full">See Plus</Link>
+          </div>
+        </div>
+      ) : (
       <form
         onSubmit={(e) => { e.preventDefault(); spokeLast.current = false; void send(text); }}
         className="sticky bottom-[calc(env(safe-area-inset-bottom)+6.5rem)] z-20 flex items-end gap-2 pt-6"
@@ -446,6 +457,7 @@ function Chat() {
         </button>
         )}
       </form>
+      )}
       <p className="mt-2 text-center text-[12px] text-dim">AI Coach gives general fitness and nutrition guidance, not medical advice.</p>
 
       <FoodSheet food={open?.food ?? null} date={todayKey()} preset={{ aiEstimate: open?.grams }} onClose={() => setOpen(null)} />

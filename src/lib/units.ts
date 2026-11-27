@@ -266,7 +266,7 @@ export function measuresFor(food: Food): Measure[] {
 }
 
 /** Short name for a unit button: "1 medium drumstick" → "medium drumstick", "1 cup (240 ml)" → "cup". */
-export const unitName = (label: string) => label.replace(/^1\s+/, '').replace(/\s*\((typical|\d[^)]*)\)/i, '').replace(/,.*$/, '').trim();
+export const unitName = (label: string) => label.replace(/^1\s+/, '').replace(/\s*\([^)]*\)?/g, '').replace(/,.*$/, '').trim();
 
 /** Units a person can pick when creating a food, inferred from what kind of food it is. */
 /** The units to offer for each group: the measurement table, in order (grams always last). */

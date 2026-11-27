@@ -11,3 +11,6 @@ create table if not exists public.food_photos (
 alter table public.food_photos enable row level security;
 drop policy if exists "food photos: anyone reads" on public.food_photos;
 create policy "food photos: anyone reads" on public.food_photos for select using (true);
+
+-- Only photos a person picked in Owner dashboard → Food photos are shown.
+alter table public.food_photos add column if not exists verified boolean not null default false;

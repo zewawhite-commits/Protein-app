@@ -124,7 +124,7 @@ export function Terms() {
 
       <H>Plans and payments</H>
       <ul className="list-disc space-y-2 pl-5">
-        <li><b>Free</b> costs nothing and includes 3 AI photo scans, 5 meal follow-ups and 5 coach messages each day, and 2 AI recipes and 1 AI meal plan each calendar month. Recipe imports are unlimited. Free may show advertising.</li>
+        <li><b>Free</b> costs nothing and includes 3 AI photo scans and 5 meal follow-ups each day (the AI coach is part of Plus), and 2 AI recipes and 1 AI meal plan each calendar month. Recipe imports are unlimited. Free may show advertising.</li>
         <li><b>Plus</b> costs {money('pro_monthly')} a month or {money('pro_yearly')} a year. The price is shown before you pay.</li>
         <li>Paid plans are billed in advance through Paystack and renew automatically at the end of each month or year until you cancel.</li>
         <li>Prices are shown in US dollars. If you’re charged in another currency, your bank or card provider sets the exchange rate and may add fees.</li>

@@ -22,7 +22,7 @@ const FAQ: [string, string][] = [
   ['What if I can’t find a food?', 'Create your own in seconds with the numbers from the pack, or build a meal from its ingredients and save it. You can also edit any dish, for example add an egg or swap the protein, and keep your version for next time.'],
   ['Can I edit scanned meals and change serving sizes?', 'Always. A scan is a starting point: change any food, add or remove items, and adjust the amount or unit before you save. Saved meals can be edited later too.'],
   ['How accurate are the calories and nutrition numbers?', 'Foods come from official food-composition tables (such as USDA, UK CoFID, Australia’s AFCD and FAO/INFOODS) and pack labels, and every food shows its source. A photo can’t weigh food, so scans are clearly marked as estimates. For exact numbers, weigh it. Missing values are shown as missing, never as zero.'],
-  ['What’s included in Free and Plus?', 'Free: the full food diary, search, barcode and voice logging, recipes, water, sleep, steps and exercise, reports and graphs, plus 3 AI food scans and 5 AI coach messages a day. Plus ($8.99 a month or $44.99 a year) adds unlimited AI scans, the AI coach, and personalised meal plans, recipes and workouts.'],
+  ['What’s included in Free and Plus?', 'Free: the full food diary, search, barcode and voice logging, recipes, water, sleep, steps and exercise, reports and graphs, plus 3 AI food scans a day. Plus ($8.99 a month or $44.99 a year) adds unlimited AI scans, the AI coach, and personalised meal plans, recipes and workouts.'],
   ['Can I cancel, and is my data secure?', 'Cancel any time in Profile → Subscription in two taps; you keep Plus until the end of the period you paid for, and your data stays yours. Your diary is private, sent over encrypted connections, never sold, and you can download or delete everything from Profile.'],
 ];
 
@@ -86,7 +86,7 @@ export default function Landing() {
                 <p className="text-[20px] font-extrabold">Free</p>
                 <p className="mt-1"><span className="text-[34px] font-extrabold">$0</span> <span className="text-silver">for ever</span></p>
                 <ul className="mt-4 space-y-2 text-[15px]">
-                  {['Calories, protein, carbs, fat, vitamins & minerals', '18,000+ foods, barcode scanning, voice logging', 'Diary, saved meals, recipes, weight, sleep, workouts', 'World recipe library, unlimited recipe imports, exercise library, works offline', '3 AI photo scans and 5 coach messages a day, 2 AI recipes and 1 AI meal plan a month'].map((x) => <li key={x} className="flex gap-2"><Check size={18} className="mt-0.5 shrink-0 text-accent" />{x}</li>)}
+                  {['Calories, protein, carbs, fat, vitamins & minerals', '18,000+ foods, barcode scanning, voice logging', 'Diary, saved meals, recipes, weight, sleep, workouts', 'World recipe library, unlimited recipe imports, exercise library, works offline', '3 AI photo scans a day, 2 AI recipes and 1 AI meal plan a month'].map((x) => <li key={x} className="flex gap-2"><Check size={18} className="mt-0.5 shrink-0 text-accent" />{x}</li>)}
                 </ul>
                 <Link to="/start" className="btn-ghost mt-6 w-full">Start free</Link>
               </div>

@@ -1,7 +1,7 @@
 /**
  * Plan limits for every AI feature, enforced on the server so they can't be bypassed.
  *
- *   free: 3 photo scans, 5 meal follow-ups and 5 coach messages a day; 2 AI recipes and 1 meal plan a month; no AI workouts
+ *   free: 3 photo scans, 5 meal follow-ups a day and no AI coach; 2 AI recipes and 1 meal plan a month; no AI workouts
  *         or meal ideas. Recipe imports are unlimited for everyone (burst throttle only, no credits).
  *   plus / trial / reward: unlimited photo scans (personal use; burst throttle and review alerts only), and
  *         300 AI credits per billing month (credits.ts, owner-editable) for the coach, AI recipes, meal plans and
@@ -37,14 +37,14 @@ const daily = (feature: string, tier: PlanTier) => (DAILY[tier] && !FREE_MONTHLY
 export const usageKey = (feature: string, userId: string, tier: PlanTier) => (daily(feature, tier) ? `${feature}:${userId}:${today()}` : `${feature}:${userId}`);
 
 const DEFAULTS: Record<PlanTier, Record<Feature, number>> = {
-  free: { scan: 3, coach: 5, workout: 0, recipe: 2, plan: 1, ideas: 0, menu: 0, import: FAIR_USE, followup: 5 },
+  free: { scan: 3, coach: 0, workout: 0, recipe: 2, plan: 1, ideas: 0, menu: 0, import: FAIR_USE, followup: 5 },
   // There is only one paid plan now (Plus); any older Plus subscription gets everything Plus has.
   plus: { scan: FAIR_USE, coach: FAIR_USE * 3, workout: FAIR_USE, recipe: FAIR_USE, plan: FAIR_USE, ideas: FAIR_USE, menu: FAIR_USE, import: FAIR_USE, followup: FAIR_USE },
   pro: { scan: FAIR_USE, coach: FAIR_USE * 3, workout: FAIR_USE, recipe: FAIR_USE, plan: FAIR_USE, ideas: FAIR_USE, menu: FAIR_USE, import: FAIR_USE, followup: FAIR_USE },
   // The 3-day Plus trial: everything Plus has (same daily fair-use limits).
   trial: { scan: FAIR_USE, coach: FAIR_USE * 3, workout: FAIR_USE, recipe: FAIR_USE, plan: FAIR_USE, ideas: FAIR_USE, menu: FAIR_USE, import: FAIR_USE, followup: FAIR_USE },
   // Days earned by inviting friends: Plus features, coach at the Free daily allowance.
-  reward: { scan: FAIR_USE, coach: 5, workout: FAIR_USE, recipe: FAIR_USE, plan: FAIR_USE, ideas: FAIR_USE, menu: FAIR_USE, import: FAIR_USE, followup: FAIR_USE },
+  reward: { scan: FAIR_USE, coach: 0, workout: FAIR_USE, recipe: FAIR_USE, plan: FAIR_USE, ideas: FAIR_USE, menu: FAIR_USE, import: FAIR_USE, followup: FAIR_USE },
 };
 
 /** Limits at or above this are shown as "Unlimited" (a fair-use cap, ~30 a day). */

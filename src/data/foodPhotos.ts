@@ -12,7 +12,7 @@ import { photoMust } from './photoQueries';
 const DISH_RULES: [RegExp, string][] = [
   // Common foods that need their own photo (a whole roast chicken is wrong for "chicken breast").
   [/\bchicken\b.*\bbreast|\bbreast\b.*\bchicken/, 'chicken_breast'], [/\bchicken\b.*\bwings?\b|\bwings?\b.*\bchicken|^wings?\b/, 'chicken_wings'],
-  [/\bchicken\b.*\b(thigh|drumstick|leg)s?\b/, 'chicken_thigh'], [/peanut butter|groundnut (paste|butter)/, 'peanut_butter'], [/cottage cheese/, 'cottage_cheese'],
+  [/\bchicken\b.*\bthighs?\b/, 'chicken_thigh_raw'], [/\bchicken\b.*\bdrumsticks?\b/, 'chicken_drumstick'], [/peanut butter|groundnut (paste|butter)/, 'peanut_butter'], [/cottage cheese/, 'cottage_cheese'],
   [/\balmonds?\b(?! (butter|oil|paste|milk|flour|meal|extract))/, 'almonds'], [/\bsalmon\b/, 'salmon'], [/\btuna\b/, 'tuna'], [/scrambled egg/, 'scrambled_eggs'], [/\begg\b.*\bfried|fried egg/, 'fried_egg'],
   [/\bjollof(?! (spaghetti|macaroni|pasta|fonio|couscous|beans))/, 'jollof'], [/\bfried rice\b/, 'fried_rice'], [/\begusi|\begushi/, 'egusi'], [/\bpounded yam|\bpoundo|\biyan\b/, 'pounded_yam'],
   [/\bamala/, 'amala'], [/\beba\b|gari swallow/, 'eba'], [/\bfufu|\bakpu\b|\bfoufou/, 'fufu'], [/\bsemovita|\bsemo\b|semolina (swallow|fufu)/, 'semovita'],
@@ -25,6 +25,12 @@ const DISH_RULES: [RegExp, string][] = [
   [/beans porridge|\bewa riro/, 'beans_porridge'], [/yam porridge|\basaro|yam pottage/, 'yam_porridge'], [/ewa agoyin/, 'ewa_agoyin'], [/\basun\b/, 'asun'],
   [/^peppered snails?|\bigbin\b/, 'peppered_snail'], [/\bthieboudienne|\bjollof fish/, 'thieboudienne'], [/groundnut soup|peanut soup|\bmafe\b/, 'groundnut_soup'],
   [/\bogi\b|\bpap\b|\bakamu|\bkoko\b/, 'pap'], [/agege bread/, 'agege_bread'], [/\bdodo\b|plantain, (cooked|fried|ripe.*fried)|fried plantain|\balloco/, 'plantain'],
+  [/\bhummus|\bhoumous/, 'hummus'], [/\bbiryani|\bbiriyani/, 'biryani'], [/\bpad thai/, 'pad_thai'], [/^pho\b/, 'pho'],
+  [/^ramen\b/, 'ramen'], [/^lasagn/, 'lasagne'], [/\bspaghetti bolognese|spaghetti with meat sauce/, 'spaghetti_bolognese'], [/^mac(aroni)? (and|&|n) cheese/, 'mac_and_cheese'],
+  [/^caesar salad/, 'caesar_salad'], [/^greek salad/, 'greek_salad'], [/^guacamole/, 'guacamole'], [/\bbutter chicken|murgh makhani/, 'butter_chicken'], [/tikka masala/, 'tikka_masala'],
+  [/^paella/, 'paella'], [/^couscous\b/, 'couscous'], [/\bdoro wat|\bdoro wot/, 'doro_wat'], [/^shakshuka/, 'shakshuka'], [/^tagine|\btajine/, 'tagine'],
+  [/^chili con carne|^chilli con carne/, 'chili_con_carne'], [/^gyoza|^potstickers?/, 'gyoza'], [/^bibimbap/, 'bibimbap'], [/^nasi goreng/, 'nasi_goreng'], [/^pierogi/, 'pierogi'],
+  [/^moussaka/, 'moussaka'], [/^tabbouleh|^tabouli/, 'tabbouleh'], [/^miso soup/, 'miso_soup'], [/^tom yum/, 'tom_yum'], [/^jerk chicken/, 'jerk_chicken'],
   [/^yam\b|\byam, (cooked|boiled|tuber)/, 'yam'], [/\boats?\b|\boatmeal|\bporridge, oat/, 'oats'], [/\byogh?urt/, 'yogurt'], [/\btofu\b/, 'tofu'],
 ];
 
@@ -35,7 +41,7 @@ const NOT_PLAIN = /\b(with|and|&|sandwich|burger|pounder|pie|pies|soup|stew|curr
 const BRANDED = /\b[A-Z]{3,}\b/;
 
 // These are ordinary foods, so they follow the same "is it plainly this food?" check as everything else.
-const PLAIN_DISHES = new Set(['chicken_breast', 'chicken_wings', 'chicken_thigh', 'peanut_butter', 'cottage_cheese', 'almonds', 'salmon', 'tuna', 'scrambled_eggs', 'fried_egg', 'yam', 'oats', 'yogurt', 'tofu', 'plantain']);
+const PLAIN_DISHES = new Set(['chicken_breast', 'chicken_wings', 'chicken_thigh_raw', 'chicken_drumstick', 'peanut_butter', 'cottage_cheese', 'almonds', 'salmon', 'tuna', 'scrambled_eggs', 'fried_egg', 'yam', 'oats', 'yogurt', 'tofu', 'plantain']);
 // Cooking notes that don't change what the food looks like ("with skin", "fried in oil", "broilers or fryers").
 const NOTES = /\b(with|without|in) (added )?(cooking spray|[a-z]+ oil|oil|butter|margarine|animal fat|fat|salt|skin|bone|added solution)\b|\b(meat|skin|bone|flesh) and (skin|bone|meat|fat)\b|broilers? or fryers?|\bns as to [a-z ]+|\bor (raw|cooked|frozen)\b/g;
 
@@ -59,7 +65,9 @@ const ONLY: Record<string, { yes: RegExp; no?: RegExp }> = {
   salmon: { yes: /\b(raw|fresh|fillet)\b/, no: /\b(cooked|baked|grilled|fried|broiled|canned|steamed|poached|roasted|microwaved|dry heat|smoked|lox|gravlax|rock salmon|dogfish)\b/ },
   // The photo is grilled, sliced breast: not raw, stewed or casseroled.
   chicken_breast: { yes: /./, no: /\b(raw|uncooked|breaded|coated|fried|batter|deli|sliced|luncheon|canned|stewed|casseroled|poached|boiled)\b/ },
-  chicken_thigh: { yes: /\braw\b/, no: /\b(fried|coated|cooked|roasted|baked|stewed|grilled|from raw)\b/ },
+  chicken_thigh_raw: { yes: /\braw\b/, no: /\b(fried|coated|cooked|roasted|baked|stewed|grilled|from raw)\b/ },
+  // The photo is raw drumsticks.
+  chicken_drumstick: { yes: /\braw\b/, no: /\b(fried|coated|cooked|roasted|baked|broiled|stewed|grilled|rotisserie|sauteed|from raw)\b/ },
   shrimp: { yes: /./, no: /\b(raw|dried|dry|canned|paste|breaded|fried|kung pao)\b/ },
   cooked_rice: { yes: /\bwhite\b.*\b(cooked|boiled|steamed)\b|\b(cooked|boiled|steamed)\b.*\bwhite\b/, no: /\b(raw|uncooked|dry|flour|brown|wild|red|yellow|fried|beverage|cakes?)\b/ },
   potato: { yes: /\braw\b/, no: /\b(flour|flakes|powder|dehydrated|chips|fries)\b/ },
