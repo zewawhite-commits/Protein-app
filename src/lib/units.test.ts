@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { densityOf, measuresFor, suggestedUnits } from './units';
+import { densityOf, groupOf, measuresFor, suggestedUnits } from './units';
 import type { Food } from './types';
 
 const food = (name: string, portions: [string, number][], source: Food['source'] = 'usda-sr', category = ''): Food =>
@@ -23,7 +23,7 @@ describe('food-specific measurements', () => {
   });
   it('drinks get glass, can, bottle and litre; the record’s own cup wins', () => {
     const m = measuresFor(food('Orange juice', [['1 cup', 248]]));
-    expect(m.filter((x) => /cup/.test(x.label))).toHaveLength(1);
+    expect(m.filter((x) => /^1 cup/.test(x.label))).toHaveLength(1);
     expect(m.some((x) => x.label === '1 bottle (500 ml)')).toBe(true);
   });
   it('drops confusing source labels', () => {
@@ -36,5 +36,26 @@ describe('food-specific measurements', () => {
     expect(suggestedUnits('Grilled tilapia')).toContain('fillet');
     expect(suggestedUnits('Coconut rice')).toContain('cup');
     expect(suggestedUnits('Palm oil')).toContain('tbsp');
+  });
+});
+
+describe('category units', () => {
+  it('puts foods in the right group by their leading word', () => {
+    const g = (name: string) => groupOf({ name, category: '', source: 'usda-sr' } as never);
+    expect(g('Fish, tuna, light, canned in oil')).toBe('fish');
+    expect(g('Nuts, almonds, oil roasted')).toBe('nuts');
+    expect(g('Beans, white, mature seeds')).toBe('beans');
+    expect(g('Bagels, egg')).toBe('bread');
+    expect(g('Chicken curry')).toBe('soups');
+    expect(g('Almond milk, chocolate')).toBe('beverages');
+    expect(g('Eggplant, raw')).toBe('vegetables');
+    expect(g('Watermelon, raw')).toBe('fruit');
+    expect(g('Peanut butter, smooth')).toBe('spreads');
+  });
+  it('chicken gets no cups; eggs keep their weighed sizes; "2 scoop" offers 1 scoop', () => {
+    expect(measuresFor(food('Chicken breast, roasted', [['1 cup, chopped', 140], ['0.5 breast', 86]])).some((m) => /cup/.test(m.label))).toBe(false);
+    const egg = measuresFor(food('Egg, whole, raw', [['1 large', 50], ['1 medium', 44]]));
+    expect(egg.some((m) => !m.verified && /egg/.test(m.label))).toBe(false);
+    expect(measuresFor(food('Whey protein powder', [['2 scoop', 39]])).find((m) => m.label === '1 scoop')?.grams).toBe(19.5);
   });
 });

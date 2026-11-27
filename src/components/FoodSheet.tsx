@@ -1,4 +1,4 @@
-import { densityOf, measuresFor } from '@/lib/units';
+import { densityOf, measuresFor, groupOf, unitName, GROUP_NAMES } from '@/lib/units';
 import { CreateFood } from './CreateFood';
 import { useMealOptions } from '@/lib/meals';
 import { MealPicker } from './MealPicker';
@@ -46,6 +46,15 @@ type Unit = 'g' | 'kg' | 'ml' | 'L' | 'oz' | 'lb';
 const UNIT_G: Record<Unit, number> = { g: 1, kg: 1000, ml: 1, L: 1000, oz: 28.3495, lb: 453.592 };
 const UNIT_NAME: Record<Unit, string> = { g: 'grams', kg: 'kilograms', ml: 'millilitres', L: 'litres', oz: 'ounces', lb: 'pounds' };
 const UNIT_DP: Record<Unit, number> = { g: 1, kg: 1000, ml: 1, L: 1000, oz: 10, lb: 100 };
+const SIZE_WORDS = /\b(extra large|extra small|small|medium|large|jumbo|regular|any size|thin|thick|very thin|mini|miniature|baby)\b/gi;
+/** "1 medium breast" → "breast"; "small or thin/very thin slice" → "slice". */
+const unitKey = (label: string, noun = 'piece') => {
+  const k = unitName(label).replace(/\btablespoons?\b/gi, 'tbsp').replace(/\bteaspoons?\b/gi, 'tsp').replace(/^[\d.\/½¼¾]+\s*/, '').replace(SIZE_WORDS, '').replace(/\b(or|and)\b|\//gi, ' ').replace(/\s+/g, ' ').trim().toLowerCase();
+  return !k ? noun : /^(fl )?oz|^g$|^ml$/.test(k) ? unitName(label).toLowerCase() : k;
+};
+/** The size part of a label, for the size buttons ("medium", "4 oz", "1 cup chopped"). */
+const sizeName = (label: string) => { const m = unitName(label).match(SIZE_WORDS); return m ? m.join(' ') : unitName(label); };
+
 /** Grams in one of a unit. Volume uses the food's own density (oil is lighter than water, syrup heavier). */
 let DENSITY_NOW = 1;
 const gPer = (u: Unit) => (u === 'ml' || u === 'L' ? UNIT_G[u] * DENSITY_NOW : UNIT_G[u]);
@@ -81,7 +90,7 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
   // The amount typed, in the chosen unit; nutrition always uses grams.
   const dens = densityOf(food);
   DENSITY_NOW = dens?.gPerMl ?? 1;
-  const liquid = !!dens || isLiquid(food);
+  const liquid = groupOf(food) !== 'protein_powder' && ((!!dens && ['beverages', 'oils', 'sauces', 'soups', 'dairy', 'spreads', 'other', 'mixed'].includes(groupOf(food))) || isLiquid(food));
   const [unit, setUnitState] = useState<Unit>(() => { try { const u = localStorage.getItem('provora-unit') as Unit | null; return u === 'oz' || ((u === 'kg' || u === 'lb') && !liquid) || ((u === 'ml' || u === 'L') && liquid) ? u : 'g'; } catch { return 'g'; } });
   // What they had last time is their own number, so a new entry starts there (they can change it).
   const [usual] = useState(() => (entry ? null : lastAmount(useStore.getState().entries, food)));
@@ -138,8 +147,10 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
     : /\b(piece|wing|drumstick|thigh|leg|egg|slice|fillet|ball|whole|large|medium|small|extra large|jumbo|breast|steak|chop|link|patty|roll|bun|muffin|bar|biscuit|cookie|wrap)\b/i.test(label) ? 2 : 0);
   // Within the same kind, start at a medium/regular size and a single whole item ("1 breast", not "0.5 breast").
   const size = (l: string) => (/\bmedium|regular|any size\b/i.test(l) ? 2 : /^1 \w/.test(l) && !/\b(small|large|extra|jumbo)\b/i.test(l) ? 1 : /^0?\.\d|^0\.5/.test(l) ? -1 : 0);
-  const countable = measures.filter((p) => p.grams > 0).sort((a, b) => rank(b.label) - rank(a.label) || size(b.label) - size(a.label));
-  const pieceFirst = !!countable[0] && rank(countable[0].label) === 2;
+  const head = food.name.toLowerCase().split(/[ ,(]/)[0].replace(/(es|s)$/, '');
+  const named = (l: string) => (head.length > 2 && new RegExp(`\\b${head.replace(/[^a-z]/g, '')}`, 'i').test(unitName(l)) ? 1 : 0);
+  const countable = measures.filter((p) => p.grams > 0).sort((a, b) => named(b.label) - named(a.label) || rank(b.label) - rank(a.label) || size(b.label) - size(a.label));
+  const pieceFirst = !!countable[0] && (rank(countable[0].label) === 2 || named(countable[0].label) === 1);
   const usualCount = usual && countable[0] ? Math.round((usual / countable[0].grams) * 2) / 2 : null;
   const usualFits = !!usualCount && Math.abs(usualCount * countable[0].grams - usual!) < 1;
   const [byCount, setByCount] = useState(() => !entry && pieceFirst && (!usual || usualFits));
@@ -152,6 +163,13 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
   const portion = (portionIdx === -1 ? ownPortion : undefined) ?? countable[portionIdx] ?? countable[0] ?? ownPortion;
   const applyCount = (c: string, p = portion) => { setCount(c); const n = Number(c.replace(',', '.')); if (p && n >= 0) setGrams(toUnit(n * p.grams, unit)); };
   useEffect(() => { if (byCount && count && portion) applyCount(count); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  const noun = groupOf(food) === 'eggs' ? 'egg' : 'piece';
+  const key = (l: string) => unitKey(l, noun);
+  // The unit row: one button per kind of measure (breast, piece, cup…), sizes chosen after.
+  const unitKeys = useMemo(() => { const seen = new Map<string, number>(); countable.forEach((p, i) => { const k = key(p.label); if (k && !seen.has(k) && !(liquid && /^(litre|liter|l)$/.test(k))) seen.set(k, i); }); return [...seen.entries()]; }, [countable]); // eslint-disable-line react-hooks/exhaustive-deps
+  const sizes = byCount && portion && portionIdx !== -1 ? countable.map((p, i) => [p, i] as const).filter(([p]) => key(p.label) === key(portion.label)) : [];
+  const weightUnits: Unit[] = (() => { const base: Unit[] = liquid ? ['ml', 'L', 'g', 'oz'] : ['g', 'oz']; return base.includes(unit) ? base : [...base, unit]; })();
+  const weightChip = (u: Unit) => <button key={u} role="radio" aria-checked={!byCount && unit === u} onClick={() => { haptic(); setByCount(false); setUnit(u); }} className={cx('chip shrink-0', !byCount && unit === u && 'chip-on')}>{u}</button>;
   const bump = (d: number) => setG(Math.max(0, g + Math.sign(d) * ({ g: 5, ml: 5 * DENSITY_NOW, L: 50 * DENSITY_NOW, oz: 14.17, kg: 50, lb: 45.36 } as const)[unit]));
 
   async function onPhoto(file?: File) {
@@ -265,11 +283,20 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
             <span className="flex items-center gap-1.5 text-[14px] font-semibold text-silver"><Scale size={14} /> {weighHint}</span>
           </div>
         )}
-        {(
-          <div className="mb-4 flex justify-center">
-            <Segmented<'count' | 'weight'> value={byCount ? 'count' : 'weight'} onChange={(v) => { haptic(); setByCount(v === 'count'); if (v === 'count') applyCount(count || '1'); }} options={[{ value: 'count', label: pieceFirst ? 'How many' : 'Servings' }, { value: 'weight', label: 'Weight' }]} />
-          </div>
-        )}
+        {/* 1. Pick a unit: only the ones that fit this kind of food, then weight. */}
+        <div className="mb-1 flex items-center justify-between px-1">
+          <span className="text-[13px] font-semibold text-silver">Measure in</span>
+          <span className="text-[12px] text-dim">{GROUP_NAMES[groupOf(food)]}</span>
+        </div>
+        <div className="-mx-5 mb-4 flex gap-2 overflow-x-auto px-5 no-scrollbar" role="radiogroup" aria-label="Unit">
+          {weightChip(weightUnits[0])}
+          {unitKeys.map(([k, idx]) => {
+            const on = byCount && portionIdx !== -1 && key(countable[portionIdx]?.label ?? '') === k;
+            return <button key={k} role="radio" aria-checked={on} onClick={() => { haptic(); setByCount(true); setPortionIdx(idx); setOwnSize(''); applyCount(count || '1', countable[idx]); }} className={cx('chip shrink-0', on && 'chip-on')}>{k}</button>;
+          })}
+          {!countable.length && <button role="radio" aria-checked={byCount} onClick={() => { haptic(); setByCount(true); setPortionIdx(-1); }} className={cx('chip shrink-0', byCount && 'chip-on')}>serving</button>}
+          {weightUnits.slice(1).map(weightChip)}
+        </div>
         {byCount && !portion && (
           <div className="mx-auto max-w-[260px] text-center">
             <p className="text-sm text-silver">How much is one of your servings?</p>
@@ -278,26 +305,31 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
         )}
         {byCount && portion ? (
           <>
+            {/* 2. Which size, when the record has more than one (small / medium / large breast). */}
+            {sizes.length > 1 && (
+              <div className="-mx-5 mb-3 flex justify-center gap-2 overflow-x-auto px-5 no-scrollbar">
+                {sizes.map(([p, i]) => <button key={p.label} onClick={() => { haptic(); setPortionIdx(i); setOwnSize(''); applyCount(count || '1', p); }} className={cx('chip !h-8 shrink-0 !px-3 text-[13px]', i === portionIdx && 'chip-on')}>{sizeName(p.label)} <span className="opacity-60">{fmt(p.grams)}g</span></button>)}
+              </div>
+            )}
+            {/* 3. How many. */}
             <div className="flex items-center gap-3">
               <button onClick={() => applyCount(String(Math.max(0, (Number(count.replace(',', '.')) || 0) - (Number(count) > 1 ? 1 : 0.5))))} className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-raised" aria-label="One less"><Minus size={20} strokeWidth={2.6} /></button>
               <label className="flex flex-1 items-baseline justify-center gap-2">
                 <input inputMode="decimal" value={count} onChange={(e) => applyCount(e.target.value.replace(/[^\d.,]/g, ''))} onFocus={(e) => e.target.select()} placeholder="0" aria-label="How many" className="num min-w-0 bg-transparent text-center text-[56px] font-extrabold leading-none outline-none" style={{ width: `${Math.max(1, count.length) + 0.5}ch` }} />
-                <span className="text-xl font-semibold text-silver">× {portion.label.replace(/^1\s+/, '')}</span>
+                <span className="text-xl font-semibold text-silver">{portion === ownPortion ? 'serving' : unitName(portion.label)}</span>
               </label>
               <button onClick={() => applyCount(String((Number(count.replace(',', '.')) || 0) + 1))} className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-raised" aria-label="One more"><Plus size={20} strokeWidth={2.6} /></button>
             </div>
-            <p className="num mt-2 text-center text-[13px] text-silver">= {fmt(g)} g{portion.grams ? ` (${fmt(portion.grams)} g each)` : ''}</p>
+            <div className="-mx-1 mt-2 flex justify-center gap-1.5">
+              {['½', '1', '2', '3'].map((c) => <button key={c} onClick={() => { haptic(); applyCount(c === '½' ? '0.5' : c); }} className={cx('chip !h-8 !px-3 text-[13px]', (count === c || (c === '½' && count === '0.5')) && 'chip-on')}>{c}</button>)}
+            </div>
+            <p className="num mt-3 text-center text-[15px] font-bold">= {fmt(g)} g</p>
             <p className={cx('mx-auto mt-1 w-fit rounded-full px-2.5 py-0.5 text-center text-[12px] font-semibold', portion === ownPortion ? 'bg-raised text-silver' : portion.verified ? 'bg-accent/10 text-accent' : 'bg-warn/15 text-warn')}>
-              {portion === ownPortion ? 'Your own size' : portion.verified ? 'Verified size from the food record' : 'Estimated size: change it or weigh for accuracy'}
+              {portion === ownPortion ? 'Your own size' : portion.verified ? `Verified: ${fmt(portion.grams)} g each, from the food record` : `Estimated: about ${fmt(portion.grams)} g each. Weigh it or set your size`}
             </p>
-            <label className="mx-auto mt-2 flex w-fit items-center gap-2 text-[13px] text-silver">Your serving size<input inputMode="decimal" value={ownSize} onChange={(e) => { const v = e.target.value.replace(/[^\d.,]/g, ''); setOwnSize(v); const n2 = Number(v.replace(',', '.')); if (n2 > 0) { setPortionIdx(-1); setGrams(toUnit((Number(count.replace(',', '.')) || 1) * n2, unit)); } else setPortionIdx(0); }} className="field !h-9 !w-20 !px-2 text-center" aria-label="Your serving size in grams" placeholder="g" />g</label>
-            {countable.length > 1 && (
-              <div className="-mx-5 mt-3 flex gap-2 overflow-x-auto px-5 no-scrollbar">
-                {countable.map((p, i) => <button key={p.label} onClick={() => { setPortionIdx(i); setOwnSize(''); applyCount(count || '1', p); }} className={cx('chip shrink-0', i === portionIdx && 'chip-on')}>{p.label} <span className="opacity-60">{fmt(p.grams)}g{p.verified ? '' : ' · est.'}</span></button>)}
-              </div>
-            )}
+            <label className="mx-auto mt-2 flex w-fit items-center gap-2 text-[13px] text-silver">Your own size<input inputMode="decimal" value={ownSize} onChange={(e) => { const v = e.target.value.replace(/[^\d.,]/g, ''); setOwnSize(v); const n2 = Number(v.replace(',', '.')); if (n2 > 0) { setPortionIdx(-1); setGrams(toUnit((Number(count.replace(',', '.')) || 1) * n2, unit)); } else setPortionIdx(0); }} className="field !h-9 !w-20 !px-2 text-center" aria-label="Your serving size in grams" placeholder="g" />g each</label>
           </>
-        ) : (<>
+        ) : !byCount && (<>
         <div className="flex items-center gap-3">
           <button onClick={() => bump(-5)} className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-raised" aria-label="Less"><Minus size={20} strokeWidth={2.6} /></button>
           <label className="flex flex-1 items-baseline justify-center">
@@ -318,32 +350,27 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
           </label>
           <button onClick={() => bump(5)} className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-raised" aria-label="More"><Plus size={20} strokeWidth={2.6} /></button>
         </div>
-        <div className="mt-3 flex items-center justify-center gap-2">
-          <Segmented<Unit> value={unit} onChange={(u) => { haptic(); setUnit(u); }} options={(liquid ? ['g', 'ml', 'L', 'oz'] as Unit[] : ['g', 'kg', 'oz', 'lb'] as Unit[]).map((u) => ({ value: u, label: u }))} />
-          {unit !== 'g' && g > 0 && <span className="num text-[13px] text-silver">= {fmt(g)} g{unit === 'ml' || unit === 'L' ? ` (1 ml ≈ ${DENSITY_NOW} g)` : ''}</span>}
+        {unit !== 'g' && g > 0 && <p className="num mt-2 text-center text-[13px] text-silver">= {fmt(g)} g{unit === 'ml' || unit === 'L' ? ` (1 ml ≈ ${DENSITY_NOW} g)` : ''}</p>}
+        <div className="-mx-1 mt-3 flex justify-center gap-1.5">
+          {(unit === 'oz' ? [1, 3, 4, 6] : unit === 'ml' ? [100, 250, 330, 500] : unit === 'L' ? [0.5, 1, 1.5, 2] : unit === 'kg' ? [0.25, 0.5, 1] : unit === 'lb' ? [0.25, 0.5, 1] : [50, 100, 150, 200]).map((v) => (
+            <button key={v} onClick={() => { haptic(); setGrams(String(v)); }} className={cx('chip !h-8 !px-3 text-[13px]', grams === String(v) && 'chip-on')}>{v} {unit}</button>
+          ))}
         </div>
-        <div className="-mx-5 mt-4 flex gap-2 overflow-x-auto px-5 no-scrollbar">
+        </>)}
+        {/* Shortcuts that work whichever unit you picked. */}
+        <div className="-mx-5 mt-4 flex justify-center gap-2 overflow-x-auto px-5 no-scrollbar">
           {!!preset?.aiEstimate && !entry && (
-            <button onClick={() => { haptic(); setG(preset.aiEstimate!); }} className="chip shrink-0 border border-dashed border-accent !bg-accent/10 !text-accent" title="A rough guess from your photo — weigh for accuracy">
+            <button onClick={() => { haptic(); setByCount(false); setUnitState('g'); setGrams(String(preset.aiEstimate)); }} className="chip shrink-0 border border-dashed border-accent !bg-accent/10 !text-accent" title="A rough guess from your photo — weigh for accuracy">
               AI estimate ~{preset.aiEstimate}g
             </button>
           )}
           <SayAmount food={food} onGrams={(v) => { setByCount(false); setG(v); }} />
           {!!usual && (
-            <button onClick={() => { haptic(); setG(usual); }} className={cx('chip shrink-0', Math.round(g) === Math.round(usual) && 'chip-on')} title="The amount you logged last time">
+            <button onClick={() => { haptic(); setByCount(false); setG(usual); }} className={cx('chip shrink-0', !byCount && Math.round(g) === Math.round(usual) && 'chip-on')} title="The amount you logged last time">
               Last time {fmt(usual)}g
             </button>
           )}
-          {[50, 100, 150, 200].map((v) => (
-            <button key={v} onClick={() => setG(v)} className={cx('chip shrink-0', Math.round(g) === v && 'chip-on')}>{v}g</button>
-          ))}
-          {measures.map((p) => (
-            <button key={p.label} onClick={() => setG(p.grams)} className={cx('chip shrink-0', Math.round(g) === Math.round(p.grams) && 'chip-on')} title={p.verified ? 'Verified measure from the food record' : 'Estimated size'}>
-              {p.label} <span className="opacity-60">{fmt(p.grams)}g{p.verified ? '' : ' · est.'}</span>
-            </button>
-          ))}
         </div>
-        </>)}
       </div>
 
       {similar.length > 0 && onSwitchFood && !entry && (

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useStore } from '@/store/useStore';
 import type { CustomFood, Food, Per100, PrepState } from '@/lib/types';
 import { Segmented, Sheet, cx, fmt } from './ui';
-import { suggestedUnits } from '@/lib/units';
+import { GROUP_NAMES, groupOf, suggestedUnits } from '@/lib/units';
 import { haptic, toast } from './fx';
 
 const FIELDS: [keyof Per100, string, string][] = [
@@ -71,7 +71,7 @@ function Form({ from, onDone }: { from?: Food; onDone: (f?: Food) => void }) {
       </div>
       {name.trim().length >= 2 && (
         <div className="-mt-1 flex flex-wrap items-center gap-1.5" role="group" aria-label="Suggested serving units">
-          <span className="text-[12px] text-silver">Measured in:</span>
+          <span className="text-[12px] text-silver">{GROUP_NAMES[groupOf({ name, category: '', source: 'custom' })]} · measured in:</span>
           {suggestedUnits(name).filter((u) => u !== 'g').map((u) => <button key={u} type="button" onClick={() => setServingLabel(`1 ${u}`)} className={cx('chip !h-8 !px-3 text-[13px]', servingLabel === `1 ${u}` && 'chip-on')}>{u}</button>)}
           <span className="text-[12px] text-dim">then enter how many grams one weighs</span>
         </div>
