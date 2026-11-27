@@ -1,3 +1,4 @@
+import { measuresFor } from '@/lib/units';
 import { ShareRecipeSheet } from '@/components/ShareRecipe';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
@@ -39,6 +40,17 @@ export function recipePer100(ingredients: RecipeDef['ingredients'], cookedGrams:
 }
 
 /** Build or edit a homemade recipe: ingredients + cooked weight → nutrition per 100 g and per serving. */
+/** A sensible first amount: one whole item (1 banana, 1 egg) or a medium serving, else 100 g. */
+function startGrams(f: Food): number {
+  const ms = measuresFor(f).filter((m) => m.grams > 0 && m.grams <= 500);
+  const head = f.name.toLowerCase().split(/[ ,(]/)[0].replace(/(es|s)$/, '').replace(/[^a-z]/g, '');
+  const pick = ms.find((m) => head.length > 2 && new RegExp(`^1 (medium |large )?${head}`, 'i').test(m.label))
+    ?? ms.find((m) => /\b(medium|regular)\b/i.test(m.label) && !/slice|cup|tbsp|tsp/i.test(m.label))
+    ?? ms.find((m) => /^1 (tbsp|tablespoon)/i.test(m.label) && /honey|syrup|oil|butter|sauce|jam|spread|sugar/i.test(f.name))
+    ?? ms.find((m) => /^1 (piece|egg|fillet|breast|thigh|drumstick|wing|serving|portion|cup|bowl)\b/i.test(m.label));
+  return pick ? Math.round(pick.grams) : 100;
+}
+
 export default function RecipeBuilder() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
@@ -79,6 +91,30 @@ export default function RecipeBuilder() {
     const portion = dish.portions.find((p) => /medium|plate|wrap|bowl|portion|serving/.test(p.label));
     setServings(String(Math.max(1, Math.round(std.yieldGrams / (portion?.grams || std.yieldGrams / 4)))));
     setBase(title);
+  }, [db]); // eslint-disable-line react-hooks/exhaustive-deps
+  // While the name is the one we filled in, keep it matching what's added ("Oats with banana and honey").
+  const autoName = useRef(false);
+  useEffect(() => {
+    if (!autoName.current || !items.length) return;
+    const [first, ...rest] = items.map((i) => i.name.split(',')[0].toLowerCase());
+    const others = rest.length > 1 ? `${rest.slice(0, -1).join(', ')} and ${rest[rest.length - 1]}` : rest[0];
+    setName((first.charAt(0).toUpperCase() + first.slice(1) + (others ? ` with ${others}` : '')).slice(0, 60));
+  }, [items]);
+  // "Add something to it": start a meal from one food at the amount chosen (?with=<food id>&g=<grams>).
+  useEffect(() => {
+    const id = params.get('with');
+    if (!db || !id || existing || items.length) return;
+    const f = db.byId.get(id) ?? custom.find((c) => c.id === id);
+    if (!f) return;
+    const grams = Math.min(3000, Math.max(1, Number(params.get('g')) || 100));
+    const title = splitName(f.name).title;
+    setItems([{ foodId: f.id, name: title, grams, per100: f.per100 }]);
+    setName(title);
+    autoName.current = true;
+    setServings('1');
+    setUnitName('serving');
+    setBase(null);
+    toast(`${title} added. Now add what you put with it`);
   }, [db]); // eslint-disable-line react-hooks/exhaustive-deps
   // "Build this plate" from search: find each part, add it with a typical portion, all editable.
   const [missingParts, setMissingParts] = useState<string[]>([]);
@@ -121,7 +157,7 @@ export default function RecipeBuilder() {
 
   const add = (f: Food) => {
     haptic();
-    setItems((cur) => [...cur, { foodId: f.id, name: splitName(f.name).title, grams: f.portions[0]?.grams && f.portions[0].grams <= 500 ? Math.round(f.portions[0].grams) : 100, per100: f.per100 }]);
+    setItems((cur) => [...cur, { foodId: f.id, name: splitName(f.name).title, grams: startGrams(f), per100: f.per100 }]);
     setQ('');
   };
 
@@ -183,7 +219,7 @@ export default function RecipeBuilder() {
         </div>
       )}
       <label className="label" htmlFor="rb-name">Meal or recipe name</label>
-      <input id="rb-name" className="field" maxLength={60} placeholder="e.g. Seafood boil with eggs, homemade zobo" value={name} onChange={(e) => setName(e.target.value)} />
+      <input id="rb-name" className="field" maxLength={60} placeholder="e.g. Seafood boil with eggs, homemade zobo" value={name} onChange={(e) => { autoName.current = false; setName(e.target.value); }} />
 
       <p className="label mt-5">Ingredients</p>
       {items.length > 0 && (

@@ -387,6 +387,12 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
           ))}
         </div>
         </>)}
+        {/* Already have this food and want to add something to it (oats + banana + honey). */}
+        {!entry && (
+          <Link to={food.source === 'recipe' && standardRecipe(food.sourceNote) ? `/recipe?from=${encodeURIComponent(food.id)}` : `/recipe?with=${encodeURIComponent(food.id)}&g=${Math.round(g) || 100}`} onClick={onClose} className="mx-auto mt-4 flex w-fit items-center gap-1.5 rounded-full bg-raised px-4 py-2 text-[14px] font-semibold">
+            <Plus size={16} strokeWidth={2.6} /> Add something to it
+          </Link>
+        )}
         {/* Shortcuts that work whichever unit you picked. */}
         <div className="-mx-5 mt-4 flex justify-center gap-2 overflow-x-auto px-5 no-scrollbar">
           {!!preset?.aiEstimate && !entry && (
