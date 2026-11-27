@@ -171,7 +171,7 @@ const PHRASES: [RegExp, string][] = [
   [/\bchips\b(?! and)/, 'french fries'], [/\bcrisps\b/, 'potato chips'], [/\baubergine\b/, 'eggplant'], [/\bcoriander\b/, 'cilantro'],
   [/\b(agbalumo|udara|alasa)\b/, 'african star apple'], [/\bgarden eggs?\b/, 'eggplant fruit raw'], [/\bkilishi\b/, 'beef jerky'],
   [/\bsmall chops\b/, 'puff puff'], [/\bpawpaw\b/, 'papaya'], [/\bgroundnuts?\b(?! (soup|flour|oil))/, 'peanuts'], [/\bbambara nuts?\b/, 'bambara groundnut'],
-  [/\bswede\b/, 'rutabaga'], [/\bgarbanzo\b/, 'chickpeas'], [/\brocket\b/, 'arugula'], [/\bspring onions?\b/, 'scallions'],
+  [/\b(red |green |yellow |orange )?bell peppers?\b/, 'pepper sweet $1'], [/\bcapsicums?\b/, 'pepper sweet'], [/\bswede\b/, 'rutabaga'], [/\bgarbanzo\b/, 'chickpeas'], [/\brocket\b/, 'arugula'], [/\bspring onions?\b/, 'scallions'],
 ];
 
 /** One-word everyday names that mean a specific food. */

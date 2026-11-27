@@ -1,4 +1,8 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
+import { Plus, Search, Trash2 } from 'lucide-react';
+import { searchFoods, splitName } from '@/lib/foods';
+import { recipePer100 } from '@/lib/recipeMath';
+import type { RecipeDef } from '@/lib/types';
 import { useStore } from '@/store/useStore';
 import type { CustomFood, Food, Per100, PrepState } from '@/lib/types';
 import { Segmented, Sheet, cx, fmt } from './ui';
@@ -14,19 +18,94 @@ const FIELDS: [keyof Per100, string, string][] = [
  * Add your own food, or your own corrected version of one: the numbers from a pack label
  * (per serving or per 100 g) or from anywhere you trust. Saved to My foods; nothing else changes.
  */
-export function CreateFood({ open, onClose, from, onSaved }: { open: boolean; onClose: () => void; from?: Food | null; onSaved?: (f: Food) => void }) {
+export function CreateFood({ open, onClose, from, onSaved, initialName }: { open: boolean; onClose: () => void; from?: Food | null; onSaved?: (f: Food) => void; initialName?: string }) {
+  const [how, setHow] = useState<'numbers' | 'ingredients'>('numbers');
+  const done = (f?: Food) => { onClose(); setHow('numbers'); if (f) onSaved?.(f); };
   return (
     <Sheet open={open} onClose={onClose} title={from ? 'Your own version' : 'Create a food'}>
-      {open && <Form from={from ?? undefined} onDone={(f) => { onClose(); if (f) onSaved?.(f); }} />}
+      {open && !from && (
+        <div className="mb-3">
+          <Segmented<'numbers' | 'ingredients'> value={how} onChange={setHow} options={[{ value: 'numbers', label: 'I know the numbers' }, { value: 'ingredients', label: 'From ingredients' }]} />
+        </div>
+      )}
+      {open && (how === 'ingredients' && !from ? <FromIngredients initialName={initialName} onDone={done} /> : <Form from={from ?? undefined} initialName={initialName} onDone={done} />)}
     </Sheet>
   );
 }
 
-function Form({ from, onDone }: { from?: Food; onDone: (f?: Food) => void }) {
+/**
+ * Make a food from what's in it (a side, a sauce, a homemade snack): pick each ingredient from
+ * the database with its amount. Nutivili adds them up; nothing is estimated.
+ */
+function FromIngredients({ initialName, onDone }: { initialName?: string; onDone: (f?: Food) => void }) {
+  const upsert = useStore((s) => s.upsertCustomFood);
+  const custom = useStore((s) => s.customFoods);
+  const [name, setName] = useState(initialName ?? '');
+  const [q, setQ] = useState('');
+  const [items, setItems] = useState<RecipeDef['ingredients']>([]);
+  const [cooked, setCooked] = useState('');
+  const results = useMemo(() => (q.trim().length >= 2 ? searchFoods(q, { limit: 6, custom: custom.filter((c) => !c.archived) }) : []), [q, custom]);
+  const total = items.reduce((t, i) => t + i.grams, 0);
+  const weight = Number(cooked) > 0 ? Number(cooked) : total;
+  const per100 = items.length ? recipePer100(items, weight) : null;
+  const ok = name.trim().length >= 2 && items.length > 0 && total > 0;
+  function save() {
+    if (!ok || !per100) return;
+    const food = upsert({
+      name: name.trim().slice(0, 80), category: 'My foods', state: 'na', per100, portions: [{ label: '1 serving (all of it)', grams: Math.round(weight) }],
+      sourceNote: `Your recipe: ${items.map((i) => `${i.name} ${Math.round(i.grams)} g`).join(', ')}`.slice(0, 300),
+      recipe: { ingredients: items, cookedGrams: Math.round(weight), servings: 1 },
+    });
+    haptic();
+    toast(`Saved to My foods: ${food.name}`);
+    onDone(food);
+  }
+  return (
+    <div className="space-y-3 pb-2">
+      <input className="field" placeholder="Name, e.g. Mum’s coleslaw or Pepper sauce" value={name} onChange={(e) => setName(e.target.value)} aria-label="Food name" maxLength={80} />
+      <p className="text-[13px] text-silver">Add what's in it and how much of each. The nutrition is worked out from the database.</p>
+      {items.length > 0 && (
+        <div className="card divide-y divide-line p-1.5">
+          {items.map((it, i) => (
+            <div key={it.foodId + i} className="flex items-center gap-2 px-2 py-2">
+              <span className="min-w-0 flex-1 truncate text-[15px] font-semibold">{it.name}</span>
+              <input inputMode="decimal" aria-label={`Grams of ${it.name}`} className="num h-10 w-20 rounded-xl bg-raised px-2 text-right text-[15px] font-bold outline-none" value={it.grams || ''} onChange={(e) => { const g = Number(e.target.value.replace(/[^\d.]/g, '')) || 0; setItems((cur) => cur.map((x, k) => (k === i ? { ...x, grams: Math.min(g, 20000) } : x))); }} />
+              <span className="text-sm text-silver">g</span>
+              <button onClick={() => setItems((cur) => cur.filter((_, k) => k !== i))} className="grid h-9 w-9 place-items-center rounded-full text-silver" aria-label={`Remove ${it.name}`}><Trash2 size={17} /></button>
+            </div>
+          ))}
+        </div>
+      )}
+      <div className="relative">
+        <Search size={18} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-silver" />
+        <input className="field !pl-11" placeholder="+ Add an ingredient" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Search ingredients" />
+      </div>
+      {results.length > 0 && (
+        <div className="card p-1.5">
+          {results.map((f) => (
+            <button key={f.id} onClick={() => { haptic(); setItems((cur) => [...cur, { foodId: f.id, name: splitName(f.name).title, grams: 100, per100: f.per100 }]); setQ(''); }} className="flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-left active:bg-raised">
+              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-accent/10 text-accent"><Plus size={16} /></span>
+              <span className="min-w-0 flex-1 truncate text-[15px] font-semibold">{splitName(f.name).title}</span>
+            </button>
+          ))}
+        </div>
+      )}
+      {items.length > 1 && (
+        <label className="flex items-center justify-between gap-2 text-sm"><span className="font-semibold">Weight after cooking <span className="font-normal text-silver">(optional)</span></span><span className="relative"><input inputMode="numeric" className="field !h-10 !w-28 pr-8 text-right" placeholder={String(Math.round(total))} value={cooked} onChange={(e) => setCooked(e.target.value.replace(/\D/g, '').slice(0, 5))} aria-label="Weight after cooking" /><span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-silver">g</span></span></label>
+      )}
+      {per100 && (
+        <p className="num rounded-2xl bg-raised px-3 py-2 text-[13px]">All of it ({fmt(weight)} g): <b>{per100.kcal != null ? fmt((per100.kcal * weight) / 100) : '–'} kcal</b> · P {fmt((per100.protein * weight) / 100, 1)} g · C {per100.carbs != null ? fmt((per100.carbs * weight) / 100, 1) : '–'} g · F {per100.fat != null ? fmt((per100.fat * weight) / 100, 1) : '–'} g</p>
+      )}
+      <button disabled={!ok} onClick={save} className="btn-primary w-full">Save to My foods</button>
+    </div>
+  );
+}
+
+function Form({ from, onDone, initialName }: { from?: Food; onDone: (f?: Food) => void; initialName?: string }) {
   const upsert = useStore((s) => s.upsertCustomFood);
   const firstServing = from?.portions?.[0];
   const mine = from?.source === 'custom' ? (from as CustomFood) : undefined;
-  const [name, setName] = useState(mine ? from!.name : from ? `${from.name} (my version)` : '');
+  const [name, setName] = useState(mine ? from!.name : from ? `${from.name} (my version)` : initialName ?? '');
   const [state, setState] = useState<PrepState>(from?.state ?? 'na');
   const [basis, setBasis] = useState<'serving' | '100'>(from ? '100' : 'serving');
   const [servingLabel, setServingLabel] = useState(firstServing?.label ?? '1 serving');
