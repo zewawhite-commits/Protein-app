@@ -12,7 +12,7 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { RECIPES } from './recipes-world.mjs';
+import { RECIPES } from './recipes-global.mjs';
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const dest = join(root, 'public', 'data', 'foods.json');

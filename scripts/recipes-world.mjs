@@ -231,4 +231,4 @@ RECIPES.push(
   plate('Vegetable thali', 'Indian', [['rice', 200], ['Dal', 150], ['Aloo gobi', 120], ['Chana masala', 120], ['yogurt', 50]], [['1 thali', 640]], ['veg thali', 'vegetarian thali']),
 );
 
-export { RECIPES };
+export { RECIPES, K };

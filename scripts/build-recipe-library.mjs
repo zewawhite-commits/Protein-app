@@ -2,7 +2,7 @@
 // Ingredients and amounts come from recipes.mjs (official USDA/FAO records); method from recipe-steps.mjs.
 // Nutrition is read in the app from each dish's food record (same id), so numbers always match the diary.
 import { readFileSync, writeFileSync } from 'node:fs';
-import { RECIPES } from './recipes-world.mjs';
+import { RECIPES } from './recipes-global.mjs';
 import { STEPS } from './recipe-steps.mjs';
 
 const ids = JSON.parse(readFileSync(new URL('./recipe-ids.json', import.meta.url))).ids;

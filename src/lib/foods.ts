@@ -308,6 +308,9 @@ function searchTerms(terms: string[], opts: SearchOptions): Food[] {
   const phrase = terms.join(' ');
   const wantsRaw = terms.some((t) => /^(raw|uncooked|dry|dried|fresh|uncook)/.test(t));
   const scored: { f: Food; s: number }[] = [];
+  // One plain ingredient word ("apple", "rice"): the ingredient itself beats dishes made with it.
+  const t0 = terms.length === 1 ? terms[0].replace(/(es|s)$/, '') : '';
+  const isIngredient = !!t0 && pool.some((it) => it.food.source !== 'recipe' && new RegExp(`^${t0}(e?s)?,`).test(it.lower));
   for (const it of pool) {
     if (state !== 'all' && it.food.state !== state) continue;
     let score = 0;
@@ -329,7 +332,7 @@ function searchTerms(terms: string[], opts: SearchOptions): Food[] {
     if (it.food.source === 'custom') score += 8;
     if (quickPickIds.has(it.food.id)) score += 14;
     // A dish people ask for by name ("jollof rice", "moin moin") — not when the word is incidental ("toast" in beans on toast).
-    if (it.food.source === 'recipe' && (firstPos === 0 || firstPos >= it.nameWords)) score += 12;
+    if (it.food.source === 'recipe' && (firstPos === 0 || firstPos >= it.nameWords) && !(isIngredient && it.nameWords > 1)) score += 12;
     // The exact phrase appears in the name ("sesame seeds" → "Seeds, sesame seeds, whole", not sesame paste).
     if (terms.length > 1 && it.lower.includes(phrase)) score += 10;
     // Food tables name things the other way round: "brown rice" is "Rice, brown", "whole milk" is "Milk, whole".
