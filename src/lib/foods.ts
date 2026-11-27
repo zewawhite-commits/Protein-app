@@ -352,6 +352,8 @@ function searchTerms(terms: string[], opts: SearchOptions): Food[] {
     if (/\b(meatless|imitation|substitute|meat-free|soy-based)\b/.test(it.lower) && !terms.some((t) => /^(meatless|imitation|substitute|vegetarian|vegan|soy|plant)/.test(t))) score -= 12;
     if (PROCESSED_CATEGORIES.has(it.food.category)) score -= 10;
     if (PROCESSED_WORDS.test(it.lower)) score -= 5;
+    // Ready meals ("…with potatoes, vegetable, frozen meal") only when asked for.
+    if (/\b(frozen meal|tv dinner|frozen dinner|frozen entree|meals, entrees)\b/.test(it.lower) && !terms.some((t) => /^(frozen|meal|dinner|entree|tv)/.test(t))) score -= 15;
     if (/\b(meat only|skinless|boneless|lean)\b/.test(it.lower)) score += 3;
     // Meat, fish, grains and beans are eaten cooked: a raw record would understate a cooked portion.
     if (!wantsRaw && (it.food.state === 'raw' || it.food.state === 'dry') && EATEN_COOKED.test(it.lower)) score -= 8;
@@ -461,7 +463,7 @@ export function splitName(name: string): { title: string; detail: string } {
   let title = core[0];
   let rest = core.slice(1);
   // Only for one-word heads ("Chicken, breast"); multi-word heads are already natural ("Chicken thigh, skin eaten").
-  if (rest.length && rest[0].split(' ').length <= 2 && !title.includes(' ') && !/\d|%|\(/.test(rest[0])) {
+  if (rest.length && rest[0].split(' ').length <= 2 && !title.includes(' ') && !/\d|%|\(/.test(rest[0]) && !/^(with|and|in|on|or|without|from)\b/i.test(rest[0])) {
     const word = rest[0];
     const isPart = PART.test(word) || (/^egg$/i.test(title) && /^(white|yolk)$/i.test(word));
     // Cuts/parts follow the food ("Chicken breast"); descriptors lead it ("Greek yogurt", "White rice").

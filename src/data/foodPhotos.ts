@@ -10,6 +10,15 @@ import { photoMust } from './photoQueries';
 
 /** Dishes with a photo of their own, checked before the general illustration key. */
 const DISH_RULES: [RegExp, string][] = [
+  // Mixed dishes with their own photo (a plain biryani photo is wrong for chicken biryani).
+  [/^(chicken biryani|biryani with chicken)\b/, 'chicken_biryani'], [/^(vegetable biryani|biryani with vegetables?)\b/, 'vegetable_biryani'],
+  [/^(lamb|mutton|goat) biryani|^biryani with (lamb|mutton|goat)\b/, 'lamb_biryani'], [/^(chicken pad thai|pad thai with chicken)\b/, 'chicken_pad_thai'],
+  [/^(shrimp|prawn) pad thai|^pad thai with (shrimp|prawns?)\b/, 'shrimp_pad_thai'], [/^(meat lasagn\w*|lasagn\w* with meat|beef lasagn\w*)/, 'meat_lasagne'],
+  [/^(vegetable lasagn\w*|lasagn\w* with vegetables?|lasagn\w*, meatless)/, 'vegetable_lasagne'], [/^(chicken fried rice|fried rice with chicken)\b/, 'chicken_fried_rice'],
+  [/^(shrimp|prawn) fried rice|^fried rice with (shrimp|prawns?)\b/, 'shrimp_fried_rice'], [/^(beef pho|pho with beef|pho bo)\b/, 'beef_pho'], [/^(chicken pho|pho with chicken|pho ga)\b/, 'chicken_pho'],
+  [/^(beef tacos?|tacos? with beef)\b/, 'beef_tacos'], [/^(chicken tacos?|tacos? with chicken)\b/, 'chicken_tacos'],
+  [/^(spaghetti with meatballs|spaghetti and meatballs)\b/, 'spaghetti_meatballs'], [/^(chicken caesar salad|caesar salad with chicken)\b/, 'chicken_caesar_salad'],
+  [/^(jollof rice with chicken|chicken jollof)\b/, 'jollof_chicken'], [/^(rice and beans|rice with beans|beans and rice)\b/, 'rice_and_beans'],
   // Common foods that need their own photo (a whole roast chicken is wrong for "chicken breast").
   [/\bchicken\b.*\bbreast|\bbreast\b.*\bchicken/, 'chicken_breast'], [/\bchicken\b.*\bwings?\b|\bwings?\b.*\bchicken|^wings?\b/, 'chicken_wings'],
   [/\bchicken\b.*\bthighs?\b/, 'chicken_thigh_raw'], [/\bchicken\b.*\bdrumsticks?\b/, 'chicken_drumstick'], [/peanut butter|groundnut (paste|butter)/, 'peanut_butter'], [/cottage cheese/, 'cottage_cheese'],
@@ -39,6 +48,8 @@ const DISH_RULES: [RegExp, string][] = [
 // They get a plain tile rather than a photo of something else.
 const NOT_PLAIN = /\b(with|and|&|sandwich|burger|pounder|pie|pies|soup|stew|curry|salad|sauce|gravy|dip|chips|crisps|crackers?|biscuits?|cookies?|snacks?|pudding|mix|cakes?|nuggets?|fingers?|sticks?|patty|patties|balls?|rolls?|wraps?|frozen|flavou?r(ed)?|baby food|infant|formula|liver|giblets?|gizzards?|hearts?|kidneys?|feet|neck|tongue|tripe|blood|substitute|imitation|powder|extract|juice|drink|spread|fast food|restaurant|caterpillar|insects?|larvae|split|nectar|crumbs?|breadcrumbs|deviled|quiche|cacciatore|beverage|paper|wrapper|fishcakes?|sausages?|separable|bacon bits|croutons?|stuffing|dumplings?|filling|topping|syrup|candied|canned in syrup|dressing|flour|creole|mixed|shake|beverage|beverages|confectionery|cereals?|muffins?|granola|candy|chocolate[- ]coated|covered)\b| or /;
 const BRANDED = /\b[A-Z]{3,}\b/;
+// Keys whose photo shows the whole mixed dish, so "with" in the name is expected.
+const COMBO = new Set(['chicken_biryani', 'vegetable_biryani', 'lamb_biryani', 'chicken_pad_thai', 'shrimp_pad_thai', 'meat_lasagne', 'vegetable_lasagne', 'chicken_fried_rice', 'shrimp_fried_rice', 'beef_pho', 'chicken_pho', 'beef_tacos', 'chicken_tacos', 'spaghetti_meatballs', 'chicken_caesar_salad', 'jollof_chicken', 'rice_and_beans']);
 
 // These are ordinary foods, so they follow the same "is it plainly this food?" check as everything else.
 const PLAIN_DISHES = new Set(['chicken_breast', 'chicken_wings', 'chicken_thigh_raw', 'chicken_drumstick', 'peanut_butter', 'cottage_cheese', 'almonds', 'salmon', 'tuna', 'scrambled_eggs', 'fried_egg', 'yam', 'oats', 'yogurt', 'tofu', 'plantain']);
@@ -137,6 +148,7 @@ export function photoKeyFor(name: string, category?: string): string | undefined
   for (const [re, key] of DISH_RULES) {
     if (PLAIN_DISHES.has(key)) { if (re.test(n)) return plain && (re.test(main) || PLAIN_HEADS.test(main)) && onlyOk(key, n) ? key : undefined; continue; }
     // Named dishes: only when the dish is the food itself, not "fufu of plantain with palm oil".
+    if (COMBO.has(key)) { if (re.test(n)) return / of |\*/.test(n.split('(')[0]) || /\band\b.*\band\b|, with /.test(n) ? undefined : key; continue; }
     if (re.test(main)) return / of | with |\*/.test(n.split('(')[0]) || !onlyOk(key, n) ? undefined : key;
   }
   if (!plain) return undefined;
