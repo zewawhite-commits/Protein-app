@@ -54,7 +54,10 @@ export function VoiceSheet({ onClose, onSearch, date }: { onClose: () => void; o
   const [err, setErr] = useState('');
   const [lines, setLines] = useState<Line[]>([]);
   const [asking, setAsking] = useState<string | null>(null);
-  const [speak, setSpeak] = useState(() => { try { return localStorage.getItem('nutivili-voice-replies') !== 'off'; } catch { return true; } });
+  const [speak, setSpeak] = useState(() => { try { return localStorage.getItem('nutivili-voice-replies') === 'on'; } catch { return false; } });
+  // First time: ask whether they'd like answers spoken out loud or just written. Changeable any time.
+  const [chosen, setChosen] = useState(() => { try { return localStorage.getItem('nutivili-voice-replies') != null; } catch { return true; } });
+  const choose = (v: boolean) => { setSpeak(v); setChosen(true); if (!v) window.speechSynthesis?.cancel(); try { localStorage.setItem('nutivili-voice-replies', v ? 'on' : 'off'); } catch { /* ignore */ } };
   const rec = useRef<Recognizer | null>(null);
   const closed = useRef(false);
   const [meal, setMeal] = useState<Meal>(defaultMeal(mealForNow()));
@@ -272,11 +275,21 @@ export function VoiceSheet({ onClose, onSearch, date }: { onClose: () => void; o
         <div className="flex items-center justify-between gap-2">
           <p className="text-lg font-bold">Say what you ate</p>
           <div className="flex gap-2">
-            <button onClick={() => { const v = !speak; setSpeak(v); if (!v) window.speechSynthesis?.cancel(); try { localStorage.setItem('nutivili-voice-replies', v ? 'on' : 'off'); } catch { /* ignore */ } }} className="grid h-10 w-10 place-items-center rounded-full bg-surface" aria-label={speak ? 'Mute voice replies' : 'Turn voice replies on'}>{speak ? <Volume2 size={18} /> : <VolumeX size={18} />}</button>
+            <button onClick={() => choose(!speak)} className="flex h-10 items-center gap-1.5 rounded-full bg-surface px-3 text-[13px] font-semibold" aria-label={speak ? 'Answers are spoken. Switch to written only' : 'Answers are written. Switch to spoken'}>{speak ? <Volume2 size={17} /> : <VolumeX size={17} />}{speak ? 'Talk back' : 'Write back'}</button>
             <button onClick={close} className="grid h-10 w-10 place-items-center rounded-full bg-surface" aria-label="Close"><X size={18} /></button>
           </div>
         </div>
         <p className="mt-1 text-sm text-silver">For example: “two boiled eggs, a cup of rice and three chicken wings”. I’ll ask if I need to know how much.</p>
+        {!chosen && (
+          <div className="mt-4 rounded-2xl bg-surface p-4" style={{ boxShadow: 'var(--shadow)' }} role="group" aria-label="How should I answer you?">
+            <p className="font-bold">How should I answer you?</p>
+            <p className="mt-0.5 text-[13px] text-silver">You can change this any time with the button at the top.</p>
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <button onClick={() => choose(true)} className="btn-primary !h-11 text-[14px]"><Volume2 size={16} /> Talk back</button>
+              <button onClick={() => choose(false)} className="btn-ghost !h-11 text-[14px]"><VolumeX size={16} /> Write back</button>
+            </div>
+          </div>
+        )}
 
         <div className="my-5 grid place-items-center">
           <button disabled={!SR} onClick={() => (listening ? stopAll() : listen(asking && lines.some((l) => !l.food || l.grams == null) ? handler.current : understand))} className={cx('relative grid h-20 w-20 place-items-center rounded-full text-white transition disabled:opacity-40', listening ? 'bg-danger' : 'bg-primary')} aria-label={listening ? 'Stop listening' : 'Start listening'}>

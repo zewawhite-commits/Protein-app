@@ -1,3 +1,4 @@
+import { UpgradePrompt } from './UpgradePrompt';
 import { Logo } from './Logo';
 import { useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
@@ -52,6 +53,7 @@ export function Layout() {
       <main className="relative mx-auto max-w-lg px-5 pb-nav">
         <Outlet />
       </main>
+      <UpgradePrompt />
 
       {/* Bottom bar (phones and tablets) */}
       <div className="pointer-events-none fixed inset-x-0 bottom-0 z-30 h-32 bg-gradient-to-t from-bg via-bg/80 to-transparent" />

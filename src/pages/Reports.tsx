@@ -8,11 +8,13 @@ import { sumEntries, dailyGoal } from '@/lib/nutrition';
 import { dailyTargets } from '@/lib/energy';
 import { splitName } from '@/lib/foods';
 import { Segmented, cx, fmt } from '@/components/ui';
+import { downloadDailyReport } from '@/lib/dailyReport';
+import { fmtSleep } from '@/components/Sleep';
 
-type Period = 'week' | 'month' | 'year' | 'custom';
+type Period = 'day' | 'week' | 'month' | 'year' | 'custom';
 
 /** Start and end (inclusive) of the week (Mon–Sun) or month that is `offset` periods back. */
-function range(period: Exclude<Period, 'custom'>, offset: number): { from: string; to: string; label: string } {
+function range(period: Exclude<Period, 'custom' | 'day'>, offset: number): { from: string; to: string; label: string } {
   const now = fromKey(todayKey());
   if (period === 'week') {
     const monday = addDays(todayKey(), -((now.getDay() + 6) % 7) - offset * 7);
@@ -36,6 +38,7 @@ function range(period: Exclude<Period, 'custom'>, offset: number): { from: strin
 export default function Reports() {
   const nav = useNavigate();
   const [period, setPeriod] = useState<Period>('week');
+  const [day, setDay] = useState(todayKey());
   const [offset, setOffset] = useState(0);
   const st = useStore();
   // Custom: any dates they pick (defaults to the last 14 days); compared with the same number of days before.
@@ -43,8 +46,8 @@ export default function Reports() {
   const [to, setTo] = useState(todayKey());
   const fmtDay = (k: string) => fromKey(k).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
   const span = Math.max(1, Math.round((fromKey(to).getTime() - fromKey(from).getTime()) / 864e5) + 1);
-  const r = period === 'custom' ? { from, to, label: `${fmtDay(from)} – ${fmtDay(to)}` } : range(period, offset);
-  const prev = period === 'custom' ? { from: addDays(from, -span), to: addDays(from, -1), label: '' } : range(period, offset + 1);
+  const r = period === 'custom' ? { from, to, label: `${fmtDay(from)} – ${fmtDay(to)}` } : period === 'day' ? { from: day, to: day, label: fmtDay(day) } : range(period, offset);
+  const prev = period === 'custom' ? { from: addDays(from, -span), to: addDays(from, -1), label: '' } : period === 'day' ? { from: addDays(day, -1), to: addDays(day, -1), label: '' } : range(period, offset + 1);
 
   const report = useMemo(() => {
     const stats = (from: string, to: string) => {
@@ -55,12 +58,16 @@ export default function Reports() {
       const avg = (k: 'kcal' | 'protein' | 'carbs' | 'fat' | 'fiber') => (n ? totals.reduce((a, t) => a + (t[k] ?? 0), 0) / n : null);
       const water = Object.entries(st.water ?? {}).filter(([d]) => d >= from && d <= to).map(([, ml]) => ml).filter((ml) => ml > 0);
       const workouts = st.exercises.filter((e) => e.date >= from && e.date <= to);
+      const nights = Object.entries(st.sleep ?? {}).filter(([d]) => d >= from && d <= to).map(([, v]) => v.hours);
+      const stepDays = Object.entries(st.steps ?? {}).filter(([d]) => d >= from && d <= to).map(([, v]) => v.steps);
       const w = st.weights.filter((x) => x.date >= from && x.date <= to);
       const foods = new Map<string, number>();
       for (const list of days.values()) for (const e of list) foods.set(splitName(e.food.name).title, (foods.get(splitName(e.food.name).title) ?? 0) + 1);
       return {
         logged: n, kcal: avg('kcal'), protein: avg('protein'), carbs: avg('carbs'), fat: avg('fat'), fiber: avg('fiber'),
         water: water.length ? water.reduce((a, b) => a + b, 0) / water.length : null,
+        sleep: nights.length ? nights.reduce((a, b) => a + b, 0) / nights.length : null,
+        steps: stepDays.length ? stepDays.reduce((a, b) => a + b, 0) / stepDays.length : null,
         workouts: workouts.length, minutes: workouts.reduce((a, e) => a + e.minutes, 0), km: workouts.reduce((a, e) => a + (e.km ?? 0), 0),
         weightChange: w.length >= 2 ? w[w.length - 1].kg - w[0].kg : null, lastWeight: w.length ? w[w.length - 1].kg : null,
         top: [...foods.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5),
@@ -68,7 +75,7 @@ export default function Reports() {
       };
     };
     return { now: stats(r.from, r.to), before: stats(prev.from, prev.to) };
-  }, [st.entries, st.water, st.exercises, st.weights, st.profile, r.from, r.to, prev.from, prev.to]);
+  }, [st.entries, st.water, st.sleep, st.steps, st.exercises, st.weights, st.profile, r.from, r.to, prev.from, prev.to]);
 
   const targets = st.profile ? dailyTargets(st.profile, dailyGoal(st.profile)) : null;
   const length = Math.round((fromKey(r.to).getTime() - fromKey(r.from).getTime()) / 864e5) + 1;
@@ -84,10 +91,12 @@ export default function Reports() {
     ['Fat', now.fat == null ? '—' : `${fmt(now.fat)} g`, delta(now.fat, before.fat, ' g'), targets?.fat && now.fat ? now.fat / targets.fat : null],
     ['Fiber', now.fiber == null ? '—' : `${fmt(now.fiber)} g`, delta(now.fiber, before.fiber, ' g'), now.fiber ? now.fiber / 30 : null],
     ['Water', now.water == null ? '—' : `${fmt(now.water / 1000, 1)} L`, null, now.water ? now.water / waterGoal(st.profile?.bodyWeightKg, st.settings.waterGoalMl) : null],
+    ['Sleep', now.sleep == null ? '—' : fmtSleep(now.sleep), null, now.sleep ? now.sleep / (st.settings.sleepGoalH ?? 8) : null],
+    ['Steps', now.steps == null ? '—' : fmt(now.steps), null, now.steps ? now.steps / (st.settings.stepGoal ?? 8000) : null],
   ];
 
   const periodWord = period === 'custom' ? `${span} days` : period;
-  const kind = period === 'week' ? 'weekly' : period === 'month' ? 'monthly' : period === 'year' ? 'yearly' : 'custom';
+  const kind = period === 'day' ? 'daily' : period === 'week' ? 'weekly' : period === 'month' ? 'monthly' : period === 'year' ? 'yearly' : 'custom';
   /** A real PDF file saved to the phone (share sheet on phones, download on computers). */
   const savePdf = async () => {
     const { jsPDF } = await import('jspdf');
@@ -125,10 +134,17 @@ export default function Reports() {
       <header className="pt-safe flex items-center gap-3 pb-4 print:hidden">
         <button onClick={() => nav(-1)} className="grid h-11 w-11 place-items-center rounded-full bg-surface" style={{ boxShadow: 'var(--shadow)' }} aria-label="Back"><ArrowLeft size={20} /></button>
         <h1 className="flex-1 text-[26px] font-extrabold tracking-tight">Reports</h1>
-        <button onClick={() => void savePdf()} className="chip !h-10"><Download size={15} /> PDF</button>
+        <button onClick={() => void (period === 'day' ? downloadDailyReport(day) : savePdf())} className="chip !h-10"><Download size={15} /> PDF</button>
       </header>
-      <div className="print:hidden"><Segmented full value={period} onChange={(p) => { setPeriod(p); setOffset(0); }} options={[{ value: 'week', label: 'Weekly' }, { value: 'month', label: 'Monthly' }, { value: 'year', label: 'Yearly' }, { value: 'custom', label: 'Custom' }]} /></div>
+      <div className="print:hidden"><Segmented full value={period} onChange={(p) => { setPeriod(p); setOffset(0); }} options={[{ value: 'day', label: 'Daily' }, { value: 'week', label: 'Weekly' }, { value: 'month', label: 'Monthly' }, { value: 'year', label: 'Yearly' }, { value: 'custom', label: 'Custom' }]} /></div>
 
+      {period === 'day' && (
+        <div className="mt-4 print:hidden">
+          <label className="text-xs font-semibold text-silver">Day<input type="date" aria-label="Day" className="field mt-1" value={day} max={todayKey()} onChange={(e) => e.target.value && setDay(e.target.value)} /></label>
+          <button onClick={() => void downloadDailyReport(day)} className="btn-primary mt-3 w-full"><Download size={17} /> Download full daily report (PDF)</button>
+          <p className="mt-2 text-xs text-dim">Every food with amounts and macros, meal totals, all vitamins and minerals, water by time of day, sleep, steps, activities and weight.</p>
+        </div>
+      )}
       {period === 'custom' && (
         <div className="mt-4 grid grid-cols-2 gap-2 print:hidden">
           <label className="text-xs font-semibold text-silver">From<input type="date" aria-label="From" className="field mt-1" value={from} max={to} onChange={(e) => e.target.value && setFrom(e.target.value)} /></label>
@@ -136,9 +152,9 @@ export default function Reports() {
         </div>
       )}
       <div className="mt-4 flex items-center justify-between">
-        <button disabled={period === 'custom'} onClick={() => setOffset((o) => o + 1)} className="grid h-10 w-10 place-items-center rounded-full bg-surface print:hidden" aria-label="Previous"><ChevronLeft size={18} /></button>
+        <button disabled={period === 'custom'} onClick={() => (period === 'day' ? setDay((d) => addDays(d, -1)) : setOffset((o) => o + 1))} className="grid h-10 w-10 place-items-center rounded-full bg-surface print:hidden" aria-label="Previous"><ChevronLeft size={18} /></button>
         <p className="text-center font-bold">Nutivili AI {kind} report · {r.label}</p>
-        <button disabled={offset === 0 || period === 'custom'} onClick={() => setOffset((o) => Math.max(0, o - 1))} className="grid h-10 w-10 place-items-center rounded-full bg-surface disabled:opacity-30 print:hidden" aria-label="Next"><ChevronRight size={18} /></button>
+        <button disabled={period === 'day' ? day >= todayKey() : offset === 0 || period === 'custom'} onClick={() => (period === 'day' ? setDay((d) => addDays(d, 1)) : setOffset((o) => Math.max(0, o - 1)))} className="grid h-10 w-10 place-items-center rounded-full bg-surface disabled:opacity-30 print:hidden" aria-label="Next"><ChevronRight size={18} /></button>
       </div>
 
       {now.logged === 0 ? (

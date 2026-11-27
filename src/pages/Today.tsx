@@ -4,7 +4,7 @@ import { WaterCard } from '@/components/Water';
 import { Logo } from '@/components/Logo';
 import { useMemo, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Check, ChevronRight, Copy, Droplet, Drumstick, Flame, Plus, Wheat } from 'lucide-react';
+import { Check, ChevronRight, Copy, Download, Droplet, Drumstick, Flame, Plus, Wheat } from 'lucide-react';
 import { useStore, goalOn } from '@/store/useStore';
 import { useDay, useFoodLookup } from '@/lib/hooks';
 import { addDays, fromKey, relativeDay, todayKey, weekOf } from '@/lib/dates';
@@ -14,6 +14,7 @@ import { DV_NOTE, MacroBar, NutrientList } from '@/components/Nutrients';
 import type { Food, LogEntry } from '@/lib/types';
 import { SleepCard } from '@/components/Sleep';
 import { MovementCard } from '@/components/Movement';
+import { downloadDailyReport } from '@/lib/dailyReport';
 import type { HomeNutrient } from '@/lib/types';
 import { HomeInsights } from '@/components/HomeInsights';
 import { Pill, Ring, Sheet, cx, fmt } from '@/components/ui';
@@ -98,7 +99,7 @@ export default function Today() {
 
       <div className="mb-2 flex items-center justify-between px-1">
         <p className="text-[14px] font-semibold text-silver">{fromKey(date).toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}</p>
-        <Link to="/history?view=calendar" className="hit text-[14px] font-semibold text-accent">View all</Link>
+        <span className="flex items-center gap-4"><Link to="/planner" className="hit text-[14px] font-semibold text-accent">Week plan</Link><Link to="/history?view=calendar" className="hit text-[14px] font-semibold text-accent">View all</Link></span>
       </div>
       <WeekStrip date={date} onSelect={setDate} />
       {!isToday && (
@@ -155,6 +156,7 @@ export default function Today() {
       </div>
 
       <ExerciseList date={date} />
+      <button onClick={() => void downloadDailyReport(date)} className="btn-ghost mt-4 w-full"><Download size={16} /> Download this day’s full report</button>
       {isToday && !quietAi && <div className="mt-2"><Suggestions remaining={Math.max(0, goal - totals.protein)} kcalLeft={targets ? targets.kcal - totals.kcal : undefined} /></div>}
       <WaterCard date={date} />
       <SleepCard date={date} />

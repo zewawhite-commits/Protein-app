@@ -11,6 +11,8 @@ import { cx, fmt } from '@/components/ui';
 import { haptic, toast } from '@/components/fx';
 import { RecipeImport, type ImportResult } from '@/components/RecipeImport';
 import { standardRecipe } from '@/lib/recipe';
+import { CreateFood } from '@/components/CreateFood';
+import { mealForNow, todayKey } from '@/lib/dates';
 
 const KEYS = ['protein', 'kcal', 'fat', 'carbs', 'fiber', ...EXTRA_KEYS] as (keyof Per100)[];
 
@@ -52,6 +54,9 @@ export default function RecipeBuilder() {
   const [cooked, setCooked] = useState(existing?.recipe ? String(existing.recipe.cookedGrams) : '');
   const [servings, setServings] = useState(String(existing?.recipe?.servings ?? 2));
   const [q, setQ] = useState('');
+  const [creating, setCreating] = useState(false);
+  const [unitName, setUnitName] = useState(() => existing?.portions?.[0]?.label?.replace(/^1 /, '') ?? 'serving');
+  const addEntry = useStore((s) => s.addEntry);
   const [check, setCheck] = useState<ImportResult | null>(null);
   // "Make it your way": start from a world dish's standard recipe (?from=<food id>) and change it.
   const [base, setBase] = useState<string | null>(null);
@@ -96,18 +101,27 @@ export default function RecipeBuilder() {
     setQ('');
   };
 
-  function save() {
-    upsert({
+  /** Ingredients with a gap in the main numbers: saved as they are and flagged, never filled with zero. */
+  const gaps = items.filter((i) => i.per100.kcal == null || i.per100.carbs == null || i.per100.fat == null);
+  const portionsOf = (id: string) => (db?.byId.get(id) ?? custom.find((c) => c.id === id))?.portions ?? [];
+  function save(andLog = false) {
+    const food = upsert({
       id: existing?.id,
       name: name.trim(),
       category: 'My recipes',
       state: 'cooked',
       per100,
-      portions: [{ label: '1 serving', grams: Math.round(servingGrams) }],
+      portions: [{ label: `1 ${unitName.trim() || 'serving'}`, grams: Math.round(servingGrams) }],
       sourceNote: `My recipe, ${Math.round(cookedGrams)} g cooked: ${items.map((i) => `${Math.round(i.grams)} g ${i.name}`).join('; ')}`,
       recipe: { ingredients: items, cookedGrams: Math.round(cookedGrams), servings: nServings, ...(steps.trim() ? { steps: steps.split('\n').map((x) => x.trim()).filter(Boolean).slice(0, 40) } : {}) },
     });
-    toast(existing ? 'Recipe updated' : 'Recipe saved to My foods');
+    if (andLog && food) {
+      addEntry({ date: todayKey(), meal: mealForNow(), food, grams: Math.round(servingGrams) });
+      toast(`Saved, and 1 ${unitName.trim() || 'serving'} added to today`);
+      navigate('/', { replace: true });
+      return;
+    }
+    toast(existing ? 'Meal updated' : 'Saved to My foods');
     navigate('/add?tab=custom', { replace: true });
   }
 
@@ -115,7 +129,7 @@ export default function RecipeBuilder() {
     <div className="mx-auto min-h-dvh max-w-lg animate-fade-up px-5 pb-16">
       <header className="pt-safe flex items-center gap-3 pb-4">
         <button onClick={() => navigate(-1)} className="grid h-11 w-11 place-items-center rounded-full bg-surface" style={{ boxShadow: 'var(--shadow)' }} aria-label="Back"><ArrowLeft size={20} /></button>
-        <h1 className="flex-1 text-[26px] font-extrabold tracking-tight">{existing ? 'Edit recipe' : 'New recipe'}</h1>
+        <h1 className="flex-1 text-[26px] font-extrabold tracking-tight">{existing ? 'Edit meal' : base ? 'Make it your way' : 'Build your meal'}</h1>
         {existing && <button onClick={() => setShare(true)} className="chip !h-10"><Share2 size={15} /> Share</button>}
       </header>
       {existing && <ShareRecipeSheet food={existing} open={share} onClose={() => setShare(false)} />}
@@ -137,18 +151,30 @@ export default function RecipeBuilder() {
           <p className="mt-1 text-silver">Weigh the finished pot and enter the cooked weight for the most accurate numbers.</p>
         </div>
       )}
-      <label className="label" htmlFor="rb-name">Recipe name</label>
-      <input id="rb-name" className="field" maxLength={60} placeholder="e.g. Mum’s chicken stew" value={name} onChange={(e) => setName(e.target.value)} />
+      <label className="label" htmlFor="rb-name">Meal or recipe name</label>
+      <input id="rb-name" className="field" maxLength={60} placeholder="e.g. Seafood boil with eggs, homemade zobo" value={name} onChange={(e) => setName(e.target.value)} />
 
       <p className="label mt-5">Ingredients</p>
       {items.length > 0 && (
         <div className="card mb-3 divide-y divide-line p-1.5">
           {items.map((it, i) => (
-            <div key={i} className="flex items-center gap-2 px-2.5 py-2">
+            <div key={i} className="px-2.5 py-2">
+            <div className="flex items-center gap-2">
               <p className="min-w-0 flex-1 truncate text-[15px] font-semibold">{it.name}</p>
+              {portionsOf(it.foodId).length > 0 && (
+                <select aria-label={`Portion of ${it.name}`} value="" onChange={(e) => { const g = Number(e.target.value); if (g > 0) setItems((cur) => cur.map((x, k) => (k === i ? { ...x, grams: Math.round(g) } : x))); }} className="h-10 max-w-[6.5rem] rounded-xl bg-raised px-1.5 text-[13px] font-semibold">
+                  <option value="">Units…</option>
+                  {portionsOf(it.foodId).slice(0, 8).map((p) => <option key={p.label} value={p.grams}>{p.label} ({Math.round(p.grams)} g)</option>)}
+                </select>
+              )}
               <input inputMode="decimal" aria-label={`Grams of ${it.name}`} className="num h-10 w-20 rounded-xl bg-raised px-2 text-right text-[15px] font-bold outline-none" value={it.grams || ''} onChange={(e) => { const g = Number(e.target.value.replace(/[^\d.]/g, '')) || 0; setItems((cur) => cur.map((x, k) => (k === i ? { ...x, grams: Math.min(g, 20000) } : x))); }} />
               <span className="text-sm text-silver">g</span>
               <button onClick={() => setItems((cur) => cur.filter((_, k) => k !== i))} className="grid h-9 w-9 place-items-center rounded-full text-dim" aria-label={`Remove ${it.name}`}><Trash2 size={16} /></button>
+            </div>
+            <p className="num mt-0.5 text-[12px] text-silver">
+              {it.per100.kcal == null ? <span className="text-warn">no calorie data</span> : `${fmt((it.per100.kcal * it.grams) / 100)} kcal`} · {fmt((it.per100.protein * it.grams) / 100, 1)} g protein
+              {it.per100.carbs != null && ` · ${fmt((it.per100.carbs * it.grams) / 100, 1)} g carbs`}{it.per100.fat != null && ` · ${fmt((it.per100.fat * it.grams) / 100, 1)} g fat`}
+            </p>
             </div>
           ))}
         </div>
@@ -170,6 +196,8 @@ export default function RecipeBuilder() {
           ))}
         </div>
       )}
+      <button onClick={() => setCreating(true)} className="mt-2 w-full rounded-2xl bg-raised px-4 py-3 text-left text-[14px]"><span className="text-silver">Can’t find this food?</span> <span className="font-semibold text-accent">+ Create your own food</span></button>
+      <CreateFood open={creating} onClose={() => setCreating(false)} onSaved={(f) => add(f)} />
       <p className="mt-2 text-xs text-dim">Weigh each ingredient as you add it to the pot (raw meat as “raw”, dry rice as “dry”). Don’t forget oil and butter.</p>
 
       <div className="mt-5 grid grid-cols-2 gap-3">
@@ -181,9 +209,14 @@ export default function RecipeBuilder() {
           </div>
         </div>
         <div>
-          <label className="label" htmlFor="rb-serv">Servings</label>
+          <label className="label" htmlFor="rb-serv">How many {unitName.trim() || 'servings'}?</label>
           <input id="rb-serv" inputMode="numeric" className="field" value={servings} onChange={(e) => setServings(e.target.value.replace(/\D/g, '').slice(0, 2))} />
         </div>
+      </div>
+      <label className="label mt-3" htmlFor="rb-unit">Serving is a…</label>
+      <div className="flex flex-wrap gap-1.5">
+        {['serving', 'plate', 'bowl', 'bottle', 'glass', 'cup', 'piece', 'slice'].map((u) => <button key={u} onClick={() => setUnitName(u)} className={cx('chip !h-9 !px-3 text-[13px]', unitName === u && 'chip-on')}>{u}</button>)}
+        <input id="rb-unit" className="field !h-9 !w-28 text-[13px]" maxLength={20} value={unitName} onChange={(e) => setUnitName(e.target.value)} aria-label="Serving name" />
       </div>
       <p className="mt-2 text-xs text-dim">Weigh the finished dish (pot on the scale, minus the empty pot). Food loses or gains water as it cooks, so this makes the numbers right. Left blank, we use the ingredients’ total weight.</p>
 
@@ -192,7 +225,7 @@ export default function RecipeBuilder() {
           <p className="text-[17px] font-bold">Nutrition</p>
           <div className="mt-3 grid grid-cols-[1fr_auto_auto] gap-x-5 gap-y-2 text-[15px]">
             <span className="text-xs font-semibold uppercase tracking-wide text-dim" />
-            <span className="text-right text-xs font-semibold uppercase tracking-wide text-dim">Per serving ({fmt(servingGrams)} g)</span>
+            <span className="text-right text-xs font-semibold uppercase tracking-wide text-dim">Per {unitName.trim() || 'serving'} ({fmt(servingGrams)} g)</span>
             <span className="text-right text-xs font-semibold uppercase tracking-wide text-dim">Per 100 g</span>
             {([['Calories', 'kcal', ' kcal'], ['Protein', 'protein', ' g'], ['Carbs', 'carbs', ' g'], ['Fat', 'fat', ' g'], ['Fibre', 'fiber', ' g']] as const).map(([label, k, u]) => (
               <div key={k} className="contents">
@@ -202,13 +235,16 @@ export default function RecipeBuilder() {
               </div>
             ))}
           </div>
-          <p className="mt-3 text-xs leading-relaxed text-dim">Calculated from each ingredient’s database record × its weight, divided by the cooked weight. Change any amount and it recalculates.</p>
+          <p className="mt-3 text-xs leading-relaxed text-dim">Calculated from each ingredient’s record: grams ÷ 100 × value per 100 g, added up, divided by the cooked weight. Change any amount and it recalculates.</p>
+          {gaps.length > 0 && <p className="mt-2 rounded-2xl bg-warn/15 px-3 py-2 text-[13px] leading-relaxed"><b>Incomplete nutrition:</b> {gaps.map((g) => g.name).join(', ')} {gaps.length === 1 ? 'has' : 'have'} missing values. You can still save; totals marked “–” are unknown, not zero. Open the ingredient and add its numbers to complete it.</p>}
         </div>
       )}
 
       <label className="label mt-5" htmlFor="rb-steps">Method (optional)</label>
       <textarea id="rb-steps" value={steps} onChange={(e) => setSteps(e.target.value)} rows={5} maxLength={6000} placeholder={'One step per line\n1. Wash the rice…'} className="field !h-auto resize-y py-3 text-[15px]" />
-      <button onClick={save} disabled={!valid} className="btn-primary mt-6 w-full">{existing ? 'Save changes' : 'Save recipe'}</button>
+      <button onClick={() => save(true)} disabled={!valid} className="btn-primary mt-6 w-full">Save and add 1 {unitName.trim() || 'serving'} to today</button>
+      <button onClick={() => save(false)} disabled={!valid} className="btn-ghost mt-2 w-full">{existing ? 'Save changes' : 'Save to My foods'}</button>
+      {base && <p className="mt-2 text-center text-xs text-dim">The original {base} stays as it is; this saves as your own meal.</p>}
       {existing && (
         <button onClick={() => { if (confirm('Delete this recipe? Meals you already logged with it stay in your history.')) { archive(existing.id, true); toast('Recipe deleted'); navigate('/add?tab=custom', { replace: true }); } }} className="mt-3 w-full text-sm font-semibold text-danger">Delete recipe</button>
       )}

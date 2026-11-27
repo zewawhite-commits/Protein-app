@@ -20,7 +20,7 @@ export function ProMore() {
   if (has) return null;
   return (
     <Link to="/premium?tier=pro" className="mt-6 flex items-center gap-3 rounded-2xl px-4 py-3 text-[14px] text-silver transition active:bg-raised">
-      <span className="min-w-0 flex-1"><b className="text-ink">Plus adds four reports here:</b> a weekly progress report, calorie targets that adjust as your weight changes, which vitamins and minerals you’re often short of (and foods that fix it), and how your eating changes across the week.</span>
+      <span className="min-w-0 flex-1"><b className="text-ink">Plus adds:</b> the AI coach to review your week and answer questions about these charts, unlimited AI scans, the weekly meal planner with grocery lists, and personalised meal plans, recipes and workouts.</span>
       <ChevronRight size={16} className="shrink-0 text-dim" />
     </Link>
   );

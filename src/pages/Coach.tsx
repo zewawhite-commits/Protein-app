@@ -1,3 +1,4 @@
+import { EXERCISES, activityName, burnedKcal, completedActivities, type SaidExercise } from '@/lib/exercise';
 import { crisisReply } from '@/lib/safety';
 import { utter } from '@/lib/voice';
 import { FoodVisual } from '@/components/FoodIcon';
@@ -29,7 +30,7 @@ import { Segmented, Sheet, cx, fmt } from '@/components/ui';
 import { PlanView } from '@/components/PlanView';
 import { APP_NAME, haptic, toast } from '@/components/fx';
 
-interface Msg extends ChatTurn { streaming?: boolean; updates?: ProfileUpdate[]; applied?: boolean; foods?: CoachFood[]; error?: boolean; premium?: boolean; signIn?: boolean; thumb?: string; fromPhoto?: boolean }
+interface Msg extends ChatTurn { activities?: SaidExercise[]; streaming?: boolean; updates?: ProfileUpdate[]; applied?: boolean; foods?: CoachFood[]; error?: boolean; premium?: boolean; signIn?: boolean; thumb?: string; fromPhoto?: boolean }
 interface Pending { data: string; mediaType: 'image/jpeg'; thumb: string }
 
 /** Apply changes the person confirmed in the chat to their profile. */
@@ -121,6 +122,20 @@ export function useCoachContext(): CoachContext {
       const wp = JSON.parse(localStorage.getItem('nutivili-workout-prefs') ?? 'null') as { daysPerWeek?: number; minutes?: number; place?: string; level?: string; focus?: string } | null;
       if (wp?.daysPerWeek) progress.push(`Workout preferences: ${wp.daysPerWeek} days a week, ${wp.minutes} min, ${wp.place}, ${wp.level}${wp.focus ? `; notes: ${wp.focus.slice(0, 120)}` : ''}.`);
     } catch { /* none */ }
+    // The person's whole recent history, so the coach answers from facts, not guesses.
+    // Facts = what they logged; "~" = an estimate; anything not logged is said to be missing.
+    const from30 = addDays(todayKey(), -30);
+    const fdays = new Map<string, { k: number; p: number }>();
+    for (const e of allEntries) if (e.date > from30 && !e.planned) { const d = fdays.get(e.date) ?? { k: 0, p: 0 }; d.k += ((e.food.per100.kcal ?? 0) * e.grams) / 100; d.p += (e.food.per100.protein * e.grams) / 100; fdays.set(e.date, d); }
+    if (fdays.size) { const v = [...fdays.values()]; progress.push(`Last 30 days (fact): food logged on ${fdays.size} days, averaging ${Math.round(v.reduce((a, x) => a + x.k, 0) / v.length)} kcal and ${Math.round(v.reduce((a, x) => a + x.p, 0) / v.length)} g protein on those days; the other ${30 - fdays.size} days have no food logged (missing, not zero).`); }
+    const wat = Object.entries(st.water ?? {}).filter(([d, ml]) => d > addDays(todayKey(), -7) && ml > 0);
+    progress.push(wat.length ? `Water, last 7 days: logged on ${wat.length} days, average ${(wat.reduce((a, [, ml]) => a + ml, 0) / wat.length / 1000).toFixed(1)} L; today ${((st.water?.[todayKey()] ?? 0) / 1000).toFixed(2)} L.` : 'Water: not logged in the last 7 days.');
+    const sl = Object.entries(st.sleep ?? {}).filter(([d]) => d > addDays(todayKey(), -7));
+    progress.push(sl.length ? `Sleep, last 7 days: ${sl.length} nights logged, average ${(sl.reduce((a, [, x]) => a + x.hours, 0) / sl.length).toFixed(1)} h${st.sleep?.[todayKey()] ? `; last night ${st.sleep[todayKey()].hours} h${st.sleep[todayKey()].quality ? `, felt ${st.sleep[todayKey()].quality}` : ''}` : ''}.` : 'Sleep: not logged in the last 7 days.');
+    const stp = Object.entries(st.steps ?? {}).filter(([d]) => d > addDays(todayKey(), -7));
+    if (stp.length) progress.push(`Steps, last 7 days: ${stp.length} days logged, average ${Math.round(stp.reduce((a, [, x]) => a + x.steps, 0) / stp.length)} a day${st.steps?.[todayKey()] ? `; today ${st.steps[todayKey()].steps}` : ''}.`);
+    const acts = st.exercises.filter((x) => x.date > addDays(todayKey(), -14)).sort((a, b) => b.date.localeCompare(a.date)).slice(0, 12);
+    if (acts.length) progress.push(`Activities, last 14 days: ${acts.map((x) => `${x.date} ${activityName(x)} ${x.minutes} min${x.km ? ` ${x.km} km` : ''} (${x.manual ? '' : '~'}${Math.round(x.kcal)} kcal)`).join('; ')}.`);
     const lastLog = useStore.getState().workoutLogs.at(-1);
     if (lastLog) progress.push(`Last workout (${lastLog.date}): ${lastLog.name}, ${lastLog.minutes} min — ${lastLog.exercises.slice(0, 5).map((e) => e.name).join(', ')}.`);
     return { recentFoods, progress };
@@ -240,7 +255,8 @@ function Chat() {
     haptic();
     // Earlier photos aren't re-sent; the text notes that one was there.
     const history = [...msgs.filter((m) => !m.error).map((m) => (m.thumb ? { ...m, content: `[photo] ${m.content}` } : m)), { role: 'user' as const, content: q }];
-    setMsgs([...msgs, { role: 'user', content: q, thumb: photo?.thumb }]);
+    const did = completedActivities(q);
+    setMsgs([...msgs, { role: 'user', content: q, thumb: photo?.thumb, ...(did.length ? { activities: did } : {}) }]);
     setText('');
     setPending(null);
     // Safety first, even offline or without coach access: a fixed reply with real helplines.
@@ -350,6 +366,7 @@ function Chat() {
             <div className="flex max-w-[85%] flex-col items-end gap-1.5">
               {m.thumb && <img src={m.thumb} alt="Your photo" className="h-40 w-40 rounded-[22px] object-cover" />}
               <p className="whitespace-pre-wrap rounded-[22px] rounded-br-md bg-primary px-4 py-2.5 text-[15px] text-on-primary">{m.content}</p>
+              {m.activities && <SaveActivities items={m.activities} />}
             </div>
           </div>
         ) : (
@@ -497,6 +514,24 @@ function FoodCards({ foods, onOpen, estimate }: { foods: CoachFood[]; onOpen: (f
         );
       })}
       <p className="px-2 pb-1 pt-1 text-[12px] text-dim">Numbers from USDA / FAO records for the portion shown. Tap to log your real weight.</p>
+    </div>
+  );
+}
+
+/** "You walked 40 min — save it?" under a chat message that says an activity was done. No duplicates. */
+function SaveActivities({ items }: { items: SaidExercise[] }) {
+  const add = useStore((s) => s.addExercise);
+  const exercises = useStore((s) => s.exercises);
+  const kg = useStore((s) => (s.weights.length ? s.weights[s.weights.length - 1].kg : s.profile?.bodyWeightKg ?? 70));
+  const today = todayKey();
+  const saved = (x: SaidExercise) => exercises.some((e) => e.date === today && e.type === x.type && e.minutes === x.minutes);
+  const left = items.filter((x) => !saved(x));
+  if (!left.length) return <p className="text-[12px] text-silver">Saved to today’s activity ✓</p>;
+  return (
+    <div className="w-full rounded-2xl bg-surface p-3 text-left" style={{ boxShadow: 'var(--shadow)' }}>
+      <p className="text-[13px] font-semibold">Save to today’s activity?</p>
+      <p className="text-[13px] text-silver">{left.map((x) => `${EXERCISES[x.type!].label}, ${x.minutes} min${x.km ? `, ${x.km} km` : ''}`).join(' · ')}</p>
+      <button onClick={() => { for (const x of left) add({ date: today, type: x.type!, intensity: x.intensity, minutes: x.minutes!, kcal: burnedKcal(x.type!, x.intensity, x.minutes!, kg), ...(x.km ? { km: x.km } : {}), source: 'coach' }); haptic(15); toast('Activity saved (calories are an estimate)'); }} className="chip chip-on mt-2 !h-8 !px-3 text-[13px]">Save</button>
     </div>
   );
 }

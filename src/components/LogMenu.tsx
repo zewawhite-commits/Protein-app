@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bookmark, Camera, Mic, ChefHat, ScanText, Dumbbell, PenLine, ScanBarcode, Search, Trash2, PlusSquare, Footprints, BookOpen } from 'lucide-react';
+import { Bookmark, Camera, Mic, ChefHat, ScanText, Dumbbell, PenLine, ScanBarcode, Search, Trash2, PlusSquare, Footprints, BookOpen, Layers } from 'lucide-react';
 import { StepsSheet } from './Movement';
 import { useStore } from '@/store/useStore';
 import { todayKey } from '@/lib/dates';
@@ -30,6 +30,7 @@ export function LogMenu({ open, onClose, date }: { open: boolean; onClose: () =>
     ] },
     { title: 'Your food', items: [
       { icon: PlusSquare, label: 'Custom food', sub: 'Your own numbers', to: `/add?create=1${q ? `&${q.slice(1)}` : ''}` },
+      { icon: Layers, label: 'Build a meal', sub: 'Add items, see totals', to: '/recipe' },
       { icon: ChefHat, label: 'Recipes', sub: 'Make, import & share', to: `/add?tab=custom${q ? `&${q.slice(1)}` : ''}` },
     ] },
     { title: 'Activity', items: [

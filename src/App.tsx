@@ -24,6 +24,7 @@ import Profile from './pages/Profile';
 import Onboarding from './pages/Onboarding';
 
 const Insights = lazy(() => import('./pages/Insights'));
+const Planner = lazy(() => import('./pages/Planner'));
 const Admin = lazy(() => import('./pages/Admin'));
 const Owner = lazy(() => import('./pages/Owner'));
 const Landing = lazy(() => import('./pages/Landing'));
@@ -77,6 +78,7 @@ export default function App() {
           <Route index element={<Today />} />
           <Route path="history" element={<History />} />
           <Route path="insights" element={<Insights />} />
+          <Route path="planner" element={<Planner />} />
           <Route path="coach" element={<Coach />} />
           <Route path="groups" element={<Groups />} />
           <Route path="feed" element={<Feed />} />

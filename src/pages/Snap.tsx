@@ -814,6 +814,7 @@ function Camera({ onClose, onCapture, onCaptureMany, mode, onMode, onBarcode, on
       )}
 
       <div className="absolute inset-x-0 bottom-0" style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 2rem)' }}>
+      <ScansLeft />
       {mode === 'menu' && (
         <div className="mb-3 flex justify-center"><button onClick={() => setLinkOpen(true)} className="rounded-full bg-white/15 px-4 py-2 text-sm font-semibold backdrop-blur-md">QR code or menu link</button></div>
       )}
@@ -1239,6 +1240,25 @@ function QuickResult({ matches, photoUrl, quality, note, onClose, onRetake, onFi
         <button onClick={() => onFix(servings)} className="btn-ghost flex-1 !border-2 !border-line"><Pencil size={16} /> Fix results</button>
         <button onClick={() => (missing ? onFix(servings) : onDone(usable, extras))} className="btn-primary flex-1">{missing ? 'Pick matches' : 'Done'}</button>
       </div>
+    </div>
+  );
+}
+
+/** Free plan: how many AI scans are left today (resets every day). Hidden for Plus. */
+function ScansLeft() {
+  const [left, setLeft] = useState<{ left: number; limit: number } | null>(null);
+  useEffect(() => {
+    void import('@/lib/premium').then((m) => m.fetchUsage()).then((u) => {
+      const f = u?.features?.scan;
+      if (u && !u.admin && f && f.limit != null && f.limit > 0) setLeft({ left: Math.max(0, f.limit - f.used), limit: f.limit });
+    }).catch(() => undefined);
+  }, []);
+  if (!left) return null;
+  return (
+    <div className="mb-3 flex justify-center">
+      <a href="/premium" className="rounded-full bg-black/45 px-4 py-2 text-[13px] font-semibold text-white backdrop-blur-md">
+        {left.left > 0 ? `${left.left} of ${left.limit} free AI scans left today` : 'No AI scans left today · search or barcode still work · Plus for unlimited'}
+      </a>
     </div>
   );
 }

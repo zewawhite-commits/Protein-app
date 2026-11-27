@@ -38,7 +38,7 @@ interface Props {
   onSwitchFood?: (f: Food) => void;
   /** Starting values from the photo flow: the meal photo and an AI portion estimate (a suggestion only). */
   /** From the photo flow: the meal photo and the AI's rough portion guess (never pre-filled as the weight). */
-  preset?: { photoId?: string; aiEstimate?: number; meal?: Meal };
+  preset?: { photoId?: string; aiEstimate?: number; meal?: Meal; plan?: boolean };
 }
 
 type Unit = 'g' | 'kg' | 'ml' | 'oz' | 'lb';
@@ -71,7 +71,7 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
   const { db } = useFoodDb();
   const day = useDay(date);
   // A day still to come: food is planned, not logged (it counts once marked eaten).
-  const isFuture = date > todayKey();
+  const isFuture = date > todayKey() || !!preset?.plan;
 
   // The weight is always what the user enters; nothing is pre-filled for a new entry.
   // The amount typed, in the chosen unit; nutrition always uses grams.

@@ -262,7 +262,7 @@ export default function AddFood() {
           </div>
         </div>
       )}
-      <FoodSheet food={selected} date={date} preset={photoId || params.get('meal') ? { ...(photoId ? { photoId } : {}), ...(params.get('meal') ? { meal: params.get('meal') as Meal } : {}) } : undefined} onClose={() => setSelected(null)} onSaved={(m) => { setAdded((a) => ({ count: a.count + 1, meal: m ?? a.meal })); setQ(''); }} onSwitchFood={setSelected} />
+      <FoodSheet food={selected} date={date} preset={photoId || params.get('meal') || params.get('plan') ? { ...(photoId ? { photoId } : {}), ...(params.get('meal') ? { meal: params.get('meal') as Meal } : {}), ...(params.get('plan') === '1' ? { plan: true } : {}) } : undefined} onClose={() => setSelected(null)} onSaved={(m) => { setAdded((a) => ({ count: a.count + 1, meal: m ?? a.meal })); setQ(''); }} onSwitchFood={setSelected} />
     </div>
   );
 }

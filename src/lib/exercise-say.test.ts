@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseExercise } from './exercise';
+import { completedActivities, parseExercise } from './exercise';
 
 const one = (s: string) => parseExercise(s).map(({ type, minutes, intensity, km }) => [type, minutes, intensity, km ?? null]);
 
@@ -21,5 +21,17 @@ describe('saying what exercise you did', () => {
   });
   it('keeps a time even when the activity is unclear, so the person can pick it', () => {
     expect(one('trained 30 minutes')).toEqual([[null, 30, 'medium', null]]);
+  });
+});
+
+describe('coach chat: completed activities only', () => {
+  it('offers what was done', () => {
+    expect(completedActivities('I walked 40 minutes this morning').length).toBe(1);
+    expect(completedActivities('just finished a 30 min run').length).toBe(1);
+  });
+  it('ignores plans and questions', () => {
+    expect(completedActivities('should I run 30 minutes tomorrow?')).toEqual([]);
+    expect(completedActivities('I will walk 20 minutes later')).toEqual([]);
+    expect(completedActivities('how many calories does a 30 minute run burn?')).toEqual([]);
   });
 });

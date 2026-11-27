@@ -111,3 +111,17 @@ export function parseExercise(text: string): SaidExercise[] {
     })
     .filter((s) => s.type || s.minutes);
 }
+
+/** Words that mean it hasn't happened (yet): plans, questions, wishes. */
+const NOT_DONE = /\b(will|gonna|going to|plan(ning)? to|want to|wanna|should i|shall i|could i|can i|might|tomorrow|later today|tonight i'?ll|next (week|time)|if i|would it|how (long|much|many))\b|\?\s*$/i;
+const DONE = /\b(did|done|went|walked|ran|jogged|cycled|rode|biked|swam|lifted|trained|played|danced|hiked|worked out|finished|completed|just (did|got back|finished)|had a|this morning i|today i)\b/i;
+
+/**
+ * Activities someone says they've already done, in a chat message ("I walked 40 minutes this
+ * morning"). Plans and questions ("should I run tomorrow?") return nothing, so nothing hypothetical
+ * is ever offered for saving.
+ */
+export function completedActivities(text: string): SaidExercise[] {
+  if (!DONE.test(text) || NOT_DONE.test(text)) return [];
+  return parseExercise(text).filter((x) => x.type && x.minutes && x.minutes > 0);
+}
