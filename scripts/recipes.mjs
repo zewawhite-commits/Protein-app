@@ -594,3 +594,29 @@ RECIPES.push(
   n('Okpa', 1000, [['Bambara groundnut, dry, raw', 400], [PALM, 70], [CHILI, 10], [SALT, 5], [WATER, 600]], [['1 wrap', 250]], ['okpa di oku', 'bambara nut pudding']),
   n('Fish roll', 700, [[I.flour, 350], [I.butter, 80], [I.sugar, 30], ['Fish, mackerel, jack, canned, drained solids', 150], [ONION, 20], [CHILI, 5], [I.oil, 60], [SALT, 4], [WATER, 80]], [['1 roll', 70]], ['nigerian fish roll', 'small chops fish roll']),
 );
+
+// ---- Meal combinations people actually order (added Nov 2026). Same method: exact records, cooked yield.
+{
+  const OKRA = 'Okra, cooked, boiled, drained, without salt', PALM_OIL = 'Oil, palm', STK = 'Soup, stock, beef, home-prepared';
+  const base = [[OKRA, 400], [PALM_OIL, 40], ['Shrimp, dried', 20], ['Onions, raw', 50], [STK, 300], ['Peppers, hot chili, red, raw', 10], ['Salt, table', 4]];
+  const okra = (name, protein, aliases) => ({ name, cuisine: 'West African', yield: 900 + protein.reduce((s, [, g]) => s + g, 0) - 200, aliases, portions: SOUP_PORTIONS, ingredients: [...base, ...protein] });
+  const BEEF = 'Beef, round, bottom round, steak, separable lean and fat, trimmed to 0" fat, all grades, cooked, braised';
+  RECIPES.push(
+    okra('Okra soup with chicken', [['Chicken, broilers or fryers, thigh, meat only, cooked, roasted', 200]], ['okro soup with chicken', 'chicken okra soup']),
+    okra('Okra soup with beef', [[BEEF, 200]], ['okro soup with beef', 'beef okra soup']),
+    okra('Okra soup with assorted meat', [[BEEF, 100], ['Beef, variety meats and by-products, tripe, cooked, simmered', 70], ['Beef, variety meats and by-products, liver, cooked, braised', 30]], ['okro soup with assorted meat', 'okra soup assorted', 'okro assorted meat', 'okra soup with shaki']),
+    okra('Okra soup with fish', [[CATFISH, 200]], ['okro soup with fish', 'fish okra soup', 'okra soup with catfish']),
+    okra('Okra soup with beef and fish', [[BEEF, 100], [CATFISH, 100]], ['okro soup with beef and fish']),
+    okra('Okra soup with seafood', [['Crustaceans, shrimp, cooked', 120], ['Crustaceans, crab, blue, cooked, moist heat', 80], [CATFISH, 60]], ['okro soup with seafood', 'seafood okra soup', 'seafood okro']),
+    okra('Okra soup with chicken and beef', [['Chicken, broilers or fryers, thigh, meat only, cooked, roasted', 100], [BEEF, 100]], ['okro soup with chicken and beef']),
+    {
+      name: 'Seafood boil', aliases: ['cajun seafood boil', 'low country boil', 'shrimp boil', 'crab boil'], cuisine: 'American (Southern)', yield: 1650,
+      ingredients: [
+        ['Crustaceans, shrimp, cooked', 400], ['Crustaceans, crab, blue, cooked, moist heat', 300],
+        ['Corn, sweet, yellow, cooked, boiled, drained, with salt', 300], ['Potatoes, boiled, cooked without skin, flesh, with salt', 400],
+        ['Sausage, Polish, pork and beef, smoked', 150], ['Butter, salted', 60], ['Garlic, raw', 15], ['Salt, table', 8],
+      ],
+      portions: [['1 medium plate', 450], ['1 small plate', 300], ['1 large plate', 650], ['1 bag (restaurant)', 900]],
+    },
+  );
+}

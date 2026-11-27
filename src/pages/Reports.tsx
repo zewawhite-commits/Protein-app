@@ -9,6 +9,7 @@ import { dailyTargets } from '@/lib/energy';
 import { splitName } from '@/lib/foods';
 import { Segmented, cx, fmt } from '@/components/ui';
 import { downloadDailyReport } from '@/lib/dailyReport';
+import { activityName } from '@/lib/exercise';
 import { fmtSleep } from '@/components/Sleep';
 
 type Period = 'day' | 'week' | 'month' | 'year' | 'custom';
@@ -71,6 +72,7 @@ export default function Reports() {
         workouts: workouts.length, minutes: workouts.reduce((a, e) => a + e.minutes, 0), km: workouts.reduce((a, e) => a + (e.km ?? 0), 0),
         weightChange: w.length >= 2 ? w[w.length - 1].kg - w[0].kg : null, lastWeight: w.length ? w[w.length - 1].kg : null,
         top: [...foods.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5),
+        activities: [...workouts.reduce((m, e) => { const k = activityName(e); const c = m.get(k) ?? { n: 0, min: 0, km: 0, kcal: 0, est: false }; m.set(k, { n: c.n + 1, min: c.min + e.minutes, km: c.km + (e.km ?? 0), kcal: c.kcal + e.kcal, est: c.est || !e.manual }); return m; }, new Map<string, { n: number; min: number; km: number; kcal: number; est: boolean }>()).entries()].sort((a, b) => b[1].min - a[1].min),
         proteinDays: st.profile ? totals.filter((t) => t.protein >= dailyGoal(st.profile!) * 0.9).length : 0,
       };
     };
@@ -186,6 +188,13 @@ export default function Reports() {
             <div className="rounded-2xl bg-raised py-3"><p className="num text-[22px] font-extrabold">{now.weightChange == null ? '—' : `${now.weightChange >= 0 ? '+' : '−'}${w(Math.abs(now.weightChange))}`}</p><p className="text-xs text-silver">weight change</p></div>
           </section>
 
+          {now.activities.length > 0 && (
+            <section className="card mt-4 p-5">
+              <p className="font-bold">Activities</p>
+              <ul className="mt-2 space-y-1.5 text-sm">{now.activities.map(([name, a]) => <li key={name} className="flex justify-between gap-2"><span>{name} <span className="text-silver">× {a.n}</span></span><span className="num text-silver">{a.min} min{a.km ? ` · ${fmt(a.km, 1)} km` : ''} · {a.est ? '~' : ''}{fmt(a.kcal)} kcal</span></li>)}</ul>
+              <p className="mt-2 text-xs text-dim">Includes activities you added yourself. “~” calories are estimates from the activity, time and your weight.</p>
+            </section>
+          )}
           {now.top.length > 0 && (
             <section className="card mt-4 p-5">
               <p className="font-bold">Most logged foods</p>

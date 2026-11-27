@@ -11,6 +11,7 @@ import { useFoodDb, useFoodLookup, usePhotoUrl } from '@/lib/hooks';
 import { SOURCE_SHORT, searchFoods, splitName, groupDuplicates, hasCoreNutrition } from '@/lib/foods';
 import { searchProducts } from '@/lib/openFoodFacts';
 import { plateParts } from '@/lib/plate';
+import { varietiesFor } from '@/lib/varieties';
 import { deletePhoto } from '@/lib/photos';
 import { fitsDiet } from '@/lib/goals';
 import { addDays, mealForNow, relativeDay, todayKey } from '@/lib/dates';
@@ -212,6 +213,14 @@ export default function AddFood() {
           </span>
           <ChevronRight size={20} className="shrink-0 text-dim" />
         </Link>
+      )}
+      {searching && varietiesFor(dq) && (
+        <div className="mb-2 mt-1" role="group" aria-label={`Types of ${varietiesFor(dq)!.group}`}>
+          <p className="mb-1.5 px-1 text-[13px] font-semibold text-silver">Which {varietiesFor(dq)!.group}? Tap the one you had</p>
+          <div className="-mx-5 flex gap-2 overflow-x-auto px-5 pb-1 no-scrollbar">
+            {varietiesFor(dq)!.options.map((v) => <button key={v.label} title={v.note} onClick={() => { haptic(); setQ(v.q); }} className="chip !h-10 shrink-0 text-[14px]">{v.label}</button>)}
+          </div>
+        </div>
       )}
       {db && list.length > 0 && !(tab === 'saved' && !searching) && (
         <div className="card mt-1 p-2">
