@@ -6,7 +6,9 @@ import type { RecipeDef } from '@/lib/types';
 import { useStore } from '@/store/useStore';
 import type { CustomFood, Food, Per100, PrepState } from '@/lib/types';
 import { Segmented, Sheet, cx, fmt } from './ui';
-import { GROUP_NAMES, groupOf, suggestedUnits } from '@/lib/units';
+import { GROUP_NAMES, groupOf, startMeasure, suggestedUnits } from '@/lib/units';
+import { IngredientAmount } from './IngredientAmount';
+import { foodById as dbFood } from '@/lib/foods';
 import { haptic, toast } from './fx';
 
 const FIELDS: [keyof Per100, string, string][] = [
@@ -44,6 +46,7 @@ function FromIngredients({ initialName, onDone }: { initialName?: string; onDone
   const [q, setQ] = useState('');
   const [items, setItems] = useState<RecipeDef['ingredients']>([]);
   const [cooked, setCooked] = useState('');
+  const foodById = (id: string): Food | undefined => custom.find((c) => c.id === id) ?? dbFood(id);
   const results = useMemo(() => (q.trim().length >= 2 ? searchFoods(q, { limit: 6, custom: custom.filter((c) => !c.archived) }) : []), [q, custom]);
   const total = items.reduce((t, i) => t + i.grams, 0);
   const weight = Number(cooked) > 0 ? Number(cooked) : total;
@@ -67,11 +70,12 @@ function FromIngredients({ initialName, onDone }: { initialName?: string; onDone
       {items.length > 0 && (
         <div className="card divide-y divide-line p-1.5">
           {items.map((it, i) => (
-            <div key={it.foodId + i} className="flex items-center gap-2 px-2 py-2">
-              <span className="min-w-0 flex-1 truncate text-[15px] font-semibold">{it.name}</span>
-              <input inputMode="decimal" aria-label={`Grams of ${it.name}`} className="num h-10 w-20 rounded-xl bg-raised px-2 text-right text-[15px] font-bold outline-none" value={it.grams || ''} onChange={(e) => { const g = Number(e.target.value.replace(/[^\d.]/g, '')) || 0; setItems((cur) => cur.map((x, k) => (k === i ? { ...x, grams: Math.min(g, 20000) } : x))); }} />
-              <span className="text-sm text-silver">g</span>
-              <button onClick={() => setItems((cur) => cur.filter((_, k) => k !== i))} className="grid h-9 w-9 place-items-center rounded-full text-silver" aria-label={`Remove ${it.name}`}><Trash2 size={17} /></button>
+            <div key={it.foodId + i} className="px-2 py-2">
+              <div className="flex items-center gap-2">
+                <span className="min-w-0 flex-1 text-[15px] font-semibold leading-snug">{it.name}</span>
+                <button onClick={() => setItems((cur) => cur.filter((_, k) => k !== i))} className="grid h-9 w-9 place-items-center rounded-full text-silver" aria-label={`Remove ${it.name}`}><Trash2 size={17} /></button>
+              </div>
+              <IngredientAmount item={it} food={foodById(it.foodId)} onChange={(v) => setItems((cur) => cur.map((x, k) => (k === i ? { ...x, ...v } : x)))} />
             </div>
           ))}
         </div>
@@ -83,7 +87,7 @@ function FromIngredients({ initialName, onDone }: { initialName?: string; onDone
       {results.length > 0 && (
         <div className="card p-1.5">
           {results.map((f) => (
-            <button key={f.id} onClick={() => { haptic(); setItems((cur) => [...cur, { foodId: f.id, name: splitName(f.name).title, grams: 100, per100: f.per100 }]); setQ(''); }} className="flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-left active:bg-raised">
+            <button key={f.id} onClick={() => { haptic(); const st = startMeasure(f); setItems((cur) => [...cur, { foodId: f.id, name: splitName(f.name).title, grams: st.grams, per100: f.per100, unit: st.unit, qty: st.qty }]); setQ(''); }} className="flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-left active:bg-raised">
               <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-accent/10 text-accent"><Plus size={16} /></span>
               <span className="min-w-0 flex-1 truncate text-[15px] font-semibold">{splitName(f.name).title}</span>
             </button>

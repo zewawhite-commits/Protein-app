@@ -70,7 +70,8 @@ export interface Food {
 
 /** A homemade recipe's ingredients (snapshots, so it still works offline and can be edited later). */
 export interface RecipeDef {
-  ingredients: { foodId: string; name: string; grams: number; per100: Per100 }[];
+  /** unit/qty: how the person measured it ("1 cup", "½ banana"); grams is always what's counted. */
+  ingredients: { foodId: string; name: string; grams: number; per100: Per100; unit?: string; qty?: string }[];
   cookedGrams: number;
   servings: number;
   /** The method, as written (imported recipes) or typed by the person. */

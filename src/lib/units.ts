@@ -45,7 +45,7 @@ const FOR_KIND: Record<string, string[]> = {
 };
 
 /** Labels from source tables that confuse people; the weight is still available in grams. */
-const UNHELPFUL = /linear inch|cubic inch|surface inch|yield from|excluding refuse|\bNFS\b|^1 oz\b|^1 lb\b|^1 fl oz/i;
+const UNHELPFUL = /guideline amount|linear inch|cubic inch|surface inch|yield from|excluding refuse|\bNFS\b|^1 oz\b|^1 lb\b|^1 fl oz/i;
 
 /** Shorter, clearer names for source-table measure labels. */
 export function tidyLabel(label: string): string {
@@ -58,7 +58,7 @@ export function tidyLabel(label: string): string {
 }
 
 export const isEstimated = (food: Pick<Food, 'source'>, label: string) =>
-  /\(typical\)/i.test(label) || food.source === 'recipe' || food.source === 'custom';
+  /\(typical\)/i.test(label) || food.source === 'recipe';
 
 export type FoodGroup =
   | 'rice_grains' | 'meat' | 'poultry' | 'fish' | 'seafood' | 'eggs' | 'beans' | 'pasta' | 'bread' | 'fruit' | 'vegetables'
@@ -304,3 +304,59 @@ export const GROUP_UNITS: Record<FoodGroup, string[]> = {
 export function suggestedUnits(name: string, category = ''): string[] {
   return [...GROUP_UNITS[groupOf({ name, category, source: 'custom' } as Pick<Food, 'name' | 'category' | 'source'>)], 'g'];
 }
+
+/** Weight and volume units per food group (the measurement table); household units come from the food itself. */
+export type WeightUnit = 'g' | 'kg' | 'ml' | 'L' | 'oz' | 'lb';
+export const WEIGHT_BY_GROUP: Record<FoodGroup, WeightUnit[]> = {
+  rice_grains: ['g', 'kg'], meat: ['g', 'oz'], poultry: ['g', 'oz'], fish: ['g', 'oz'], seafood: ['g', 'oz'], eggs: ['g'], beans: ['g'],
+  pasta: ['g', 'oz'], bread: ['g'], fruit: ['g'], vegetables: ['g'], tubers: ['g'], nuts: ['g', 'oz'], dairy: ['g', 'ml'], oils: ['g', 'ml'],
+  sauces: ['g', 'ml'], soups: ['g', 'ml'], salads: ['g'], cereals: ['g'], snacks: ['g'], desserts: ['g'], beverages: ['ml', 'L'],
+  protein_powder: ['g'], spreads: ['g'], mixed: ['g', 'oz'], other: ['g', 'oz'],
+};
+const FRACTIONS: Record<string, number> = { '½': 0.5, '¼': 0.25, '¾': 0.75, '⅓': 1 / 3, '⅔': 2 / 3 };
+/** "1½", "1 1/2", "3/4", "½", "1,5" → a number (NaN if it isn't one). */
+export function parseQty(text: string): number {
+  const t = text.trim().replace(',', '.');
+  if (!t) return NaN;
+  const m = /^(\d+(?:\.\d+)?)?\s*(?:([½¼¾⅓⅔])|(\d+)\/(\d+))?$/.exec(t);
+  if (!m || (!m[1] && !m[2] && !m[3])) return NaN;
+  const whole = m[1] ? Number(m[1]) : 0;
+  const frac = m[2] ? FRACTIONS[m[2]] : m[3] ? Number(m[3]) / Number(m[4]) : 0;
+  if (m[1] && m[3] && !/\s/.test(t)) return NaN; // "12/3" is ambiguous
+  return whole + frac;
+}
+export const fmtQty = (n: number) => { const w = Math.floor(n + 1e-9); const f = n - w; const sym = Object.entries(FRACTIONS).find(([, v]) => Math.abs(v - f) < 0.01)?.[0]; return sym ? `${w || ''}${sym}` : String(Math.round(n * 100) / 100); };
+
+
+/** Grams in one of a weight/volume unit for this food (ml and L use the food's own density). */
+export function weightUnitGrams(unit: WeightUnit, food: Pick<Food, 'name' | 'category'>): number {
+  const base = { g: 1, kg: 1000, ml: 1, L: 1000, oz: 28.3495, lb: 453.592 }[unit];
+  return unit === 'ml' || unit === 'L' ? base * (densityOf(food)?.gPerMl ?? 1) : base;
+}
+
+/** The units offered for one ingredient: grams first, the group's other weights, then the food's own measures. */
+export function unitOptions(f: Food): { key: string; label: string; grams: number; estimated?: boolean }[] {
+  const weights = WEIGHT_BY_GROUP[groupOf(f)].map((u: WeightUnit) => ({ key: u, label: u, grams: weightUnitGrams(u, f) }));
+  const seen = new Set<string>(weights.map((w) => w.key));
+  const own = measuresFor(f).filter((m) => m.grams > 0).flatMap((m) => {
+    const label = unitName(m.label).toLowerCase().replace(/\btablespoons?\b/g, 'tbsp').replace(/\bteaspoons?\b/g, 'tsp');
+    // "½ cup" and "0.33 cup" are just amounts of a cup: the quantity box covers those.
+    const base = label.replace(/^[\d.\/½¼¾⅓⅔]+\s*/, '');
+    if (!label || seen.has(label) || (base !== label && seen.has(base))) return [];
+    seen.add(label);
+    return [{ key: m.label, label, grams: m.grams, estimated: !m.verified }];
+  });
+  return [...weights, ...own];
+}
+
+/** A sensible first amount: one whole item (1 banana, 1 egg), a medium serving or 1 tbsp of honey/oil, else 100 g. */
+export function startMeasure(f: Food): { unit: string; qty: string; grams: number } {
+  const ms = measuresFor(f).filter((m) => m.grams > 0 && m.grams <= 500);
+  const head = f.name.toLowerCase().split(/[ ,(]/)[0].replace(/(es|s)$/, '').replace(/[^a-z]/g, '');
+  const pick = ms.find((m) => head.length > 2 && new RegExp(`^1 (medium |large )?${head}`, 'i').test(m.label))
+    ?? ms.find((m) => /\b(medium|regular)\b/i.test(m.label) && !/slice|cup|tbsp|tsp/i.test(m.label))
+    ?? ms.find((m) => /^1 (tbsp|tablespoon)/i.test(m.label) && /honey|syrup|oil|butter|sauce|jam|spread|sugar/i.test(f.name))
+    ?? ms.find((m) => /^1 (piece|egg|fillet|breast|thigh|drumstick|wing|serving|portion|cup|bowl)\b/i.test(m.label));
+  return pick ? { unit: pick.label, qty: '1', grams: Math.round(pick.grams) } : { unit: 'g', qty: '100', grams: 100 };
+}
+

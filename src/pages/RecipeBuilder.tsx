@@ -1,4 +1,5 @@
-import { measuresFor } from '@/lib/units';
+import { startMeasure } from '@/lib/units';
+import { IngredientAmount } from '@/components/IngredientAmount';
 import { ShareRecipeSheet } from '@/components/ShareRecipe';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
@@ -20,17 +21,6 @@ export { recipePer100 } from '@/lib/recipeMath';
 import { recipePer100 } from '@/lib/recipeMath';
 
 /** Build or edit a homemade recipe: ingredients + cooked weight → nutrition per 100 g and per serving. */
-/** A sensible first amount: one whole item (1 banana, 1 egg) or a medium serving, else 100 g. */
-function startGrams(f: Food): number {
-  const ms = measuresFor(f).filter((m) => m.grams > 0 && m.grams <= 500);
-  const head = f.name.toLowerCase().split(/[ ,(]/)[0].replace(/(es|s)$/, '').replace(/[^a-z]/g, '');
-  const pick = ms.find((m) => head.length > 2 && new RegExp(`^1 (medium |large )?${head}`, 'i').test(m.label))
-    ?? ms.find((m) => /\b(medium|regular)\b/i.test(m.label) && !/slice|cup|tbsp|tsp/i.test(m.label))
-    ?? ms.find((m) => /^1 (tbsp|tablespoon)/i.test(m.label) && /honey|syrup|oil|butter|sauce|jam|spread|sugar/i.test(f.name))
-    ?? ms.find((m) => /^1 (piece|egg|fillet|breast|thigh|drumstick|wing|serving|portion|cup|bowl)\b/i.test(m.label));
-  return pick ? Math.round(pick.grams) : 100;
-}
-
 export default function RecipeBuilder() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
@@ -76,7 +66,7 @@ export default function RecipeBuilder() {
     setBase(title);
   }, [db]); // eslint-disable-line react-hooks/exhaustive-deps
   // While the name is the one we filled in, keep it matching what's added ("Oats with banana and honey").
-  const autoName = useRef(false);
+  const autoName = useRef(!existing && !params.get('from') && !params.get('plate') && !params.get('import'));
   useEffect(() => {
     if (!autoName.current || !items.length) return;
     const [first, ...rest] = items.map((i) => i.name.split(',')[0].toLowerCase());
@@ -91,7 +81,8 @@ export default function RecipeBuilder() {
     if (!f) return;
     const grams = Math.min(3000, Math.max(1, Number(params.get('g')) || 100));
     const title = splitName(f.name).title;
-    setItems([{ foodId: f.id, name: title, grams, per100: f.per100 }]);
+    const u = params.get('u'); const n = params.get('n');
+    setItems([{ foodId: f.id, name: title, grams, per100: f.per100, ...(u && n ? { unit: u, qty: n } : { unit: 'g', qty: String(grams) }) }]);
     setName(title);
     autoName.current = true;
     setServings('1');
@@ -140,9 +131,10 @@ export default function RecipeBuilder() {
 
   const add = (f: Food) => {
     haptic();
-    const item = { foodId: f.id, name: splitName(f.name).title, grams: startGrams(f), per100: f.per100 };
+    const st = startMeasure(f);
+    const item = { foodId: f.id, name: splitName(f.name).title, grams: st.grams, per100: f.per100, unit: st.unit, qty: st.qty };
     if (swapping != null) {
-      setItems((cur) => cur.map((x, k) => (k === swapping ? { ...item, grams: x.grams } : x)));
+      setItems((cur) => cur.map((x, k) => (k === swapping ? item : x)));
       toast(`Swapped for ${item.name}`);
       setSwapping(null);
     } else setItems((cur) => [...cur, item]);
@@ -151,7 +143,7 @@ export default function RecipeBuilder() {
 
   /** Ingredients with a gap in the main numbers: saved as they are and flagged, never filled with zero. */
   const gaps = items.filter((i) => i.per100.kcal == null || i.per100.carbs == null || i.per100.fat == null);
-  const portionsOf = (id: string) => (db?.byId.get(id) ?? custom.find((c) => c.id === id))?.portions ?? [];
+  const foodOf = (id: string): Food | undefined => db?.byId.get(id) ?? custom.find((c) => c.id === id);
   function save(andLog = false) {
     const food = upsert({
       id: existing?.id,
@@ -215,18 +207,11 @@ export default function RecipeBuilder() {
           {items.map((it, i) => (
             <div key={i} className="px-2.5 py-2">
             <div className="flex items-center gap-2">
-              <p className="min-w-0 flex-1 truncate text-[15px] font-semibold">{it.name}</p>
-              {portionsOf(it.foodId).length > 0 && (
-                <select aria-label={`Portion of ${it.name}`} value="" onChange={(e) => { const g = Number(e.target.value); if (g > 0) setItems((cur) => cur.map((x, k) => (k === i ? { ...x, grams: Math.round(g) } : x))); }} className="h-10 max-w-[6.5rem] rounded-xl bg-raised px-1.5 text-[13px] font-semibold">
-                  <option value="">Units…</option>
-                  {portionsOf(it.foodId).slice(0, 8).map((p) => <option key={p.label} value={p.grams}>{p.label} ({Math.round(p.grams)} g)</option>)}
-                </select>
-              )}
-              <input inputMode="decimal" aria-label={`Grams of ${it.name}`} className="num h-10 w-20 rounded-xl bg-raised px-2 text-right text-[15px] font-bold outline-none" value={it.grams || ''} onChange={(e) => { const g = Number(e.target.value.replace(/[^\d.]/g, '')) || 0; setItems((cur) => cur.map((x, k) => (k === i ? { ...x, grams: Math.min(g, 20000) } : x))); }} />
-              <span className="text-sm text-silver">g</span>
+              <p className="min-w-0 flex-1 text-[15px] font-semibold leading-snug">{it.name}</p>
               <button onClick={() => { haptic(); setSwapping(swapping === i ? null : i); setQ(''); setTimeout(() => searchRef.current?.focus(), 50); }} className={cx('h-9 shrink-0 rounded-full px-2.5 text-[13px] font-semibold', swapping === i ? 'bg-primary text-on-primary' : 'text-accent')} aria-label={`Swap ${it.name}`}>Swap</button>
               <button onClick={() => { setItems((cur) => cur.filter((_, k) => k !== i)); setSwapping(null); }} className="grid h-9 w-9 place-items-center rounded-full text-dim" aria-label={`Remove ${it.name}`}><Trash2 size={16} /></button>
             </div>
+            <IngredientAmount item={it} food={foodOf(it.foodId)} onChange={(v) => setItems((cur) => cur.map((x, k) => (k === i ? { ...x, ...v } : x)))} />
             <p className="num mt-0.5 text-[12px] text-silver">
               {it.per100.kcal == null ? <span className="text-warn">no calorie data</span> : `${fmt((it.per100.kcal * it.grams) / 100)} kcal`} · {fmt((it.per100.protein * it.grams) / 100, 1)} g protein
               {it.per100.carbs != null && ` · ${fmt((it.per100.carbs * it.grams) / 100, 1)} g carbs`}{it.per100.fat != null && ` · ${fmt((it.per100.fat * it.grams) / 100, 1)} g fat`}

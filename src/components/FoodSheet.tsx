@@ -1,4 +1,4 @@
-import { densityOf, measuresFor, groupOf, unitName, GROUP_NAMES, type FoodGroup } from '@/lib/units';
+import { densityOf, measuresFor, groupOf, unitName, GROUP_NAMES, WEIGHT_BY_GROUP, parseQty, fmtQty } from '@/lib/units';
 import { CreateFood } from './CreateFood';
 import { useMealOptions } from '@/lib/meals';
 import { MealPicker } from './MealPicker';
@@ -46,26 +46,7 @@ type Unit = 'g' | 'kg' | 'ml' | 'L' | 'oz' | 'lb';
 const UNIT_G: Record<Unit, number> = { g: 1, kg: 1000, ml: 1, L: 1000, oz: 28.3495, lb: 453.592 };
 const UNIT_NAME: Record<Unit, string> = { g: 'grams', kg: 'kilograms', ml: 'millilitres', L: 'litres', oz: 'ounces', lb: 'pounds' };
 const UNIT_DP: Record<Unit, number> = { g: 1, kg: 1000, ml: 1, L: 1000, oz: 10, lb: 100 };
-/** Weight and volume units per food group (the measurement table); household units come from the food itself. */
-const WEIGHT_BY_GROUP: Record<FoodGroup, Unit[]> = {
-  rice_grains: ['g', 'kg'], meat: ['g', 'oz'], poultry: ['g', 'oz'], fish: ['g', 'oz'], seafood: ['g', 'oz'], eggs: ['g'], beans: ['g'],
-  pasta: ['g', 'oz'], bread: ['g'], fruit: ['g'], vegetables: ['g'], tubers: ['g'], nuts: ['g', 'oz'], dairy: ['g', 'ml'], oils: ['g', 'ml'],
-  sauces: ['g', 'ml'], soups: ['g', 'ml'], salads: ['g'], cereals: ['g'], snacks: ['g'], desserts: ['g'], beverages: ['ml', 'L'],
-  protein_powder: ['g'], spreads: ['g'], mixed: ['g', 'oz'], other: ['g', 'oz'],
-};
-const FRACTIONS: Record<string, number> = { '½': 0.5, '¼': 0.25, '¾': 0.75, '⅓': 1 / 3, '⅔': 2 / 3 };
-/** "1½", "1 1/2", "3/4", "½", "1,5" → a number (NaN if it isn't one). */
-export function parseQty(text: string): number {
-  const t = text.trim().replace(',', '.');
-  if (!t) return NaN;
-  const m = /^(\d+(?:\.\d+)?)?\s*(?:([½¼¾⅓⅔])|(\d+)\/(\d+))?$/.exec(t);
-  if (!m || (!m[1] && !m[2] && !m[3])) return NaN;
-  const whole = m[1] ? Number(m[1]) : 0;
-  const frac = m[2] ? FRACTIONS[m[2]] : m[3] ? Number(m[3]) / Number(m[4]) : 0;
-  if (m[1] && m[3] && !/\s/.test(t)) return NaN; // "12/3" is ambiguous
-  return whole + frac;
-}
-const fmtQty = (n: number) => { const w = Math.floor(n + 1e-9); const f = n - w; const sym = Object.entries(FRACTIONS).find(([, v]) => Math.abs(v - f) < 0.01)?.[0]; return sym ? `${w || ''}${sym}` : String(Math.round(n * 100) / 100); };
+export { parseQty } from '@/lib/units';
 
 const SIZE_WORDS = /\b(extra large|extra small|small|medium|large|jumbo|regular|any size|thin|thick|very thin|mini|miniature|baby)\b/gi;
 /** "1 medium breast" → "breast"; "small or thin/very thin slice" → "slice". */
@@ -389,7 +370,7 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
         </>)}
         {/* Already have this food and want to add something to it (oats + banana + honey). */}
         {!entry && (
-          <Link to={food.source === 'recipe' && standardRecipe(food.sourceNote) ? `/recipe?from=${encodeURIComponent(food.id)}` : `/recipe?with=${encodeURIComponent(food.id)}&g=${Math.round(g) || 100}`} onClick={onClose} className="mx-auto mt-4 flex w-fit items-center gap-1.5 rounded-full bg-raised px-4 py-2 text-[14px] font-semibold">
+          <Link to={food.source === 'recipe' && standardRecipe(food.sourceNote) ? `/recipe?from=${encodeURIComponent(food.id)}` : `/recipe?with=${encodeURIComponent(food.id)}&g=${Math.round(g) || 100}${byCount && portion && portion !== ownPortion && count ? `&u=${encodeURIComponent(portion.label)}&n=${encodeURIComponent(count)}` : ''}`} onClick={onClose} className="mx-auto mt-4 flex w-fit items-center gap-1.5 rounded-full bg-raised px-4 py-2 text-[14px] font-semibold">
             <Plus size={16} strokeWidth={2.6} /> Add something to it
           </Link>
         )}
