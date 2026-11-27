@@ -80,3 +80,7 @@ export interface HealthAdapter {
 /** Set by a native shell (Capacitor or similar) at start-up; stays null in the browser. */
 export let healthAdapter: HealthAdapter | null = null;
 export const registerHealthAdapter = (a: HealthAdapter) => { healthAdapter = a; };
+
+/** A fast: from the last meal (start) to the first meal (end). Free for everyone. */
+export interface Fast { id: string; start: number; end?: number; goalH: number }
+export const FAST_PRESETS = [12, 14, 16, 18, 20] as const;

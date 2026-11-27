@@ -14,6 +14,7 @@ import { DV_NOTE, MacroBar, NutrientList } from '@/components/Nutrients';
 import type { Food, LogEntry } from '@/lib/types';
 import { SleepCard } from '@/components/Sleep';
 import { MovementCard } from '@/components/Movement';
+import { FastingCard } from '@/components/Fasting';
 import { downloadDailyReport } from '@/lib/dailyReport';
 import type { HomeNutrient } from '@/lib/types';
 import { HomeInsights } from '@/components/HomeInsights';
@@ -161,6 +162,7 @@ export default function Today() {
       <WaterCard date={date} />
       <SleepCard date={date} />
       <MovementCard date={date} />
+      {isToday && <FastingCard />}
 
       <FoodSheet food={editing ? entryAsFood(editing, lookup) : null} entry={editing ?? undefined} date={date} onClose={() => setEditing(null)} />
     </div>

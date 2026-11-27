@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { useSession } from '@/lib/account';
 import { blockedList, getPrivacy, restrict, restrictedList, savePrivacy, unblock, DEFAULT_PRIVACY, type DmFrom, type Privacy } from '@/lib/dm';
-import type { PublicProfile } from '@/lib/social';
+import { upsertMyProfile, type PublicProfile } from '@/lib/social';
 import { SignInButtons } from '@/components/SignIn';
 import { cx } from '@/components/ui';
 import { toast } from '@/components/fx';
@@ -83,11 +83,11 @@ export default function PrivacySettings() {
             <p className="mb-2 px-1 text-[13px] font-semibold uppercase tracking-wide text-silver">Profile and activity</p>
             <div className="card divide-y divide-line p-1">
               <Toggle on={p.private_profile} label="Private profile" sub="Only your followers see your posts" onChange={(v) => void set({ private_profile: v })} />
-              <Toggle on={p.show_follows} label="Show who you follow" sub="Off: your follower and following lists stay hidden" onChange={(v) => void set({ show_follows: v })} />
               <Toggle on={p.read_receipts} label="Read receipts" sub="Off: people don’t see when you’ve read their messages" onChange={(v) => void set({ read_receipts: v })} />
-              <Toggle on={p.show_activity} label="Show my streak and activity" sub="Off: your streak isn’t shown on your profile or leaderboards" onChange={(v) => void set({ show_activity: v })} />
+              <Toggle on={p.show_activity} label="Show my streak and activity" sub="Off: your streak isn’t shown on your profile or leaderboards" onChange={(v) => { void set({ show_activity: v }); if (!v) void upsertMyProfile({ streak: 0 }).catch(() => undefined); }} />
             </div>
           </section>
+          <p className="-mt-3 px-1 text-[12px] text-dim">Who you follow and who follows you is always private: nobody else can see those lists or counts.</p>
           <section>
             <p className="mb-2 px-1 text-[13px] font-semibold uppercase tracking-wide text-silver">Notifications</p>
             <div className="card divide-y divide-line p-1">

@@ -81,3 +81,11 @@ select pg_temp.as_user('bbbbbbbb-0000-0000-0000-000000000000');
 select 'B (not following) sees private posts (expect 0): ' || count(*) from posts;
 insert into follows (followee) values ('aaaaaaaa-0000-0000-0000-000000000000');
 select 'B (following) sees posts (expect 1): ' || count(*) from posts;
+\echo '--- 12. Abuse filter and hidden streak'
+select pg_temp.as_user('bbbbbbbb-0000-0000-0000-000000000000');
+insert into direct_messages (recipient, body) values ('aaaaaaaa-0000-0000-0000-000000000000','just kys lol');
+select 'skyscraper not blocked (expect t): ' || not public.has_banned('I love skyscrapers');
+select pg_temp.as_user('aaaaaaaa-0000-0000-0000-000000000000');
+update privacy_settings set show_activity = false;
+update profiles_public set streak = 12 where user_id = 'aaaaaaaa-0000-0000-0000-000000000000';
+select 'streak hidden (expect 0): ' || streak from profiles_public where user_id = 'aaaaaaaa-0000-0000-0000-000000000000';

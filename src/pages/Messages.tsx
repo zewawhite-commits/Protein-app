@@ -22,6 +22,9 @@ export default function Messages() {
   const [params, setParams] = useSearchParams();
   const open = params.get('with');
   const sending = params.get('recipe') ?? '';
+  const postId = params.get('post');
+  const postTitle = params.get('title') ?? '';
+  const keep = { ...(sending ? { recipe: sending } : {}), ...(postId ? { post: postId, title: postTitle } : {}) };
   const sendingName = useStore((s) => s.customFoods.find((c) => c.id === sending)?.name);
   const [list, setList] = useState<ChatSummary[] | null>(null);
   const [error, setError] = useState('');
@@ -44,7 +47,7 @@ export default function Messages() {
   if (open) {
     const c = list?.find((x) => x.with === open);
     const profile = c?.profile ?? (partner?.user_id === open ? partner : undefined);
-    return <Thread other={open} chat={c} profile={profile} preRecipe={sending} onBack={() => { setParams(sending ? { recipe: sending } : {}); load(); }} />;
+    return <Thread other={open} chat={c} profile={profile} preRecipe={sending} prePost={postId ? { post_id: postId, title: postTitle } : undefined} onBack={() => { setParams(keep); load(); }} />;
   }
 
   const counts = { requests: list?.filter((c) => c.request && !c.archived).length ?? 0, archived: list?.filter((c) => c.archived).length ?? 0 };
@@ -56,6 +59,7 @@ export default function Messages() {
   return (
     <Shell back={() => nav(-1)} right={<Link to="/privacy-settings" className="chip !h-10">Privacy</Link>}>
       {sendingName && <p className="mb-3 rounded-2xl bg-accent/10 px-4 py-3 text-sm font-semibold text-accent">Choose who to send “{sendingName}” to.</p>}
+      {postId && <p className="mb-3 rounded-2xl bg-accent/10 px-4 py-3 text-sm font-semibold text-accent">Choose who to send the post “{postTitle}” to.</p>}
       <div className="flex gap-2">
         <input className="field flex-1" placeholder="Message someone by @username" value={who} onChange={(e) => setWho(e.target.value)} aria-label="Username" />
         <button disabled={finding || who.replace(/^@/, '').trim().length < 3} onClick={async () => {
@@ -64,7 +68,7 @@ export default function Messages() {
             const u = await findUser(who.trim());
             if (!u) setError('No one with that username. Check the spelling.');
             else if (u.user_id === (await myUserId())) setError('That’s you!');
-            else { setPartner(u); setParams({ with: u.user_id, ...(sending ? { recipe: sending } : {}) }); }
+            else { setPartner(u); setParams({ with: u.user_id, ...keep }); }
           } catch (e) { setError((e as Error).message); } finally { setFinding(false); }
         }} className="btn-primary !px-5">{finding ? <Loader2 size={17} className="animate-spin" /> : 'Chat'}</button>
       </div>
@@ -96,7 +100,7 @@ export default function Messages() {
       ) : (
         <div className="card mt-4 divide-y divide-line p-1.5">
           {shown.map((c) => (
-            <button key={c.with} onClick={() => setParams({ with: c.with, ...(sending ? { recipe: sending } : {}) })} className="flex w-full items-center gap-3 px-3 py-3 text-left">
+            <button key={c.with} onClick={() => setParams({ with: c.with, ...keep })} className="flex w-full items-center gap-3 px-3 py-3 text-left">
               <Avatar p={c.profile} />
               <span className="min-w-0 flex-1">
                 <span className="flex items-center gap-1.5 truncate font-semibold">{c.profile.display_name}{c.profile.username ? <span className="font-normal text-silver">@{c.profile.username}</span> : null}{c.muted && <BellOff size={13} className="shrink-0 text-dim" aria-label="Muted" />}</span>
@@ -147,7 +151,8 @@ export function ReportSheet({ open, onClose, target, what = 'this' }: { open: bo
   );
 }
 
-function Thread({ other, chat, profile, onBack, preRecipe }: { other: string; chat?: ChatSummary; profile?: PublicProfile; onBack: () => void; preRecipe?: string }) {
+function Thread({ other, chat, profile, onBack, preRecipe, prePost }: { other: string; chat?: ChatSummary; profile?: PublicProfile; onBack: () => void; preRecipe?: string; prePost?: { post_id: string; title: string } }) {
+  const [postToSend, setPostToSend] = useState(prePost);
   const request = !!chat?.request;
   const [accepted, setAccepted] = useState(false);
   const [msgs, setMsgs] = useState<DM[] | null>(null);
@@ -241,7 +246,7 @@ function Thread({ other, chat, profile, onBack, preRecipe }: { other: string; ch
                 {quoted && <span className="mb-1 max-w-full truncate rounded-xl border-l-4 border-accent bg-raised px-3 py-1.5 text-[12px] text-silver">{preview(quoted)}</span>}
                 {m.attachment && <AttachmentView m={m} onOpen={(url) => setViewer({ url, m })} />}
                 {m.body && <span className={cx('whitespace-pre-wrap rounded-[20px] px-4 py-2.5 text-[15px]', mine ? 'rounded-br-md bg-primary text-on-primary' : 'rounded-bl-md bg-surface', m.pending === 'failed' && 'opacity-60')}>{m.body}</span>}
-                {m.shared_post && <span className="mt-1 rounded-2xl bg-surface px-4 py-2.5 text-[14px]">Shared post: <b>{m.shared_post.title}</b></span>}
+                {m.shared_post && <Link to="/groups" onClick={(e) => e.stopPropagation()} className="mt-1 rounded-2xl bg-surface px-4 py-2.5 text-[14px]" style={{ boxShadow: 'var(--shadow)' }}>Shared post: <b>{m.shared_post.title}</b> <span className="text-accent">· Open feed</span></Link>}
               </button>
               {m.recipe && <div className="w-full max-w-[92%] [&>div]:mx-0"><SharedRecipeCard recipe={m.recipe} /></div>}
               {rs.length > 0 && <span className="mt-0.5 rounded-full bg-surface px-2 py-0.5 text-[13px]" style={{ boxShadow: 'var(--shadow)' }}>{rs.map((r) => r.emoji).join(' ')}</span>}
@@ -256,6 +261,13 @@ function Thread({ other, chat, profile, onBack, preRecipe }: { other: string; ch
         <div ref={end} />
       </div>
 
+      {postToSend && canWrite && (
+        <div className="card mt-3 flex items-center gap-3 p-3">
+          <span className="min-w-0 flex-1 truncate text-[14px]">Send post: <b>{postToSend.title}</b></span>
+          <button onClick={async () => { try { await sendDM(other, { body: text, shared_post: postToSend }); setText(''); setPostToSend(undefined); haptic(); toast('Post sent'); load(); } catch (e) { toast((e as Error).message); } }} className="chip chip-on !h-9">Send</button>
+          <button onClick={() => setPostToSend(undefined)} aria-label="Don’t send"><X size={16} /></button>
+        </div>
+      )}
       {picking && canWrite && (
         <div className="card mt-3 p-3">
           <p className="mb-2 text-sm font-semibold">Share a recipe</p>

@@ -383,3 +383,43 @@ create trigger notify_comment after insert on public.comments for each row execu
 do $$ begin alter publication supabase_realtime add table public.direct_messages; exception when others then null; end $$;
 do $$ begin alter publication supabase_realtime add table public.dm_reactions; exception when others then null; end $$;
 do $$ begin alter publication supabase_realtime add table public.notifications; exception when others then null; end $$;
+
+-- ───────────────────────── Hide my streak (privacy switch) ─────────────────────────
+create or replace function public.hide_streak() returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  if not (public.setting_of(new.user_id)).show_activity then new.streak := 0; end if;
+  return new;
+end $$;
+drop trigger if exists hide_streak on public.profiles_public;
+create trigger hide_streak before insert or update on public.profiles_public for each row execute function public.hide_streak();
+
+-- ───────────────────────── Abuse filter ─────────────────────────
+-- Phrases that are blocked in posts, comments and messages. Add more in Supabase (Table editor →
+-- banned_phrases); only the owner can, with the service key. Matching ignores case.
+create table if not exists public.banned_phrases (phrase text primary key check (char_length(phrase) between 2 and 80));
+alter table public.banned_phrases enable row level security;
+insert into public.banned_phrases (phrase) values
+  ('kill yourself'), ('kys'), ('go die'), ('you should die'), ('hope you die'), ('end your life'), ('nobody would miss you'),
+  ('starve yourself'), ('you fat pig'), ('fat cow'), ('ugly whale')
+on conflict do nothing;
+
+create or replace function public.has_banned(t text) returns boolean
+language sql stable security definer set search_path = public as $$
+  select t is not null and exists (select 1 from banned_phrases b where lower(t) ~ ('(^|[^a-z])' || regexp_replace(lower(b.phrase), '([.*+?^${}()|\[\]\\])', '\\\1', 'g') || '($|[^a-z])'));
+$$;
+
+create or replace function public.block_abuse() returns trigger language plpgsql security definer set search_path = public as $$
+declare txt text;
+begin
+  txt := coalesce(to_jsonb(new) ->> 'body', '') || ' ' || coalesce(to_jsonb(new) ->> 'title', '') || ' ' || coalesce(to_jsonb(new) ->> 'caption', '');
+  if public.has_banned(txt) then raise exception 'This breaks our community rules (no harassment or abuse). Please rephrase.'; end if;
+  return new;
+end $$;
+drop trigger if exists block_abuse on public.direct_messages;
+create trigger block_abuse before insert or update on public.direct_messages for each row execute function public.block_abuse();
+drop trigger if exists block_abuse on public.posts;
+create trigger block_abuse before insert or update on public.posts for each row execute function public.block_abuse();
+drop trigger if exists block_abuse on public.comments;
+create trigger block_abuse before insert or update on public.comments for each row execute function public.block_abuse();
+drop trigger if exists block_abuse on public.messages;
+create trigger block_abuse before insert or update on public.messages for each row execute function public.block_abuse();

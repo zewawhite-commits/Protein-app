@@ -12,7 +12,7 @@ import { dailyGoal } from '@/lib/nutrition';
 import { todayKey } from '@/lib/dates';
 import { deletePhoto } from '@/lib/photos';
 import { dayPartNow, type DayPart, type WaterDrink } from '@/lib/water';
-import type { StepDay } from '@/lib/activity';
+import type { Fast, StepDay } from '@/lib/activity';
 import { burnedKcal, type ExerciseEntry, type ExerciseType, type Routine } from '@/lib/exercise';
 import { guardWrite } from '@/lib/gate';
 import { elapsed, type ActiveWorkout, type CustomExercise, type LiveSet, type WorkoutLog } from '@/lib/liveWorkout';
@@ -95,6 +95,11 @@ interface State {
   waterLog: Record<string, WaterDrink[]>;
   /** Steps, walking distance and (when known, e.g. from a watch) active calories, by day. */
   steps: Record<string, StepDay>;
+  /** Fasts: start/end times (ms) and the goal in hours. The one with no end is running. */
+  fasts: Fast[];
+  startFast: (goalH: number, start?: number) => void;
+  endFast: (end?: number) => void;
+  removeFast: (id: string) => void;
   setSteps: (date: string, day: Omit<StepDay, 'updatedAt'> | null) => void;
   removeDrink: (date: string, id: string) => void;
   /** Deleted items (id, or "w:<date>" for weigh-ins) → when, so a sync never brings them back. */
@@ -182,6 +187,7 @@ export const useStore = create<State>()(
       sleep: {},
       waterLog: {},
       steps: {},
+      fasts: [],
       deleted: {},
 
       addMeasurement: (m) => set((s) => ({ measurements: [...s.measurements, { ...m, id: crypto.randomUUID(), createdAt: Date.now() }] })),
@@ -191,6 +197,9 @@ export const useStore = create<State>()(
         if (e.externalId && s.exercises.some((x) => x.externalId === e.externalId)) return {};
         return { exercises: [...s.exercises, { source: 'manual' as const, ...e, id: crypto.randomUUID() }] };
       }),
+      startFast: (goalH, start) => set((s) => (s.fasts?.some((f) => !f.end) ? {} : { fasts: [...(s.fasts ?? []), { id: crypto.randomUUID(), start: start ?? Date.now(), goalH }] })),
+      endFast: (end) => set((s) => ({ fasts: (s.fasts ?? []).map((f) => (f.end ? f : { ...f, end: Math.max(f.start + 60_000, end ?? Date.now()) })) })),
+      removeFast: (id) => set((s) => ({ fasts: (s.fasts ?? []).filter((f) => f.id !== id), deleted: { ...s.deleted, [id]: Date.now() } })),
       setSteps: (date, day) => set((s) => {
         const next = { ...(s.steps ?? {}) };
         if (!day) delete next[date]; else next[date] = { ...day, updatedAt: Date.now() };
@@ -382,12 +391,13 @@ export const useStore = create<State>()(
           sleep: (d as { sleep?: Record<string, SleepEntry> }).sleep ?? {},
           waterLog: (d as { waterLog?: Record<string, WaterDrink[]> }).waterLog ?? {},
           steps: (d as { steps?: Record<string, StepDay> }).steps ?? {},
+          fasts: (d as { fasts?: Fast[] }).fasts ?? [],
           deleted: (d as { deleted?: Record<string, number> }).deleted ?? {},
         });
       },
 
       resetAll: () =>
-        set({ profile: null, settings: defaultSettings, entries: [], customFoods: [], goalHistory: {}, recentFoodIds: [], favoriteFoodIds: [], remoteFoods: {}, savedMeals: [], savedPlans: [], workoutPlan: null, savedRecipes: [], coachChats: [], weights: [], exercises: [], measurements: [], routines: [], customExercises: [], workoutLogs: [], activeWorkout: null, progressPhotos: [], premium: null, perks: null, serverTier: null, picks: {}, water: {}, waterLog: {}, steps: {}, sleep: {}, deleted: {} }),
+        set({ profile: null, settings: defaultSettings, entries: [], customFoods: [], goalHistory: {}, recentFoodIds: [], favoriteFoodIds: [], remoteFoods: {}, savedMeals: [], savedPlans: [], workoutPlan: null, savedRecipes: [], coachChats: [], weights: [], exercises: [], measurements: [], routines: [], customExercises: [], workoutLogs: [], activeWorkout: null, progressPhotos: [], premium: null, perks: null, serverTier: null, picks: {}, water: {}, waterLog: {}, steps: {}, fasts: [], sleep: {}, deleted: {} }),
     }),
     {
       name: 'protein-app',
@@ -407,7 +417,7 @@ useStore.subscribe((s, prev) => {
   const changed =
     s.entries !== prev.entries || s.profile !== prev.profile || s.customFoods !== prev.customFoods ||
     s.goalHistory !== prev.goalHistory || s.favoriteFoodIds !== prev.favoriteFoodIds ||
-    s.savedMeals !== prev.savedMeals || s.savedPlans !== prev.savedPlans || s.workoutPlan !== prev.workoutPlan || s.savedRecipes !== prev.savedRecipes || s.coachChats !== prev.coachChats || s.measurements !== prev.measurements || s.routines !== prev.routines || s.customExercises !== prev.customExercises || s.workoutLogs !== prev.workoutLogs || s.weights !== prev.weights || s.exercises !== prev.exercises || s.water !== prev.water || s.waterLog !== prev.waterLog || s.steps !== prev.steps || s.sleep !== prev.sleep || s.deleted !== prev.deleted;
+    s.savedMeals !== prev.savedMeals || s.savedPlans !== prev.savedPlans || s.workoutPlan !== prev.workoutPlan || s.savedRecipes !== prev.savedRecipes || s.coachChats !== prev.coachChats || s.measurements !== prev.measurements || s.routines !== prev.routines || s.customExercises !== prev.customExercises || s.workoutLogs !== prev.workoutLogs || s.weights !== prev.weights || s.exercises !== prev.exercises || s.water !== prev.water || s.waterLog !== prev.waterLog || s.steps !== prev.steps || s.fasts !== prev.fasts || s.sleep !== prev.sleep || s.deleted !== prev.deleted;
   if (changed && s.lastModified === prev.lastModified) useStore.setState({ lastModified: Date.now() });
 });
 
@@ -422,14 +432,14 @@ export function goalOn(date: string, goalHistory: Record<string, number>, profil
 
 export function exportData() {
   // Premium passes and personal API keys are never written to backup files.
-  const { profile, settings, entries, customFoods, goalHistory, recentFoodIds, favoriteFoodIds, remoteFoods, savedMeals, savedPlans, workoutPlan, savedRecipes, coachChats, weights, exercises, measurements, routines, customExercises, workoutLogs, water, waterLog, steps, sleep, deleted } = useStore.getState();
+  const { profile, settings, entries, customFoods, goalHistory, recentFoodIds, favoriteFoodIds, remoteFoods, savedMeals, savedPlans, workoutPlan, savedRecipes, coachChats, weights, exercises, measurements, routines, customExercises, workoutLogs, water, waterLog, steps, fasts, sleep, deleted } = useStore.getState();
   const safeSettings = settings;
-  return { app: 'protein-app', exportedAt: new Date().toISOString(), profile, settings: safeSettings, entries, customFoods, goalHistory, recentFoodIds, favoriteFoodIds, remoteFoods, savedMeals, savedPlans, workoutPlan, savedRecipes, coachChats, weights, exercises, measurements, routines, customExercises, workoutLogs, water, waterLog, steps, sleep, deleted };
+  return { app: 'protein-app', exportedAt: new Date().toISOString(), profile, settings: safeSettings, entries, customFoods, goalHistory, recentFoodIds, favoriteFoodIds, remoteFoods, savedMeals, savedPlans, workoutPlan, savedRecipes, coachChats, weights, exercises, measurements, routines, customExercises, workoutLogs, water, waterLog, steps, fasts, sleep, deleted };
 }
 
 // Look-only mode (sign-up code not entered yet): saving is blocked and the code sheet opens.
 {
-  const WRITES = ['addEntry', 'updateEntry', 'removeEntry', 'addExercise', 'updateExercise', 'logWeight', 'addMeasurement', 'saveMeal', 'savePlan', 'saveRecipe', 'upsertCustomFood', 'addWater', 'saveRoutine', 'saveCustomExercise', 'addProgressPhoto', 'toggleFavorite', 'setActiveWorkout', 'logSleep', 'removeDrink', 'setSteps'] as const;
+  const WRITES = ['addEntry', 'updateEntry', 'removeEntry', 'addExercise', 'updateExercise', 'logWeight', 'addMeasurement', 'saveMeal', 'savePlan', 'saveRecipe', 'upsertCustomFood', 'addWater', 'saveRoutine', 'saveCustomExercise', 'addProgressPhoto', 'toggleFavorite', 'setActiveWorkout', 'logSleep', 'removeDrink', 'setSteps', 'startFast', 'endFast'] as const;
   const s = useStore.getState() as unknown as Record<string, unknown>;
   const patch: Record<string, unknown> = {};
   for (const k of WRITES) {

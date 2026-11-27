@@ -10,6 +10,7 @@ import { haptic, toast } from '@/components/fx';
 import { useFoodDb, useFoodLookup, usePhotoUrl } from '@/lib/hooks';
 import { SOURCE_SHORT, searchFoods, splitName, groupDuplicates, hasCoreNutrition } from '@/lib/foods';
 import { searchProducts } from '@/lib/openFoodFacts';
+import { plateParts } from '@/lib/plate';
 import { deletePhoto } from '@/lib/photos';
 import { fitsDiet } from '@/lib/goals';
 import { addDays, mealForNow, relativeDay, todayKey } from '@/lib/dates';
@@ -233,6 +234,12 @@ export default function AddFood() {
         </p>
       )}
 
+      {searching && plateParts(dq).length > 1 && (
+        <Link to={`/recipe?plate=${encodeURIComponent(dq)}`} className="card mt-4 flex items-center gap-3 p-4 transition active:scale-[.99]">
+          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-primary text-on-primary"><Plus size={20} /></span>
+          <span className="min-w-0 flex-1"><span className="block font-bold">Build this plate</span><span className="block truncate text-sm text-silver">{plateParts(dq).join(' + ')}: each item with its own amount, then the total</span></span>
+        </Link>
+      )}
       {searching && <WorldProducts query={dq} onPick={setSelected} localCount={results.length} />}
       {searching && (
         <div className="card mt-6 p-5">

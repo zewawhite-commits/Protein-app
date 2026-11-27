@@ -7,7 +7,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowLeft, Check, ChevronDown, Copy, Crown, Droplet, Drumstick, Dumbbell, Flame, Globe2, Heart, ImagePlus, Link2, Loader2, Lock, LogOut, MessageCircle, Plus, RefreshCw, Reply, Send, Share2, Smile, SmilePlus, ThumbsUp, Trash2, UserRound, Users, Utensils, Wheat, X, MoreHorizontal, Flag, ShieldOff } from 'lucide-react';
 import { AVATAR_COLORS, Avatar } from '@/components/Avatar';
 import { GroupChat } from '@/components/GroupChat';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useStore } from '@/store/useStore';
 import { accountsEnabled, useSession } from '@/lib/account';
 import { useDay } from '@/lib/hooks';
@@ -455,7 +455,7 @@ function PostCard({ post, me, onReact, onOpen, onDelete, onAuthor }: { post: Pos
           </div>
         </button>
         {post.user_id === me && <button onClick={() => { if (confirm('Delete this post? This can’t be undone.')) onDelete(); }} className="grid h-9 w-9 place-items-center rounded-full text-dim" aria-label="Delete post"><Trash2 size={16} /></button>}
-        {me && post.user_id !== me && <PostMenu post={post} />}
+        {me && <PostMenu post={post} mine={post.user_id === me} />}
       </div>
       <p className="mt-3 px-4 text-[17px] font-semibold leading-snug">{post.title}</p>
       {post.caption && <p className="mt-1 px-4 text-[15px] text-silver">{post.caption}</p>}
@@ -881,7 +881,8 @@ function CommunityFeed() {
 
 
 /** Report a post, or block its author, from the feed. */
-function PostMenu({ post }: { post: Post }) {
+function PostMenu({ post, mine }: { post: Post; mine?: boolean }) {
+  const nav = useNavigate();
   const [open, setOpen] = useState(false);
   const [reporting, setReporting] = useState(false);
   const name = post.author?.display_name ?? 'this person';
@@ -890,8 +891,9 @@ function PostMenu({ post }: { post: Post }) {
       <button onClick={() => setOpen(true)} className="grid h-9 w-9 place-items-center rounded-full text-dim" aria-label="Post options"><MoreHorizontal size={17} /></button>
       <Sheet open={open} onClose={() => setOpen(false)} title="Post">
         <div className="grid gap-2">
-          <button onClick={() => { setOpen(false); setReporting(true); }} className="btn-ghost w-full justify-start"><Flag size={16} /> Report post</button>
-          <button onClick={async () => { if (!confirm(`Block ${name}? You won’t see their posts and they can’t message or follow you. They won’t be told.`)) return; try { await block(post.user_id); toast('Blocked. Pull to refresh.'); } catch (e) { toast((e as Error).message); } setOpen(false); }} className="btn-ghost w-full justify-start text-danger"><ShieldOff size={16} /> Block {name}</button>
+          <button onClick={() => { setOpen(false); nav(`/messages?post=${post.id}&title=${encodeURIComponent(post.title.slice(0, 120))}`); }} className="btn-ghost w-full justify-start"><Send size={16} /> Send in a message</button>
+          {!mine && <button onClick={() => { setOpen(false); setReporting(true); }} className="btn-ghost w-full justify-start"><Flag size={16} /> Report post</button>}
+          {!mine && <button onClick={async () => { if (!confirm(`Block ${name}? You won’t see their posts and they can’t message or follow you. They won’t be told.`)) return; try { await block(post.user_id); toast('Blocked. Pull to refresh.'); } catch (e) { toast((e as Error).message); } setOpen(false); }} className="btn-ghost w-full justify-start text-danger"><ShieldOff size={16} /> Block {name}</button>}
         </div>
       </Sheet>
       <ReportSheet open={reporting} onClose={() => setReporting(false)} target={{ type: post.photo_path ? 'image' : 'post', id: post.id, user: post.user_id }} what="post" />
