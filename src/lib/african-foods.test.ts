@@ -11,7 +11,7 @@ beforeAll(async () => {
 
 describe('African foods', () => {
   it.each([
-    ['jollof rice', /^Jollof rice$/], ['jollof rice with chicken', /^Jollof rice$/], ['tuwo shinkafa', /Tuwo shinkafa/], ['miyan kuka', /Miyan kuka/],
+    ['jollof rice', /^Jollof rice$/], ['jollof rice with chicken', /^Jollof rice with chicken$/], ['tuwo shinkafa', /Tuwo shinkafa/], ['miyan kuka', /Miyan kuka/],
     ['egusi soup', /Egusi/], ['pounded yam', /Pounded yam/], ['suya', /Suya/], ['moi moi', /Moi moi/], ['akara', /Akara/], ['masa', /Masa/],
     ['nigerian fried rice', /fried rice/i], ['eba', /Eba/], ['amala', /Amala/], ['fufu', /Fufu/], ['pepper soup', /pepper soup/i], ['boiled rice', /Rice, white/],
     ['ofada rice', /Rice, brown.*cook/], ['efo riro', /Efo riro/], ['ogbono soup', /Ogbono/], ['banga soup', /Banga/], ['puff puff', /Puff puff/],

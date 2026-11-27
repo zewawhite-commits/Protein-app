@@ -13,7 +13,7 @@ import { searchProducts } from '@/lib/openFoodFacts';
 import { plateParts } from '@/lib/plate';
 import { varietiesFor } from '@/lib/varieties';
 import { deletePhoto } from '@/lib/photos';
-import { fitsDiet } from '@/lib/goals';
+import { dietLabel, fitsDiet } from '@/lib/goals';
 import { addDays, mealForNow, relativeDay, todayKey } from '@/lib/dates';
 import { useStore } from '@/store/useStore';
 import type { CustomFood, Food, PrepState, Meal } from '@/lib/types';
@@ -98,7 +98,9 @@ export default function AddFood() {
   // Optional: hide foods whose source doesn't list all the core numbers.
   const [completeOnly, setCompleteOnly] = useState(() => { try { return localStorage.getItem('provora-complete-only') === '1'; } catch { return false; } });
   const methodRe = METHODS.find((m) => m.value === method)?.re;
-  const list = (searching ? results : browse).filter((f) => (!completeOnly || hasCoreNutrition(f)) && (!methodRe || methodRe.test(f.name)));
+  // Vegetarian / vegan filter: starts from the person's own diet, can be switched off any time.
+  const [plantOnly, setPlantOnly] = useState<'all' | 'vegetarian' | 'vegan'>(() => (diet === 'vegan' || diet === 'vegetarian' ? diet : 'all'));
+  const list = (searching ? results : browse).filter((f) => (!completeOnly || hasCoreNutrition(f)) && (!methodRe || methodRe.test(f.name)) && (plantOnly === 'all' || fitsDiet(f, plantOnly)));
   const groups = useMemo(() => (searching ? groupDuplicates(list) : list.map((food) => ({ food, others: [] as Food[], conflict: false }))), [list, searching]);
   const [openGroup, setOpenGroup] = useState<string | null>(null);
   const back = () => nav(date === todayKey() ? '/' : `/?date=${date}`);
@@ -157,7 +159,7 @@ export default function AddFood() {
                 <button key={s.value} onClick={() => setState(s.value)} className={cx('chip', state === s.value && 'chip-on')}>{s.label}</button>
               )), ...METHODS.map((m) => (
                 <button key={m.value} onClick={() => setMethod((v) => (v === m.value ? '' : m.value))} className={cx('chip shrink-0', method === m.value && 'chip-on')} aria-pressed={method === m.value}>{m.label}</button>
-              )), (
+              )), ...(['vegetarian', 'vegan'] as const).map((d) => <button key={d} onClick={() => { haptic(); setPlantOnly((v) => (v === d ? 'all' : d)); }} className={cx('chip shrink-0', plantOnly === d && 'chip-on')} aria-pressed={plantOnly === d}>{d === 'vegan' ? 'Vegan' : 'Vegetarian'}</button>), (
                 <button key="complete" onClick={() => setCompleteOnly((v) => { try { localStorage.setItem('provora-complete-only', v ? '0' : '1'); } catch { /* ignore */ } return !v; })} className={cx('chip shrink-0', completeOnly && 'chip-on')} aria-pressed={completeOnly}>Complete nutrition only</button>
               )]
             : TABS.map(([v, l]) => (
@@ -364,6 +366,7 @@ function FoodRow({ food, onClick }: { food: Food; onClick: () => void }) {
         </p>
         {/* Labels wrap onto a second line rather than spill into the buttons. */}
         <div className="mt-1.5 flex min-w-0 flex-wrap items-center gap-1.5">
+          {(() => { const l = dietLabel(food); return l ? <span className="rounded-full bg-accent/10 px-2 py-0.5 text-[11px] font-semibold text-accent">{l}</span> : null; })()}
           <StateBadge state={food.state} className="shrink-0" />
           <AllergyTag food={food} />
           {food.source !== 'usda-sr' && <span className="shrink-0 rounded-full bg-raised px-2 text-[12px] font-semibold uppercase leading-5 tracking-wide text-silver">{SOURCE_SHORT[food.source]}</span>}

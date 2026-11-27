@@ -40,9 +40,11 @@ export function suggestionReason(goal: FitnessGoal, activity: ActivityLevel, gPe
   return 'Within the 1.4–2.0 g/kg range recommended for people who exercise regularly.';
 }
 
-const MEAT = /\b(chicken|beef|pork|lamb|turkey|veal|ham|bacon|sausage|duck)\b/i;
-const FISH = /\b(fish|salmon|tuna|shrimp|crustaceans|mollusks|cod|sardine)\b/i;
-const ANIMAL = /\b(egg|milk|cheese|yogurt|whey|cream|butter|honey)\b/i;
+const MEAT = /\b(chicken|beef|pork|lamb|turkey|veal|ham|bacon|sausages?|duck|goat|mutton|venison|rabbit|liver|tripe|kidneys?|gizzards?|oxtails?|suya|meats?|lard|gelatin|gelatine|pepperoni|salami|chorizo|frankfurters?|hot dogs?|bologna|pastrami|jerky|game|quail|goose|pigeon|snail|stock, (beef|chicken)|broth, (beef|chicken)|bone broth)\b/i;
+const FISH = /\b(fish|salmon|tuna|shrimps?|prawns?|crustaceans|mollusks|cod|sardines?|catfish|tilapia|mackerel|anchov(y|ies)|crabs?|lobsters?|oysters?|mussels?|clams?|scallops?|squid|octopus|crayfish|periwinkles?|herring|trout|haddock|hake|croaker|stockfish|seafood|calamari)\b/i;
+const ANIMAL = /\b(eggs?|milk|cheeses?|yogh?urts?|whey|casein|cream|butter|honey|ghee|mayonnaise|paneer|custard|kefir|buttermilk|lactose)\b/i;
+/** Plant foods whose names contain an animal word ("peanut butter", "soy milk", "eggplant" is fine already). */
+const PLANT_ALIKE = /\b(peanut|almond|cashew|nut|seed|shea|cocoa|apple|soy|soya|sunflower|groundnut|sesame)\s+butter\b|\b(coconut|soy|soya|almond|oat|rice|cashew|hemp|pea)\s+(milk|cream|yogh?urt|cheese)\b|\bmeatless\b|\bveggie\b|\bvegan\b|\bcream of tartar\b|\bplant-based\b|\b(non-?dairy|dairy-free)\b/gi;
 
 const AVOID_RULES: Record<string, RegExp> = {
   Peanuts: /\bpeanut/i,
@@ -72,12 +74,23 @@ export function fitsPrefs(food: Pick<Food, 'name' | 'per100'>, p: { diet?: Diet;
   return true;
 }
 
-/** Whether a food fits a diet, judged from its name (used to tailor suggestions, never to hide search results). */
-export function fitsDiet(food: Pick<Food, 'name'>, diet: Diet | undefined): boolean {
+/**
+ * Whether a food fits a diet, judged from its name and, for dishes, its ingredient list
+ * (so egusi soup made with beef isn't called vegetarian). Used to tailor suggestions and the
+ * Vegetarian / Vegan filter; it never hides anything from a plain search.
+ */
+export function fitsDiet(food: Pick<Food, 'name'> & { sourceNote?: string; recipe?: { ingredients: { name: string }[] } }, diet: Diet | undefined): boolean {
   if (!diet || diet === 'all') return true;
-  if (MEAT.test(food.name)) return false;
+  const ingredients = food.recipe ? food.recipe.ingredients.map((i) => i.name).join('; ') : /standard recipe|^Your recipe/i.test(food.sourceNote ?? '') ? food.sourceNote ?? '' : '';
+  // Named as vegan / plant-based by its maker or recipe: trust that.
+  if (/\b(vegan|plant-based|meatless)\b/i.test(food.name) && !ingredients) return true;
+  const text = `${food.name}; ${ingredients}`.replace(PLANT_ALIKE, ' ');
+  if (MEAT.test(text)) return false;
   if (diet === 'pescatarian') return true;
-  if (FISH.test(food.name)) return false;
+  if (FISH.test(text)) return false;
   if (diet === 'vegetarian') return true;
-  return !ANIMAL.test(food.name);
+  return !ANIMAL.test(text);
 }
+
+/** "Vegan" / "Vegetarian" label for a food, or null. */
+export const dietLabel = (food: Parameters<typeof fitsDiet>[0]): 'Vegan' | 'Vegetarian' | null => (fitsDiet(food, 'vegan') ? 'Vegan' : fitsDiet(food, 'vegetarian') ? 'Vegetarian' : null);

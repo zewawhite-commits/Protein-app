@@ -9,7 +9,8 @@ describe('standard recipe ids are permanent', () => {
   it('every dish in the database has the id it was given', () => {
     for (const row of foods.filter((r) => r[10] === 'r')) {
       const full = row[1] as string;
-      const base = Object.keys(reg).find((n) => full === n || full.startsWith(`${n} (`));
+      // Longest matching name first: "Jollof rice (vegan)" is its own dish, not "Jollof rice".
+      const base = Object.keys(reg).sort((x, y) => y.length - x.length).find((n) => full === n || full.startsWith(`${n} (`));
       expect(base, full).toBeTruthy();
       expect(row[0], full).toBe(reg[base!]);
     }

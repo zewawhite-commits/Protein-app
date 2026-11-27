@@ -54,12 +54,14 @@ const V: Record<string, string[]> = {
   smoothie: ['Banana smoothie', 'Strawberry smoothie', 'Mango smoothie', 'Green smoothie', 'Protein smoothie', 'Smoothie bowl'],
   seeds: ['Chia seeds', 'Flaxseeds', 'Pumpkin seeds', 'Sunflower seeds', 'Sesame seeds', 'Egusi seeds', 'Hemp seeds'],
   dumplings: ['Gyoza', 'Momo', 'Pierogi', 'Wontons', 'Bao'],
+  vegan: ['Tofu scramble', 'Buddha bowl', 'Lentil soup', 'Bean chili', 'Vegetable curry with coconut', 'Chana masala', 'Dal', 'Falafel wrap', 'Vegan jollof rice', 'Vegan moi moi', 'Vegan egusi soup', 'Ewa agoyin and dodo', 'Vegetable fried rice', 'Tofu pad thai', 'Mujadara', 'Black bean tacos', 'Ratatouille', 'Lentil bolognese', 'Tempeh stir-fry', 'Avocado cucumber sushi'],
+  vegetarian: ['Palak paneer', 'Mushroom risotto', 'Vegetable lasagne', 'Vegetable thali', 'Bean and cheese burrito', 'Shakshuka', 'Menemen', 'Paneer tikka', 'Vegetable biryani', 'Gado gado', 'Veggie burger', 'Mac and cheese'],
   wrap: ['Chicken wrap', 'Shawarma', 'Burrito', 'Tacos', 'Falafel sandwich', 'Gyro'],
 };
 const ALIAS: Record<string, string> = {
   fishes: 'fish', rices: 'rice', soups: 'soup', meats: 'meat', breads: 'bread', noodle: 'noodles', bean: 'beans', eggs: 'egg', drinks: 'drink',
   yogurts: 'yogurt', yoghurt: 'yogurt', yoghurts: 'yogurt', curries: 'curry', stews: 'stew', salads: 'salad', fruits: 'fruit', oils: 'oil', nut: 'nuts',
-  potatoes: 'potato', swallows: 'swallow', juices: 'juice', plantains: 'plantain', okro: 'okra', 'sea food': 'seafood', vegetable: 'vegetables', veg: 'vegetables', veggies: 'vegetables', cereals: 'cereal', snacks: 'snack', desserts: 'dessert', sweets: 'dessert', cakes: 'cake', sauces: 'sauce', spreads: 'spread', 'protein powder': 'protein', sandwiches: 'sandwich', pizzas: 'pizza', burgers: 'burger', smoothies: 'smoothie', seed: 'seeds', dumpling: 'dumplings', wraps: 'wrap', goat: 'goat', 'goat meat': 'goat', 'pork meat': 'pork',
+  potatoes: 'potato', swallows: 'swallow', juices: 'juice', plantains: 'plantain', okro: 'okra', 'sea food': 'seafood', vegetable: 'vegetables', 'plant based': 'vegan', 'plant-based': 'vegan', veggie: 'vegetarian', 'vegan food': 'vegan', 'vegetarian food': 'vegetarian', veg: 'vegetables', veggies: 'vegetables', cereals: 'cereal', snacks: 'snack', desserts: 'dessert', sweets: 'dessert', cakes: 'cake', sauces: 'sauce', spreads: 'spread', 'protein powder': 'protein', sandwiches: 'sandwich', pizzas: 'pizza', burgers: 'burger', smoothies: 'smoothie', seed: 'seeds', dumpling: 'dumplings', wraps: 'wrap', goat: 'goat', 'goat meat': 'goat', 'pork meat': 'pork',
 };
 
 /** "Label|search" lets a choice use the closest real record (e.g. jasmine rice → long-grain white rice). */

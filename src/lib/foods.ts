@@ -167,7 +167,7 @@ export interface SearchOptions {
 const PHRASES: [RegExp, string][] = [
   [/\bbiltong\b/, 'beef jerky'], [/\bboerewors\b/, 'sausage pork and beef'], [/\bnyama choma\b/, 'goat roasted'],
   [/\blechon\b/, 'pork roasted'], [/\blumpia\b/, 'spring roll'], [/\bdim sum\b/, 'dumpling'], [/\bfried noodles\b/, 'chow mein'],
-  [/\b(dodo|alloco|maduros|platanos)\b/, 'plantain cooked with oil'], [/\basado\b/, 'beef flank'], [/\bofada rice\b/, 'rice brown'],
+  [/\b(dodo|alloco|maduros|platanos)\b/, 'plantain cooked with oil'], [/\bofada rice\b/, 'rice brown'],
   [/\bchips\b(?! and)/, 'french fries'], [/\bcrisps\b/, 'potato chips'], [/\baubergine\b/, 'eggplant'], [/\bcoriander\b/, 'cilantro'],
   [/\b(agbalumo|udara|alasa)\b/, 'african star apple'], [/\bgarden eggs?\b/, 'eggplant fruit raw'], [/\bkilishi\b/, 'beef jerky'],
   [/\bsmall chops\b/, 'puff puff'], [/\bpawpaw\b/, 'papaya'], [/\bgroundnuts?\b(?! (soup|flour|oil))/, 'peanuts'], [/\bbambara nuts?\b/, 'bambara groundnut'],
