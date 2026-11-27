@@ -127,6 +127,13 @@ export default function Profile({ mode = 'profile' }: { mode?: 'profile' | 'sett
       {isSettings && (
         <>
 
+      <Group title="Food preference">
+        <div id="diet" className="px-4 py-3">
+          <Segmented<'all' | 'vegetarian' | 'vegan'> full value={profile.diet === 'vegetarian' || profile.diet === 'vegan' ? profile.diet : 'all'} onChange={(d) => { useStore.getState().saveProfile({ ...profile, diet: d }); toast(d === 'all' ? 'No dietary restriction' : `${d === 'vegan' ? 'Vegan' : 'Vegetarian'}: suggestions, plans and search now fit this`); }} options={[{ value: 'all', label: 'No restriction' }, { value: 'vegetarian', label: 'Vegetarian' }, { value: 'vegan', label: 'Vegan' }]} />
+          <p className="mt-2 text-[13px] text-silver">Used for food suggestions, meal plans, recipes and search filters. You can change your dietary preference anytime here.</p>
+        </div>
+      </Group>
+
       <Group title="Appearance">
         <Row icon={settings.theme === 'light' ? <Sun size={18} /> : <Moon size={18} />} label="Theme">
           <Segmented<Theme> value={settings.theme} onChange={(t) => updateSettings({ theme: t })} options={[{ value: 'dark', label: 'Dark' }, { value: 'light', label: 'Light' }, { value: 'system', label: 'Auto' }]} />

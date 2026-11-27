@@ -6,7 +6,11 @@
  * (e.g. every banana record shares the banana photo).
  */
 import { artFor } from './foodArt';
-import { photoMust } from './photoQueries';
+import { dishPhotoKey, photoMust } from './photoQueries';
+import { COUNTRY_DISHES } from './countryDishes';
+
+/** Every country dish by its exact name → its own photo slot. */
+const COUNTRY_DISH_KEYS = new Map(Object.values(COUNTRY_DISHES).flatMap((v) => v.dishes.map((d) => [d.toLowerCase(), dishPhotoKey(d)] as const)));
 
 /** Dishes with a photo of their own, checked before the general illustration key. */
 const DISH_RULES: [RegExp, string][] = [
@@ -205,6 +209,8 @@ const onlyOk = (key: string, n: string) => { const o = ONLY[key]; return !o || (
 /** Which photo a food uses, or undefined for a plain tile. Only when we're sure it shows this food. */
 export function photoKeyFor(name: string, category?: string): string | undefined {
   const n = name.toLowerCase();
+  // A dish already given a specific photo rule keeps it; otherwise a country dish gets its own slot.
+  const countryKey = COUNTRY_DISH_KEYS.get(n.split(' (')[0]);
   if (BRANDED.test(name) || /\b(fast foods?|restaurant|breaded|breading|nuggets?|sandwich(es)?|burger|luncheon|deli|baby food|infant|as ingredient)\b/.test(n)) return undefined;
   const plain = !NOT_PLAIN.test(n.replace(NOTES, ' '));
   // The food's main name: "Bread, wheat" → "bread"; "Jollof rice (party jollof)" → "jollof rice".
@@ -215,6 +221,7 @@ export function photoKeyFor(name: string, category?: string): string | undefined
     if (COMBO.has(key)) { if (re.test(n)) return / of |\*/.test(n.split('(')[0]) || /\band\b.*\band\b|, with /.test(n) ? undefined : key; continue; }
     if (re.test(main)) return / of | with |\*/.test(n.split('(')[0]) || !onlyOk(key, n) ? undefined : key;
   }
+  if (countryKey) return countryKey;
   if (!plain) return undefined;
   const art = artFor(name, category);
   if (art === 'fork_and_knife_with_plate') return undefined;

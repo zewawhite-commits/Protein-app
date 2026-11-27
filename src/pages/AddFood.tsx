@@ -216,6 +216,9 @@ export default function AddFood() {
           <ChevronRight size={20} className="shrink-0 text-dim" />
         </Link>
       )}
+      {searching && plantOnly !== 'all' && (
+        <p className="mb-2 px-1 text-[13px] text-silver">Showing {plantOnly} foods only. <Link to="/settings#diet" className="font-semibold text-accent">You can change your dietary preference anytime in Settings.</Link></p>
+      )}
       {searching && varietiesFor(dq) && (
         <div className="mb-2 mt-1" role="group" aria-label={`Types of ${varietiesFor(dq)!.group}`}>
           <p className="mb-1.5 px-1 text-[13px] font-semibold text-silver">Which {varietiesFor(dq)!.group}? Tap the one you had</p>

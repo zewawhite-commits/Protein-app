@@ -51,8 +51,10 @@ let added = 0, skipped = 0;
 const NEW = [];
 /** One serving of a dish, from cooked records; portions scale from that serving. */
 function serve(name, cuisine, items, aliases = [], unit = 'serving') {
-  if (taken.has(norm(name))) { skipped++; return; }
-  taken.add(norm(name));
+  const base = norm(name); // "X (region)" counts as X when checking for duplicates
+  name = name.replace(/\s*\(([^)]+)\)/g, ', $1'); // brackets are read as other names by the app
+  if (taken.has(base)) { skipped++; return; }
+  taken.add(base);
   const ingredients = items.filter(([, g]) => g > 0).map(([k, g]) => [key(name, k), g]);
   const total = ingredients.reduce((s, [, g]) => s + g, 0);
   NEW.push({ name, cuisine, aliases, yield: total, ingredients,
@@ -691,4 +693,4 @@ for (const [n, cu, items, al, u] of MISC) serve(n, cu, items, al, u);
 
 RECIPES.push(...NEW);
 console.error(`recipes-global: ${added} international dishes added, ${skipped} skipped as already in the database`);
-export { RECIPES };
+export { RECIPES, K };

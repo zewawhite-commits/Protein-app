@@ -1,5 +1,6 @@
 // What to search Unsplash for, per food photo key (see foodPhotos.ts). Server-side only.
 import { LIBRARY } from './exerciseLibrary.js';
+import { COUNTRY_DISHES } from './countryDishes.js';
 
 export const PHOTO_QUERIES: Record<string, string> = {
  "chicken_breast": "grilled chicken breast sliced",
@@ -295,3 +296,10 @@ export function photoMust(key: string): string[] {
 
 // Exercise photos (only shown once a person has checked each one shows exactly that exercise).
 for (const e of LIBRARY) PHOTO_QUERIES[`ex_${e.id}`] = `${e.name.toLowerCase()} exercise`;
+
+/** Photo slot for every country dish (shown only once someone approves a photo of exactly that dish). */
+export const dishPhotoKey = (dish: string) => `dish_${dish.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '').slice(0, 50)}`;
+for (const [country, v] of Object.entries(COUNTRY_DISHES)) {
+  if (/^Worldwide/.test(country)) { for (const d of v.dishes) PHOTO_QUERIES[dishPhotoKey(d)] ??= d.toLowerCase(); continue; }
+  for (const d of v.dishes) PHOTO_QUERIES[dishPhotoKey(d)] ??= `${d.toLowerCase().replace(/,.*$/, '')} ${v.demonym.toLowerCase()} food`;
+}

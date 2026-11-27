@@ -23,7 +23,7 @@ const V: Record<string, string[]> = {
   plantain: ['Fried plantain', 'Boiled plantain', 'Roasted plantain', 'Plantain chips', 'Kelewele', 'Plantain swallow'],
   potato: ['Boiled potato', 'Mashed potato', 'Baked potato', 'Chips', 'French fries', 'Roast potatoes', 'Sweet potato', 'Potato salad'],
   juice: ['Orange juice', 'Apple juice', 'Pineapple juice', 'Mango juice', 'Zobo drink', 'Grape juice', 'Smoothie'],
-  drink: ['Water', 'Tea', 'Coffee', 'Zobo drink', 'Kunu', 'Chapman', 'Soft drink', 'Orange juice', 'Milkshake', 'Malt drink', 'Smoothie'],
+  drink: ['Water', 'Tea', 'Coffee', 'Masala chai', 'Bubble tea', 'Horchata', 'Mango lassi', 'Thai iced tea', 'Moroccan mint tea', 'Hot chocolate', 'Cappuccino', 'Café latte', 'Matcha latte', 'Fresh orange juice', 'Lemonade', 'Sobolo', 'Zobo drink', 'Agua de jamaica', 'Coconut water', 'Sugarcane juice', 'Banana smoothie', 'Milkshake', 'Kefir drink', 'Teh tarik'],
   cheese: ['Cheddar', 'Mozzarella', 'Feta', 'Parmesan', 'Cottage cheese', 'Cream cheese', 'Halloumi', 'Goat cheese'],
   yogurt: ['Greek yoghurt', 'Plain yoghurt', 'Fruit yoghurt', 'Low-fat yoghurt', 'Ayran'],
   curry: ['Chicken curry', 'Goat curry', 'Thai red curry', 'Thai green curry', 'Massaman curry', 'Butter chicken', 'Chana masala', 'Dal', 'Katsu curry'],
@@ -41,7 +41,7 @@ const V: Record<string, string[]> = {
   cereal: ['Cornflakes', 'Oats', 'Granola', 'Muesli', 'Bran flakes', 'Crisp rice cereal|Crisp rice', 'Shredded wheat', 'Pap'],
   porridge: ['Oatmeal', 'Pap', 'Beans porridge', 'Yam porridge', 'Rice porridge', 'Millet porridge'],
   snack: ['Crisps', 'Popcorn', 'Plantain chips', 'Chin chin', 'Puff puff', 'Peanuts', 'Crackers', 'Granola bar', 'Pretzels', 'Trail mix', 'Meat pie', 'Doughnut'],
-  dessert: ['Ice cream', 'Chocolate cake', 'Cheesecake', 'Brownie', 'Apple pie', 'Rice pudding', 'Custard', 'Fruit salad', 'Cookies', 'Doughnut', 'Chocolate'],
+  dessert: ['Ice cream', 'Tiramisu', 'Baklava', 'Gulab jamun', 'Mango sticky rice', 'Churros with chocolate', 'Flan', 'Tres leches cake', 'Pastel de nata', 'Crème brûlée', 'Chocolate mousse', 'Cheesecake', 'Brownie', 'Apple pie', 'Malva pudding', 'Pavlova', 'Mochi', 'Kheer', 'Halo-halo', 'Brigadeiro', 'Knafeh', 'Carrot cake', 'Vegan chocolate cake', 'Fruit salad'],
   cake: ['Chocolate cake', 'Sponge cake', 'Carrot cake', 'Cheesecake', 'Fruit cake', 'Cupcake', 'Pound cake', 'Banana bread'],
   sauce: ['Tomato sauce', 'Ketchup', 'Mayonnaise', 'Soy sauce', 'Hot sauce', 'Barbecue sauce', 'Pesto', 'Gravy', 'Salsa', 'Shito', 'Mustard'],
   spread: ['Peanut butter', 'Butter', 'Margarine', 'Jam', 'Honey', 'Chocolate spread', 'Cream cheese', 'Almond butter'],
@@ -74,13 +74,30 @@ const V: Record<string, string[]> = {
 const ALIAS: Record<string, string> = {
   fishes: 'fish', rices: 'rice', soups: 'soup', meats: 'meat', breads: 'bread', noodle: 'noodles', bean: 'beans', eggs: 'egg', drinks: 'drink',
   yogurts: 'yogurt', yoghurt: 'yogurt', yoghurts: 'yogurt', curries: 'curry', stews: 'stew', salads: 'salad', fruits: 'fruit', oils: 'oil', nut: 'nuts',
-  potatoes: 'potato', swallows: 'swallow', juices: 'juice', plantains: 'plantain', okro: 'okra', 'sea food': 'seafood', vegetable: 'vegetables', 'plant based': 'vegan', 'indian food': 'indian', 'thai food': 'thai', 'chinese food': 'chinese', 'japanese food': 'japanese', 'korean food': 'korean', 'mexican food': 'mexican', 'italian food': 'italian', 'arabic': 'middle eastern', 'arab': 'middle eastern', 'lebanese': 'middle eastern', 'jamaican': 'caribbean', 'english': 'british', 'uk': 'british', 'usa': 'american', 'african food': 'african', 'latin': 'latin american', 'brazilian': 'latin american', 'peruvian': 'latin american', 'plant-based': 'vegan', veggie: 'vegetarian', 'vegan food': 'vegan', 'vegetarian food': 'vegetarian', veg: 'vegetables', veggies: 'vegetables', cereals: 'cereal', snacks: 'snack', desserts: 'dessert', sweets: 'dessert', cakes: 'cake', sauces: 'sauce', spreads: 'spread', 'protein powder': 'protein', sandwiches: 'sandwich', pizzas: 'pizza', burgers: 'burger', smoothies: 'smoothie', seed: 'seeds', dumpling: 'dumplings', wraps: 'wrap', goat: 'goat', 'goat meat': 'goat', 'pork meat': 'pork',
+  potatoes: 'potato', swallows: 'swallow', juices: 'juice', plantains: 'plantain', okro: 'okra', 'sea food': 'seafood', vegetable: 'vegetables', 'plant based': 'vegan', 'indian food': 'indian', 'thai food': 'thai', 'chinese food': 'chinese', 'japanese food': 'japanese', 'korean food': 'korean', 'mexican food': 'mexican', 'italian food': 'italian', 'arabic': 'middle eastern', 'arab': 'middle eastern', 'lebanese': 'middle eastern', 'jamaican': 'caribbean', 'english': 'british', 'uk': 'british', 'usa': 'american', 'african food': 'african', 'latin': 'latin american', 'plant-based': 'vegan', veggie: 'vegetarian', 'vegan food': 'vegan', 'vegetarian food': 'vegetarian', veg: 'vegetables', veggies: 'vegetables', cereals: 'cereal', snacks: 'snack', desserts: 'dessert', sweets: 'dessert', cakes: 'cake', sauces: 'sauce', spreads: 'spread', 'protein powder': 'protein', sandwiches: 'sandwich', pizzas: 'pizza', burgers: 'burger', smoothies: 'smoothie', seed: 'seeds', dumpling: 'dumplings', wraps: 'wrap', goat: 'goat', 'goat meat': 'goat', 'pork meat': 'pork',
 };
+
+import { COUNTRY_DISHES as COUNTRIES } from '@/data/countryDishes';
+
+/** Every country and territory: its name or nationality ("ghana", "ghanaian food") shows its dishes. */
+const COUNTRY: Record<string, { name: string; dishes: string[] }> = {};
+for (const [country, v] of Object.entries(COUNTRIES)) {
+  const entry = { name: country, dishes: v.dishes };
+  for (const k of [country, v.demonym, `${v.demonym} food`, `${country} food`, country.replace(/^the /i, '')]) COUNTRY[k.toLowerCase()] = entry;
+}
+COUNTRY['usa'] = COUNTRY['us'] = COUNTRY['america'] = COUNTRY['united states of america'];
+COUNTRY['uk'] = COUNTRY['britain'] = COUNTRY['england'] = COUNTRY['united kingdom'];
+COUNTRY['ivory coast'] = COUNTRY["côte d'ivoire"];
+COUNTRY['turkey'] = COUNTRY['türkiye'];
+COUNTRY['drc'] = COUNTRY['congo'] = COUNTRY['democratic republic of the congo'];
 
 /** "Label|search" lets a choice use the closest real record (e.g. jasmine rice → long-grain white rice). */
 export function varietiesFor(query: string): { group: string; options: { label: string; q: string; note?: string }[] } | null {
   const k = query.trim().toLowerCase();
   const key = ALIAS[k] ?? k;
-  if (!V[key]) return null;
+  if (!V[key]) {
+    const c = COUNTRY[k] ?? COUNTRY[k.replace(/ (food|dishes|cuisine)$/, '')];
+    return c ? { group: `${c.name} dish`, options: c.dishes.slice(0, 24).map((d) => ({ label: d, q: d })) } : null;
+  }
   return { group: key, options: V[key].map((o) => { const [label, q] = o.split('|'); return { label, q: q ?? label, ...(q ? { note: `closest record: ${q.toLowerCase()}` } : {}) }; }) };
 }

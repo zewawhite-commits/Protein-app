@@ -41,8 +41,8 @@ export function suggestionReason(goal: FitnessGoal, activity: ActivityLevel, gPe
 }
 
 const MEAT = /\b(chicken|beef|pork|lamb|turkey|veal|ham|bacon|sausages?|duck|goat|mutton|venison|rabbit|liver|tripe|kidneys?|gizzards?|oxtails?|suya|meats?|lard|gelatin|gelatine|pepperoni|salami|chorizo|frankfurters?|hot dogs?|bologna|pastrami|jerky|game|quail|goose|pigeon|snail|stock, (beef|chicken)|broth, (beef|chicken)|bone broth)\b/i;
-const FISH = /\b(fish|salmon|tuna|shrimps?|prawns?|crustaceans|mollusks|cod|sardines?|catfish|tilapia|mackerel|anchov(y|ies)|crabs?|lobsters?|oysters?|mussels?|clams?|scallops?|squid|octopus|crayfish|periwinkles?|herring|trout|haddock|hake|croaker|stockfish|seafood|calamari)\b/i;
-const ANIMAL = /\b(eggs?|milk|cheeses?|yogh?urts?|whey|casein|cream|butter|honey|ghee|mayonnaise|paneer|custard|kefir|buttermilk|lactose)\b/i;
+const FISH = /\b(fish|salmon|tuna|shrimps?|prawns?|crustaceans|mollusks|cod|sardines?|catfish|tilapia|mackerel|anchov(y|ies)|crabs?|lobsters?|oysters?|mussels?|clams?|scallops?|squid|octopus|crayfish|periwinkles?|herring|trout|haddock|hake|croaker|stockfish|seafood|calamari|worcestershire|caesar dressing|dashi|bonito)\b/i;
+const ANIMAL = /\b(eggs?|milk|cheeses?|yogh?urts?|whey|casein|cream|butter|honey|ghee|mayonnaise|paneer|custard|kefir|buttermilk|lactose|pesto|mayo|mayonnaise|meringues?|lassi|tzatziki|labneh|ricotta|mozzarella|feta|parmesan)\b/i;
 /** Plant foods whose names contain an animal word ("peanut butter", "soy milk", "eggplant" is fine already). */
 const PLANT_ALIKE = /\b(peanut|almond|cashew|nut|seed|shea|cocoa|apple|soy|soya|sunflower|groundnut|sesame)\s+butter\b|\b(coconut|soy|soya|almond|oat|rice|cashew|hemp|pea)\s+(milk|cream|yogh?urt|cheese)\b|\bmeatless\b|\bveggie\b|\bvegan\b|\bcream of tartar\b|\bplant-based\b|\b(non-?dairy|dairy-free)\b/gi;
 
