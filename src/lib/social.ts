@@ -110,7 +110,7 @@ export async function members(groupId: string): Promise<Member[]> {
     .sort((a, b) => b.streak - a.streak);
 }
 
-async function profilesFor(ids: string[]) {
+export async function profilesFor(ids: string[]) {
   const map = new Map<string, PublicProfile>();
   if (!ids.length) return map;
   const { data, error } = await db().from('profiles_public').select('user_id, display_name, avatar, streak, username, photo_path').in('user_id', [...new Set(ids)]);
@@ -280,7 +280,7 @@ export async function joinCommunity() {
 // ---------- private messages (needs supabase/recipes-messages.sql) ----------
 
 export interface DirectMessage { id: string; sender: string; recipient: string; body: string | null; recipe: SharedRecipe | null; created_at: string; read_at: string | null }
-/** request: you don't follow each other and haven't accepted or written to them — it waits under Requests, and you can't reply until you accept. */
+/** request: you don't follow them and haven't accepted or written to them — it waits under Requests, and you can't reply until you accept. */
 export interface Conversation { with: string; profile: PublicProfile; last: DirectMessage; unread: number; request: boolean }
 
 const setupHint = (e: { message: string } | null) => { if (e && /direct_messages|find_user|blocks|does not exist/.test(e.message)) throw new Error('Messages need a quick database update (run supabase/recipes-messages.sql in Supabase).'); fail(e); };
@@ -300,7 +300,8 @@ export async function conversations(): Promise<Conversation[]> {
     byOther.set(other, c);
   }
   const [profiles, mine, theirs, ok] = await Promise.all([profilesFor([...byOther.keys()]), following(), followers(), accepted()]);
-  return [...byOther.entries()].map(([w, { replied, ...c }]) => ({ with: w, profile: profiles.get(w) ?? { display_name: 'Member', avatar: '', streak: 0 }, ...c, request: !replied && !ok.has(w) && !(mine.has(w) && theirs.has(w)) }));
+  return [...byOther.entries()].map(([w, { replied, ...c }]) => ({ with: w, profile: profiles.get(w) ?? { display_name: 'Member', avatar: '', streak: 0 }, ...c, request: !replied && !ok.has(w) && !mine.has(w) }));
+  void theirs;
 }
 
 export async function thread(other: string): Promise<DirectMessage[]> {

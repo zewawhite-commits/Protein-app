@@ -197,6 +197,7 @@ export default function Profile({ mode = 'profile' }: { mode?: 'profile' | 'sett
       </Group>
 
       <Group title="Legal">
+        <Link to="/privacy-settings" className="block"><Row icon={<Lock size={18} />} label="Privacy & security" chevron /></Link>
         <Link to="/privacy" className="block"><Row icon={<Lock size={18} />} label="Privacy policy" chevron /></Link>
         <Link to="/terms" className="block"><Row icon={<FileText size={18} />} label="Terms and conditions" chevron /></Link>
         <Link to="/refunds" className="block"><Row icon={<FileText size={18} />} label="Cancellation and refunds" chevron /></Link>

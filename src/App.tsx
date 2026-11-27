@@ -42,6 +42,7 @@ const Help = lazy(() => import('./pages/Help'));
 const Reports = lazy(() => import('./pages/Reports'));
 const Routines = lazy(() => import('./pages/Routines'));
 const Messages = lazy(() => import('./pages/Messages'));
+const PrivacySettings = lazy(() => import('./pages/PrivacySettings'));
 const LiveWorkout = lazy(() => import('./pages/LiveWorkout'));
 const Train = lazy(() => import('./pages/Train'));
 const SharedRecipePage = lazy(() => import('./pages/SharedRecipePage'));
@@ -102,6 +103,7 @@ export default function App() {
         <Route path="goals" element={<Goals />} />
         <Route path="owner" element={<Owner />} />
         <Route path="messages" element={<Messages />} />
+        <Route path="privacy-settings" element={<PrivacySettings />} />
         <Route path="add" element={<div className="mx-auto max-w-lg px-5 pb-16"><AddFood /></div>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

@@ -6,6 +6,8 @@ import { formatTime } from '@/lib/dates';
 import { haptic, toast } from './fx';
 import { Sheet, cx, fmt } from './ui';
 
+const NO_DRINKS: never[] = [];
+
 /** Daily water target: about 35 ml per kg of body weight, kept between 1.5 and 4 litres (a common rule of thumb). */
 export function waterGoal(kg?: number | null, chosen?: number): number {
   if (chosen) return chosen;
@@ -44,7 +46,7 @@ export function WaterCard({ date }: { date: string }) {
 export function WaterSheet({ date, open, onClose }: { date: string; open: boolean; onClose: () => void }) {
   const add = useStore((s) => s.addWater);
   const remove = useStore((s) => s.removeDrink);
-  const drinks = useStore((s) => s.waterLog?.[date] ?? []);
+  const drinks = useStore((s) => s.waterLog?.[date]) ?? NO_DRINKS;
   const total = useStore((s) => s.water?.[date] ?? 0);
   const [part, setPart] = useState<DayPart>(dayPartNow());
   const [count, setCount] = useState(1);

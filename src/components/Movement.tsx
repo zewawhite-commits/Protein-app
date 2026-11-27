@@ -8,6 +8,7 @@ import { ExerciseSheet } from './LogMenu';
 import { haptic, toast } from './fx';
 import { Sheet, cx, fmt } from './ui';
 
+const NO_STEPS = {} as Record<string, never>;
 const useKg = () => useStore((s) => (s.weights.length ? s.weights[s.weights.length - 1].kg : s.profile?.bodyWeightKg ?? 70));
 
 /** Activity & Movement on Home: steps, distance, active calories and the movement goal. Food stays separate. */
@@ -102,7 +103,7 @@ export function StepsSheet({ date, open, onClose }: { date: string; open: boolea
 
 /** Seven days of movement for Progress: steps bars, plus the week's sessions. */
 export function MovementWeek({ end }: { end: string }) {
-  const stepsAll = useStore((s) => s.steps ?? {});
+  const stepsAll = useStore((s) => s.steps) ?? NO_STEPS;
   const exercises = useStore((s) => s.exercises);
   const remove = useStore((s) => s.removeExercise);
   const goal = useStore((s) => s.settings.stepGoal) ?? DEFAULT_STEP_GOAL;

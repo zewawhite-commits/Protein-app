@@ -12,7 +12,24 @@ These create the tables for AI credits, the AI cost dashboard, saved answers, an
 4. Paste into the Supabase query box → click **Run** (bottom right). You should see "Success. No rows returned".
 5. Click **New query** again and do the same with `supabase/scale.sql`.
 
-Both files are safe to run again if you're not sure they worked.
+6. Do the same with `supabase/privacy-messaging.sql` (new: message requests, privacy settings, blocking,
+   reports, replies/reactions/edits, private file sharing, notifications). Run it **after** the others.
+
+All files are safe to run again if you're not sure they worked.
+
+## 1b. Turn on "Continue with Google" (3 min)
+
+1. Supabase → **Authentication** → **Sign In / Providers** → **Google** → Enable.
+2. It asks for a Google Client ID and Secret: create them at **console.cloud.google.com** → APIs & Services →
+   Credentials → Create credentials → OAuth client ID → Web application. Paste the **Callback URL** Supabase shows
+   into "Authorised redirect URIs". Copy the Client ID and Secret back into Supabase → Save.
+3. Supabase → Authentication → **URL Configuration** → add your site address (and `https://nutivili.com` once the
+   domain is connected) under Redirect URLs.
+
+## 1c. Realtime for messages (1 min)
+
+Supabase → **Database** → **Publications** → `supabase_realtime` → make sure `direct_messages`, `dm_reactions`
+and `notifications` are ticked (the SQL file tries to add them; this just confirms it).
 
 ## 2. Set ADMIN_EMAILS in Vercel (2 min)
 

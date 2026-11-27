@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Bell, BellRing, Dumbbell, Flame, Lightbulb, PartyPopper, Scale, TriangleAlert, Utensils } from 'lucide-react';
 import { useStore } from '@/store/useStore';
+import { useSession } from '@/lib/account';
+import { markNoticesRead, notices, type Notice } from '@/lib/dm';
 import { useDay } from '@/lib/hooks';
 import { todayKey } from '@/lib/dates';
 import { dailyTargets } from '@/lib/energy';
@@ -27,6 +29,25 @@ function useNudges(): Nudge[] {
   const workedOut = useStore((s) => s.exercises.some((e) => e.date === date));
   const weighed = useStore((s) => s.weights.some((w) => w.date === date));
   const perks = useStore((s) => s.perks);
+  const session = useSession();
+  const [social, setSocial] = useState<Nudge[]>([]);
+  useEffect(() => {
+    if (!session) return;
+    let live = true;
+    const pull = () => notices().then((list) => {
+      if (!live) return;
+      const name = (n: Notice) => n.who?.display_name ?? 'Someone';
+      setSocial(list.slice(0, 20).map((n) => ({
+        id: `n-${n.id}`, kind: 'win' as const,
+        title: n.kind === 'message' ? `${name(n)} sent you a message` : n.kind === 'request' ? `${name(n)} wants to message you` : n.kind === 'request_accepted' ? `${name(n)} accepted your message request` : n.kind === 'follow' ? `${name(n)} started following you` : n.kind === 'like' ? `${name(n)} reacted to your post` : n.kind === 'comment' ? `${name(n)} commented on your post` : n.body ?? 'Account notice',
+        body: n.kind === 'comment' && n.body ? `“${n.body}”` : new Date(n.created_at).toLocaleString(undefined, { weekday: 'short', hour: 'numeric', minute: '2-digit' }),
+        link: n.kind === 'message' || n.kind === 'request_accepted' ? `/messages?with=${n.actor}` : n.kind === 'request' ? '/messages' : n.kind === 'follow' ? '/groups' : '/groups',
+      })));
+    }, () => undefined);
+    void pull();
+    const t = setInterval(pull, 60_000);
+    return () => { live = false; clearInterval(t); };
+  }, [session]);
   const paid = useStore((s) => !!s.premium && s.premium.exp > Date.now());
   return useMemo(() => {
     const list = computeNudges({ date, now, entries, totals, proteinGoal: goal, targets: profile ? dailyTargets(profile, goal) : null, streak, times: reminders, workedOut, weighed, gentle });
@@ -35,8 +56,8 @@ function useNudges(): Nudge[] {
     if (!paid && left > 0 && left < 36 * 3600e3) {
       list.unshift({ id: `trial-end-${new Date(perks!.until).toISOString().slice(0, 10)}`, kind: 'tip', title: 'Your free Plus time ends soon', body: `It ends ${new Date(perks!.until).toLocaleString(undefined, { weekday: 'long', hour: 'numeric', minute: '2-digit' })}. Nothing will be charged; you’ll simply move to Free and keep all your data.` } as Nudge);
     }
-    return list;
-  }, [date, now, entries, totals, goal, profile, streak, reminders, workedOut, weighed, gentle, perks, paid]);
+    return [...social, ...list];
+  }, [date, now, entries, totals, goal, profile, streak, reminders, workedOut, weighed, gentle, perks, paid, social]);
 }
 
 const ICON = { meal: Utensils, win: PartyPopper, tip: Lightbulb, warn: TriangleAlert } as const;
@@ -54,6 +75,7 @@ export function NotificationBell() {
     setOpen(true);
     const ids = [...new Set([...read, ...nudges.map((n) => n.id)])].slice(-200);
     try { localStorage.setItem(READ_KEY, JSON.stringify(ids)); } catch { /* storage unavailable */ }
+    void markNoticesRead().catch(() => undefined);
     // Keep the dots visible while the sheet is open; clear them on close.
   }
 
