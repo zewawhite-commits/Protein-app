@@ -1,3 +1,4 @@
+import { densityOf, measuresFor } from '@/lib/units';
 import { CreateFood } from './CreateFood';
 import { useMealOptions } from '@/lib/meals';
 import { MealPicker } from './MealPicker';
@@ -41,11 +42,14 @@ interface Props {
   preset?: { photoId?: string; aiEstimate?: number; meal?: Meal; plan?: boolean };
 }
 
-type Unit = 'g' | 'kg' | 'ml' | 'oz' | 'lb';
-const UNIT_G: Record<Unit, number> = { g: 1, kg: 1000, ml: 1, oz: 28.3495, lb: 453.592 };
-const UNIT_NAME: Record<Unit, string> = { g: 'grams', kg: 'kilograms', ml: 'millilitres', oz: 'ounces', lb: 'pounds' };
-const UNIT_DP: Record<Unit, number> = { g: 1, kg: 1000, ml: 1, oz: 10, lb: 100 };
-const toUnit = (grams: number, u: Unit) => String(Math.round((grams / UNIT_G[u]) * UNIT_DP[u]) / UNIT_DP[u]);
+type Unit = 'g' | 'kg' | 'ml' | 'L' | 'oz' | 'lb';
+const UNIT_G: Record<Unit, number> = { g: 1, kg: 1000, ml: 1, L: 1000, oz: 28.3495, lb: 453.592 };
+const UNIT_NAME: Record<Unit, string> = { g: 'grams', kg: 'kilograms', ml: 'millilitres', L: 'litres', oz: 'ounces', lb: 'pounds' };
+const UNIT_DP: Record<Unit, number> = { g: 1, kg: 1000, ml: 1, L: 1000, oz: 10, lb: 100 };
+/** Grams in one of a unit. Volume uses the food's own density (oil is lighter than water, syrup heavier). */
+let DENSITY_NOW = 1;
+const gPer = (u: Unit) => (u === 'ml' || u === 'L' ? UNIT_G[u] * DENSITY_NOW : UNIT_G[u]);
+const toUnit = (grams: number, u: Unit) => String(Math.round((grams / gPer(u)) * UNIT_DP[u]) / UNIT_DP[u]);
 /** Drinks, soups and other foods people measure by volume. */
 export const isLiquid = (food: { name: string; category?: string }) =>
   /beverage|drink/i.test(food.category ?? '') || /\b(milk|juice|water|soda|cola|tea|coffee|latte|drink|smoothie|shake|beer|wine|kefir|broth|soup|yogh?urt drink|zobo|kunu)\b/i.test(food.name);
@@ -75,8 +79,10 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
 
   // The weight is always what the user enters; nothing is pre-filled for a new entry.
   // The amount typed, in the chosen unit; nutrition always uses grams.
-  const liquid = isLiquid(food);
-  const [unit, setUnitState] = useState<Unit>(() => { try { const u = localStorage.getItem('provora-unit') as Unit | null; return u === 'oz' || ((u === 'kg' || u === 'lb') && !liquid) || (u === 'ml' && liquid) ? u : 'g'; } catch { return 'g'; } });
+  const dens = densityOf(food);
+  DENSITY_NOW = dens?.gPerMl ?? 1;
+  const liquid = !!dens || isLiquid(food);
+  const [unit, setUnitState] = useState<Unit>(() => { try { const u = localStorage.getItem('provora-unit') as Unit | null; return u === 'oz' || ((u === 'kg' || u === 'lb') && !liquid) || ((u === 'ml' || u === 'L') && liquid) ? u : 'g'; } catch { return 'g'; } });
   // What they had last time is their own number, so a new entry starts there (they can change it).
   const [usual] = useState(() => (entry ? null : lastAmount(useStore.getState().entries, food)));
   // A new entry starts empty: "Last time" is a shortcut to tap, never assumed as today's portion.
@@ -101,7 +107,7 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
 
   // In edit mode, use the snapshot stored with the entry (what was logged), not today's record.
   const per100 = entry ? entry.food.per100 : food.per100;
-  const g = Math.max(0, (Number(grams.replace(',', '.')) || 0) * UNIT_G[unit]);
+  const g = Math.max(0, (Number(grams.replace(',', '.')) || 0) * gPer(unit));
   /** Set the amount from a weight in grams, shown in the current unit. */
   const setG = (v: number) => setGrams(toUnit(v, unit));
   const setUnit = (u: Unit) => { setGrams(g ? toUnit(g, u) : ''); setUnitState(u); try { localStorage.setItem('provora-unit', u); } catch { /* ignore */ } };
@@ -126,8 +132,12 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
   const after = before + n.protein;
 
   // Foods eaten in pieces (wings, eggs, slices, cups…): count them instead of weighing.
-  const countable = food.portions.filter((p) => p.grams > 0).sort((a, b) => Number(/\b(piece|wing|drumstick|thigh|leg|egg|slice|medium|large|small|whole|fillet|ball|serving|wrap|portion|plate|ladle|glass|pot|bar|bag|pack|stick|biscuit|muffin|cup)\b/i.test(b.label)) - Number(/\b(piece|wing|drumstick|thigh|leg|egg|slice|medium|large|small|whole|fillet|ball|serving|wrap|portion|plate|ladle|glass|pot|bar|bag|pack|stick|biscuit|muffin|cup)\b/i.test(a.label)));
-  const pieceFirst = !!countable[0] && /\b(piece|wing|drumstick|thigh|leg|egg|slice|fillet|ball)\b/i.test(countable[0].label);
+  const measures = measuresFor(food);
+  // Whole items first (1 egg, 1 wing, 1 slice, 1 fillet), then servings (plate, bowl, cup), then the rest.
+  const rank = (label: string) => (/\b(plate|bowl|cup|ladle|glass|bottle|can|tbsp|tsp|spoon|litre|portion|serving|chopped|diced|sliced|mashed)\b/i.test(label) ? 1
+    : /\b(piece|wing|drumstick|thigh|leg|egg|slice|fillet|ball|whole|large|medium|small|extra large|jumbo|breast|steak|chop|link|patty|roll|bun|muffin|bar|biscuit|cookie|wrap)\b/i.test(label) ? 2 : 0);
+  const countable = measures.filter((p) => p.grams > 0).sort((a, b) => rank(b.label) - rank(a.label));
+  const pieceFirst = !!countable[0] && rank(countable[0].label) === 2;
   const usualCount = usual && countable[0] ? Math.round((usual / countable[0].grams) * 2) / 2 : null;
   const usualFits = !!usualCount && Math.abs(usualCount * countable[0].grams - usual!) < 1;
   const [byCount, setByCount] = useState(() => !entry && pieceFirst && (!usual || usualFits));
@@ -136,11 +146,11 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
   // Your own serving size (e.g. the bowl you always use), for any food.
   const [ownSize, setOwnSize] = useState('');
   const own = Number(ownSize.replace(',', '.'));
-  const ownPortion = own > 0 && own <= 3000 ? { label: '1 serving', grams: own } : undefined;
+  const ownPortion = own > 0 && own <= 3000 ? { label: '1 serving', grams: own, verified: false } : undefined;
   const portion = (portionIdx === -1 ? ownPortion : undefined) ?? countable[portionIdx] ?? countable[0] ?? ownPortion;
   const applyCount = (c: string, p = portion) => { setCount(c); const n = Number(c.replace(',', '.')); if (p && n >= 0) setGrams(toUnit(n * p.grams, unit)); };
   useEffect(() => { if (byCount && count && portion) applyCount(count); }, []); // eslint-disable-line react-hooks/exhaustive-deps
-  const bump = (d: number) => setG(Math.max(0, g + Math.sign(d) * ({ g: 5, ml: 5, oz: 14.17, kg: 50, lb: 45.36 } as const)[unit]));
+  const bump = (d: number) => setG(Math.max(0, g + Math.sign(d) * ({ g: 5, ml: 5 * DENSITY_NOW, L: 50 * DENSITY_NOW, oz: 14.17, kg: 50, lb: 45.36 } as const)[unit]));
 
   async function onPhoto(file?: File) {
     if (!file) return;
@@ -274,11 +284,14 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
               </label>
               <button onClick={() => applyCount(String((Number(count.replace(',', '.')) || 0) + 1))} className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-raised" aria-label="One more"><Plus size={20} strokeWidth={2.6} /></button>
             </div>
-            <p className="num mt-2 text-center text-[13px] text-silver">= {fmt(g)} g{portion.grams ? ` (${fmt(portion.grams)} g each, ${portion === ownPortion ? 'your size' : 'from the food record'})` : ''}</p>
+            <p className="num mt-2 text-center text-[13px] text-silver">= {fmt(g)} g{portion.grams ? ` (${fmt(portion.grams)} g each)` : ''}</p>
+            <p className={cx('mx-auto mt-1 w-fit rounded-full px-2.5 py-0.5 text-center text-[12px] font-semibold', portion === ownPortion ? 'bg-raised text-silver' : portion.verified ? 'bg-accent/10 text-accent' : 'bg-warn/15 text-warn')}>
+              {portion === ownPortion ? 'Your own size' : portion.verified ? 'Verified size from the food record' : 'Estimated size: change it or weigh for accuracy'}
+            </p>
             <label className="mx-auto mt-2 flex w-fit items-center gap-2 text-[13px] text-silver">Your serving size<input inputMode="decimal" value={ownSize} onChange={(e) => { const v = e.target.value.replace(/[^\d.,]/g, ''); setOwnSize(v); const n2 = Number(v.replace(',', '.')); if (n2 > 0) { setPortionIdx(-1); setGrams(toUnit((Number(count.replace(',', '.')) || 1) * n2, unit)); } else setPortionIdx(0); }} className="field !h-9 !w-20 !px-2 text-center" aria-label="Your serving size in grams" placeholder="g" />g</label>
             {countable.length > 1 && (
               <div className="-mx-5 mt-3 flex gap-2 overflow-x-auto px-5 no-scrollbar">
-                {countable.map((p, i) => <button key={p.label} onClick={() => { setPortionIdx(i); setOwnSize(''); applyCount(count || '1', p); }} className={cx('chip shrink-0', i === portionIdx && 'chip-on')}>{p.label} <span className="opacity-60">{fmt(p.grams)}g</span></button>)}
+                {countable.map((p, i) => <button key={p.label} onClick={() => { setPortionIdx(i); setOwnSize(''); applyCount(count || '1', p); }} className={cx('chip shrink-0', i === portionIdx && 'chip-on')}>{p.label} <span className="opacity-60">{fmt(p.grams)}g{p.verified ? '' : ' · est.'}</span></button>)}
               </div>
             )}
           </>
@@ -304,8 +317,8 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
           <button onClick={() => bump(5)} className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-raised" aria-label="More"><Plus size={20} strokeWidth={2.6} /></button>
         </div>
         <div className="mt-3 flex items-center justify-center gap-2">
-          <Segmented<Unit> value={unit} onChange={(u) => { haptic(); setUnit(u); }} options={(liquid ? ['g', 'ml', 'oz'] as Unit[] : ['g', 'kg', 'oz', 'lb'] as Unit[]).map((u) => ({ value: u, label: u }))} />
-          {unit !== 'g' && g > 0 && <span className="num text-[13px] text-silver">= {fmt(g)} g{unit === 'ml' ? ' (1 ml ≈ 1 g)' : ''}</span>}
+          <Segmented<Unit> value={unit} onChange={(u) => { haptic(); setUnit(u); }} options={(liquid ? ['g', 'ml', 'L', 'oz'] as Unit[] : ['g', 'kg', 'oz', 'lb'] as Unit[]).map((u) => ({ value: u, label: u }))} />
+          {unit !== 'g' && g > 0 && <span className="num text-[13px] text-silver">= {fmt(g)} g{unit === 'ml' || unit === 'L' ? ` (1 ml ≈ ${DENSITY_NOW} g)` : ''}</span>}
         </div>
         <div className="-mx-5 mt-4 flex gap-2 overflow-x-auto px-5 no-scrollbar">
           {!!preset?.aiEstimate && !entry && (
@@ -322,9 +335,9 @@ function Body({ food, date, entry, onClose, onSaved, onSwitchFood, preset }: Pro
           {[50, 100, 150, 200].map((v) => (
             <button key={v} onClick={() => setG(v)} className={cx('chip shrink-0', Math.round(g) === v && 'chip-on')}>{v}g</button>
           ))}
-          {food.portions.map((p) => (
-            <button key={p.label} onClick={() => setG(p.grams)} className={cx('chip shrink-0', Math.round(g) === Math.round(p.grams) && 'chip-on')}>
-              {p.label} <span className="opacity-60">{fmt(p.grams)}g</span>
+          {measures.map((p) => (
+            <button key={p.label} onClick={() => setG(p.grams)} className={cx('chip shrink-0', Math.round(g) === Math.round(p.grams) && 'chip-on')} title={p.verified ? 'Verified measure from the food record' : 'Estimated size'}>
+              {p.label} <span className="opacity-60">{fmt(p.grams)}g{p.verified ? '' : ' · est.'}</span>
             </button>
           ))}
         </div>

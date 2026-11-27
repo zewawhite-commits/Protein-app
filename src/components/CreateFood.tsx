@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useStore } from '@/store/useStore';
 import type { CustomFood, Food, Per100, PrepState } from '@/lib/types';
-import { Segmented, Sheet, fmt } from './ui';
+import { Segmented, Sheet, cx, fmt } from './ui';
+import { suggestedUnits } from '@/lib/units';
 import { haptic, toast } from './fx';
 
 const FIELDS: [keyof Per100, string, string][] = [
@@ -39,7 +40,8 @@ function Form({ from, onDone }: { from?: Food; onDone: (f?: Food) => void }) {
   if (name.trim().length < 2) errors.push('Give it a name.');
   if (basis === 'serving' && !(sg && sg > 0 && sg <= 3000)) errors.push('Enter the serving size in grams (on the pack, e.g. “per 30 g”).');
   if (per100.protein == null) errors.push('Protein is needed (0 is fine).');
-  if (per100.kcal == null) errors.push('Calories are needed.');
+  // Missing calories are allowed: the food is saved as incomplete and totals say so, never as zero.
+  const incomplete = per100.kcal == null || per100.carbs == null || per100.fat == null;
   for (const [k, label] of FIELDS) { const x = per100[k] as number | null; if (x != null && (Number.isNaN(x) || x < 0)) errors.push(`${label} must be a number.`); }
   if ((per100.kcal ?? 0) > 902) errors.push('Those calories are more than any food has per 100 g — check the serving size.');
   const mass = (per100.protein ?? 0) + (per100.carbs ?? 0) + (per100.fat ?? 0);
@@ -67,16 +69,24 @@ function Form({ from, onDone }: { from?: Food; onDone: (f?: Food) => void }) {
         <input className="field" value={servingLabel} onChange={(e) => setServingLabel(e.target.value)} aria-label="Serving name" placeholder="1 bar, 1 cup, 1 piece…" />
         <div className="relative"><input className="field pr-8" inputMode="decimal" value={servingGrams} onChange={(e) => setServingGrams(e.target.value)} aria-label="Serving size in grams" placeholder={basis === 'serving' ? 'grams' : 'optional'} /><span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-silver">g</span></div>
       </div>
+      {name.trim().length >= 2 && (
+        <div className="-mt-1 flex flex-wrap items-center gap-1.5" role="group" aria-label="Suggested serving units">
+          <span className="text-[12px] text-silver">Measured in:</span>
+          {suggestedUnits(name).filter((u) => u !== 'g').map((u) => <button key={u} type="button" onClick={() => setServingLabel(`1 ${u}`)} className={cx('chip !h-8 !px-3 text-[13px]', servingLabel === `1 ${u}` && 'chip-on')}>{u}</button>)}
+          <span className="text-[12px] text-dim">then enter how many grams one weighs</span>
+        </div>
+      )}
       <div className="grid grid-cols-2 gap-2">
         {FIELDS.map(([k, label, unit]) => (
           <label key={k} className="rounded-2xl bg-raised px-3 py-2">
-            <span className="block text-xs font-semibold text-silver">{label} ({unit}){k === 'kcal' || k === 'protein' ? '' : ' · optional'}</span>
+            <span className="block text-xs font-semibold text-silver">{label} ({unit}){k === 'protein' ? '' : ' · optional'}</span>
             <input inputMode="decimal" aria-label={label} className="num mt-0.5 w-full bg-transparent text-[17px] font-bold outline-none" placeholder="—" value={v[k]} onChange={(e) => setV((x) => ({ ...x, [k]: e.target.value.replace(/[^\d.,]/g, '') }))} />
           </label>
         ))}
       </div>
       <p className="text-xs text-dim">Empty boxes stay “unknown”, not zero. {basis === 'serving' ? 'We work out per 100 g from your serving size.' : ''}</p>
       {errors.length > 0 && name && <p className="text-sm text-danger">{errors[0]}</p>}
+      {!errors.length && incomplete && name && <p className="rounded-2xl bg-warn/15 px-3 py-2 text-[13px]">Some values are missing. You can still save it; it’s marked as incomplete and totals show the gap instead of counting it as zero.</p>}
       {mine?.changes?.length ? (
         <details className="rounded-2xl bg-raised px-4 py-3 text-[13px] text-silver">
           <summary className="cursor-pointer font-semibold text-ink">Earlier values ({mine.changes.length})</summary>
