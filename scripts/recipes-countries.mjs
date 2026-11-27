@@ -3949,12 +3949,599 @@ Vegan doubles | flour:60 oil:15 chickpeas:80 curry:3 tamarind:10 | doubles vegan
 Pumpkin talkari | pumpkin:200 oil:8 garlic:3 | pumpkin choka | portion
 `);
 
+
+/** Dishes from here on go to the second data file (public/data/foods-more.json): the main file is near its offline-cache limit. */
+const LATER_FROM = NEW.length;
+Object.assign(K, { cranberries: 'Cranberries, raw', nopales: 'Nopales, cooked, without salt', radish: 'Radish', chayote: 'Chayote, fruit, cooked, boiled, drained, without salt', jicama: 'Jicama, raw', tomatillo: 'Tomatillos, raw', green_chili: 'Peppers, hot chili, green, raw', squash_flowers: 'Pumpkin flowers, cooked, boiled, drained, without salt', cotija: 'Queso cotija', lard: 'Lard', guava_paste: 'Guava paste', epazote: 'Epazote, raw', summer_squash: 'Squash, summer, all varieties, cooked, boiled, drained, without salt' });
+// ======================= ROUND 4: REGIONAL, FESTIVAL, STREET AND HOME DISHES — AMERICAS =======================
+X('United States of America', 'American', NA, `
+Hoppin' John with collards | cowpeas:150 rice:120 kale:80 onion:20 oil:8 | new year black-eyed peas | plate
+Succotash | corn:100 fava:80 butter:8 onion:15 | southern succotash | portion
+Fried green tomatoes | tomato:150 cornmeal:25 egg:15 oil:15 | fried green tomatoes | serving (4 slices)
+Pimento cheese sandwich | bread:70 cheddar:40 mayo:15 red_pepper:15 | pimento cheese | sandwich
+Tomato pie (Southern) | pie_crust:50 tomato:100 cheddar:30 mayo:15 | southern tomato pie | slice
+Brunswick stew | chicken_meat:70 pork_shoulder:40 corn:40 fava:40 tomato_canned:80 | brunswick stew | bowl
+Frogmore-style shrimp boil | shrimp:120 corn:100 potato:100 sausage:40 | low country boil | plate
+Maque choux | corn:150 red_pepper:30 onion:20 butter:10 cream:20 | cajun corn | portion
+Étouffée, crawfish-style shrimp | shrimp:130 butter:15 flour:10 onion:30 celery:20 rice:150 | etouffee | plate
+Muffuletta | baguette:100 ham_slice:30 provolone:25 olives:25 olive_oil:8 | new orleans muffuletta | sandwich
+Beignets | flour:50 sugar:8 milk:20 oil:15 icing_sugar:10 | new orleans beignets | serving (3)
+Bread pudding with praline | bread:60 milk:80 egg:25 brown_sugar:20 walnuts:10 | praline bread pudding | portion
+Chicago deep dish slice | flour:70 butter:10 mozzarella:60 marinara:50 sausage:30 | deep dish pizza | slice
+Italian beef sandwich | baguette:90 beef:100 green_pepper:20 stock:30 | chicago italian beef | sandwich
+Cincinnati chili | pasta:150 beef_mince:90 tomato_canned:60 cheddar:30 sp_cinnamon:0.5 | cincinnati chili spaghetti | plate
+Hot brown | bread:60 turkey:80 bacon:15 milk:60 cheddar:25 tomato:30 | kentucky hot brown | plate
+Burgoo | beef:50 chicken_meat:50 corn:40 potato:50 tomato_canned:60 water:150 | kentucky burgoo | bowl
+Pierogi, Pittsburgh-style | flour:60 potato:60 cheddar:20 butter:10 onion:15 | pittsburgh pierogies | serving (6)
+Scrapple | pork_shoulder:50 cornmeal:30 water:30 oil:8 | philadelphia scrapple | slice (2)
+Soft pretzel, Philly | flour:80 salt:1 mustard:5 | philly pretzel | pretzel
+Shoofly pie | pie_crust:40 molasses:30 flour:15 brown_sugar:15 butter:8 | pennsylvania dutch pie | slice
+Chow-chow relish | cabbage:60 green_pepper:30 onion:20 vinegar:15 sugar:10 | chow chow | portion
+New England boiled dinner | beef_brisket:120 cabbage:80 potato:100 carrots:50 | boiled dinner | plate
+Clam cakes | clams:40 flour:40 milk:20 egg:10 oil:15 | rhode island clam cakes | serving (3)
+Johnnycakes, Rhode Island | cornmeal:50 water:50 butter:8 | rhode island johnnycake | serving (2)
+Fluffernutter sandwich | bread:70 peanut_butter:25 marshmallow:15 | fluffernutter | sandwich
+Indian pudding | cornmeal:20 milk:150 molasses:20 sp_ginger:0.5 sp_cinnamon:0.5 | new england cornmeal pudding | bowl
+Hotdish (tater tot) | beef_mince:80 potato:100 green_beans:50 milk:40 cheddar:20 | minnesota hotdish | portion
+Juicy Lucy | beef_patty:120 cheddar:25 burger_bun:60 | jucy lucy burger | burger
+Wild rice soup | brown_rice:60 chicken_meat:60 carrots:30 celery:20 cream:30 stock:200 | minnesota wild rice soup | bowl
+Booyah | chicken_meat:70 beef:40 potato:50 cabbage:40 carrots:30 water:250 | wisconsin booyah | bowl
+Cheese curds, fried | cheddar:60 flour:15 milk:15 oil:15 | wisconsin cheese curds | serving
+Runza | flour:70 beef_mince:60 cabbage:50 onion:15 | nebraska runza | sandwich
+Chislic | lamb:120 salt:1 | south dakota chislic | serving
+Pasty, Michigan | flour:70 butter:20 beef:60 potato:50 onion:15 | yooper pasty | pasty
+Coney dog | sausage:60 roll:50 beef_mince:40 onion:10 mustard:5 | detroit coney | hot dog
+Green chile stew | pork_shoulder:100 green_pepper:80 potato:80 onion:20 water:200 | new mexico green chile stew | bowl
+Navajo tacos, vegetarian | flour:70 oil:20 kidney:80 lettuce:20 cheddar:20 salsa:20 | frybread taco vegetarian | piece
+Sopaipillas with honey | flour:50 oil:15 honey:15 | new mexico sopaipillas | serving (2)
+Posole verde | hominy:150 chicken_meat:80 green_pepper:40 water:200 | green posole | bowl
+Calabacitas | zucchini:150 corn:60 green_pepper:30 cheddar:20 oil:8 | new mexico squash | portion
+Chimichanga | flour_tortilla:80 beef:80 kidney:30 oil:15 cheddar:20 | fried burrito | piece
+Sonoran hot dog | sausage:60 roll:60 bacon:15 kidney:30 tomato:20 mayo:10 | arizona hot dog | hot dog
+Indian fry bread with honey | flour:70 oil:20 honey:15 | frybread sweet | piece
+Hatch chile cheeseburger | beef_patty:110 green_pepper:30 cheddar:20 burger_bun:60 | green chile burger | burger
+Fish taco, Baja-style | fish:100 flour:15 oil:12 corn_tortilla:60 cabbage:30 mayo:10 | baja fish tacos | serving (2)
+California roll | rice_short:150 crab:40 avocado:30 cucumber:20 laver:3 | california maki | roll (8)
+Cioppino | fish:80 shrimp:50 mussels:40 clams:40 tomato_canned:150 | san francisco seafood stew | bowl
+Sourdough bread bowl with chowder | bread:150 clams:60 potato:60 milk:150 butter:8 | clam chowder bread bowl | bowl
+Mission burrito | flour_tortilla:110 rice:100 kidney:80 beef:80 cheddar:25 sour_cream:20 salsa:30 | san francisco burrito | burrito
+Garlic noodles | egg_noodles:180 butter:15 garlic:8 parmesan:10 | sf garlic noodles | plate
+Frito pie | corn_tortilla:50 oil:12 beef_mince:70 kidney:40 cheddar:20 onion:10 | frito pie | bag
+Breakfast kolache | flour:60 sugar:8 butter:10 sausage:40 cheddar:15 | texas klobasnek | piece
+Texas sheet cake | flour:35 sugar:30 butter:20 cocoa_powder:6 buttermilk:20 walnuts:5 | chocolate sheet cake | slice
+Chicken fried chicken | chicken_breast:150 flour:25 egg:15 oil:20 gravy:60 | country fried chicken | plate
+Brisket plate | beef_brisket:150 bread:30 pickles:15 onion:10 | texas bbq brisket | plate
+Burnt ends | beef_brisket:120 bbq:30 | kansas city burnt ends | portion
+Toasted ravioli | pasta:80 beef_mince:30 breadcrumbs:15 oil:15 marinara:30 | st louis toasted ravioli | serving (6)
+Gooey butter cake | flour:30 butter:20 sugar:25 cream_cheese:25 egg:15 | st louis gooey cake | slice
+St. Paul sandwich | egg:60 bean_sprouts:30 onion:15 oil:12 bread:70 mayo:10 | st paul egg foo young sandwich | sandwich
+Hawaiian plate lunch, kalua pork | pork_shoulder:120 rice:180 pasta:60 mayo:20 | kalua pig plate | plate
+Poke, ahi shoyu | tuna_raw:120 soy:12 onion:15 sesame_oil:5 | ahi shoyu poke | bowl
+Saimin | egg_noodles:150 ham_slice:30 egg:25 stock:250 | hawaiian saimin | bowl
+Malasadas | flour:50 sugar:15 egg:10 milk:20 oil:15 | portuguese doughnut hawaii | serving (2)
+Haupia | coconut_milk:100 sugar:15 cornstarch:12 | coconut pudding hawaii | square
+Shave ice | sugar:30 water:150 | hawaiian shave ice | cup
+Butter mochi | sticky_rice:50 coconut_milk:40 butter:12 sugar:25 egg:15 | hawaiian butter mochi | square
+Fry sauce and fries | fries:150 mayo:15 ketchup:15 | utah fry sauce | serving
+Funeral potatoes | potato:150 sour_cream:30 cheddar:30 cornflakes:10 butter:8 | utah cheesy potatoes | portion
+Huckleberry pancakes | flour:60 milk:90 egg:25 blueberries:50 butter:8 | montana huckleberry pancakes | stack (3)
+Salmon candy | salmon:60 brown_sugar:10 | alaska smoked salmon candy | portion
+Reindeer-style sausage with eggs | sausage:80 egg_scrambled:100 | alaskan sausage breakfast | plate
+Pumpkin roll | flour:20 pumpkin:40 sugar:20 egg:20 cream_cheese:25 icing_sugar:10 | thanksgiving pumpkin roll | slice
+Cranberry sauce, homemade | cranberries:100 sugar:30 oj:20 | thanksgiving cranberry sauce | portion
+Stuffing, homemade | bread:80 butter:15 onion:20 celery:20 stock:60 | thanksgiving stuffing | portion
+Deviled crab | crab:80 breadcrumbs:15 mayo:15 egg:10 | maryland deviled crab | serving
+Crab cakes, Maryland | crab:120 breadcrumbs:15 mayo:15 egg:10 mustard:3 | maryland crab cake | serving (2)
+Smith Island cake | flour:30 sugar:30 butter:15 egg:15 dark_choc:20 | maryland layer cake | slice
+Pepperoni roll | flour:70 pepperoni:25 | west virginia pepperoni roll | roll
+Half-smoke | sausage:100 roll:60 onion:15 beef_mince:30 | dc half smoke | hot dog
+Garbage plate | beef_patty:110 pasta:80 fries:80 baked_beans:60 onion:15 | rochester garbage plate | plate
+Buffalo wings with blue cheese | wing:200 butter:10 sp_cayenne:1 blue_cheese:20 celery_raw:30 | buffalo wings | serving (8)
+Beef on weck | roll:70 beef:100 | buffalo beef on weck | sandwich
+Chicken riggies | pasta:180 chicken_breast:80 red_pepper:30 cream:40 marinara:60 | utica riggies | plate
+Spiedie | chicken_breast:120 olive_oil:10 lemon:5 roll:50 | binghamton spiedie | sandwich
+Bagel with schmear and tomato | bagel:100 cream_cheese:30 tomato:30 | new york bagel | bagel
+Black and white cookie | flour:40 sugar:25 butter:12 egg:10 icing_sugar:20 cocoa_powder:3 | new york cookie | cookie
+Knish, potato | flour:40 potato:100 onion:20 oil:10 | potato knish | knish
+Egg cream (soda fountain) | milk:120 cocoa_powder:8 sugar:20 water:150 | new york egg cream | glass
+`);
+X('Mexico', 'Mexican', NA, `
+Cochinita pibil tacos | pork_shoulder:110 oj:20 corn_tortilla:60 onion:15 | yucatan cochinita | serving (3)
+Panuchos | corn_tortilla:60 refried:40 chicken_meat:50 oil:10 lettuce:15 | yucatan panuchos | serving (2)
+Salbutes | corn_tortilla:60 oil:15 chicken_meat:50 tomato:20 cabbage:15 | yucatan salbutes | serving (2)
+Papadzules | corn_tortilla:90 egg_boiled:60 pumpkin:40 tomato:50 | yucatan papadzules | serving (3)
+Sopa de lima | chicken_meat:80 corn_tortilla:20 oil:8 lime:15 stock:250 | yucatan lime soup | bowl
+Mole negro with rice | chicken_thigh:150 dark_choc:15 chili_powder:5 raisins:8 sesame:5 rice:150 | oaxacan black mole | plate
+Tlayuda | corn_tortilla:80 refried:60 mozzarella:40 cabbage:20 avocado:30 | oaxacan pizza | piece
+Memelas | masa:90 refried:40 feta:20 salsa:20 | oaxacan memelas | serving (2)
+Enfrijoladas | corn_tortilla:90 black_beans:100 feta:20 sour_cream:15 | bean sauce tortillas | serving (3)
+Entomatadas | corn_tortilla:90 tomato:120 feta:20 sour_cream:15 | tomato sauce tortillas | serving (3)
+Chiles en nogada | green_pepper:150 pork_mince:60 apple:30 walnuts:25 cream:30 | puebla stuffed chiles | serving
+Cemita poblana | roll:90 chicken_breast:80 avocado:40 mozzarella:30 | puebla cemita | sandwich
+Chalupas poblanas | corn_tortilla:60 oil:12 pork_shoulder:40 salsa:30 onion:10 | puebla chalupas | serving (4)
+Mole de olla | beef:120 corn:50 zucchini:50 green_beans:30 water:250 | beef vegetable mole soup | bowl
+Pozole blanco | hominy:150 pork_shoulder:80 cabbage:20 radish:15 water:250 | white pozole | bowl
+Birria tacos | beef:110 corn_tortilla:60 onion:15 stock:80 | quesabirria | serving (3)
+Tortas ahogadas | roll:80 pork_shoulder:100 tomato:80 chili:5 | guadalajara drowned sandwich | torta
+Carne en su jugo | beef:130 kidney:60 bacon:15 stock:200 | jalisco beef in its juice | bowl
+Machaca con huevo | beef:60 egg:100 tomato:30 onion:15 flour_tortilla:50 | northern machaca eggs | plate
+Cabrito-style roast goat | goat:180 | monterrey cabrito | portion
+Discada | beef:70 pork_shoulder:40 bacon:15 sausage:30 onion:30 | northern discada | serving
+Burritos de frijol (Chihuahua) | flour_tortilla:70 refried:80 cheddar:20 | bean burrito northern | burrito
+Tacos de canasta | corn_tortilla:60 potato:60 oil:15 | basket tacos | serving (3)
+Tacos al pastor | pork_shoulder:100 pineapple:30 corn_tortilla:60 onion:10 | al pastor | serving (3)
+Tacos de suadero | beef:100 corn_tortilla:60 onion:10 | suadero tacos | serving (3)
+Tacos de carnitas | pork_shoulder:110 corn_tortilla:60 onion:10 | carnitas tacos | serving (3)
+Tacos de nopal | nopales:100 corn_tortilla:60 onion:15 cotija:15 | cactus tacos | serving (3)
+Tacos de hongos | mushrooms:120 onion:20 oil:8 corn_tortilla:60 | mushroom tacos | serving (3)
+Tacos de papa | potato:120 oil:15 corn_tortilla:60 salsa:20 | potato tacos | serving (3)
+Tacos dorados | corn_tortilla:60 chicken_meat:60 oil:15 sour_cream:15 lettuce:15 | flautas | serving (3)
+Gorditas de chicharrón | masa:90 pork_belly:40 oil:10 | gorditas | serving (2)
+Gorditas de requesón | masa:90 ricotta:40 oil:10 | ricotta gorditas | serving (2)
+Sopes | masa:90 refried:40 lettuce:15 feta:15 sour_cream:15 | sopes | serving (2)
+Huaraches | masa:100 refried:50 salsa:30 feta:20 | huarache | piece
+Tlacoyos | masa:90 fava:50 feta:20 salsa:20 | blue corn tlacoyos | serving (2)
+Quesadillas de flor de calabaza | masa:80 mozzarella:30 squash_flowers:40 | squash blossom quesadilla | serving (2)
+Elote asado | corn:150 mayo:10 feta:10 chili_powder:1 lime:5 | grilled corn | cob
+Tamales de rajas con queso | masa:100 green_pepper:30 mozzarella:30 oil:8 | rajas tamales | serving (2)
+Tamales dulces | masa:100 sugar:20 raisins:10 butter:10 | sweet tamales | serving (2)
+Arroz rojo | rice:180 tomato:40 onion:15 oil:8 | mexican red rice | portion
+Frijoles charros | kidney:180 bacon:15 tomato:30 onion:15 | cowboy beans | bowl
+Frijoles de la olla | black_beans:200 onion:15 | pot beans | bowl
+Calabacitas a la mexicana | zucchini:150 corn:40 tomato:40 onion:15 oil:8 | mexican squash | portion
+Nopales salad | nopales:120 tomato:50 onion:15 cotija:15 coriander:3 | ensalada de nopales | bowl
+Caldo de res | beef:100 corn:50 potato:60 carrots:40 cabbage:40 water:250 | mexican beef soup | bowl
+Caldo tlalpeño | chicken_meat:80 chickpeas:40 carrots:30 avocado:30 water:250 | tlalpeno soup | bowl
+Sopa de tortilla | corn_tortilla:40 oil:10 tomato:80 avocado:30 feta:15 stock:200 | tortilla soup | bowl
+Albóndigas en chipotle | beef_mince:120 rice:15 tomato:80 chili:3 | chipotle meatballs | serving
+Bistec a la mexicana | beef:150 tomato:60 onion:20 green_pepper:15 oil:8 | mexican steak | portion
+Pescado a la veracruzana | fish:170 tomato:80 olives:15 capers:5 olive_oil:10 | veracruz fish | portion
+Camarones a la diabla | shrimp:150 tomato:60 chili:5 butter:8 | deviled shrimp | portion
+Aguachile | shrimp:130 lime:20 cucumber:40 onion:15 chili:3 | sinaloa aguachile | plate
+Tostada de ceviche | taco_shell:30 fish:80 lime:15 tomato:30 onion:10 | ceviche tostada | serving (2)
+Huevos motuleños | corn_tortilla:50 egg_fried:100 black_beans:50 ham:20 peas:15 salsa:30 | motul eggs | plate
+Chilaquiles verdes | corn_tortilla:80 oil:15 salsa:80 sour_cream:20 onion:10 | green chilaquiles | plate
+Enchiladas suizas | corn_tortilla:90 chicken_meat:80 cream:40 mozzarella:30 salsa:50 | swiss enchiladas | serving (3)
+Enchiladas mineras | corn_tortilla:90 potato:50 carrots:30 feta:20 salsa:40 | guanajuato enchiladas | serving (3)
+Molletes dulces | baguette:80 butter:10 sugar:10 sp_cinnamon:0.5 | sweet molletes | serving (2)
+Pan de muerto | flour:60 sugar:15 butter:12 egg:15 oj:5 | day of the dead bread | piece
+Rosca de reyes | flour:60 sugar:15 butter:12 egg:15 apricot_dried:10 | kings cake | slice
+Buñuelos mexicanos | flour:40 oil:15 sugar:10 sp_cinnamon:0.5 | mexican bunuelos | piece
+Capirotada | bread:60 brown_sugar:25 raisins:10 cheddar:15 peanuts:10 | lenten bread pudding | portion
+Jericalla | milk:120 egg:30 sugar:20 | guadalajara custard | ramekin
+Cajeta crepes | flour:30 milk:60 egg:20 condensed:30 walnuts:8 | crepas de cajeta | serving (2)
+Gelatina de mosaico | gelatine:4 condensed:40 milk:60 sugar:10 | mosaic jello | cup
+Mangonada | mango:150 sorbet:60 chili_powder:1 lime:5 | mango chamoy | cup
+Paletas de fresa | strawberries:80 sugar:15 water:30 | strawberry ice pop | pop
+Agua de pepino con limón | cucumber:100 lime:20 sugar:20 water:200 | cucumber lime water | glass
+Café de olla | coffee:240 brown_sugar:15 sp_cinnamon:0.5 | pot coffee | cup
+`);
+X('Canada', 'Canadian', NA, `
+Pâté chinois | beef_mince:110 corn_canned:80 mash:180 | quebec shepherds pie | portion
+Cretons on toast | pork_mince:50 bread:60 | quebec pork spread | serving
+Fèves au lard | kidney:180 molasses:15 pork_belly:20 | quebec baked beans | portion
+Tarte au sucre à la crème | pie_crust:45 brown_sugar:30 cream:25 | quebec sugar cream pie | slice
+Grands-pères au sirop | flour:50 milk:30 butter:8 maple:40 | maple dumplings | serving (3)
+Oreilles de crisse | pork_belly:40 | quebec crispy pork | serving
+Ragoût de boulettes | pork_mince:120 flour:10 potato:80 gravy:60 | quebec meatball stew | bowl
+Pea soup with ham hock (Québec) | split_peas:100 ham:40 carrots:30 onion:20 water:250 | soupe aux pois jaunes | bowl
+Bannock, Métis style | flour:70 oil:8 milk:30 raisins:10 | metis bannock | piece
+Three sisters soup | corn:80 kidney:80 butternut:100 water:250 | haudenosaunee soup | bowl
+Pemmican-style bar | beef:30 blueberries:20 | dried meat berry bar | bar
+Jiggs dinner | beef_brisket:100 potato:100 cabbage:80 carrots:50 split_peas:40 | newfoundland jiggs | plate
+Toutons with molasses | flour:60 oil:12 molasses:20 | newfoundland fried dough | serving (2)
+Cod au gratin | cod:150 milk:80 cheddar:30 breadcrumbs:10 butter:8 | newfoundland cod | portion
+Lobster roll, Maritime | crab:110 mayo:15 roll:60 celery_raw:10 | maritime lobster roll | roll
+Rappie pie | potato:200 chicken_meat:70 stock:80 | acadian rappie | portion
+Hodge podge | potato:100 green_beans:60 carrots:50 peas:30 cream:40 butter:10 | nova scotia hodge podge | bowl
+Blueberry grunt | blueberries:100 flour:30 sugar:15 butter:8 | nova scotia grunt | portion
+Fricot | chicken_meat:80 potato:100 onion:20 flour:20 water:200 | acadian chicken stew | bowl
+Pouding chômeur aux pommes | flour:35 sugar:15 butter:10 apple:50 maple:20 | apple poor man's pudding | portion
+Halifax donair pizza slice | flour:70 beef_mince:50 mozzarella:30 condensed:15 | donair pizza | slice
+Montreal steak spice burger | beef_patty:120 sp_pepper:1 burger_bun:60 | montreal burger | burger
+Bagel with smoked meat | bagel:90 beef_brisket:60 mustard:5 | smoked meat bagel | bagel
+Smoked meat poutine | fries:180 cheddar:40 gravy:60 beef_brisket:40 | smoked meat poutine | plate
+Japadog-style hot dog | sausage:60 roll:50 laver:2 mayo:10 teriyaki:10 | vancouver japadog | hot dog
+B.C. salmon burger | salmon:120 burger_bun:60 lettuce:15 mayo:10 | salmon burger | burger
+Bannock tacos | flour:60 oil:15 beef_mince:60 lettuce:20 cheddar:15 salsa:20 | indian taco canada | piece
+Perogies with sour cream (Prairies) | flour:60 potato:60 cheddar:15 sour_cream:30 onion:15 butter:8 | prairie perogies | serving (6)
+Holubtsi, Prairie Ukrainian | cabbage_cooked:120 rice:60 onion:20 butter:8 | prairie cabbage rolls | serving (3)
+Saskatoon berry pancakes | flour:60 milk:90 egg:25 blueberries:50 maple:15 | prairie pancakes | stack (3)
+Alberta beef dip | baguette:90 beef:100 stock:60 | beef dip | sandwich
+Ginger beef, vegetarian (tofu) | tofu:150 cornstarch:15 oil:15 sugar:12 ginger:5 rice:150 | ginger tofu | plate
+Caesar salad with tofu bacon | lettuce:100 tofu:40 parmesan:15 mayo:15 bread:20 | vegetarian caesar | bowl
+Flapper pie | pie_crust:40 milk:80 egg:20 sugar:20 meringue:8 | prairie custard pie | slice
+Butter tart squares | flour:30 butter:15 brown_sugar:25 egg:10 raisins:10 | butter tart bars | square
+Maple taffy | maple:30 | tire d'erable | stick
+`);
+X('Brazil', 'Brazilian', SA, `
+Vatapá | bread:40 shrimp:60 coconut_milk:60 peanuts:15 palm_oil:10 | bahian vatapa | portion
+Acarajé | cowpeas:100 palm_oil:20 shrimp:30 tomato:20 | bahian acaraje | piece
+Caruru | okra:150 dried_shrimp:10 peanuts:15 palm_oil:10 | okra stew bahia | portion
+Bobó de camarão | shrimp:120 cassava_cooked:100 coconut_milk:60 palm_oil:8 | shrimp cassava cream | bowl
+Baião de dois | rice:120 cowpeas:80 feta:30 bacon:15 | northeastern rice and beans | plate
+Carne de sol com mandioca | beef:130 cassava_cooked:150 butter:10 | sun-dried beef with cassava | plate
+Arroz de carreteiro | rice:180 beef:80 onion:20 oil:10 | cart driver rice | plate
+Galinhada | rice:180 chicken_thigh:120 turmeric:1 peas:20 | goias chicken rice | plate
+Pequi rice-style arroz com pequi | rice:180 chicken_thigh:80 oil:10 | arroz com pequi | plate
+Tutu de feijão | kidney:150 flour:20 bacon:15 onion:15 | minas bean puree | portion
+Frango com quiabo | chicken_thigh:150 okra:80 tomato:40 onion:20 | chicken with okra minas | plate
+Tropeiro (Minas) | kidney:120 flour:25 bacon:20 egg:30 kale:30 | feijao tropeiro mineiro | plate
+Virado à paulista | rice:120 kidney:80 pork_loin:80 egg_fried:50 kale:40 plantain_fried:50 | sao paulo plate | plate
+Sanduíche de mortadela | roll:80 ham_slice:100 provolone:20 | sao paulo mortadella | sandwich
+Bauru | roll:80 beef:50 mozzarella:30 tomato:20 pickles:10 | bauru sandwich | sandwich
+Cuscuz paulista | cornmeal:60 sardine:40 tomato:40 peas:20 egg_boiled:20 | sao paulo couscous | slice
+Barreado | beef:150 onion:20 banana:60 | parana barreado | plate
+Arroz de pato (Brazilian) | rice:180 duck_meat:90 | duck rice brazil | plate
+Pato no tucupi | duck_meat:150 spinach:50 rice:120 | duck in tucupi | plate
+Tacacá | shrimp:40 tapioca:30 spinach:30 water:250 | amazon tacaca | bowl
+Maniçoba | spinach:150 pork_shoulder:50 sausage:30 | para manicoba | bowl
+Caldo de cana with pastel | sugarcane:250 flour:50 oil:15 mozzarella:30 | street pastel and cane juice | serving
+Pastel de queijo | flour:50 oil:15 mozzarella:40 | cheese pastel | piece
+Esfiha | flour:50 beef_mince:40 tomato:15 onion:10 | brazilian sfiha | serving (2)
+Kibe (Brazilian) | bulgur:40 beef_mince:50 oil:15 | brazilian kibbeh | serving (2)
+Empadinha de palmito | flour:40 butter:15 asparagus:40 milk:15 | heart of palm pie | serving (2)
+Torta de frango | flour:50 milk:60 egg:20 chicken_meat:60 corn_canned:20 | brazilian chicken pie | slice
+Salpicão | chicken_meat:80 carrots_raw:30 corn_canned:20 mayo:25 raisins:8 potato:30 | brazilian chicken salad | portion
+Escondidinho de frango | cassava_cooked:180 chicken_meat:80 mozzarella:25 | chicken cassava bake | portion
+Polenta frita | cornmeal:70 water:150 oil:15 | fried polenta | portion
+Pão de queijo recheado | tapioca:50 mozzarella:30 milk:20 egg:10 ham_slice:15 | stuffed cheese bread | serving (3)
+Canjica | hominy:100 milk:150 condensed:25 coconut_meat:10 peanuts:10 | sweet hominy porridge | bowl
+Curau | corn:120 milk:120 sugar:20 sp_cinnamon:0.5 | sweet corn cream | bowl
+Paçoca | peanuts:30 sugar:10 | peanut candy | piece
+Pé de moleque | peanuts:30 brown_sugar:20 | peanut brittle brazil | piece
+Beijinho | condensed:30 coconut_meat:8 butter:3 | coconut truffles | serving (3)
+Romeu e Julieta | guava_paste:40 feta:40 | guava and cheese | serving
+Pudim de leite condensado | condensed:60 milk:60 egg:30 sugar:10 | brazilian flan | slice
+Mousse de maracujá | condensed:40 cream:40 passion:30 | passion fruit mousse | cup
+Bolo de rolo | flour:20 sugar:20 butter:20 egg:20 guava_paste:30 | roll cake pernambuco | slice
+Brigadeiro de colher | condensed:50 cocoa_powder:5 butter:5 | spoon brigadeiro | cup
+Açaí na tigela with banana and granola | banana:80 strawberries:40 granola:40 honey:10 | acai bowl brazil | bowl
+Caldo de feijão | black_beans:180 bacon:10 onion:15 water:150 | bean broth | cup
+Guaraná-style homemade soda | sugar:30 water:300 lime:5 | brazilian soda homemade | glass
+`);
+X('Argentina', 'Argentine', SA, `
+Milanesa de berenjena | eggplant:180 breadcrumbs:25 egg:20 oil:15 | eggplant milanesa | portion
+Matambre arrollado | flank:150 egg_boiled:40 carrots:40 red_pepper:30 | rolled flank | slice (2)
+Pastel de papa | beef_mince:110 mash:180 olives:10 egg_boiled:20 | argentine cottage pie | portion
+Carbonada criolla | beef:100 pumpkin:80 corn:40 potato:50 peach:30 | argentine carbonada | bowl
+Guiso de lentejas | lentils:180 chorizo:30 potato:50 carrots:30 | argentine lentil stew | bowl
+Sorrentinos | pasta:150 ricotta:40 ham_slice:15 marinara:60 | argentine stuffed pasta | plate
+Ñoquis del 29 | gnocchi:220 marinara:80 parmesan:10 | gnocchi day | plate
+Revuelto gramajo | potato:100 oil:12 egg:100 ham:30 peas:20 | gramajo scramble | plate
+Tortilla de papas (Argentine) | potato:150 egg:80 onion:30 oil:12 | argentine potato omelette | slice
+Sándwich de miga | bread:60 ham_slice:30 swiss:20 butter:5 | crustless sandwich | serving (2)
+Lomito completo | roll:90 beef_sirloin:100 ham_slice:20 swiss:20 egg_fried:50 lettuce:15 | lomito sandwich | sandwich
+Humita en chala | corn:180 onion:20 milk:30 feta:20 | corn husk humita | serving (2)
+Tamales salteños | cornmeal:80 beef:50 onion:15 lard:8 | salta tamales | serving (2)
+Empanadas tucumanas | flour:50 lard:10 beef:50 onion:15 egg_boiled:10 | tucuman empanadas | serving (2)
+Empanadas de jamón y queso | flour:50 butter:12 ham_slice:30 mozzarella:30 | ham cheese empanadas | serving (2)
+Medialunas de grasa | flour:50 lard:12 | savory croissants | serving (2)
+Vigilante | cheddar:40 guava_paste:40 | cheese and quince | serving
+Arroz con leche (Argentine) | rice:50 milk:180 sugar:18 lemon:2 | argentine rice pudding | bowl
+Flan con dulce de leche | milk:100 egg:35 sugar:20 condensed:20 | flan mixto | slice
+Panqueques de manzana | flour:30 milk:60 egg:20 apple:60 sugar:10 | apple crepes | serving (2)
+Torta rogel | flour:30 butter:12 egg:10 condensed:40 meringue:8 | layered dulce cake | slice
+Chocotorta | shortbread:40 condensed:35 cream_cheese:35 cocoa_powder:2 | chocolate cookie cake | slice
+`);
+X('Peru', 'Peruvian', SA, `
+Cau cau | tripe:120 potato:100 turmeric:2 mint:2 oil:8 | tripe stew peru | bowl
+Carapulcra | potato:120 pork_shoulder:80 peanuts:15 onion:20 | dried potato stew | bowl
+Seco de res | beef:130 coriander:10 kidney:80 rice:150 | peruvian beef stew | plate
+Arroz con pato | rice:180 duck_meat:100 coriander:10 peas:20 | chiclayo duck rice | plate
+Juane | rice:150 chicken_thigh:80 egg_boiled:25 olives:5 turmeric:1 | amazon juane | parcel
+Tacacho con cecina | green_plantain:180 lard:10 pork_loin:80 | amazon plantain balls | plate
+Chupe de camarones | shrimp:120 potato:80 milk:80 corn:40 egg:30 rice:30 water:150 | shrimp chowder peru | bowl
+Parihuela | fish:100 shrimp:50 clams:40 tomato:60 water:200 | peruvian seafood soup | bowl
+Sudado de pescado | fish:170 tomato:60 onion:30 rice:150 | fish stew peru | plate
+Tiradito | fish:120 lime:20 chili:3 | peruvian tiradito | plate
+Leche de tigre | fish:40 lime:30 onion:10 water:60 | tigers milk | glass
+Anticuchos (beef heart-style beef) | beef:130 chili_powder:3 vinegar:5 potato:80 | anticuchos | serving (2)
+Pollo a la brasa with fries | chicken_leg:200 fries:150 lettuce:30 | peruvian rotisserie chicken | plate
+Salchipapa | sausage:80 fries:150 ketchup:15 mayo:10 | salchipapas | plate
+Butifarra | roll:80 ham:60 onion:20 lime:5 | peruvian ham sandwich | sandwich
+Triple sandwich | bread:80 avocado:40 tomato:40 egg_boiled:40 mayo:10 | triple peruano | sandwich
+Papa rellena | potato:200 beef_mince:50 egg_boiled:15 olives:5 oil:15 | stuffed potato | piece
+Yuquitas fritas | cassava:150 oil:15 | fried yuca | portion
+Choclo con queso y huacatay | corn:150 feta:40 | corn cheese andes | plate
+Quinotto | quinoa:180 mushrooms:50 parmesan:15 butter:8 | quinoa risotto | plate
+Picante de quinua | quinoa:150 potato:60 feta:30 milk:30 | spicy quinoa stew | bowl
+Mazamorra de calabaza | pumpkin:120 sugar:20 cornstarch:10 | pumpkin pudding | bowl
+King kong | flour:40 butter:15 condensed:30 pineapple:20 peanuts:10 | lambayeque cookie | slice
+Turrón de Doña Pepa | flour:40 butter:15 molasses:30 | october nougat | slice
+Emoliente | barley:20 sugar:20 lemon:5 water:250 | herbal emoliente | glass
+`);
+X('Colombia', 'Colombian', SA, `
+Sancocho de gallina | chicken_thigh:120 green_plantain:80 cassava_cooked:80 corn:40 potato:50 water:250 | hen sancocho | bowl
+Mondongo (Colombian) | tripe:120 pork_shoulder:40 potato:80 cassava_cooked:40 water:200 | tripe soup | bowl
+Cazuela de mariscos | shrimp:60 fish:60 clams:40 coconut_milk:60 tomato:40 | seafood casserole | bowl
+Arroz con coco y pescado | rice:180 coconut_milk:50 fish:150 plantain_fried:60 | coastal fish plate | plate
+Posta negra | beef:150 brown_sugar:15 soy:5 rice:150 | cartagena black beef | plate
+Arroz atollado | rice:150 pork_shoulder:60 chicken_meat:50 potato:50 water:100 | valle soupy rice | plate
+Lechona | pork_shoulder:120 rice:80 peas:20 | tolima lechona | portion
+Tamal tolimense | masa:120 pork_shoulder:40 chicken_meat:30 egg_boiled:20 peas:15 | tolima tamal | tamal
+Envuelto de mazorca | corn:150 sugar:10 butter:8 | sweet corn wrap | piece
+Carimañola (Colombian) | cassava:100 beef_mince:40 oil:15 | colombian carimanola | serving (2)
+Arepa boyacense | masa:80 cheddar:20 sugar:10 butter:8 | sweet boyaca arepa | arepa
+Arepa santandereana | masa:90 oil:8 pork_belly:20 | santander arepa | arepa
+Pan de yuca (Colombian) | tapioca:40 feta:30 egg:10 | colombian yuca bread | serving (3)
+Mazamorra antioqueña | hominy:120 milk:150 brown_sugar:15 | corn drink with milk | glass
+Natilla | milk:150 brown_sugar:25 cornstarch:15 sp_cinnamon:0.5 | christmas custard | portion
+Postre de natas | milk:200 sugar:25 egg:20 raisins:8 | milk skin dessert | portion
+Cholado | strawberries:40 papaya:40 banana:40 condensed:20 sugar:10 | cali shaved fruit | cup
+Avena colombiana | oats:30 milk:200 sugar:15 sp_cinnamon:0.5 | colombian oat drink | glass
+Lulada | oj:0 lime:15 sugar:25 water:200 pineapple:40 | | glass
+`);
+X('Venezuela', 'Venezuelan', SA, `
+Asado negro | beef:150 brown_sugar:15 onion:20 rice:150 | caracas black roast | plate
+Pisca andina | potato:80 egg:50 milk:100 onion:15 water:150 | andean breakfast soup | bowl
+Mandocas | cornmeal:50 ripe_plantain:40 brown_sugar:10 oil:15 feta:15 | zulia corn rings | serving (3)
+Patacón maracucho | green_plantain:200 oil:15 beef:60 cheddar:20 lettuce:15 | plantain sandwich | sandwich
+Tostones con queso | green_plantain:150 oil:15 feta:30 | tostones cheese | serving
+Cachito | flour:60 butter:12 ham_slice:30 | ham croissant venezuela | piece
+Golfeados | flour:50 brown_sugar:20 feta:15 butter:8 | sweet cheese rolls | piece
+Pan de jamón | flour:60 ham_slice:40 olives:10 raisins:10 | christmas ham bread | slice
+Polvorosas | flour:30 lard:12 sugar:10 | venezuelan shortbread | serving (3)
+Quesillo venezolano | condensed:50 milk:60 egg:35 sugar:10 | venezuelan flan | slice
+Papelón con limón | brown_sugar:30 lime:15 water:250 | panela lemonade | glass
+`);
+X('Chile', 'Chilean', SA, `
+Cazuela de vacuno | beef:100 potato:80 pumpkin:60 corn:40 rice:20 water:250 | chilean beef cazuela | bowl
+Caldillo de congrio | fish:150 potato:80 tomato:40 onion:20 water:200 | conger eel soup | bowl
+Paila marina | fish:60 mussels:50 clams:50 shrimp:30 water:200 | seafood stew chile | bowl
+Machas a la parmesana | clams:100 parmesan:20 butter:10 | razor clams parmesan | plate
+Chorrillana | fries:200 beef:80 onion:40 egg_fried:50 | chilean chorrillana | plate
+Lomo a lo pobre | beef_sirloin:150 fries:150 egg_fried:100 onion:30 | steak poor man style | plate
+Barros Luco | roll:80 beef_sirloin:80 cheddar:30 | barros luco sandwich | sandwich
+Churrasco italiano | roll:80 beef_sirloin:80 avocado:40 tomato:30 mayo:15 | chilean steak sandwich | sandwich
+Empanada de pino | flour:60 lard:10 beef_mince:60 onion:30 egg_boiled:15 olives:5 raisins:5 | pino empanada | piece
+Sopaipillas pasadas | flour:40 pumpkin:30 oil:15 brown_sugar:20 | sopaipillas in syrup | serving (3)
+Leche nevada | milk:150 egg:30 sugar:20 | floating islands chile | bowl
+Alfajor chileno | flour:30 butter:10 condensed:30 dark_choc:10 | chilean alfajor | piece
+Calzones rotos con manjar | flour:40 oil:15 sugar:10 condensed:20 | calzones manjar | serving (3)
+`);
+X('Ecuador', 'Ecuadorian', SA, `
+Fanesca | fava:40 kidney:40 corn:40 pumpkin:60 salt_cod:30 milk:80 rice:20 | easter fanesca | bowl
+Seco de chivo | goat:150 tomato:40 onion:20 rice:150 ripe_plantain:60 | goat stew ecuador | plate
+Encocado de pescado | fish:170 coconut_milk:80 tomato:30 rice:150 | coconut fish ecuador | plate
+Ceviche ecuatoriano de camarón | shrimp:120 tomato:60 oj:30 lime:15 onion:20 | ecuador shrimp ceviche | bowl
+Hornado | pork_shoulder:150 potato:100 corn:50 | roast pork ecuador | plate
+Guatita | tripe:120 potato:100 peanut_butter:20 | tripe peanut stew | bowl
+Bolón de verde con chicharrón | green_plantain:180 pork_belly:30 butter:8 | bolon mixto | piece
+Empanadas de viento | flour:50 oil:15 mozzarella:30 sugar:5 | wind empanadas | piece
+Quimbolitos | flour:30 cornmeal:20 butter:15 sugar:15 egg:15 raisins:5 | steamed corn cakes | serving (2)
+Higos con queso | figs:80 sugar:20 feta:40 | figs with cheese | serving
+`);
+X('Bolivia', 'Bolivian', SA, `
+Pique macho | beef:100 sausage:50 fries:150 egg_boiled:30 tomato:30 green_pepper:20 | pique macho | plate
+Majadito | rice:180 beef:60 egg_fried:50 ripe_plantain:60 | santa cruz rice | plate
+Fricasé paceño | pork_shoulder:120 hominy:80 potato:80 water:200 | la paz fricase | bowl
+Chairo | beef:60 potato:60 hominy:30 carrots:30 water:250 | andean chairo soup | bowl
+Sajta de pollo | chicken_thigh:150 potato:80 onion:30 | bolivian chicken | plate
+Plato paceño | corn:100 fava:60 potato:80 cheddar:30 | la paz plate | plate
+Anticucho boliviano | beef:120 potato:80 peanuts:10 | bolivian anticucho | serving
+Masaco | green_plantain:150 cheddar:30 lard:10 | mashed plantain bolivia | portion
+Tawa tawa | flour:50 oil:15 honey:15 | bolivian fritters | serving (4)
+Helado de canela | sugar:30 water:150 sp_cinnamon:1 | cinnamon ice | cup
+`);
+X('Uruguay', 'Uruguayan', SA, `
+Chivito canadiense | roll:80 beef_sirloin:100 bacon:15 mozzarella:25 egg_fried:50 olives:10 lettuce:15 | chivito al plato | sandwich
+Pizza al tacho | flour:70 marinara:30 mozzarella:40 | uruguayan pizza | slice
+Fainá con pizza | chickpea_flour:40 olive_oil:8 flour:50 marinara:20 mozzarella:20 | pizza a caballo | slice
+Buseca | tripe:80 kidney:60 chorizo:20 tomato_canned:80 | uruguayan tripe stew | bowl
+Torta de fiambre | pie_crust:60 ham_slice:40 mozzarella:30 egg:20 | ham cheese pie | slice
+Arroz con leche uruguayo | rice:50 milk:180 sugar:18 | uruguayan rice pudding | bowl
+`);
+X('Paraguay', 'Paraguayan', SA, `
+So'o yosopy | beef_mince:100 rice:30 water:250 | beef soup paraguay | bowl
+Pastel mandi'o | cassava:120 beef_mince:50 oil:15 | cassava empanada | serving (2)
+Mbeju mestizo | tapioca:40 cornmeal:20 cheddar:30 milk:20 | mixed mbeju | piece
+Chipa guasu | corn:150 cheddar:30 egg:20 milk:40 onion:15 | corn souffle | slice
+Kosereva | oj:0 orange:80 molasses:30 | bitter orange candy | portion
+Tereré-style iced yerba drink | green_tea:250 mint:2 | cold yerba drink | glass
+`);
+X('Cuba', 'Cuban', NA, `
+Ropa vieja | flank:130 tomato:60 green_pepper:30 onion:20 rice:150 | cuban shredded beef | plate
+Lechón asado | pork_shoulder:150 oj:20 garlic:4 | cuban roast pork | portion
+Ajiaco cubano | beef:60 pork_shoulder:40 corn:40 cassava_cooked:60 taro:50 water:200 | cuban ajiaco | bowl
+Arroz con pollo a la chorrera | rice:180 chicken_thigh:100 tomato:30 peas:20 red_pepper:20 | soupy chicken rice | plate
+Tamal en cazuela | cornmeal:60 pork_shoulder:50 tomato:40 water:200 | cuban polenta stew | bowl
+Fufú de plátano | green_plantain:200 pork_belly:20 garlic:3 | cuban plantain mash | portion
+Frita cubana | beef_mince:100 roll:60 potato:30 oil:8 | cuban burger | sandwich
+Medianoche | roll:80 pork_roast:50 ham_slice:30 swiss:20 pickles:10 | midnight sandwich | sandwich
+Papa rellena cubana | potato:200 beef_mince:50 breadcrumbs:15 oil:15 | cuban stuffed potato | piece
+Pan con lechón | roll:80 pork_shoulder:80 onion:15 | cuban pork sandwich | sandwich
+Boniatillo | sweet_potato:120 sugar:25 egg:10 sp_cinnamon:0.5 | sweet potato pudding cuba | portion
+Flan de coco | coconut_meat:30 condensed:40 egg:30 milk:40 | coconut flan | slice
+Guava and cheese pastelito | puff_pastry:60 guava_paste:30 cream_cheese:20 | pastelito de guayaba y queso | pastry
+Batido de mamey-style milkshake | papaya:120 milk:200 sugar:15 | cuban fruit shake | glass
+`);
+X('Puerto Rico', 'Puerto Rican', TE, `
+Pernil | pork_shoulder:160 garlic:4 oregano:1 | puerto rican roast pork | portion
+Pasteles puertorriqueños | green_plantain:120 taro:40 pork_shoulder:50 olives:5 | puerto rican pasteles | serving (2)
+Asopao de pollo | rice:60 chicken_thigh:100 tomato:30 peas:20 water:250 | chicken asopao | bowl
+Bacalaítos | salt_cod:30 flour:50 oil:15 | cod fritters puerto rico | serving (3)
+Piononos | ripe_plantain:120 beef_mince:50 egg:15 oil:12 | stuffed plantain rolls | serving (2)
+Sorullitos | cornmeal:50 cheddar:20 oil:15 | corn sticks | serving (4)
+Tripleta | roll:90 beef:40 ham_slice:30 pork_shoulder:40 cheddar:15 | puerto rican tripleta | sandwich
+Arroz con dulce | rice:60 coconut_milk:60 sugar:20 raisins:10 ginger:2 | coconut rice pudding pr | bowl
+Flan de queso | cream_cheese:40 condensed:40 egg:30 milk:40 | cheese flan | slice
+Coquito-style coconut drink (alcohol-free) | coconut_milk:120 condensed:40 evaporated:60 sp_cinnamon:0.5 | coconut eggnog no alcohol | glass
+`);
+X('Dominican Republic', 'Dominican', NA, `
+Sancocho de siete carnes | beef:40 chicken_thigh:40 pork_shoulder:30 sausage:20 yam:60 plantain:50 corn:30 water:200 | seven meat sancocho | bowl
+Chivo guisado | goat:160 tomato:40 onion:20 rice:150 | dominican goat stew | plate
+Pescado con coco (Samaná) | fish:170 coconut_milk:80 tomato:30 rice:150 | samana coconut fish | plate
+Locrio de pollo | rice:180 chicken_thigh:100 tomato_paste:15 oil:10 | dominican chicken rice | plate
+Moro de guandules | rice:180 kidney:80 coconut_milk:30 | pigeon pea rice | plate
+Chimichurri burger (Dominican chimi) | beef_patty:100 roll:70 cabbage:30 ketchup:10 mayo:10 | dominican chimi | sandwich
+Quipe | bulgur:40 beef_mince:50 oil:15 | dominican kibbeh | serving (2)
+Pastelitos dominicanos | flour:50 oil:15 beef_mince:40 | dominican turnovers | serving (2)
+Kipes de yuca | cassava:100 cheddar:20 oil:15 | yuca kipes | serving (2)
+Dulce de leche cortada | milk:200 sugar:30 lemon:5 | curdled milk sweet | portion
+Majarete | corn:120 coconut_milk:60 sugar:25 cornstarch:10 | corn pudding dominican | portion
+Morir soñando | milk:150 oj:120 sugar:15 | dominican orange milk | glass
+`);
+X('Haiti', 'Haitian', NA, `
+Diri ak pwa wouj | rice:180 kidney:100 oil:10 | rice and red beans haiti | plate
+Bouillon (Haitian) | beef:80 spinach:60 yam:60 plantain:60 carrots:30 water:250 | haitian bouyon | bowl
+Lambi creole | clams:150 tomato:60 onion:20 oil:10 | conch in creole sauce | portion
+Poul nan sòs | chicken_thigh:160 tomato:50 onion:20 oil:10 rice:150 | haitian stewed chicken | plate
+Mayi moulen ak sòs pwa | cornmeal:80 water:200 kidney:80 coconut_milk:20 | cornmeal with bean sauce | plate
+Bannann peze | green_plantain:180 oil:20 | haitian fried plantain | serving
+Pate kode | flour:60 oil:15 beef_mince:40 | haitian patties | piece
+Kremas-style coconut cream drink (alcohol-free) | coconut_milk:100 condensed:40 evaporated:60 sp_nutmeg:0.5 | kremas no alcohol | glass
+Dous makos | condensed:40 sugar:20 cocoa_powder:3 | haitian fudge | piece
+`);
+X('Jamaica', 'Jamaican', NA, `
+Stew chicken (Jamaican) | chicken_thigh:160 brown_sugar:5 tomato:30 carrots:30 rice:150 | jamaican stew chicken | plate
+Curry chicken back | chicken_meat:120 potato:60 curry:5 rice:150 | jamaican curry chicken back | plate
+Brown stew fish | fish:180 tomato:40 onion:20 green_pepper:20 oil:10 | jamaican brown stew fish | portion
+Escovitch fish with bammy | fish:180 oil:20 vinegar:15 carrots_raw:20 cassava_cooked:80 | fried fish bammy | plate
+Fish tea | fish:80 potato:40 yam:40 water:250 | jamaican fish soup | bowl
+Mannish water-style goat soup | goat:100 yam:60 green_plantain:50 flour:20 water:250 | goat soup jamaica | bowl
+Saltfish fritters | salt_cod:40 flour:50 oil:15 onion:10 | stamp and go | serving (4)
+Steamed callaloo with breadfruit | spinach:120 breadfruit:150 onion:15 oil:8 | callaloo breadfruit | plate
+Roast breadfruit and ackee | breadfruit:180 ackee:100 oil:8 | breadfruit and ackee | plate
+Rice and peas with oxtail gravy | rice:180 kidney:60 coconut_milk:30 gravy:40 | rice and peas gravy | plate
+Ital run down | coconut_milk:120 pumpkin:80 carrots:40 kidney:60 | vegan rundown | bowl
+Ital vegetable patty | flour:60 butter:15 carrots:30 cabbage:30 curry:2 | vegetable patty jamaica | patty
+Cheese patty | flour:60 butter:15 cheddar:40 | jamaican cheese patty | patty
+Coco bread with patty | flour:80 butter:15 coconut_milk:30 beef_mince:50 | patty in coco bread | sandwich
+Fried breadfruit | breadfruit:150 oil:15 | jamaican fried breadfruit | serving
+Plantain tarts | pie_crust:40 ripe_plantain:60 sugar:10 | jamaican plantain tart | tart
+Easter bun with cheese | flour:60 molasses:15 raisins:15 brown_sugar:12 cheddar:30 | easter bun and cheese | serving
+Cornmeal pudding | cornmeal:40 coconut_milk:60 brown_sugar:25 raisins:10 | jamaican cornmeal pudding | slice
+Blue draws | cornmeal:30 sweet_potato:50 coconut_milk:40 brown_sugar:20 | duckunoo | parcel
+Asham | corn:40 brown_sugar:15 | parched corn sweet | serving
+Irish moss-style drink | milk:200 condensed:30 sp_nutmeg:0.5 | jamaican irish moss | glass
+`);
+X('Trinidad and Tobago', 'Trinidadian', NA, `
+Curry crab and dumpling | crab:150 curry:5 coconut_milk:40 flour:60 | tobago crab dumpling | plate
+Bake and shark | flour:70 oil:20 fish:100 lettuce:15 tomato:20 | maracas bake and shark | sandwich
+Callaloo (Trinidadian) | spinach:150 okra:40 coconut_milk:60 crab:30 | trini callaloo | bowl
+Stewed chicken (Trini) | chicken_thigh:160 brown_sugar:8 tomato:30 rice:150 | trini stew chicken | plate
+Curry duck | duck_meat:150 curry:5 potato:60 | trini curry duck | portion
+Macaroni pie (Trini) | pasta:150 cheddar:40 egg:20 evaporated:40 | trini macaroni pie | slice
+Corn soup (Trinidad) | corn:100 split_peas:40 pumpkin:50 dumplings_alt:0 water:250 | trini corn soup | bowl
+Bhaji (Trinidad) | spinach:150 onion:15 garlic:3 oil:8 | trini spinach bhaji | portion
+Aloo pie with channa | flour:50 potato:60 oil:15 chickpeas:50 | aloo pie stuffed | pie
+Chow (pineapple) | pineapple:150 garlic:2 chili:2 lime:5 | pineapple chow | cup
+Pastelles | cornmeal:60 beef_mince:50 olives:5 raisins:5 | trini pastelles | parcel
+Black cake (alcohol-free, Trinidad) | flour:30 raisins:25 prunes:15 brown_sugar:20 butter:15 egg:15 | trini fruit cake no alcohol | slice
+Sorrel (Trinidad, alcohol-free) | roselle:10 sugar:25 sp_cloves:0.5 water:250 | trini sorrel | glass
+Mauby | sugar:25 water:250 sp_cinnamon:0.5 | mauby drink | glass
+`);
+X('Barbados', 'Barbadian', NA, `
+Flying fish and cou-cou | fish:150 cornmeal:60 okra:40 tomato:40 butter:8 | bajan national dish | plate
+Fish cutter | roll:70 fish:100 oil:10 | bajan cutter | sandwich
+Bajan pepperpot | beef:120 pork_shoulder:40 molasses:5 | barbados pepperpot | bowl
+Jug jug | split_peas:60 cornmeal:30 beef:40 ham:20 | christmas jug jug | portion
+Conkies | cornmeal:40 sweet_potato:40 pumpkin:30 coconut_meat:15 sugar:15 raisins:8 | bajan conkies | parcel
+Turnovers (Bajan) | flour:50 butter:15 coconut_meat:25 sugar:15 | coconut turnover | piece
+`);
+X('The Bahamas', 'Bahamian', NA, `
+Conch salad | clams:120 tomato:40 onion:20 green_pepper:20 lime:15 oj:10 | bahamian conch salad | bowl
+Conch fritters | clams:50 flour:50 oil:15 green_pepper:10 | bahamian conch fritters | serving (5)
+Stew fish (Bahamian) | fish:170 tomato:40 onion:20 flour:10 | bahamian stew fish | portion
+Souse (Bahamian chicken) | chicken_meat:120 potato:60 lime:15 onion:20 water:200 | chicken souse | bowl
+`);
+X('Guatemala', 'Guatemalan', NA, `
+Kak'ik | turkey:150 tomato:60 chili_powder:3 water:200 | mayan turkey soup | bowl
+Jocón | chicken_thigh:150 tomatillo:80 green_pepper:30 coriander:5 rice:120 | green chicken stew | plate
+Hilachas | beef:130 tomato:60 potato:60 | shredded beef guatemala | plate
+Subanik | beef:60 chicken_thigh:60 pork_shoulder:40 tomato:60 | mixed meat stew | bowl
+Shucos | roll:70 sausage:60 cabbage:30 guacamole:20 | guatemalan hot dog | hot dog
+Garnachas guatemaltecas | corn_tortilla:50 oil:12 beef_mince:40 cabbage:20 | guatemalan garnachas | serving (4)
+Chiles rellenos guatemaltecos | green_pepper:150 pork_mince:60 carrots:30 green_beans:20 egg:20 oil:15 | guatemalan stuffed peppers | serving
+Fiambre | ham_slice:30 sausage:30 chicken_meat:30 beets:40 carrots:30 cauliflower:30 green_beans:30 cheddar:15 | all saints salad | plate
+Atol de plátano | ripe_plantain:120 milk:150 sugar:10 | plantain atole | cup
+`);
+X('El Salvador', 'Salvadoran', NA, `
+Sopa de pata | beef:80 corn:40 yam:40 cabbage:40 water:250 | cow foot soup | bowl
+Gallo en chicha (alcohol-free) | chicken_thigh:150 brown_sugar:10 prunes:10 | salvadoran chicken stew | plate
+Panes con pollo | roll:80 chicken_meat:80 tomato:40 cucumber:20 | salvadoran chicken sandwich | sandwich
+Yuca frita con curtido | cassava:150 oil:15 cabbage:50 vinegar:5 | fried yuca salvador | plate
+Empanadas de leche | ripe_plantain:120 milk:60 sugar:15 cornstarch:8 oil:10 | plantain custard empanadas | serving (2)
+Atol de elote salvadoreño | corn:100 milk:150 sugar:15 | salvadoran corn atole | cup
+`);
+X('Honduras', 'Honduran', NA, `
+Pollo con tajadas | chicken_fried:150 green_plantain:120 oil:12 cabbage:40 | honduran chicken plantain | plate
+Sopa de frijoles con costilla | kidney:150 ribs:80 water:200 | bean soup with ribs | bowl
+Enchiladas hondureñas | taco_shell:30 beef_mince:60 cabbage:30 egg_boiled:20 tomato:30 | honduran enchiladas | serving (3)
+Montucas | corn:150 pork_shoulder:40 | honduran corn tamal | piece
+Torrejas (Honduran) | bread:60 egg:30 brown_sugar:25 sp_cinnamon:0.5 | holy week torrejas | serving (2)
+`);
+X('Nicaragua', 'Nicaraguan', NA, `
+Indio viejo nicaragüense | beef:100 cornmeal:40 tomato:40 oj:10 | nica indio viejo | bowl
+Baho | beef:120 green_plantain:100 cassava_cooked:80 | nicaraguan baho | plate
+Sopa de albóndigas | chicken_mince:80 cornmeal:20 potato:40 water:250 | nica meatball soup | bowl
+Nacatamal de cerdo | masa:120 pork_shoulder:60 potato:20 rice:15 | nicaraguan pork tamal | tamal
+Güirila | corn:150 sugar:10 milk:20 feta:30 | sweet corn tortilla cheese | piece
+Pío V | cornmeal:30 sugar:25 butter:12 milk:40 egg:15 | pio quinto cake | slice
+Cajeta de leche | milk:150 sugar:30 | milk candy | piece
+`);
+X('Costa Rica', 'Costa Rican', NA, `
+Chifrijo | rice:100 kidney:80 pork_belly:40 tomato:30 avocado:30 | costa rican chifrijo | bowl
+Arroz con camarones | rice:180 shrimp:100 red_pepper:20 oil:8 | costa rican shrimp rice | plate
+Picadillo de papa | potato:150 beef_mince:50 onion:15 | potato hash costa rica | portion
+Rice and beans, Caribbean coast | rice:180 kidney:80 coconut_milk:40 | limon rice and beans | plate
+Rondón | fish:80 green_plantain:60 cassava_cooked:60 coconut_milk:100 | caribbean rondon | bowl
+Patí | flour:60 butter:15 beef_mince:40 | limon pati | piece
+Tres leches (Costa Rica) | sponge:60 milk:40 condensed:30 evaporated:30 cream:15 | costa rican tres leches | slice
+`);
+X('Panama', 'Panamanian', NA, `
+Ropa vieja panameña | flank:130 tomato:50 green_pepper:20 rice:150 | panama ropa vieja | plate
+Tamal de olla | cornmeal:60 chicken_meat:60 tomato:30 olives:5 | panama pot tamal | portion
+Bollos de maíz | corn:150 butter:5 | panama corn bollos | piece
+Arroz con guandú y coco | rice:180 kidney:70 coconut_milk:40 | pigeon pea rice panama | plate
+Raspao | sugar:25 condensed:20 water:150 | panama shaved ice | cup
+Chicheme | corn:60 milk:150 sugar:15 sp_cinnamon:0.5 | panama corn drink | glass
+`);
+X('Belize', 'Belizean', NA, `
+Relleno negro | turkey:120 chili_powder:5 egg_boiled:25 water:200 | black soup belize | bowl
+Escabeche (Belizean) | chicken_meat:100 onion:60 vinegar:10 corn_tortilla:40 | belize onion soup | bowl
+Boil-up | fish:100 egg_boiled:50 cassava_cooked:60 green_plantain:60 sweet_potato:50 tomato:30 | belize boil up | plate
+Cow foot soup (Belize) | beef:80 cassava_cooked:50 carrots:30 water:250 | belize cow foot soup | bowl
+Hudut with fish | fish:150 coconut_milk:100 green_plantain:150 | garifuna hudut | bowl
+Belizean meat pie | flour:50 butter:15 beef_mince:50 | belize meat pie | pie
+`);
+X('Grenada', 'Grenadian', NA, `
+Grenadian oil down with breadfruit | breadfruit:150 salt_cod:40 coconut_milk:100 spinach:30 | oil down | bowl
+Lambie souse | clams:120 lime:15 cucumber:30 onion:15 | conch souse | bowl
+Grenada cocoa tea | cocoa_powder:12 milk:150 sugar:15 sp_nutmeg:0.5 | cocoa tea | cup
+`);
+X('Saint Lucia', 'Saint Lucian', NA, `
+Bouyon (Saint Lucian) | kidney:60 beef:60 yam:60 dumplings_alt:0 flour:20 water:250 | st lucian soup | bowl
+Accra with bakes | salt_cod:40 flour:100 oil:25 | st lucia accra bake | serving
+Green fig salad | green_plantain:150 mayo:20 onion:15 | st lucian fig salad | portion
+`);
+X('Saint Vincent and the Grenadines', 'Vincentian', NA, `
+Callaloo and saltfish (Vincentian) | spinach:120 salt_cod:60 onion:15 oil:8 | vincy callaloo saltfish | plate
+Breadfruit balls | breadfruit:120 salt_cod:20 flour:10 oil:15 | vincy breadfruit balls | serving (3)
+Duckanoo (Vincentian) | cornmeal:40 coconut_meat:20 sugar:15 | vincy duckanoo | parcel
+`);
+X('Dominica', 'Dominican (Dominica)', NA, `
+Crab backs | crab:120 breadcrumbs:15 butter:10 onion:15 | crab backs | serving
+Titiri-style fish fritters | fish:50 flour:40 oil:15 | dominica fish fritters | serving (4)
+Kubouyon | fish:120 tomato:40 onion:20 water:150 | dominica fish broth | bowl
+`);
+X('Antigua and Barbuda', 'Antiguan', NA, `
+Antiguan pepperpot with fungee | spinach:100 eggplant:50 pumpkin:50 beef:50 cornmeal:70 okra:30 | pepperpot and fungi | plate
+Antiguan saltfish breakfast | salt_cod:70 tomato:30 onion:20 oil:8 bread:60 | antigua breakfast | plate
+`);
+X('Saint Kitts and Nevis', 'Kittitian', NA, `
+Kittitian stewed goat | goat:150 tomato:40 onion:20 | stewed goat st kitts | portion
+Coconut tart (Kittitian) | pie_crust:40 coconut_meat:30 sugar:20 | kittitian coconut tart | tart
+`);
+
 console.log(`everyday dishes left to real measured records: ${preferred.length}`);
 if (process.env.SHOW_PREFERRED) console.log(preferred.join('\n'));
 // ---- write out ----
+const LATER = new Set(NEW.slice(LATER_FROM).map((r) => r.name));
 RECIPES.push(...NEW);
 const total = Object.keys(coverage).length;
 const out = Object.fromEntries(Object.entries(coverage).map(([c, v]) => [c, { demonym: v.demonym, region: v.region, dishes: [...new Set(v.dishes)] }]));
 writeFileSync(new URL('../src/data/countryDishes.ts', import.meta.url), `// Generated by scripts/recipes-countries.mjs: every country and territory with its dishes.\nexport const COUNTRY_DISHES: Record<string, { demonym: string; region: string; dishes: string[] }> = ${JSON.stringify(out)};\n`);
 console.error(`recipes-countries: ${NEW.length} new dishes, ${total} countries/territories/lists; ${missingRefs.length} references not found${missingRefs.length ? `: ${missingRefs.join('; ')}` : ''}`);
-export { RECIPES, K };
+export { RECIPES, K, LATER };

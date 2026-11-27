@@ -12,7 +12,7 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { RECIPES, K } from './recipes-countries.mjs';
+import { RECIPES, K, LATER } from './recipes-countries.mjs';
 import { variantsOf } from './recipe-variants.mjs';
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
@@ -65,8 +65,10 @@ function rowFor(r) {
     r.portions, 'r', extra.map((v) => round(v, 2)), note,
   ];
 }
-const out = RECIPES.map(rowFor);
+const out = RECIPES.filter((r) => !LATER.has(r.name)).map(rowFor);
 file.foods.push(...out);
+// Newer dishes live in the second file with the versions (the main file is near the offline-cache limit).
+const later = RECIPES.filter((r) => LATER.has(r.name)).map(rowFor);
 
 // Other versions of each dish (other proteins, vegetarian, vegan) go to a second file that the app
 // loads right after the main one, so the first load and the offline cache stay small.
@@ -77,7 +79,8 @@ const more = variants.map((v) => {
   row[12] = row[12].replace(' standard recipe,', ` standard recipe (${v.kind === 'protein' ? 'version' : v.kind + ' version'} of ${v.of}),`);
   return row;
 });
-writeFileSync(join(root, 'public', 'data', 'foods-more.json'), JSON.stringify({ foods: more }));
+writeFileSync(join(root, 'public', 'data', 'foods-more.json'), JSON.stringify({ foods: [...later, ...more] }));
+console.log(`Second file: ${later.length} newer dishes + ${more.length} versions.`);
 console.log(`Added ${more.length} versions: ${['protein', 'vegetarian', 'vegan'].map((k) => `${variants.filter((v) => v.kind === k).length} ${k}`).join(', ')}.`);
 writeFileSync(dest, JSON.stringify(file));
 writeFileSync(REG_FILE, `${JSON.stringify(reg, null, 1)}\n`);
