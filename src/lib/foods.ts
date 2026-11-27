@@ -1,4 +1,5 @@
 import { EXTRA_KEYS, knownAddedSugar } from './nutrients';
+import { isAlcoholic } from './alcohol';
 /**
  * Food database: loads public/data/foods.json (USDA SR Legacy + USDA FNDDS +
  * FAO/INFOODS West Africa, built by scripts/build-foods.mjs) and merges custom
@@ -99,7 +100,7 @@ export function loadFoodDb(): Promise<FoodDb> {
         return r.json() as Promise<FoodsFile>;
       })
       .then((file) => {
-        const foods: Food[] = file.foods.map(([key, name, cat, state, protein, kcal, fat, carbs, fiber, portions, src, extra, note]) => {
+        const foods: Food[] = file.foods.filter((r) => !isAlcoholic(r[1], file.categories[r[2]])).map(([key, name, cat, state, protein, kcal, fat, carbs, fiber, portions, src, extra, note]) => {
           const usda = src === 's' || src === 'f';
           // Recipe rows carry their other names in brackets: "Egusi soup (egushi, melon seed soup)".
           const m = src === 'r' ? /^(.*?) \((.*)\)$/.exec(name) : null;

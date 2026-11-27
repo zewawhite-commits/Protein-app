@@ -92,7 +92,6 @@ const ONLY: Record<string, { yes: RegExp; no?: RegExp }> = {
   // The photo is fried wings: only fried or coated wings.
   chicken_wings: { yes: /\b(fried|coated|"wings", plain)\b|"wings"/, no: /\b(raw|glazed|barbecued?|bbq|buffalo|sauce|teriyaki|honey|frozen|marinated|stewed|casseroled|lean flesh)\b/ },
   mushroom: { yes: /\b(white|button|common|agaricus)\b/, no: /\b(cooked|boiled|fried|canned|dried|shiitake|oyster|enoki|portabell?a|chanterelle|morel|maitake|jew|asian|straw|stuffed|sauteed|microwaved|grilled)\b/ },
-  wine_glass: { yes: /\bred\b/, no: /\b(white|rose|sparkling|fortified|non-?alcoholic|cooking|cooked|dessert|port|sherry)\b/ },
   red_apple: { yes: /\b(raw|fresh|red|eating)\b/, no: /\b(dried|baked|juice|sauce|canned|cooked|stewed|green|granny|peeled|without skin|flesh only|crab|rose|star|custard|cashew|sugar|mammie|wax|chips|sweet apple)\b/ },
   onion: { yes: /\braw\b/, no: /\b(red|spring|green|pearl|cooked|fried|dried|powder|rings?|welsh|young|scallion|shallot|pickled|sweet)\b/ },
   tuna: { yes: /\b(fresh|steak|fillet|yellowfin|bluefin|skipjack|albacore)\b/, no: /\b(canned|raw|salad|smoked|dried|sushi|sauce|cream)\b/ },

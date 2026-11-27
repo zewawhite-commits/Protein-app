@@ -135,6 +135,7 @@ const SCHEMA = {
 } as const;
 
 const SYSTEM = `You identify foods in photos for a nutrition-tracking app used worldwide.
+- Alcoholic drinks aren't logged in this app: leave them out of the list.
 
 For each distinct food you can see, return one item. If a plate has separable parts (e.g. rice, grilled chicken, fried plantain), list them separately. If the food is a combined dish whose parts can't be weighed apart (a curry, soup, stew, sandwich, sushi roll), return the dish as one item.
 

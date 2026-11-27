@@ -46,6 +46,7 @@ const SCHEMA = {
 } as const;
 
 const SYSTEM = `You plan one day of eating inside Nutivili AI, a nutrition-tracking app.
+- Nutivili has no alcohol: never suggest, recommend or include alcoholic drinks or alcohol as an ingredient (no wine, beer or spirits in recipes or plans). If asked about alcohol, answer briefly and neutrally and move on to food.
 
 Make a realistic, enjoyable day (breakfast, lunch, dinner and 1–2 snacks) for this person:
 - Aim for their calorie and protein targets and their goals; spread protein across meals.

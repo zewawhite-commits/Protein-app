@@ -23,7 +23,7 @@ const V: Record<string, string[]> = {
   plantain: ['Fried plantain', 'Boiled plantain', 'Roasted plantain', 'Plantain chips', 'Kelewele', 'Plantain swallow'],
   potato: ['Boiled potato', 'Mashed potato', 'Baked potato', 'Chips', 'French fries', 'Roast potatoes', 'Sweet potato', 'Potato salad'],
   juice: ['Orange juice', 'Apple juice', 'Pineapple juice', 'Mango juice', 'Zobo drink', 'Grape juice', 'Smoothie'],
-  drink: ['Water', 'Tea', 'Coffee', 'Zobo drink', 'Kunu', 'Chapman', 'Soft drink', 'Orange juice', 'Milkshake', 'Beer', 'Wine'],
+  drink: ['Water', 'Tea', 'Coffee', 'Zobo drink', 'Kunu', 'Chapman', 'Soft drink', 'Orange juice', 'Milkshake', 'Malt drink', 'Smoothie'],
   cheese: ['Cheddar', 'Mozzarella', 'Feta', 'Parmesan', 'Cottage cheese', 'Cream cheese', 'Halloumi', 'Goat cheese'],
   yogurt: ['Greek yoghurt', 'Plain yoghurt', 'Fruit yoghurt', 'Low-fat yoghurt', 'Ayran'],
   curry: ['Chicken curry', 'Goat curry', 'Thai red curry', 'Thai green curry', 'Massaman curry', 'Butter chicken', 'Chana masala', 'Dal', 'Katsu curry'],

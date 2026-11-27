@@ -1,3 +1,4 @@
+import { isAlcoholic } from './alcohol';
 /**
  * Open Food Facts — open, worldwide database of packaged products (label data,
  * community-contributed, ODbL licence). Used live for branded products not in the
@@ -34,6 +35,8 @@ export function offToFood(p: OffProduct): Food | null {
   const protein = n(nu.proteins_100g);
   const name = (p.product_name || p.generic_name || '').trim();
   if (protein == null || protein > 100 || !name) return null;
+  // No alcoholic drinks in Nutivili.
+  if ((p.categories_tags ?? []).some((t) => /alcoholic-beverages|beers|wines|spirits|ciders|liqueurs/.test(t) && !/non-alcoholic|alcohol-free/.test(t)) || isAlcoholic(name)) return null;
   const brand = (p.brands ?? '').split(',')[0].trim();
   const serving = n(p.serving_quantity);
   return {

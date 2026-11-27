@@ -10,7 +10,7 @@ describe('photos only show on foods that look like them', () => {
     ['Bread, banana, homemade', 'bread'], ['Bread, garlic, commercial, baked', 'bread'], ['Bread, white, toasted', 'bread'], ['Bread, pitta, white', 'bread'],
     ['Fish, cod, steamed', 'fish'], ['Fish, eel', 'fish'], ['Beef, steak, country fried', 'cut_of_meat'], ['Beef, braising steak, braised, lean only', 'cut_of_meat'],
     ['Chicken breast, stewed, skin eaten', 'chicken_breast'], ['Chicken wing, stewed', 'chicken_wings'], ['Dessert pizza', 'pizza'], ['Chocolate, white', 'chocolate_bar'],
-    ['Cherries, maraschino', 'cherries'], ['Tea, hot, hibiscus', 'teacup_without_handle'], ['Wine, red, cooked', 'wine_glass'], ['Doughnut, jelly', 'doughnut'],
+    ['Cherries, maraschino', 'cherries'], ['Tea, hot, hibiscus', 'teacup_without_handle'], ['Doughnut, jelly', 'doughnut'],
     ['Hot dog, beef', 'hot_dog'], ['Mapo tofu', 'tofu'], ['Milk, malted', 'glass_of_milk'], ['Popcorn, caramel coated', 'popcorn'],
   ])('%s does not get the %s photo', (name, key) => expect(photoKeyFor(name)).not.toBe(key));
   it.each([
