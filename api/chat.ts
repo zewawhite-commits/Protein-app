@@ -3,6 +3,7 @@
  * AI nutrition coach. Requires a Premium pass when payments are configured.
  */
 export const maxDuration = 60;
+import { crisisReply } from '../src/lib/safety.js';
 import { busyMessage, logAiError } from './_lib/aiErrors.js';
 import Anthropic from '@anthropic-ai/sdk';
 import { aiClient, isDuplicate } from './_lib/metering.js';
@@ -19,6 +20,11 @@ export async function POST(request: Request): Promise<Response> {
   const body = (await request.json().catch(() => null)) as { turns?: unknown; context?: unknown; image?: { data?: unknown; mediaType?: unknown } } | null;
   const turns = cleanTurns(body?.turns);
   if (!turns) return json({ error: 'Invalid conversation.' }, 400);
+  // Safety first: a message about self-harm or an eating disorder gets a fixed, caring reply with
+  // helplines. It never reaches the AI, never uses credits and isn't blocked by any plan limit.
+  const last = [...turns].reverse().find((t) => t.role === 'user');
+  const safe = last ? crisisReply(last.content) : null;
+  if (safe) return json({ reply: safe, foods: [], safety: true });
   let image: ChatImage | undefined;
   if (body?.image) {
     const { data, mediaType } = body.image;

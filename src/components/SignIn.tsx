@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Loader2, Mail } from 'lucide-react';
-import { cleanPhone, validPhone, sendEmailCode, signInWithGoogle, verifyEmailCode } from '@/lib/account';
+import { Eye, EyeOff, Loader2, Mail } from 'lucide-react';
+import { cleanPhone, validPhone, sendEmailCode, signInWithGoogle, signInWithPassword, verifyEmailCode } from '@/lib/account';
 import { GoogleIcon } from './BrandIcons';
 import { cx } from './ui';
 import { getAuthDraft, setAuthDraft, setPending } from '@/lib/gate';
@@ -43,6 +43,9 @@ export function EmailAuth({ start = 'signup', onBack, onPreview }: { start?: 'si
   const [invite, setInvite] = useState('');
   const inviteOk = !invite.trim() || !!cleanInviteCode(invite);
   const [code, setCode] = useState('');
+  const [usePw, setUsePw] = useState(false);
+  const [pw, setPw] = useState('');
+  const [showPw, setShowPw] = useState(false);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
   const addr = email.trim().toLowerCase();
@@ -97,10 +100,24 @@ export function EmailAuth({ start = 'signup', onBack, onPreview }: { start?: 'si
   }
 
   const ready = validEmail(addr) && (!signup || (phoneOk && inviteOk));
+  const pwLogin = !signup && usePw;
+  async function passwordLogin() {
+    setErr(''); setBusy(true);
+    try { await signInWithPassword(addr, pw); setAuthDraft(null); setPending(null); }
+    catch (e) { setErr((e as Error).message); } finally { setBusy(false); }
+  }
   return (
-    <form className="grid gap-2.5" onSubmit={(e) => { e.preventDefault(); if (ready) void send(); }}>
+    <form className="grid gap-2.5" onSubmit={(e) => { e.preventDefault(); if (!ready) return; if (pwLogin) { if (pw) void passwordLogin(); } else void send(); }}>
       <p className="text-[19px] font-bold tracking-tight">{signup ? 'Create your account' : 'Welcome back'}</p>
+      <button type="button" onClick={() => { setErr(''); signInWithGoogle().catch((e) => setErr((e as Error).message)); }} className="btn w-full bg-surface text-ink" style={{ boxShadow: 'var(--shadow)' }}><GoogleIcon /> {signup ? 'Sign up with Google' : 'Continue with Google'}</button>
+      <div className="flex items-center gap-3 text-xs font-semibold uppercase tracking-wide text-dim"><span className="h-px flex-1 bg-line" />or with email<span className="h-px flex-1 bg-line" /></div>
       <input type="email" inputMode="email" autoComplete="email" aria-label="Email" className="field" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
+      {pwLogin && (
+        <div className="relative">
+          <input type={showPw ? 'text' : 'password'} autoComplete="current-password" aria-label="Password" className="field !pr-12" placeholder="Password" value={pw} onChange={(e) => setPw(e.target.value)} />
+          <button type="button" onClick={() => setShowPw(!showPw)} className="absolute right-2 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center text-silver" aria-label={showPw ? 'Hide password' : 'Show password'}>{showPw ? <EyeOff size={18} /> : <Eye size={18} />}</button>
+        </div>
+      )}
       {signup && (
         <>
           <input type="tel" inputMode="tel" autoComplete="tel" aria-label="Phone number (optional)" className={cx('field', !phoneOk && '!ring-2 !ring-danger')} placeholder="Phone number (optional)" value={phone} onChange={(e) => setPhone(e.target.value)} />
@@ -115,10 +132,18 @@ export function EmailAuth({ start = 'signup', onBack, onPreview }: { start?: 'si
       )}
       {signup && <p className="px-1 text-[12px] text-dim">You’ll read and accept the <a href="/terms" target="_blank" className="font-semibold underline">Terms</a> and <a href="/privacy" target="_blank" className="font-semibold underline">Privacy Policy</a> before you start.</p>}
       {error}
-      <button type="submit" disabled={busy || !ready || wait > 0} className="btn-primary">{Spinner} {wait > 0 ? `Send code in ${wait}s` : 'Send me a code'}</button>
+      {pwLogin
+        ? <button type="submit" disabled={busy || !ready || !pw} className="btn-primary">{Spinner} Log in</button>
+        : <button type="submit" disabled={busy || !ready || wait > 0} className="btn-primary">{Spinner} {wait > 0 ? `Send code in ${wait}s` : 'Send me a code'}</button>}
+      {!signup && (
+        <button type="button" onClick={() => { setUsePw(!usePw); setErr(''); }} className="h-9 text-sm font-semibold text-accent">
+          {usePw ? 'Email me a code instead' : 'Log in with a password instead'}
+        </button>
+      )}
+      {pwLogin && <p className="-mt-1 text-center text-[12px] text-dim">Forgot it, or never set one? Use the code instead, then set a password in Profile → Settings.</p>}
       <p className="text-center text-sm text-silver">
         {signup ? 'Already have an account? ' : 'New here? '}
-        <button type="button" onClick={() => { setSignup(!signup); setErr(''); }} className="font-semibold text-accent">{signup ? 'Log in' : 'Create an account'}</button>
+        <button type="button" onClick={() => { setSignup(!signup); setErr(''); setUsePw(false); }} className="font-semibold text-accent">{signup ? 'Log in' : 'Create an account'}</button>
       </p>
       {onBack && <button type="button" onClick={onBack} className="h-10 text-sm font-semibold text-silver">Back</button>}
     </form>

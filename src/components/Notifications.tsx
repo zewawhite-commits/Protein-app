@@ -26,10 +26,17 @@ function useNudges(): Nudge[] {
   const gentle = useStore((s) => !!s.settings.gentle);
   const workedOut = useStore((s) => s.exercises.some((e) => e.date === date));
   const weighed = useStore((s) => s.weights.some((w) => w.date === date));
-  return useMemo(
-    () => computeNudges({ date, now, entries, totals, proteinGoal: goal, targets: profile ? dailyTargets(profile, goal) : null, streak, times: reminders, workedOut, weighed, gentle }),
-    [date, now, entries, totals, goal, profile, streak, reminders, workedOut, weighed, gentle],
-  );
+  const perks = useStore((s) => s.perks);
+  const paid = useStore((s) => !!s.premium && s.premium.exp > Date.now());
+  return useMemo(() => {
+    const list = computeNudges({ date, now, entries, totals, proteinGoal: goal, targets: profile ? dailyTargets(profile, goal) : null, streak, times: reminders, workedOut, weighed, gentle });
+    // Free Plus time ending: say so a day ahead. Nothing is ever charged when it ends.
+    const left = perks?.until ? perks.until - now.getTime() : 0;
+    if (!paid && left > 0 && left < 36 * 3600e3) {
+      list.unshift({ id: `trial-end-${new Date(perks!.until).toISOString().slice(0, 10)}`, kind: 'tip', title: 'Your free Plus time ends soon', body: `It ends ${new Date(perks!.until).toLocaleString(undefined, { weekday: 'long', hour: 'numeric', minute: '2-digit' })}. Nothing will be charged; you’ll simply move to Free and keep all your data.` } as Nudge);
+    }
+    return list;
+  }, [date, now, entries, totals, goal, profile, streak, reminders, workedOut, weighed, gentle, perks, paid]);
 }
 
 const ICON = { meal: Utensils, win: PartyPopper, tip: Lightbulb, warn: TriangleAlert } as const;

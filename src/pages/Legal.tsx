@@ -9,7 +9,7 @@ import { USD_PRICES } from '@/lib/prices';
 export const SUPPORT_EMAIL: string | undefined = import.meta.env.VITE_SUPPORT_EMAIL || 'nutiviliai@gmail.com';
 const BUSINESS: string = import.meta.env.VITE_BUSINESS_NAME || APP_NAME;
 const ADDRESS: string | undefined = import.meta.env.VITE_BUSINESS_ADDRESS || undefined;
-const UPDATED = '16 November 2026';
+const UPDATED = '27 November 2026';
 
 const DOCS = [
   { to: '/terms', label: 'Terms & Conditions' },
@@ -57,10 +57,11 @@ export function Privacy() {
 
       <H>What we collect</H>
       <ul className="list-disc space-y-2 pl-5">
-        <li><b>What you enter:</b> your food log, weights, workouts, goals, body details (age, height, weight, sex), and preferences such as cuisines, diet, allergies and foods you avoid.</li>
+        <li><b>What you enter:</b> your food log, weights, workouts and activities, steps, water, sleep, goals, body details (age, height, weight, sex), and preferences such as cuisines, diet, allergies and foods you avoid.</li>
         <li><b>Account:</b> if you sign in, your email address and, with Google, your name and profile picture.</li>
         <li><b>Photos:</b> meal photos you scan and progress photos. They’re stored on your phone, not on our servers, unless you post one to the feed. Before a photo is stored or sent anywhere, the app re-saves it, which removes hidden details such as the location it was taken.</li>
-        <li><b>Community:</b> posts, comments, reactions, group messages, your username and profile photo — visible to other members of the same groups.</li>
+        <li><b>Community:</b> posts, comments, reactions, your username and profile photo, who you follow, and direct messages (including photos or files you send in them). Posts are visible according to your privacy settings; direct messages are visible only to the people in that conversation.</li>
+        <li><b>Safety:</b> people you block or restrict, and reports you make or that are made about content you posted, so we can review them and keep the community safe. The person you report is not told who reported them.</li>
         <li><b>Payments:</b> handled by Paystack. We receive your plan, payment status, and the card brand and last four digits — never your full card number.</li>
         <li><b>Usage counts:</b> how many AI features you used this month, to apply plan limits.</li>
         <li><b>Scan corrections:</b> when you choose a different food than the one the app suggested after a scan, we record the AI’s name for the food and the food you chose, without your name or email, to improve suggestions for everyone.</li>
@@ -72,7 +73,7 @@ export function Privacy() {
       <ul className="list-disc space-y-2 pl-5">
         <li>To run the app: calculate your targets, show your progress, warn you about foods on your avoid list, and keep your data in sync across devices.</li>
         <li>To send occasional tips, recipes and offers by email. You can turn these off at sign-up, any time in Settings → Tips &amp; offers by email, or by asking us. Account emails (like confirming your email or resetting your password) are always sent.</li>
-        <li>To provide AI features: when you scan a meal or label, describe food, chat with the coach or ask for a workout, recipe, plan or meal ideas, the photo or text and the relevant parts of your profile and recent log are sent to our AI provider, Anthropic, to produce a reply. Your first name may be included so the coach can address you; your email address and account details are not sent. Under Anthropic’s commercial terms, this data isn’t used to train their models.</li>
+        <li>To provide AI features: when you scan a meal or label, describe food, chat with the coach (including any photo you attach to a coach message) or ask for a workout, recipe, plan or meal ideas, the photo or text and the relevant parts of your profile and recent log are sent to our AI provider, Anthropic, to produce a reply. Your first name may be included so the coach can address you; your email address and account details are not sent. Under Anthropic’s commercial terms, this data isn’t used to train their models.</li>
         <li>To take payments, manage your subscription and give free Plus time.</li>
         <li>To keep the service safe, prevent abuse and fix problems.</li>
         <li>To understand how the app is used, from totals only (for example how many people logged food this week), never to profile you for advertising.</li>
@@ -88,6 +89,7 @@ export function Privacy() {
       <p>You can see, export and delete your data at any time: Profile → Export backup, and Profile → Delete account, which removes your account and everything linked to it. You can also contact {contact}. Depending on where you live, data-protection law may also give you the right to correct your data, object to or restrict how it’s used, and complain to your local data-protection authority.</p>
 
       <H>How long we keep it</H>
+      <p>Photos you scan or attach to the coach are sent to our AI provider to get the answer and are not stored on our servers. Photos you post or send in a message are deleted when you delete that post or message, and all of them are deleted with your account. Storage for posts and messages is private: a photo can only be opened by people allowed to see it, through short-lived links.</p>
       <p>We keep your data while your account is active. When you delete it, it’s removed from our systems within 30 days, except records we must keep by law, such as payment records. Scan corrections are kept without anything that identifies you. Crash reports are kept in our hosting logs for a short period and then deleted automatically.</p>
 
       <H>Children</H>
@@ -141,7 +143,7 @@ export function Terms() {
 
       <H>Free trial and invites</H>
       <ul className="list-disc space-y-2 pl-5">
-        <li>Each person can have one free 3-day Plus trial. No card is needed and it ends on its own; nothing is charged when it ends.</li>
+        <li>Each person can have one free 3-day Plus trial. No card is needed and it ends on its own; nothing is charged when it ends, and a free trial never turns into a paid plan without you choosing to subscribe. The app tells you the day before it ends.</li>
         <li>Friends who join with your invite link get 14 days of Plus free, and you get 7 days of Plus for each friend who joins, up to 10 friends. Invites are for real people; we may remove free time earned with fake or duplicate accounts.</li>
         <li>Free Plus time includes Plus features with the same monthly AI credits (invite rewards keep the coach at the Free allowance), has no cash value and can’t be exchanged or transferred.</li>
       </ul>

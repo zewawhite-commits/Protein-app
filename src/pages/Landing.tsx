@@ -2,7 +2,6 @@ import { Link } from 'react-router-dom';
 import { Camera, Check, CloudOff, Globe2, Mic, Scale, Search, ShieldCheck } from 'lucide-react';
 import { Logo } from '@/components/Logo';
 import { BrandName } from '@/components/fx';
-import { FoodVisual } from '@/components/FoodIcon';
 import { USD_PRICES } from '@/lib/prices';
 import { SUPPORT_EMAIL } from './Legal';
 
@@ -16,18 +15,15 @@ const WAYS = [
   { icon: Scale, title: 'Weigh it', text: 'Type the grams from your kitchen scale for exact numbers. Raw and cooked are kept separate.' },
 ];
 
-const FOODS = ['Jollof rice', 'Egusi soup', 'Pounded yam', 'Moi moi', 'Sushi', 'Chicken tikka masala', 'Pizza', 'Avocado', 'Banana', 'Pancakes'];
-
 const FAQ: [string, string][] = [
-  ['Is it really free?', 'Yes. Tracking calories, protein, carbs, fat, vitamins and minerals is free for ever, with a few AI scans and coach messages every day.'],
-  ['Where do the nutrition numbers come from?', 'Official food composition tables: USDA (US), UK CoFID, Australia’s AFCD and FAO/INFOODS West Africa, plus standard recipes built from them. Every food shows its source.'],
-  ['Does it know African food?', 'Yes. Jollof, egusi, efo riro, eba, amala, moi moi, suya, waakye, kenkey, ugali, injera and many more, measured the way they’re served: wraps, ladles, plates.'],
-  ['Are photo scans exact?', 'No photo can weigh food, so scans are estimates. You see every food and amount and can change anything before saving. For exact numbers, weigh it.'],
-  ['Does it work without internet?', 'Yes. Search and logging work offline and sync when you’re back online. AI scans and the coach need internet.'],
-  ['How do I sign up?', 'Tap Start free, then Continue with Google or Create account with email. With email we send a 6-digit code to confirm it’s you; type it in and you’re in. You can look around the app before you enter the code.'],
-  ['How do I log in on a new phone?', 'Open Nutivili, tap Log in and enter your email. We send a new 6-digit code (no password to remember). Your diary, weight and workouts sync back automatically.'],
-  ['I didn’t get the code. What now?', 'Check your spam or promotions folder, make sure the email is spelt right (you can change it on the code screen), then tap Resend code after the countdown.'],
-  ['Can I cancel Plus?', 'Any time, in Profile. You keep Plus until the end of the period you paid for.'],
+  ['What is Nutivili and how does it work?', 'Nutivili tracks what you eat and shows your calories, protein, carbs, fat, vitamins and minerals. Search 18,000+ foods, scan a meal with your camera, scan a barcode or say what you ate. Your diary, reports and trends update as you log.'],
+  ['How do I track my food?', 'Tap + and pick a way: search the database, snap a photo, scan a barcode or nutrition label, or type or say it (“2 eggs and toast”). Choose the amount in grams, pieces, cups or servings, and it’s saved to your diary.'],
+  ['Does Nutivili know foods from different countries and cuisines?', 'Yes. Dishes from around the world, with local names and common spellings, measured the way they’re really served: by the plate, bowl, piece, cup or gram.'],
+  ['What if I can’t find a food?', 'Create your own in seconds with the numbers from the pack, or build a meal from its ingredients and save it. You can also edit any dish, for example add an egg or swap the protein, and keep your version for next time.'],
+  ['Can I edit scanned meals and change serving sizes?', 'Always. A scan is a starting point: change any food, add or remove items, and adjust the amount or unit before you save. Saved meals can be edited later too.'],
+  ['How accurate are the calories and nutrition numbers?', 'Foods come from official food-composition tables (such as USDA, UK CoFID, Australia’s AFCD and FAO/INFOODS) and pack labels, and every food shows its source. A photo can’t weigh food, so scans are clearly marked as estimates. For exact numbers, weigh it. Missing values are shown as missing, never as zero.'],
+  ['What’s included in Free and Plus?', 'Free: the full food diary, search, barcode and voice logging, recipes, water, sleep, steps and exercise, reports and graphs, plus 3 AI food scans and 5 AI coach messages a day. Plus ($8.99 a month or $44.99 a year) adds unlimited AI scans, the AI coach, and personalised meal plans, recipes and workouts.'],
+  ['Can I cancel, and is my data secure?', 'Cancel any time in Profile → Subscription in two taps; you keep Plus until the end of the period you paid for, and your data stays yours. Your diary is private, sent over encrypted connections, never sold, and you can download or delete everything from Profile.'],
 ];
 
 /** The public website: what Nutivili is, for people who haven't signed in yet. */
@@ -50,15 +46,13 @@ export default function Landing() {
         <section className="mx-auto max-w-5xl px-5 pb-14 pt-12 md:pt-20">
           <p className="text-[13px] font-bold uppercase tracking-wider text-accent">Nutrition tracking, made easy</p>
           <h1 className="mt-3 max-w-3xl text-[40px] font-extrabold leading-[1.05] tracking-tight md:text-[60px]">Snap, say or weigh your food. <span className="text-accent">Hit your number.</span></h1>
-          <p className="mt-5 max-w-2xl text-[17px] leading-relaxed text-silver">Calories, protein, carbs, vitamins and minerals for the food you actually eat: from jollof and egusi to sushi and pasta. Logging a meal takes seconds, not minutes.</p>
+          <p className="mt-5 max-w-2xl text-[17px] leading-relaxed text-silver">Calories, protein, carbs, vitamins and minerals for the food you actually eat, from any kitchen in the world. Logging a meal takes seconds, not minutes.</p>
           <div className="mt-7 flex flex-wrap gap-3">
             <Link to="/start" className="btn-primary !h-12 !px-6">Start free</Link>
             <a href="#how" className="btn-ghost !h-12 !px-6">See how it works</a>
           </div>
           <p className="mt-3 text-[13px] text-dim">Free for ever · No card needed · Works on any phone, in the browser</p>
-          <div className="mt-10 flex flex-wrap gap-3" aria-label="Foods from around the world">
-            {FOODS.map((f) => <div key={f} className="flex items-center gap-2 rounded-full bg-surface py-1.5 pl-1.5 pr-3.5 text-[14px] font-semibold" style={{ boxShadow: 'var(--shadow)' }}><FoodVisual name={f} size={32} /> {f}</div>)}
-          </div>
+
         </section>
 
         <section id="how" className="bg-surface/60 py-14">
@@ -78,7 +72,7 @@ export default function Landing() {
 
         <section className="mx-auto max-w-5xl px-5 py-14">
           <div className="grid gap-4 md:grid-cols-3">
-            <div className="card p-6"><Globe2 className="text-accent" size={24} /><p className="mt-3 text-[18px] font-bold">African and world food</p><p className="mt-1 text-[15px] leading-relaxed text-silver">Nigerian, Ghanaian, Kenyan and Ethiopian dishes next to Indian, Chinese, Mexican, Middle Eastern and more, measured the way they’re really served.</p></div>
+            <div className="card p-6"><Globe2 className="text-accent" size={24} /><p className="mt-3 text-[18px] font-bold">Food from everywhere</p><p className="mt-1 text-[15px] leading-relaxed text-silver">Home cooking and restaurant dishes from every corner of the world, with local names, measured the way they’re really served.</p></div>
             <div className="card p-6"><ShieldCheck className="text-accent" size={24} /><p className="mt-3 text-[18px] font-bold">Numbers you can trust</p><p className="mt-1 text-[15px] leading-relaxed text-silver">Every value comes from an official food table and shows its source. Estimates are always labelled as estimates.</p></div>
             <div className="card p-6"><CloudOff className="text-accent" size={24} /><p className="mt-3 text-[18px] font-bold">Works offline</p><p className="mt-1 text-[15px] leading-relaxed text-silver">Search and log without internet. Everything syncs when you’re back online, and you can download your data any time.</p></div>
           </div>

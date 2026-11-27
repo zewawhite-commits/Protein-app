@@ -4,7 +4,7 @@ import { CATEGORY_NAMES, LIBRARY } from '@/data/exerciseLibrary';
  * MET values approximate the Compendium of Physical Activities (Ainsworth et al., 2011).
  * Shown labelled as an estimate; the user can type their own number (e.g. from a watch).
  */
-export type ExerciseType = 'run' | 'walk' | 'cycle' | 'weights' | 'hiit' | 'swim' | 'sport' | 'yoga';
+export type ExerciseType = 'run' | 'walk' | 'cycle' | 'weights' | 'hiit' | 'swim' | 'sport' | 'yoga' | 'dance' | 'hike' | 'other';
 export type Intensity = 'low' | 'medium' | 'high';
 
 export const EXERCISES: Record<ExerciseType, { label: string; met: Record<Intensity, number> }> = {
@@ -16,7 +16,17 @@ export const EXERCISES: Record<ExerciseType, { label: string; met: Record<Intens
   swim: { label: 'Swimming', met: { low: 5.8, medium: 8.3, high: 10.0 } },
   sport: { label: 'Sport (football, etc.)', met: { low: 5.0, medium: 7.0, high: 9.0 } },
   yoga: { label: 'Yoga / pilates', met: { low: 2.5, medium: 3.0, high: 4.0 } },
+  dance: { label: 'Dancing', met: { low: 3.0, medium: 5.0, high: 7.3 } },
+  hike: { label: 'Hiking', met: { low: 4.5, medium: 6.0, high: 7.8 } },
+  other: { label: 'Other activity', met: { low: 3.0, medium: 4.5, high: 6.5 } },
 };
+
+/** Activities where distance (and for walking-type ones, steps) makes sense. */
+export const HAS_DISTANCE: ExerciseType[] = ['run', 'walk', 'cycle', 'swim', 'hike'];
+export const HAS_STEPS: ExerciseType[] = ['run', 'walk', 'hike'];
+
+/** Name to show for an entry: the person's own name for a custom activity, else the type. */
+export const activityName = (e: Pick<ExerciseEntry, 'type' | 'detail'>) => (e.type === 'other' && e.detail?.name ? e.detail.name : EXERCISES[e.type]?.label ?? 'Activity');
 
 export interface ExerciseEntry {
   id: string;
@@ -33,7 +43,14 @@ export interface ExerciseEntry {
   detail?: { name: string; sets?: number; reps?: number; weightKg?: number; seconds?: number };
   /** Distance in km (runs, walks, rides, swims). */
   km?: number;
+  /** Steps during this activity, when the person knows them. */
+  steps?: number;
   note?: string;
+  /** Where it came from. Imported ones keep the source's id so the same workout is never added twice. */
+  source?: 'manual' | 'workout' | 'coach' | 'healthkit' | 'healthconnect';
+  externalId?: string;
+  /** Time of day it started (HH:MM), when given. */
+  time?: string;
 }
 
 export function burnedKcal(type: ExerciseType, intensity: Intensity, minutes: number, kg: number): number {

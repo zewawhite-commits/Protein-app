@@ -13,6 +13,7 @@ import { dailyTargets, type Targets } from '@/lib/energy';
 import { DV_NOTE, MacroBar, NutrientList } from '@/components/Nutrients';
 import type { Food, LogEntry } from '@/lib/types';
 import { SleepCard } from '@/components/Sleep';
+import { MovementCard } from '@/components/Movement';
 import type { HomeNutrient } from '@/lib/types';
 import { HomeInsights } from '@/components/HomeInsights';
 import { Pill, Ring, Sheet, cx, fmt } from '@/components/ui';
@@ -157,6 +158,7 @@ export default function Today() {
       {isToday && !quietAi && <div className="mt-2"><Suggestions remaining={Math.max(0, goal - totals.protein)} kcalLeft={targets ? targets.kcal - totals.kcal : undefined} /></div>}
       <WaterCard date={date} />
       <SleepCard date={date} />
+      <MovementCard date={date} />
 
       <FoodSheet food={editing ? entryAsFood(editing, lookup) : null} entry={editing ?? undefined} date={date} onClose={() => setEditing(null)} />
     </div>

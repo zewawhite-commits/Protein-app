@@ -11,6 +11,8 @@ import type { SleepEntry, CustomFood, Food, LogEntry, Meal, Profile, ProgressPho
 import { dailyGoal } from '@/lib/nutrition';
 import { todayKey } from '@/lib/dates';
 import { deletePhoto } from '@/lib/photos';
+import { dayPartNow, type DayPart, type WaterDrink } from '@/lib/water';
+import type { StepDay } from '@/lib/activity';
 import { burnedKcal, type ExerciseEntry, type ExerciseType, type Routine } from '@/lib/exercise';
 import { guardWrite } from '@/lib/gate';
 import { elapsed, type ActiveWorkout, type CustomExercise, type LiveSet, type WorkoutLog } from '@/lib/liveWorkout';
@@ -87,8 +89,14 @@ interface State {
   water: Record<string, number>;
   /** Sleep by day woken up (YYYY-MM-DD). */
   sleep: Record<string, SleepEntry>;
-  logSleep: (date: string, hours: number | null, quality?: SleepEntry['quality']) => void;
-  addWater: (date: string, ml: number) => void;
+  logSleep: (date: string, hours: number | null, quality?: SleepEntry['quality'], times?: { bed?: string; wake?: string }) => void;
+  addWater: (date: string, ml: number, part?: DayPart) => void;
+  /** Each drink logged, by day, so people can see and undo what they added and when. */
+  waterLog: Record<string, WaterDrink[]>;
+  /** Steps, walking distance and (when known, e.g. from a watch) active calories, by day. */
+  steps: Record<string, StepDay>;
+  setSteps: (date: string, day: Omit<StepDay, 'updatedAt'> | null) => void;
+  removeDrink: (date: string, id: string) => void;
   /** Deleted items (id, or "w:<date>" for weigh-ins) → when, so a sync never brings them back. */
   deleted: Record<string, number>;
   /** Put back an entry that was just deleted (undo). */
@@ -172,11 +180,22 @@ export const useStore = create<State>()(
       picks: {},
       water: {},
       sleep: {},
+      waterLog: {},
+      steps: {},
       deleted: {},
 
       addMeasurement: (m) => set((s) => ({ measurements: [...s.measurements, { ...m, id: crypto.randomUUID(), createdAt: Date.now() }] })),
       removeMeasurement: (id) => set((s) => ({ measurements: s.measurements.filter((x) => x.id !== id), deleted: { ...s.deleted, [id]: Date.now() } })),
-      addExercise: (e) => set((s) => ({ exercises: [...s.exercises, { ...e, id: crypto.randomUUID() }] })),
+      addExercise: (e) => set((s) => {
+        // Imported activities (health apps) carry the source's id: never add the same one twice.
+        if (e.externalId && s.exercises.some((x) => x.externalId === e.externalId)) return {};
+        return { exercises: [...s.exercises, { source: 'manual' as const, ...e, id: crypto.randomUUID() }] };
+      }),
+      setSteps: (date, day) => set((s) => {
+        const next = { ...(s.steps ?? {}) };
+        if (!day) delete next[date]; else next[date] = { ...day, updatedAt: Date.now() };
+        return { steps: next };
+      }),
       updateExercise: (id, patch) => set((s) => ({ exercises: s.exercises.map((x) => (x.id === id ? { ...x, ...patch, updatedAt: Date.now() } : x)) })),
       removeExercise: (id) => set((s) => ({ exercises: s.exercises.filter((x) => x.id !== id), deleted: { ...s.deleted, [id]: Date.now() } })),
 
@@ -228,13 +247,26 @@ export const useStore = create<State>()(
         void _gone;
         return { entries: [...s.entries.filter((x) => x.id !== e.id), { ...e, updatedAt: Date.now() }], deleted };
       }),
-      logSleep: (date, hours, quality) => set((s) => {
+      logSleep: (date, hours, quality, times) => set((s) => {
         const next = { ...(s.sleep ?? {}) };
         if (hours == null) delete next[date];
-        else next[date] = { hours: Math.max(0, Math.min(16, Math.round(hours * 4) / 4)), ...(quality ? { quality } : next[date]?.quality ? { quality: next[date].quality } : {}), updatedAt: Date.now() };
+        else next[date] = { hours: Math.max(0, Math.min(16, Math.round(hours * 12) / 12)), ...(quality ? { quality } : next[date]?.quality ? { quality: next[date].quality } : {}), ...(times?.bed && times?.wake ? { bed: times.bed, wake: times.wake } : {}), updatedAt: Date.now() };
         return { sleep: next };
       }),
-      addWater: (date, ml) => set((s) => ({ water: { ...(s.water ?? {}), [date]: Math.max(0, Math.min(10000, (s.water?.[date] ?? 0) + ml)) } })),
+      addWater: (date, ml, part) => set((s) => {
+        const total = Math.max(0, Math.min(10000, (s.water?.[date] ?? 0) + ml));
+        const log = s.waterLog?.[date] ?? [];
+        const nextLog = ml > 0
+          ? [...log, { id: crypto.randomUUID(), ml, part: part ?? dayPartNow(), at: Date.now() }]
+          : log.slice(0, Math.max(0, log.length - 1));
+        return { water: { ...(s.water ?? {}), [date]: total }, waterLog: { ...(s.waterLog ?? {}), [date]: nextLog } };
+      }),
+      removeDrink: (date, id) => set((s) => {
+        const log = s.waterLog?.[date] ?? [];
+        const d = log.find((x) => x.id === id);
+        if (!d) return {};
+        return { water: { ...(s.water ?? {}), [date]: Math.max(0, (s.water?.[date] ?? 0) - d.ml) }, waterLog: { ...(s.waterLog ?? {}), [date]: log.filter((x) => x.id !== id) } };
+      }),
       rememberPick: (key, foodId) => set((s) => {
         if (!key || s.picks?.[key] === foodId) return {};
         const next = { ...(s.picks ?? {}), [key]: foodId };
@@ -348,12 +380,14 @@ export const useStore = create<State>()(
           workoutLogs: (d as { workoutLogs?: WorkoutLog[] }).workoutLogs ?? [],
           water: (d as { water?: Record<string, number> }).water ?? {},
           sleep: (d as { sleep?: Record<string, SleepEntry> }).sleep ?? {},
+          waterLog: (d as { waterLog?: Record<string, WaterDrink[]> }).waterLog ?? {},
+          steps: (d as { steps?: Record<string, StepDay> }).steps ?? {},
           deleted: (d as { deleted?: Record<string, number> }).deleted ?? {},
         });
       },
 
       resetAll: () =>
-        set({ profile: null, settings: defaultSettings, entries: [], customFoods: [], goalHistory: {}, recentFoodIds: [], favoriteFoodIds: [], remoteFoods: {}, savedMeals: [], savedPlans: [], workoutPlan: null, savedRecipes: [], coachChats: [], weights: [], exercises: [], measurements: [], routines: [], customExercises: [], workoutLogs: [], activeWorkout: null, progressPhotos: [], premium: null, perks: null, serverTier: null, picks: {}, water: {}, sleep: {}, deleted: {} }),
+        set({ profile: null, settings: defaultSettings, entries: [], customFoods: [], goalHistory: {}, recentFoodIds: [], favoriteFoodIds: [], remoteFoods: {}, savedMeals: [], savedPlans: [], workoutPlan: null, savedRecipes: [], coachChats: [], weights: [], exercises: [], measurements: [], routines: [], customExercises: [], workoutLogs: [], activeWorkout: null, progressPhotos: [], premium: null, perks: null, serverTier: null, picks: {}, water: {}, waterLog: {}, steps: {}, sleep: {}, deleted: {} }),
     }),
     {
       name: 'protein-app',
@@ -373,7 +407,7 @@ useStore.subscribe((s, prev) => {
   const changed =
     s.entries !== prev.entries || s.profile !== prev.profile || s.customFoods !== prev.customFoods ||
     s.goalHistory !== prev.goalHistory || s.favoriteFoodIds !== prev.favoriteFoodIds ||
-    s.savedMeals !== prev.savedMeals || s.savedPlans !== prev.savedPlans || s.workoutPlan !== prev.workoutPlan || s.savedRecipes !== prev.savedRecipes || s.coachChats !== prev.coachChats || s.measurements !== prev.measurements || s.routines !== prev.routines || s.customExercises !== prev.customExercises || s.workoutLogs !== prev.workoutLogs || s.weights !== prev.weights || s.exercises !== prev.exercises || s.water !== prev.water || s.sleep !== prev.sleep || s.deleted !== prev.deleted;
+    s.savedMeals !== prev.savedMeals || s.savedPlans !== prev.savedPlans || s.workoutPlan !== prev.workoutPlan || s.savedRecipes !== prev.savedRecipes || s.coachChats !== prev.coachChats || s.measurements !== prev.measurements || s.routines !== prev.routines || s.customExercises !== prev.customExercises || s.workoutLogs !== prev.workoutLogs || s.weights !== prev.weights || s.exercises !== prev.exercises || s.water !== prev.water || s.waterLog !== prev.waterLog || s.steps !== prev.steps || s.sleep !== prev.sleep || s.deleted !== prev.deleted;
   if (changed && s.lastModified === prev.lastModified) useStore.setState({ lastModified: Date.now() });
 });
 
@@ -388,14 +422,14 @@ export function goalOn(date: string, goalHistory: Record<string, number>, profil
 
 export function exportData() {
   // Premium passes and personal API keys are never written to backup files.
-  const { profile, settings, entries, customFoods, goalHistory, recentFoodIds, favoriteFoodIds, remoteFoods, savedMeals, savedPlans, workoutPlan, savedRecipes, coachChats, weights, exercises, measurements, routines, customExercises, workoutLogs, water, sleep, deleted } = useStore.getState();
+  const { profile, settings, entries, customFoods, goalHistory, recentFoodIds, favoriteFoodIds, remoteFoods, savedMeals, savedPlans, workoutPlan, savedRecipes, coachChats, weights, exercises, measurements, routines, customExercises, workoutLogs, water, waterLog, steps, sleep, deleted } = useStore.getState();
   const safeSettings = settings;
-  return { app: 'protein-app', exportedAt: new Date().toISOString(), profile, settings: safeSettings, entries, customFoods, goalHistory, recentFoodIds, favoriteFoodIds, remoteFoods, savedMeals, savedPlans, workoutPlan, savedRecipes, coachChats, weights, exercises, measurements, routines, customExercises, workoutLogs, water, sleep, deleted };
+  return { app: 'protein-app', exportedAt: new Date().toISOString(), profile, settings: safeSettings, entries, customFoods, goalHistory, recentFoodIds, favoriteFoodIds, remoteFoods, savedMeals, savedPlans, workoutPlan, savedRecipes, coachChats, weights, exercises, measurements, routines, customExercises, workoutLogs, water, waterLog, steps, sleep, deleted };
 }
 
 // Look-only mode (sign-up code not entered yet): saving is blocked and the code sheet opens.
 {
-  const WRITES = ['addEntry', 'updateEntry', 'removeEntry', 'addExercise', 'updateExercise', 'logWeight', 'addMeasurement', 'saveMeal', 'savePlan', 'saveRecipe', 'upsertCustomFood', 'addWater', 'saveRoutine', 'saveCustomExercise', 'addProgressPhoto', 'toggleFavorite', 'setActiveWorkout', 'logSleep'] as const;
+  const WRITES = ['addEntry', 'updateEntry', 'removeEntry', 'addExercise', 'updateExercise', 'logWeight', 'addMeasurement', 'saveMeal', 'savePlan', 'saveRecipe', 'upsertCustomFood', 'addWater', 'saveRoutine', 'saveCustomExercise', 'addProgressPhoto', 'toggleFavorite', 'setActiveWorkout', 'logSleep', 'removeDrink', 'setSteps'] as const;
   const s = useStore.getState() as unknown as Record<string, unknown>;
   const patch: Record<string, unknown> = {};
   for (const k of WRITES) {

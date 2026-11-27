@@ -1,3 +1,4 @@
+import { crisisReply } from '@/lib/safety';
 import { utter } from '@/lib/voice';
 import { FoodVisual } from '@/components/FoodIcon';
 import { goalsForCoach } from '@/lib/myGoals';
@@ -242,6 +243,9 @@ function Chat() {
     setMsgs([...msgs, { role: 'user', content: q, thumb: photo?.thumb }]);
     setText('');
     setPending(null);
+    // Safety first, even offline or without coach access: a fixed reply with real helplines.
+    const safe = crisisReply(q);
+    if (safe) { setMsgs((m) => [...m, { role: 'assistant', content: safe }]); return; }
     setBusy(true);
     try {
       const res = await fetch('/api/chat?stream=1', {

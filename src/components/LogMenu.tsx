@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bookmark, Camera, Mic, ChefHat, ScanText, Dumbbell, PenLine, ScanBarcode, Search, Trash2, PlusSquare } from 'lucide-react';
+import { Bookmark, Camera, Mic, ChefHat, ScanText, Dumbbell, PenLine, ScanBarcode, Search, Trash2, PlusSquare, Footprints, BookOpen } from 'lucide-react';
+import { StepsSheet } from './Movement';
 import { useStore } from '@/store/useStore';
 import { todayKey } from '@/lib/dates';
-import { EXERCISES, burnedKcal, parseExercise, type ExerciseType, type Intensity, type SaidExercise } from '@/lib/exercise';
+import { EXERCISES, HAS_DISTANCE, HAS_STEPS, burnedKcal, parseExercise, type ExerciseType, type Intensity, type SaidExercise } from '@/lib/exercise';
 import { SR } from './VoiceSheet';
 import { Segmented, Sheet, cx, fmt } from './ui';
 import { haptic, toast } from './fx';
@@ -12,6 +13,8 @@ import { haptic, toast } from './fx';
 export function LogMenu({ open, onClose, date }: { open: boolean; onClose: () => void; date?: string }) {
   const nav = useNavigate();
   const [exercise, setExercise] = useState(false);
+  const [pick, setPick] = useState(false);
+  const [stepsOpen, setStepsOpen] = useState(false);
   const q = date && date !== todayKey() ? `?date=${date}` : '';
   const go = (to: string) => { haptic(); onClose(); nav(to); };
   const groups: { title: string; items: { icon: typeof Camera; label: string; sub: string; to?: string; run?: () => void }[] }[] = [
@@ -30,7 +33,8 @@ export function LogMenu({ open, onClose, date }: { open: boolean; onClose: () =>
       { icon: ChefHat, label: 'Recipes', sub: 'Make, import & share', to: `/add?tab=custom${q ? `&${q.slice(1)}` : ''}` },
     ] },
     { title: 'Activity', items: [
-      { icon: Dumbbell, label: 'Log exercise', sub: 'Add a workout', run: () => { haptic(); onClose(); setExercise(true); } },
+      { icon: Dumbbell, label: 'Exercises', sub: 'Browse or log', run: () => { haptic(); onClose(); setPick(true); } },
+      { icon: Footprints, label: 'Steps', sub: 'Steps & movement', run: () => { haptic(); onClose(); setStepsOpen(true); } },
     ] },
   ];
   return (
@@ -53,7 +57,20 @@ export function LogMenu({ open, onClose, date }: { open: boolean; onClose: () =>
           ))}
         </div>
       </Sheet>
+      <Sheet open={pick} onClose={() => setPick(false)} title="Exercises">
+        <div className="grid gap-2.5">
+          <button onClick={() => { haptic(); setPick(false); nav('/train'); }} className="flex items-center gap-3 rounded-[22px] bg-surface p-4 text-left" style={{ boxShadow: 'var(--shadow)' }}>
+            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-primary text-on-primary"><BookOpen size={20} /></span>
+            <span><span className="block font-bold">See our exercises</span><span className="text-sm text-silver">Workouts and 895 exercises with photos</span></span>
+          </button>
+          <button onClick={() => { haptic(); setPick(false); setExercise(true); }} className="flex items-center gap-3 rounded-[22px] bg-surface p-4 text-left" style={{ boxShadow: 'var(--shadow)' }}>
+            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-primary text-on-primary"><PenLine size={20} /></span>
+            <span><span className="block font-bold">Log an activity</span><span className="text-sm text-silver">Walk, run, gym, dance, sport or your own</span></span>
+          </button>
+        </div>
+      </Sheet>
       <ExerciseSheet open={exercise} onClose={() => setExercise(false)} date={date ?? todayKey()} />
+      <StepsSheet open={stepsOpen} onClose={() => setStepsOpen(false)} date={date ?? todayKey()} />
     </>
   );
 }
@@ -67,7 +84,7 @@ export function ExerciseSheet({ open, onClose, date }: { open: boolean; onClose:
   const [type, setType] = useState<ExerciseType>('run');
   const [intensity, setIntensity] = useState<Intensity>('medium');
   const [minutes, setMinutes] = useState('30');
-  const [own, setOwn] = useState('');
+  const [ownKcal, setOwnKcal] = useState('');
   const [name, setName] = useState('');
   const [sets, setSets] = useState('');
   const [reps, setReps] = useState('');
@@ -75,26 +92,31 @@ export function ExerciseSheet({ open, onClose, date }: { open: boolean; onClose:
   const [secs, setSecs] = useState('');
   const [dist, setDist] = useState('');
   const [exNote, setExNote] = useState('');
+  const [custom, setCustom] = useState('');
+  const [stepsN, setStepsN] = useState('');
+  const [time, setTime] = useState('');
   const unit = useStore((s) => s.settings.bodyUnit);
   const mins = Number(minutes) || 0;
   const estimate = burnedKcal(type, intensity, mins, kg);
-  const kcal = own ? Number(own) : estimate;
+  const kcal = ownKcal ? Number(ownKcal) : estimate;
 
   function save() {
     const num = (v: string) => (Number(v) > 0 ? Number(v) : undefined);
-    const detail = name.trim() ? { name: name.trim().slice(0, 40), sets: num(sets), reps: num(reps), weightKg: num(load) ? Math.round((unit === 'lb' ? num(load)! / 2.20462 : num(load)!) * 10) / 10 : undefined, seconds: num(secs) } : undefined;
+    const own = type === 'other' ? custom.trim().slice(0, 40) : '';
+    const detail = own ? { name: own } : name.trim() ? { name: name.trim().slice(0, 40), sets: num(sets), reps: num(reps), weightKg: num(load) ? Math.round((unit === 'lb' ? num(load)! / 2.20462 : num(load)!) * 10) / 10 : undefined, seconds: num(secs) } : undefined;
     const d = Number(dist.replace(',', '.'));
     const km = d > 0 ? Math.round((unit === 'lb' ? d * 1.609344 : d) * 100) / 100 : undefined;
-    add({ date, type, intensity, minutes: mins, kcal, manual: !!own, ...(detail && { detail }), ...(km && { km }), ...(exNote.trim() && { note: exNote.trim().slice(0, 120) }) });
-    setName(''); setSets(''); setReps(''); setLoad(''); setSecs('');
+    const st = Number(stepsN) > 0 ? Math.round(Number(stepsN)) : undefined;
+    add({ date, type, intensity, minutes: mins, kcal, manual: !!ownKcal, ...(detail && { detail }), ...(km && { km }), ...(st && { steps: st }), ...(time && { time }), ...(exNote.trim() && { note: exNote.trim().slice(0, 120) }) });
+    setName(''); setSets(''); setReps(''); setLoad(''); setSecs(''); setCustom(''); setStepsN(''); setTime(''); setDist('');
     haptic([10, 30, 10]);
-    toast(`${EXERCISES[type].label} logged · ${fmt(kcal)} kcal`);
-    setOwn('');
+    toast(`${own || EXERCISES[type].label} saved · ${ownKcal ? '' : '~'}${fmt(kcal)} kcal`);
+    setOwnKcal('');
     onClose();
   }
 
   return (
-    <Sheet open={open} onClose={onClose} title="Log exercise">
+    <Sheet open={open} onClose={onClose} title="Log an activity">
       <SayExercise date={date} kg={kg} onDone={onClose} />
       <p className="mb-2 mt-5 text-xs font-bold uppercase tracking-wide text-dim">Or fill it in</p>
       <button onClick={() => { onClose(); navToRoutines('/workout'); }} className="btn-primary mb-2 w-full"><Dumbbell size={18} /> Start a live workout (timer, sets, rest)</button>
@@ -104,6 +126,7 @@ export function ExerciseSheet({ open, onClose, date }: { open: boolean; onClose:
           <button key={t} onClick={() => setType(t)} className={cx('chip !h-10', type === t && 'chip-on')}>{EXERCISES[t].label}</button>
         ))}
       </div>
+      {type === 'other' && <input className="field mt-3" maxLength={40} placeholder="What did you do? e.g. Skipping rope, gardening" value={custom} onChange={(e) => setCustom(e.target.value)} aria-label="Activity name" />}
       <p className="label mt-5">Intensity</p>
       <Segmented full value={intensity} onChange={setIntensity} options={[{ value: 'low', label: 'Light' }, { value: 'medium', label: 'Moderate' }, { value: 'high', label: 'Hard' }]} />
       <div className="mt-4 grid grid-cols-2 gap-3">
@@ -113,16 +136,28 @@ export function ExerciseSheet({ open, onClose, date }: { open: boolean; onClose:
         </div>
         <div>
           <label className="label" htmlFor="ex-kcal">Calories</label>
-          <input id="ex-kcal" inputMode="numeric" className="field text-xl font-bold" value={own} onChange={(e) => setOwn(e.target.value.replace(/\D/g, '').slice(0, 4))} placeholder={String(estimate)} />
+          <input id="ex-kcal" inputMode="numeric" className="field text-xl font-bold" value={ownKcal} onChange={(e) => setOwnKcal(e.target.value.replace(/\D/g, '').slice(0, 4))} placeholder={String(estimate)} />
         </div>
       </div>
-      <p className="mt-2 text-xs text-dim">{own ? 'Using your number (e.g. from your watch).' : kg ? `Estimated from your weight and the activity. Type your own if your watch shows a number.` : 'Add your weight in Profile for an estimate.'}</p>
-      {['run', 'walk', 'cycle', 'swim'].includes(type) && (
-        <div className="mt-4">
-          <label className="label" htmlFor="ex-dist">Distance <span className="font-normal text-dim">(optional, {unit === 'lb' ? 'miles' : 'km'})</span></label>
-          <input id="ex-dist" inputMode="decimal" className="field" value={dist} onChange={(e) => setDist(e.target.value.replace(/[^\d.,]/g, '').slice(0, 6))} placeholder="0" />
+      <p className="mt-2 text-xs text-dim">{ownKcal ? 'Using your number (e.g. from your watch).' : kg ? `Estimated from your weight and the activity. Type your own if your watch shows a number.` : 'Add your weight in Profile for an estimate.'}</p>
+      <div className="mt-4 grid grid-cols-2 gap-3">
+        {HAS_DISTANCE.includes(type) && (
+          <div>
+            <label className="label" htmlFor="ex-dist">Distance <span className="font-normal text-dim">({unit === 'lb' ? 'mi' : 'km'})</span></label>
+            <input id="ex-dist" inputMode="decimal" className="field" value={dist} onChange={(e) => setDist(e.target.value.replace(/[^\d.,]/g, '').slice(0, 6))} placeholder="optional" />
+          </div>
+        )}
+        {HAS_STEPS.includes(type) && (
+          <div>
+            <label className="label" htmlFor="ex-steps">Steps</label>
+            <input id="ex-steps" inputMode="numeric" className="field" value={stepsN} onChange={(e) => setStepsN(e.target.value.replace(/\D/g, '').slice(0, 6))} placeholder="optional" />
+          </div>
+        )}
+        <div>
+          <label className="label" htmlFor="ex-time">Time</label>
+          <input id="ex-time" type="time" className="field" value={time} onChange={(e) => setTime(e.target.value)} />
         </div>
-      )}
+      </div>
       <input className="field mt-3" maxLength={120} placeholder="Note (optional), e.g. felt strong" value={exNote} onChange={(e) => setExNote(e.target.value)} aria-label="Workout note" />
       <p className="label mt-5">Exercise detail <span className="font-normal text-dim">(optional)</span></p>
       <input className="field" maxLength={40} placeholder="e.g. Bench press, weighted plank, farmer’s carry" value={name} onChange={(e) => setName(e.target.value)} />
@@ -141,7 +176,7 @@ export function ExerciseSheet({ open, onClose, date }: { open: boolean; onClose:
         <span><span className="block font-semibold">Add burned calories to my budget</span><span className="text-xs text-silver">Your daily calories go up on workout days</span></span>
         <input type="checkbox" checked={addBurned} onChange={(e) => updateSettings({ addBurned: e.target.checked })} className="h-5 w-5 accent-[rgb(var(--accent))]" />
       </label>
-      <button onClick={save} disabled={!mins || !kcal} className="btn-primary mt-5 w-full">Log {fmt(kcal)} kcal</button>
+      <button onClick={save} disabled={!mins || (type === 'other' && !custom.trim())} className="btn-primary mt-5 w-full">Save activity</button>
     </Sheet>
   );
 }

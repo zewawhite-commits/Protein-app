@@ -6,7 +6,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useEffect } from 'react';
 import { Bell, Target, Utensils, ArrowLeft, CalendarDays, Palette, ChevronRight, Cloud, CreditCard, Crown, Database, Download, FileText, Flame, HeartHandshake, LifeBuoy, Lightbulb, Lock, LogOut, Mail, Moon, Receipt, RefreshCw, RotateCcw, Scale, Settings as SettingsIcon, ShieldCheck, SlidersHorizontal, Smartphone, Sun, Table, Trash2, Upload, UserRound, XCircle } from 'lucide-react';
 import { useStore, exportData } from '@/store/useStore';
-import { fetchBilling, isPremiumActive, manageSubscription, type Billing } from '@/lib/premium';
+import { cancelSubscription, fetchBilling, isPremiumActive, manageSubscription, type Billing } from '@/lib/premium';
 import { SUPPORT_EMAIL } from '@/pages/Legal';
 import { setMarketingOptIn } from '@/lib/account';
 import { accountsEnabled, cleanPhone, deleteAccount, setPhoneNumber, signOut, syncNow, useSession, useSyncStatus, validPhone } from '@/lib/account';
@@ -352,6 +352,19 @@ function SubscriptionGroup() {
     try { await manageSubscription(); } catch (e) { setNote((e as Error).message); } finally { setBusy(false); }
   }
   const date = (v: string | number) => new Date(v).toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' });
+  /** One tap plus a confirm: no hoops. Plus stays on until the paid period ends. */
+  async function cancel() {
+    const end = date(billing?.nextPayment ?? premium!.exp);
+    if (!confirm(`Cancel Plus? You keep Plus until ${end}, then move to Free. You won’t be charged again and none of your data is lost.`)) return;
+    setBusy(true); setNote('');
+    try {
+      await cancelSubscription();
+      setBilling((b) => (b ? { ...b, status: 'non-renewing' } : b));
+      toast(`Cancelled. Plus stays on until ${end}.`);
+      void fetchBilling().then(setBilling);
+    } catch (e) { setNote(`${(e as Error).message} You can also cancel on the payment page:`); }
+    finally { setBusy(false); }
+  }
 
   return (
     <Group title="Subscription">
@@ -378,25 +391,28 @@ function SubscriptionGroup() {
               <span className="text-sm font-semibold text-silver">{billing?.card ? `${billing.card.brand.replace(/^\w/, (c) => c.toUpperCase())} •••• ${billing.card.last4}` : 'Update card'}</span>
             </Row>
           </button>
-          <button onClick={manage} disabled={busy} className="w-full"><Row icon={<XCircle size={18} />} label="Cancel subscription" chevron /></button>
+          {billing?.status !== 'non-renewing' && <button onClick={() => void cancel()} disabled={busy} className="w-full"><Row icon={<XCircle size={18} />} label="Cancel subscription" chevron /></button>}
         </>
       ) : (
         <>
-          <div className="mx-3 my-2 grid grid-cols-2 gap-2 text-[13px] leading-snug">
-            <div className="rounded-2xl bg-raised p-3">
-              <p className="font-bold">Free <span className="font-medium text-silver">· your plan</span></p>
-              <ul className="mt-1.5 space-y-1 text-silver"><li>Diary, search, barcode, voice</li><li>Recipe imports, exercises</li><li>3 AI scans + 5 coach messages a day</li><li>2 AI recipes, 1 meal plan a month</li></ul>
+          <div className="mx-3 my-2 grid gap-2 text-[14px] leading-snug">
+            <div className="rounded-2xl bg-raised p-3.5">
+              <p className="text-[12px] font-bold uppercase tracking-wide">Free <span className="font-semibold text-silver">· Your current plan</span></p>
+              <p className="mt-1.5 text-silver">Food diary, search, barcode &amp; voice logging</p>
+              <p className="text-silver">Recipe imports &amp; exercise tracking</p>
+              <ul className="mt-1.5 list-disc space-y-0.5 pl-5 text-silver"><li>3 AI food scans daily</li><li>5 AI coach messages daily</li><li>2 AI recipes &amp; 1 meal plan monthly</li></ul>
             </div>
-            <div className="rounded-2xl bg-accent/10 p-3">
-              <p className="font-bold">Plus <span className="font-medium text-silver">· $8.99/mo</span></p>
-              <ul className="mt-1.5 space-y-1 text-silver"><li>Unlimited AI scans &amp; follow-ups</li><li>300 AI credits for coach, recipes, plans</li><li>Coach talks back</li><li>AI meal plans, recipes, workouts</li><li>Weekly progress report</li></ul>
+            <div className="rounded-2xl bg-accent/10 p-3.5">
+              <p className="text-[12px] font-bold uppercase tracking-wide">Plus <span className="font-semibold text-silver">· $8.99/month</span></p>
+              <p className="mt-1.5 text-silver">Everything in Free, plus:</p>
+              <ul className="mt-1 list-disc space-y-0.5 pl-5 text-silver"><li>Unlimited AI food scans &amp; follow-ups</li><li>300 monthly AI credits</li><li>Interactive AI coach</li><li>Personalised meal plans, recipes &amp; workouts</li><li>Weekly progress reviews with your coach</li></ul>
             </div>
           </div>
-          <Link to="/premium" className="block"><Row icon={<CreditCard size={18} />} label="See Plus" chevron><span className="text-sm font-semibold text-accent">$8.99/mo or $44.99/yr</span></Row></Link>
+          <Link to="/premium" className="block"><Row icon={<CreditCard size={18} />} label="Explore Plus" chevron><span className="text-sm font-semibold text-accent">$44.99/year · Save 58%</span></Row></Link>
           <Link to="/premium?restore=1" className="block"><Row icon={<RotateCcw size={18} />} label="Restore purchase" chevron /></Link>
         </>
       )}
-      {note && <p className="px-4 pb-3 text-sm text-silver">{note}</p>}
+      {note && <p className="px-4 pb-3 text-sm text-silver">{note} {note.includes("payment page") && <button onClick={manage} className="font-semibold text-accent">Open it</button>}</p>}
       <p className="px-4 pb-3 pt-1 text-xs text-dim">Payments are processed securely by Paystack. We never see or store your full card number.</p>
     </Group>
   );

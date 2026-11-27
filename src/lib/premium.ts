@@ -69,6 +69,13 @@ export async function manageSubscription(): Promise<void> {
   window.open(url, '_blank', 'noopener');
 }
 
+/** Cancels renewal in one tap. Plus stays on until the paid period ends. */
+export async function cancelSubscription(): Promise<{ until: number }> {
+  const token = useStore.getState().premium?.token;
+  if (!token) throw new Error('No subscription on this device. Use Restore purchase first.');
+  return call<{ until: number }>('cancel', { token });
+}
+
 export const isPremiumActive = (p: PremiumPass | null | undefined) => !!p && p.exp > Date.now();
 
 /**

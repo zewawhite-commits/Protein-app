@@ -11,7 +11,7 @@ import { GET as plans } from '../_premium/plans.js';
 import { GET as health } from '../_premium/health.js';
 import { POST as checkout } from '../_premium/checkout.js';
 import { POST as activate } from '../_premium/activate.js';
-import { POST as manage } from '../_premium/manage.js';
+import { POST as manage, CANCEL as cancel } from '../_premium/manage.js';
 import { POST as billing } from '../_premium/billing.js';
 import { invite, trial } from '../_premium/perks.js';
 
@@ -23,7 +23,7 @@ export async function GET(request: Request): Promise<Response> {
   return a === 'plans' ? plans() : json({ error: 'Not found.' }, 404);
 }
 
-const POSTS: Record<string, (request: Request) => Promise<Response>> = { checkout, activate, manage, billing, trial, invite };
+const POSTS: Record<string, (request: Request) => Promise<Response>> = { checkout, activate, manage, cancel, billing, trial, invite };
 
 export async function POST(request: Request): Promise<Response> {
   const handler = POSTS[action(request)];

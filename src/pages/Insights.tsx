@@ -3,9 +3,10 @@ import { GoalsSummary } from './Goals';
 import { MEAL_LABELS, MEAL_ORDER } from '@/lib/meals';
 import { Link } from 'react-router-dom';
 import { ActivitySummary } from '@/components/ActivitySummary';
+import { MovementWeek } from '@/components/Movement';
 import { WeightHistory } from '@/components/WeightHistory';
 import { Measurements } from '@/components/Measurements';
-import { ProMore, ProOnly } from '@/components/ProOnly';
+import { ProMore } from '@/components/ProOnly';
 import { WeeklyReport } from '@/components/WeeklyReport';
 import { EatingPatterns, NutrientGaps, TargetCheck } from '@/components/NutritionInsights';
 import { useMemo, useState } from 'react';
@@ -16,7 +17,7 @@ import { nutrientsFor } from '@/lib/nutrition';
 import { dailyTargets } from '@/lib/energy';
 import { splitName } from '@/lib/foods';
 import type { Meal } from '@/lib/types';
-import { PageHeader, Segmented, cx, fmt } from '@/components/ui';
+import { PageHeader, Segmented, fmt } from '@/components/ui';
 import { FoodVisual } from '@/components/FoodIcon';
 import { useStreak } from './Today';
 import { WeightAndStreak, WeightChart, BeyondTheScale, SmartTarget } from '@/components/ProgressTop';
@@ -91,7 +92,7 @@ export default function Insights() {
         <WeightAndStreak />
         <WeightChart />
         <WeightHistory />
-        <ProOnly quiet><SmartTarget /></ProOnly>
+        <SmartTarget />
       </div>
 
       <div className="mb-3 flex items-center justify-between px-1">
@@ -180,15 +181,16 @@ export default function Insights() {
       )}
       {/* 3. How you're eating, beyond the chart. */}
       <div className="mt-4 space-y-4">
-        <ProOnly quiet><WeeklyReport /></ProOnly>
+        <WeeklyReport />
         <TargetCheck />
-        <ProOnly quiet><NutrientGaps /></ProOnly>
-        <ProOnly quiet><EatingPatterns /></ProOnly>
+        <NutrientGaps />
+        <EatingPatterns />
       </div>
 
       {/* 4. Body and activity */}
       <h2 className="mb-3 mt-8 px-1 text-xl font-bold">Body and activity</h2>
       <div className="space-y-4">
+        <MovementWeek end={todayKey()} />
         <ActivitySummary />
         <BeyondTheScale />
         <Measurements />
@@ -216,49 +218,36 @@ function Kpi({ label, value, unit, sub }: { label: string; value: string; unit: 
 
 function BarChart({ series, unit, highlight }: { series: { date: string; protein: number; goal: number }[]; unit: string; highlight: boolean }) {
   const [active, setActive] = useState<number | null>(null);
-  const max = Math.max(1, ...series.map((s) => Math.max(s.protein, s.goal))) * 1.1;
-  const H = 160;
+  // Same look as the weight chart: a clean line over a soft fill, a dot on each logged day.
+  // Days with nothing logged are skipped (never drawn as zero).
+  const W = 320, H = 160, P = 10;
   const n = series.length;
+  const max = Math.max(1, ...series.map((s) => Math.max(s.protein, s.goal))) * 1.1;
+  const x = (i: number) => P + (n < 2 ? (W - 2 * P) / 2 : (i / (n - 1)) * (W - 2 * P));
+  const y = (v: number) => P + (1 - v / max) * (H - 2 * P);
+  const pts = series.map((s, i) => ({ ...s, i })).filter((s) => s.protein > 0);
+  const line = pts.map((p, k) => `${k ? 'L' : 'M'}${x(p.i).toFixed(1)},${y(p.protein).toFixed(1)}`).join(' ');
+  const goalLine = series.map((s, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)},${y(s.goal).toFixed(1)}`).join(' ');
   const showLabel = (i: number) => n <= 7 || i === 0 || i === n - 1 || (n <= 30 ? i % 7 === 0 : i % 15 === 0);
   const a = active != null ? series[active] : null;
   return (
     <div>
       <p className="num mb-3 h-5 text-sm font-semibold text-silver">
-        {a ? <>{formatDay(a.date, { weekday: 'short', day: 'numeric', month: 'short' })} · <span className="font-semibold text-ink">{fmt(a.protein)} {unit}</span>{a.goal ? <> of {fmt(a.goal)} {unit}</> : null}</> : 'Tap a bar for details'}
+        {a ? <>{formatDay(a.date, { weekday: 'short', day: 'numeric', month: 'short' })} · <span className="font-semibold text-ink">{a.protein ? `${fmt(a.protein)} ${unit}` : 'nothing logged'}</span>{a.goal && a.protein ? <> of {fmt(a.goal)} {unit}</> : null}</> : 'Tap a day for details'}
       </p>
-      <div className="relative" style={{ height: H }} onMouseLeave={() => setActive(null)}>
-        {/* goal line (stepped per day so goal changes show) */}
-        <svg className="pointer-events-none absolute inset-0 h-full w-full overflow-visible" preserveAspectRatio="none" viewBox={`0 0 ${n} ${H}`}>
-          <polyline
-            fill="none"
-            stroke="rgb(var(--silver))"
-            strokeWidth="1.5"
-            strokeDasharray="4 4"
-            vectorEffect="non-scaling-stroke"
-            points={series.flatMap((s, i) => [`${i},${H - (s.goal / max) * H}`, `${i + 1},${H - (s.goal / max) * H}`]).join(' ')}
-          />
-        </svg>
-        <div className="absolute inset-0 flex items-end" style={{ gap: n > 30 ? 1 : n > 7 ? 3 : 14 }}>
-          {series.map((s, i) => {
-            const hit = highlight && s.goal > 0 && s.protein >= s.goal;
-            return (
-              <button
-                key={s.date}
-                className="relative flex h-full flex-1 items-end"
-                onMouseEnter={() => setActive(i)}
-                onClick={() => setActive(i)}
-                aria-label={`${s.date}: ${Math.round(s.protein)} ${unit}`}
-              >
-                <div
-                  className={cx('w-full bg-gradient-to-t transition-all', hit ? 'from-accent to-accent/70' : 'from-silver/70 to-silver/40', active === i && 'ring-2 ring-ink/20', active != null && active !== i && 'opacity-40')}
-                  style={{ height: `${Math.max(s.protein > 0 ? 2 : 0, (s.protein / max) * 100)}%`, borderRadius: n > 30 ? 3 : n > 7 ? 6 : 12 }}
-                />
-              </button>
-            );
-          })}
-        </div>
-      </div>
-      <div className="mt-2 flex text-[12px] font-semibold text-dim" style={{ gap: n > 30 ? 1 : n > 7 ? 3 : 14 }}>
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full" onMouseLeave={() => setActive(null)} role="img" aria-label={`Daily ${unit} chart`}>
+        <defs><linearGradient id="ag" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stopColor="rgb(var(--accent))" stopOpacity="0.28" /><stop offset="1" stopColor="rgb(var(--accent))" stopOpacity="0.02" /></linearGradient></defs>
+        {[0.25, 0.5, 0.75].map((f) => <line key={f} x1={P} x2={W - P} y1={P + f * (H - 2 * P)} y2={P + f * (H - 2 * P)} stroke="rgb(var(--line))" strokeDasharray="3 4" />)}
+        {series.some((s) => s.goal > 0) && <path d={goalLine} fill="none" stroke="rgb(var(--silver))" strokeWidth="1.5" strokeDasharray="5 5" />}
+        {pts.length > 1 && <path d={`${line} L${x(pts[pts.length - 1].i)},${H - P} L${x(pts[0].i)},${H - P} Z`} fill="url(#ag)" />}
+        {pts.length > 1 && <path d={line} fill="none" stroke="rgb(var(--accent))" strokeWidth="2.6" strokeLinejoin="round" strokeLinecap="round" />}
+        {series.map((s, i) => <rect key={s.date} x={x(i) - (W / Math.max(n, 1)) / 2} y={0} width={W / Math.max(n, 1)} height={H} fill="transparent" onMouseEnter={() => setActive(i)} onClick={() => setActive(i)} aria-label={`${s.date}: ${Math.round(s.protein)} ${unit}`} />)}
+        {pts.map((p) => {
+          const hit = highlight && p.goal > 0 && p.protein >= p.goal;
+          return <circle key={p.date} className="pointer-events-none" cx={x(p.i)} cy={y(p.protein)} r={active === p.i ? 5.5 : n > 30 ? 2.5 : 4} fill={hit ? 'rgb(var(--accent))' : 'rgb(var(--surface))'} stroke="rgb(var(--accent))" strokeWidth="2.2" />;
+        })}
+      </svg>
+      <div className="mt-1 flex text-[12px] font-semibold text-dim">
         {series.map((s, i) => (
           <span key={s.date} className="flex-1 text-center">
             {showLabel(i) ? (n <= 7 ? fromKey(s.date).toLocaleDateString(undefined, { weekday: 'narrow' }) : fromKey(s.date).getDate()) : ''}

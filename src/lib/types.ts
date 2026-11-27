@@ -211,6 +211,10 @@ export interface Settings {
   waterGoalMl?: number;
   /** Workouts per week to aim for (unset or 0 = no goal). */
   workoutsPerWeek?: number;
+  /** Daily step goal (default 8,000). */
+  stepGoal?: number;
+  /** Daily active-calorie (movement) goal in kcal (default 350). */
+  moveGoalKcal?: number;
   /** Home shows what's left (default) or what's been eaten. */
   dashView?: 'left' | 'eaten';
   /** Nutrients shown as bars on Home (default protein, carbs, fat). */
@@ -250,6 +254,6 @@ export interface GoalSetting { on: boolean; paused?: boolean; done?: boolean; ta
 export type GoalSettings = Partial<Record<GoalKind, GoalSetting>>;
 
 /** A night's sleep, logged for the day you woke up. */
-export interface SleepEntry { hours: number; quality?: 'poor' | 'ok' | 'good'; updatedAt: number }
+export interface SleepEntry { hours: number; quality?: 'poor' | 'ok' | 'good'; /** Bed and wake times (HH:MM) when entered that way. */ bed?: string; wake?: string; updatedAt: number }
 
 export type HomeNutrient = 'protein' | 'carbs' | 'fat' | 'fiber' | 'sugar' | 'sodium';
