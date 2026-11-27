@@ -3011,6 +3011,944 @@ Filmjölk with muesli | yogurt:200 oats:30 raisins:10 | swedish sour milk breakf
 Kardemummabulle | flour:45 butter:15 sugar:12 milk:20 sp_cardamom:1 | cardamom bun | bun
 `);
 
+
+Object.assign(K, { mushroom_gravy: 'Gravy, mushroom, canned', veg_cheese: 'Cheese substitute, mozzarella', coconut_yogurt: 'Yogurt, coconut milk', veg_broth: 'Soup, vegetable broth, ready to serve', jackfruit: 'Jackfruit, raw', vegan_mayo: 'Vegan mayonnaise', oat_milk: 'Oat milk', almond_milk: 'Almond milk, unsweetened', seitan: 'Vital wheat gluten' });
+// ======================= ROUND 3: PLANT DISHES, BREAKFASTS AND SNACKS (Americas, Oceania) =======================
+X('Canada', 'Canadian', NA, `
+Vegan poutine | fries:200 mushroom_gravy:100 veg_cheese:40 | dairy-free poutine | plate
+Vegetarian tourtière | pie_crust:80 lentils:80 mushrooms:50 potato:40 onion:20 | lentil meat pie | slice
+Vegan Nanaimo bar | dark_choc:15 coconut_oil:12 icing_sugar:20 coconut_meat:10 oats:10 | dairy-free nanaimo | piece
+Maple baked beans | kidney:200 maple:20 onion:20 mustard:3 | quebec beans | portion
+Wild rice salad | brown_rice:150 cranberry_alt:0 walnuts:15 celery_raw:30 olive_oil:10 | manitoba wild rice salad | bowl
+Maple tofu with roasted vegetables | tofu:150 maple:15 soy:8 carrots:60 butternut:80 | maple glazed tofu | plate
+Pea soup, vegan (Québec) | split_peas:100 carrots:30 onion:20 water:250 | soupe aux pois végane | bowl
+Fiddlehead sauté | asparagus:150 butter:10 garlic:3 | fiddleheads | portion
+Bannock with jam | flour:70 butter:10 milk:30 jam:20 | bannock and jam | piece
+Maple walnut granola | oats:40 walnuts:15 maple:15 oil:5 | maple granola | serving
+Montreal bagel with lox | bagel:90 smoked_salmon:50 cream_cheese:25 | montreal lox bagel | bagel
+Caesar salad, Canadian-style kale | kale_raw:80 parmesan:15 olive_oil:12 lemon:8 bread:20 | kale caesar | bowl
+Apple maple oatmeal | oats:50 milk:200 apple:60 maple:12 | maple apple porridge | bowl
+Peanut butter and banana toast (Canadian café) | wholemeal:60 peanut_butter:25 banana:60 maple:5 | pb banana toast | serving
+Maple popcorn | popcorn:25 maple:15 butter:5 | maple kettle corn | bowl
+`);
+X('Australia', 'Australian', OC, `
+Vegan big brekkie | tofu:100 mushrooms:60 tomato:60 baked_beans:100 avocado:50 bread:40 | plant-based big breakfast | plate
+Pumpkin and feta salad | pumpkin:200 feta:30 spinach_raw:40 walnuts:10 olive_oil:10 | roast pumpkin salad | bowl
+Vegetable pasties | flour:70 butter:20 potato:40 carrots:20 peas:15 | aussie veggie pasty | pasty
+Lentil shepherd's pie (Australian) | lentils:150 carrots:40 tomato_canned:60 mash:180 | vegetarian cottage pie | portion
+Sweet potato and chickpea curry | sweet_potato:150 chickpeas:100 coconut_milk:60 curry:5 rice:150 | aussie veg curry | plate
+Haloumi burger | halloumi:80 burger_bun:60 lettuce:15 tomato:20 | halloumi burger | burger
+Acai bowl (Australian café) | banana:100 blueberries:80 granola:30 coconut_meat:10 | acai bowl aussie | bowl
+Ricotta hotcakes | flour:50 ricotta:60 egg:30 milk:40 maple:20 | bills style hotcakes | stack (3)
+Corn fritters with avocado | corn_canned:100 flour:30 egg:25 oil:12 avocado:50 | aussie corn fritters | plate
+Vegemite scroll | flour:60 butter:10 vegemite:5 cheddar:20 | cheesymite scroll | scroll
+Muesli bar | oats:25 honey:10 raisins:8 almonds:5 | aussie muesli bar | bar
+Fruit toast with butter | bread:60 raisins:15 butter:10 | raisin toast aussie | serving (2 slices)
+Iced vovo-style biscuit | flour:15 sugar:8 coconut_meat:4 jam:5 marshmallow:5 | iced biscuit | serving (2)
+Golden gaytime-style ice cream | ice_cream:80 shortbread:15 sugar:5 | toffee crumb ice cream | stick
+`);
+X('New Zealand', 'New Zealander', OC, `
+Kūmara and chickpea salad | sweet_potato:180 chickpeas:80 spinach_raw:30 olive_oil:10 | kumara salad | bowl
+Vegetarian mince on toast | lentils:120 tomato_canned:60 onion:20 bread:60 | veggie savoury mince | plate
+Vegan pavlova | sugar:40 coconut_milk:40 strawberries:50 kiwi:30 | aquafaba pavlova | slice
+Cheese rolls (Southland) | bread:60 cheddar:30 milk:15 butter:8 | southland sushi | serving (2)
+Kiwi breakfast bowl | kiwi:100 yogurt:150 granola:30 | kiwifruit yogurt bowl | bowl
+Louise slice | flour:30 butter:12 sugar:15 jam:12 coconut_meat:10 egg_white:10 | louise cake | piece
+`);
+X('Brazil', 'Brazilian', SA, `
+Feijoada vegana | black_beans:200 sweet_potato:60 tofu:60 kale:40 rice:150 | vegan feijoada | plate
+Moqueca de banana | ripe_plantain:200 coconut_milk:80 palm_oil:10 tomato:50 red_pepper:40 rice:150 | plantain moqueca | plate
+Couve à mineira | kale:150 garlic:4 oil:10 | brazilian collard greens | portion
+Tropeiro de feijão | kidney:150 flour:30 egg:30 kale:40 oil:10 | feijao tropeiro vegetarian | plate
+Salada de maionese | potato:150 carrots:30 peas:20 mayo:30 | brazilian potato salad | portion
+Vitamina de abacate | avocado:80 milk:200 sugar:15 | avocado shake brazil | glass
+Bolo de fubá | cornmeal:40 flour:15 sugar:25 oil:15 egg:15 milk:30 | cornmeal cake | slice
+Pamonha | corn:150 sugar:15 milk:30 | sweet corn tamale | piece
+Cocada | coconut_meat:50 sugar:30 | brazilian coconut sweet | piece
+Pipoca doce | popcorn:25 sugar:15 | sweet popcorn brazil | bowl
+Coxinha de jaca | flour:50 jackfruit:50 oil:15 breadcrumbs:10 | jackfruit coxinha | piece
+`);
+X('Argentina', 'Argentine', SA, `
+Empanadas de humita | flour:50 butter:12 corn:50 onion:15 milk:15 | corn empanadas | serving (2)
+Empanadas de verdura | flour:50 butter:12 spinach:50 ricotta:20 | spinach empanadas | serving (2)
+Tarta de acelga | pie_crust:60 spinach:120 egg:30 cheddar:20 | chard tart | slice
+Fainá | chickpea_flour:60 olive_oil:12 water:80 | chickpea flatbread | slice
+Provoleta with salad | provolone:80 tomato:60 lettuce:30 olive_oil:5 | grilled provolone plate | plate
+Vegan choripán | veggie_patty:90 baguette:80 parsley:3 olive_oil:5 | vegan chori | sandwich
+Chipá (Argentine) | tapioca:40 cheddar:20 egg:10 | argentine cheese bread | serving (2)
+Pastafrola | flour:40 butter:15 sugar:15 egg:10 jam:30 | quince tart | slice
+Mate cocido with milk | green_tea:200 milk:50 sugar:8 | mate cocido | cup
+`);
+X('Peru', 'Peruvian', SA, `
+Quinoa salad (Peruvian) | quinoa:150 tomato:40 cucumber:40 onion:15 lime:8 olive_oil:8 | ensalada de quinua | bowl
+Solterito | fava:100 corn:60 feta:30 tomato:40 onion:15 olives:10 | arequipa salad | bowl
+Ceviche de champiñones | mushrooms_raw:150 lime:20 onion:20 chili:3 sweet_potato:60 | mushroom ceviche | plate
+Tallarines verdes | pasta:200 spinach:60 basil:10 milk:40 feta:25 | peruvian pesto pasta | plate
+Ocopa | potato:200 peanuts:20 milk:40 feta:25 | potato in peanut sauce | portion
+Rocoto relleno vegetariano | red_pepper:200 potato:50 cheddar:30 egg:20 milk:20 | stuffed rocoto vegetarian | portion
+Mazamorra morada | corn:20 pineapple:40 apple:30 sugar:25 cornstarch:10 water:150 | purple corn pudding | bowl
+Choclo con queso | corn:150 feta:40 | corn with cheese | plate
+Alfajores peruanos | flour:30 cornstarch:15 butter:12 condensed:25 | peruvian alfajores | serving (2)
+`);
+X('Colombia', 'Colombian', SA, `
+Arepa with avocado | masa:90 avocado:60 | arepa con aguacate | arepa
+Patacones with hogao | green_plantain:150 oil:15 tomato:60 onion:20 | patacones | plate
+Sopa de lentejas colombiana | lentils:150 potato:60 carrots:30 tomato:30 water:200 | colombian lentil soup | bowl
+Frijoles con arroz (vegetarian) | kidney:150 rice:150 ripe_plantain:80 avocado:40 | colombian beans and rice | plate
+Empanadas colombianas de papa | masa:60 potato:60 oil:15 | potato empanadas | serving (3)
+Obleas con arequipe | flour:15 condensed:30 | wafer with dulce de leche | piece
+Salpicón de frutas | papaya:60 watermelon:60 banana:40 pineapple:40 oj:60 | colombian fruit cocktail | cup
+Aguapanela | brown_sugar:30 water:250 lime:5 | panela water | glass
+Chocolate santafereño | milk:200 dark_choc:20 cheddar:20 | hot chocolate with cheese | cup
+`);
+X('Chile', 'Chilean', SA, `
+Porotos con riendas | kidney:150 pasta:60 pumpkin:60 onion:20 oil:8 | beans with noodles | bowl
+Pebre with bread | tomato:80 onion:20 coriander:5 olive_oil:8 bread:60 | pebre | serving
+Humitas chilenas | corn:180 onion:20 basil:3 butter:8 | chilean humitas | serving (2)
+Charquicán vegetariano | potato:150 pumpkin:100 corn:40 peas:30 egg_fried:50 | vegetarian charquican | plate
+Calzones rotos | flour:40 sugar:10 oil:15 egg:10 icing_sugar:5 | chilean fried pastries | serving (3)
+Mote con huesillo | barley:80 peach:100 sugar:25 water:150 | chilean peach drink | glass
+Kuchen de manzana | flour:35 butter:15 sugar:20 apple:60 egg:10 | apple kuchen | slice
+`);
+X('Ecuador', 'Ecuadorian', SA, `
+Locro de papa | potato:200 milk:80 feta:30 avocado:40 | ecuadorian potato soup | bowl
+Tigrillo | green_plantain:150 egg:50 feta:30 oil:8 | plantain egg mash | plate
+Humitas ecuatorianas | corn:150 feta:20 butter:8 egg:10 | ecuador humitas | serving (2)
+Pan de yuca | tapioca:40 feta:30 egg:10 | yuca cheese bread | serving (3)
+Colada morada (alcohol-free) | cornmeal:20 blueberries:50 pineapple:40 strawberries:30 sugar:25 water:150 | purple drink | glass
+Chifles ecuatorianos | green_plantain:100 oil:15 | ecuador plantain chips | bag
+`);
+X('Bolivia', 'Bolivian', SA, `
+Api with pastel | corn:30 sugar:20 sp_cinnamon:0.5 water:250 flour:40 oil:15 cheddar:15 | api morado | serving
+Sopa de quinua | quinoa:80 potato:60 carrots:30 peas:20 water:250 | quinoa soup | bowl
+Pique vegetariano | fries:150 egg_boiled:50 tomato:40 onion:20 green_pepper:20 | vegetarian pique | plate
+Cuñapé | tapioca:40 cheddar:30 egg:10 | bolivian cheese bread | serving (3)
+Llauchas | flour:50 cheddar:30 butter:8 | cheese pastry la paz | piece
+`);
+X('Venezuela', 'Venezuelan', SA, `
+Arepa de dominó | masa:90 black_beans:60 feta:30 | domino arepa | arepa
+Arepa vegana | masa:90 black_beans:50 avocado:40 ripe_plantain:50 | vegan arepa | arepa
+Pabellón vegetariano | rice:150 black_beans:100 ripe_plantain:80 eggplant:80 oil:10 | vegetarian pabellon | plate
+Empanada de queso | masa:60 feta:30 oil:15 | venezuelan cheese empanada | serving (2)
+Bienmesabe | coconut_milk:60 egg:20 sugar:25 sponge:30 | coconut sponge dessert | portion
+Chicha venezolana | rice:40 milk:150 condensed:25 sp_cinnamon:0.5 | rice milk drink | glass
+`);
+X('Uruguay', 'Uruguayan', SA, `
+Pascualina | pie_crust:70 spinach:120 egg:40 ricotta:30 | spinach egg pie | slice
+Bizcochos uruguayos | croissant:50 | uruguayan pastries | pastry
+Martín fierro | cheddar:40 jam:30 | cheese and quince | serving
+`);
+X('Paraguay', 'Paraguayan', SA, `
+Mbeyú with cocido | tapioca:50 cheddar:30 milk:40 green_tea:200 sugar:10 | breakfast mbeju | serving
+Vori vori vegetariano | cornmeal:40 cheddar:30 pumpkin:60 water:250 | corn ball soup | bowl
+Kivevé | pumpkin:200 cornmeal:20 cheddar:25 milk:40 sugar:10 | sweet pumpkin mash | portion
+`);
+X('Guyana', 'Guyanese', SA, `
+Dhal and rice (Guyanese) | split_peas:120 rice:180 turmeric:1 oil:8 garlic:3 | guyana dal rice | plate
+Bake and saltfish (Guyanese) | flour:70 oil:15 salt_cod:60 tomato:30 | guyanese bake | serving
+Pine tart | puff_pastry:50 pineapple:50 sugar:15 | guyanese pine tart | tart
+Vegan cook-up rice | rice:200 kidney:80 coconut_milk:50 spinach:30 pumpkin:40 | guyanese cook up vegan | plate
+`);
+X('Suriname', 'Surinamese', SA, `
+Roti with potato and long beans | flour:80 oil:10 potato:80 green_beans:80 curry:3 | surinamese roti vegetarian | plate
+Bakabana with peanut sauce | ripe_plantain:120 flour:25 oil:15 peanut_butter:20 | fried plantain peanut sauce | serving
+Pindasoep vegan | peanut_butter:40 cassava_cooked:80 water:250 | peanut soup | bowl
+`);
+X('Fiji', 'Fijian', OC, `
+Dhal soup with rice (Fiji) | red_lentils:100 rice:150 turmeric:1 garlic:3 oil:8 | fiji dhal | plate
+Cassava with coconut cream | cassava_cooked:200 coconut_milk:60 | tavioka and lolo | plate
+Bele with coconut | spinach:150 coconut_milk:60 onion:15 | fijian greens | portion
+Babakau | flour:60 sugar:10 oil:15 | fijian fried bread | piece
+Vakalolo | cassava_cooked:120 coconut_milk:40 brown_sugar:20 | fijian pudding | portion
+`);
+X('Samoa', 'Samoan', OC, `
+Koko Samoa | cocoa_powder:15 sugar:15 water:250 | samoan cocoa | cup
+Koko alaisa | rice:150 cocoa_powder:10 coconut_milk:40 sugar:15 | cocoa rice porridge | bowl
+Fa'apapa | flour:50 coconut_meat:30 sugar:10 coconut_milk:20 | coconut bread | slice
+Taro with coconut cream | taro:200 coconut_milk:60 | talo ma lu'au | plate
+Vaisalo | coconut_meat:50 tapioca:20 water:150 sugar:10 | coconut porridge | bowl
+`);
+X('Tonga', 'Tongan', OC, `
+Faikakai topai | flour:60 coconut_milk:40 brown_sugar:25 | dumplings in caramel coconut | serving
+Manioke with coconut | cassava_cooked:200 coconut_milk:50 | tongan cassava | plate
+Lu with vegetables | spinach:120 coconut_milk:60 onion:15 tomato:30 | vegetarian lu | portion
+`);
+X('Papua New Guinea', 'Papua New Guinean', OC, `
+Kaukau and peanut sauce | sweet_potato:200 peanut_butter:25 | sweet potato peanut | plate
+Saksak | tapioca:60 banana:60 coconut_milk:40 | sago dumplings | portion
+Coconut rice (PNG) | rice:200 coconut_milk:60 | png coconut rice | plate
+Kulau | coconut_water:300 | green coconut drink | coconut
+`);
+X('Solomon Islands', 'Solomon Islander', OC, `
+Slippery cabbage with coconut | spinach:150 coconut_milk:60 | solomon greens | portion
+Cassava pudding (Solomon) | cassava_cooked:150 coconut_milk:50 sugar:15 | solomon cassava pudding | portion
+`);
+X('Vanuatu', 'Ni-Vanuatu', OC, `
+Banana lap lap | banana:150 cassava_cooked:60 coconut_milk:50 | sweet lap lap | portion
+Nalot | taro:150 coconut_milk:40 | pounded taro vanuatu | portion
+Island cabbage soup | spinach:120 coconut_milk:50 water:150 | vanuatu greens soup | bowl
+`);
+X('Kiribati', 'I-Kiribati', OC, `
+Kiribati pandanus porridge | breadfruit:120 coconut_milk:40 sugar:10 | te tuae | bowl
+Coconut toddy drink (alcohol-free) | coconut_water:250 sugar:10 | kamaimai | glass
+`);
+X('Marshall Islands', 'Marshallese', OC, `
+Jukjuk | rice:150 coconut_meat:30 | coconut rice balls | serving (3)
+Banana pancakes (Marshallese) | banana:80 flour:40 egg:20 oil:8 | marshallese pancakes | serving (3)
+`);
+X('Federated States of Micronesia', 'Micronesian', OC, `
+Coconut breadfruit soup | breadfruit:150 coconut_milk:60 water:150 | micronesian soup | bowl
+Banana and coconut pudding (Micronesia) | banana:120 coconut_milk:50 tapioca:15 | micronesian dessert | portion
+`);
+X('Palau', 'Palauan', OC, `
+Tama | tapioca:40 coconut_milk:40 sugar:15 | palauan tapioca pudding | portion
+Taro leaf soup (Palau) | spinach:120 coconut_milk:50 taro:60 water:150 | palau greens soup | bowl
+`);
+X('Nauru', 'Nauruan', OC, `
+Coconut pancakes (Nauru) | flour:40 coconut_milk:40 sugar:8 oil:5 | nauru pancakes | serving (3)
+Breadfruit chips | breadfruit:100 oil:15 | breadfruit crisps | bag
+`);
+X('Tuvalu', 'Tuvaluan', OC, `
+Palusami (Tuvalu) | spinach:120 coconut_milk:70 onion:15 | tuvalu taro leaves | portion
+Fekei | taro:150 coconut_milk:40 sugar:15 | tuvalu taro pudding | portion
+`);
+X('Cook Islands', 'Cook Islander', TE, `
+Rukau | spinach:150 coconut_milk:60 onion:15 | taro leaves cook islands | portion
+Mainese (Cook Islands) | potato:150 mayo:30 egg_boiled:25 | potato salad rarotonga | portion
+`);
+X('French Polynesia', 'Tahitian', TE, `
+Firi firi | flour:50 coconut_milk:25 sugar:10 oil:15 | tahitian doughnuts | serving (2)
+Uru with coconut cream | breadfruit:180 coconut_milk:50 | tahitian breadfruit | plate
+`);
+X('Guam', 'Chamorro', TE, `
+Titiyas | flour:60 coconut_milk:30 sugar:10 butter:5 | chamorro flatbread | piece
+Chamorro bonelos aga | banana:100 flour:30 oil:15 sugar:5 | banana doughnuts | serving (3)
+Eggplant kelaguen-style salad | eggplant:150 lemon:15 coconut_meat:20 onion:15 | vegan kelaguen | portion
+`);
+X('New Caledonia', 'New Caledonian', TE, `
+Vegetable bougna | yam:120 sweet_potato:80 taro:60 coconut_milk:60 | vegetarian bougna | portion
+Pain coco | flour:50 coconut_meat:20 sugar:10 coconut_milk:20 | coconut bread caledonia | slice
+`);
+X('Niue', 'Niuean', TE, `
+Nane pia | tapioca:40 coconut_milk:40 sugar:10 | arrowroot pudding | bowl
+Pitako | breadfruit:150 coconut_milk:40 | niue breadfruit | portion
+`);
+// ---- round 3: Africa ----
+X('Algeria', 'Algerian', AF, `
+Kesra with olive oil | semolina:80 olive_oil:12 water:40 | algerian flatbread | wedge
+Loubia | kidney:200 tomato:60 garlic:4 cumin:1 olive_oil:12 | algerian white bean stew | bowl
+Mhadjeb with vegetables | semolina:70 tomato:60 onion:30 red_pepper:30 oil:10 | vegetable mahjouba | piece
+Zlabia | flour:30 oil:15 sugar:30 | algerian honey fritter | serving (2)
+`);
+X('Angola', 'Angolan', AF, `
+Feijão com banana | kidney:150 ripe_plantain:120 palm_oil:10 | beans and plantain angola | plate
+Quiabos with funge | okra:120 tomato:40 palm_oil:10 cassava_cooked:200 | okra and funge | plate
+Ginguba torrada | peanuts:40 | roasted peanuts angola | handful
+`);
+X('Benin', 'Beninese', AF, `
+Atassi | rice:150 cowpeas:80 oil:8 | rice and beans benin | plate
+Yovo doko | flour:60 sugar:12 oil:15 | benin doughnuts | serving (3)
+`);
+X('Botswana', 'Batswana', AF, `
+Morogo wa dinawa | spinach:150 cowpeas:60 onion:15 oil:8 | beans leaves botswana | portion
+Magwinya with jam | flour:60 oil:15 sugar:5 jam:15 | fat cakes and jam | serving (2)
+`);
+X('Burkina Faso', 'Burkinabè', AF, `
+Gonré | cowpeas:150 oil:10 | bean cakes burkina | serving (3)
+Bean fritters with chili (Burkina) | cowpeas:100 oil:15 chili:2 | samsa | serving (4)
+`);
+X('Burundi', 'Burundian', AF, `
+Burundian bean stew with rice | kidney:180 tomato:40 onion:20 palm_oil:8 rice:150 | ibiharage na umuceri | plate
+Fried sweet potato (Burundi) | sweet_potato:200 oil:15 | burundi street potato | portion
+`);
+X('Cabo Verde', 'Cape Verdean', AF, `
+Cuscus de milho with milk | cornmeal:70 milk:150 honey:10 | cape verde cornmeal cake | bowl
+Pastel de milho | cornmeal:50 oil:15 onion:10 | corn pastry cabo verde | serving (2)
+`);
+X('Cameroon', 'Cameroonian', AF, `
+Koki beans with plantain | cowpeas:150 palm_oil:20 ripe_plantain:100 | koki corn and beans | plate
+Puff puff and beans (vegan) | flour:60 oil:15 sugar:5 kidney:120 palm_oil:8 | accra banana beans | plate
+Bobolo | cassava_cooked:200 | cassava stick | stick
+Bouillie de maïs | cornmeal:50 water:200 sugar:12 peanuts:10 | corn pap cameroon | bowl
+`);
+X('Central African Republic', 'Central African', AF, `
+Peanut stew with greens (CAR) | peanut_butter:35 spinach:100 tomato:40 rice:150 | car peanut greens | plate
+Fried plantain with peanut sauce (CAR) | plantain_fried:150 peanut_butter:20 | car plantain | serving
+`);
+X('Chad', 'Chadian', AF, `
+Mandazi tchadien | flour:60 sugar:10 oil:15 | chad doughnuts | serving (2)
+Okra and peanut sauce with millet | okra:100 peanut_butter:25 millet:180 | chad okra boule | plate
+`);
+X('Comoros', 'Comorian', AF, `
+Mkatra foutra | flour:70 coconut_milk:40 sugar:8 sesame:5 | comorian breakfast bread | piece
+Cassava in coconut (Comoros) | cassava_cooked:200 coconut_milk:60 | mhogo wa nazi | bowl
+`);
+X('Democratic Republic of the Congo', 'Congolese (DRC)', AF, `
+Mikate | flour:60 sugar:10 oil:15 | congolese doughnuts | serving (3)
+Pondu with rice (vegan) | spinach:200 palm_oil:15 onion:20 peanut_butter:15 rice:150 | vegan pondu | plate
+`);
+X('Republic of the Congo', 'Congolese', AF, `
+Beignets congolais | flour:60 sugar:10 oil:15 | congo beignets | serving (3)
+Saka saka with rice (vegan) | spinach:150 palm_oil:15 peanut_butter:20 rice:150 | vegan saka saka | plate
+`);
+X('Djibouti', 'Djiboutian', AF, `
+Djiboutian lentils with bread | lentils:180 onion:20 tomato:30 oil:8 bread:50 | djibouti lentils | plate
+Sweet laxoox with honey | flour:70 water:80 honey:15 | sweet canjeero | serving (2)
+`);
+X('Equatorial Guinea', 'Equatoguinean', AF, `
+Cassava with palm oil and greens | cassava_cooked:200 spinach:100 palm_oil:12 | equatorial greens | plate
+Fried plantain (Equatorial Guinea) | plantain_fried:200 | platano frito | serving
+`);
+X('Eritrea', 'Eritrean', AF, `
+Shiro tegamino | chickpea_flour:70 onion:30 oil:15 tomato:30 water:150 | eritrean shiro pot | bowl
+Himbasha | flour:70 sugar:10 oil:10 sp_cardamom:1 | eritrean celebration bread | slice
+`);
+X('Eswatini', 'Swazi', AF, `
+Incwancwa | cornmeal:60 water:250 sugar:10 | sour porridge | bowl
+Emasi with pap | cornmeal:80 water:180 yogurt:150 | sour milk pap | bowl
+`);
+X('Gabon', 'Gabonese', AF, `
+Gabonese peanut soup (vegan) | peanut_butter:40 tomato:50 spinach:60 water:200 | vegan peanut soup gabon | bowl
+Banane pesée | plantain:200 oil:10 | boiled plantain gabon | serving
+`);
+X('The Gambia', 'Gambian', AF, `
+Akara (Gambian) with bread | cowpeas:100 oil:15 bread:60 | gambian akara sandwich | serving
+Monkey bread juice | yogurt:100 sugar:20 water:150 | baobab drink | glass
+`);
+X('Guinea', 'Guinean', AF, `
+Fonio with peanut sauce | fonio:60 peanut_butter:30 tomato:40 | guinea fonio | plate
+Guinean ginger juice | ginger:20 sugar:25 water:250 lemon:5 | gnamakoudji | glass
+`);
+X('Guinea-Bissau', 'Bissau-Guinean', AF, `
+Bissau cashew snack | cashews:40 | roasted cashews bissau | handful
+Arroz de coco | rice:200 coconut_milk:60 | coconut rice bissau | plate
+`);
+X('Lesotho', 'Basotho', AF, `
+Motoho | sorghum:60 water:250 sugar:10 | fermented sorghum porridge | bowl
+Lesotho bean salad | kidney:150 onion:15 tomato:30 oil:8 | basotho beans | portion
+`);
+X('Liberia', 'Liberian', AF, `
+Liberian rice bread with butter | rice_flour:40 banana:40 sugar:15 oil:10 butter:8 | rice bread slice | slice
+Plantain chips (Liberian) | green_plantain:100 oil:15 | liberian chips | bag
+Kanyan | peanuts:30 rice_flour:20 sugar:15 | liberian peanut candy | piece
+`);
+X('Libya', 'Libyan', AF, `
+Sfinz | flour:60 oil:20 | libyan doughnut | piece
+Libyan chickpeas with cumin | chickpeas:180 olive_oil:10 cumin:1 lemon:5 | hummus mutabbal libya | bowl
+`);
+X('Madagascar', 'Malagasy', AF, `
+Vary amin'anana | rice:80 spinach:80 water:200 | rice greens porridge | bowl
+Mokary | rice_flour:50 coconut_milk:40 sugar:10 | malagasy rice cakes | serving (3)
+Achards de légumes | cabbage:60 carrots_raw:40 green_beans:30 vinegar:10 oil:8 turmeric:1 | malagasy pickled veg | portion
+`);
+X('Malawi', 'Malawian', AF, `
+Nsima with mpiru | cornmeal:110 water:220 spinach:120 tomato:30 | nsima and greens | plate
+Phala | cornmeal:50 water:200 sugar:10 peanuts:15 | malawi porridge | bowl
+`);
+X('Mali', 'Malian', AF, `
+Dégué | millet:60 yogurt:150 sugar:15 | millet yogurt mali | bowl
+Malian bean fritters | cowpeas:100 oil:15 onion:10 | samsa mali | serving (4)
+`);
+X('Mauritania', 'Mauritanian', AF, `
+Lakh with milk (Mauritania) | millet:60 milk:150 sugar:10 | mauritanian lakh | bowl
+Zrig | yogurt:200 sugar:15 water:100 | mauritanian milk drink | glass
+`);
+X('Mauritius', 'Mauritian', AF, `
+Farata with curry | flour:80 oil:12 kidney:80 curry:3 | mauritian farata | plate
+Gâteau patate | sweet_potato:100 flour:20 coconut_meat:15 sugar:12 oil:12 | sweet potato cakes | serving (3)
+Alouda | milk:200 tapioca:15 sugar:20 | mauritian milk drink | glass
+`);
+X('Mozambique', 'Mozambican', AF, `
+Bolo polana | cashews:40 potato:40 sugar:25 butter:15 egg:15 | cashew potato cake | slice
+Matapa with rice (vegan) | spinach:150 peanuts:30 coconut_milk:60 rice:150 | vegan matapa | plate
+`);
+X('Namibia', 'Namibian', AF, `
+Oshifima with beans | millet:200 cowpeas:100 oil:5 | mahangu and beans | plate
+Namibian vetkoek | flour:70 oil:20 | namibian fat cake | piece
+`);
+X('Niger', 'Nigerien', AF, `
+Masa (Niger) | rice:80 sugar:8 oil:10 | rice cakes niger | serving (4)
+Kopto salad | spinach:120 peanuts:25 onion:15 tomato:20 | moringa salad | bowl
+`);
+X('Rwanda', 'Rwandan', AF, `
+Ibihaza | pumpkin:200 kidney:80 palm_oil:8 | pumpkin and beans | bowl
+Akabanga-spiced beans | kidney:180 chili:3 oil:8 onion:15 | rwandan chili beans | bowl
+Ikivuguto | yogurt:250 | rwandan fermented milk | glass
+`);
+X('São Tomé and Príncipe', 'Santomean', AF, `
+Fried breadfruit (São Tomé) | breadfruit:150 oil:15 | fruta-pão frita | serving
+Cocoa porridge | cornmeal:40 cocoa_powder:10 milk:150 sugar:15 | santomean cocoa porridge | bowl
+`);
+X('Senegal', 'Senegalese', AF, `
+Ndambé | cowpeas:180 tomato:40 onion:20 oil:12 baguette:60 | bean sandwich senegal | sandwich
+Fataya | flour:50 oil:15 beef_mince:40 onion:10 | senegalese fried pies | serving (3)
+Bissap | roselle:10 sugar:25 water:250 mint:2 | senegalese hibiscus | glass
+Bouye | yogurt:100 sugar:20 water:150 | baobab juice | glass
+`);
+X('Seychelles', 'Seychellois', AF, `
+Breadfruit chips (Seychelles) | breadfruit:100 oil:15 | seychelles chips | bag
+Lentil curry (Seychelles) | lentils:180 coconut_milk:40 curry:3 rice:150 | seychelles dal | plate
+`);
+X('Sierra Leone', 'Sierra Leonean', AF, `
+Akara (Sierra Leone) | rice_flour:40 banana:50 sugar:10 oil:15 | rice akara salone | serving (4)
+Ginger beer (Salone, alcohol-free) | ginger:20 sugar:25 water:250 | salone ginger beer | glass
+`);
+X('Somalia', 'Somali', AF, `
+Canjeero with tea | flour:70 water:80 black_tea:200 sugar:10 | lahoh breakfast | serving
+Bariis with vegetables | rice:200 carrots:40 peas:30 raisins:10 oil:12 | somali vegetable rice | plate
+Somali shaah | black_tea:200 milk:50 sugar:12 sp_cardamom:0.5 | somali spiced tea | cup
+`);
+X('South Sudan', 'South Sudanese', AF, `
+Asida | sorghum:80 water:200 | sorghum dough | portion
+Bean stew with kisra (South Sudan) | kidney:150 sorghum:60 peanut_butter:20 | south sudan beans | plate
+`);
+X('Sudan', 'Sudanese', AF, `
+Tamiya (Sudanese) | chickpeas:120 onion:15 oil:15 | sudanese falafel | serving (4)
+Balila | chickpeas:180 oil:8 cumin:1 | boiled chickpeas sudan | bowl
+Shai bil laban | black_tea:150 milk:100 sugar:12 | sudanese milk tea | cup
+`);
+X('Tanzania', 'Tanzanian', AF, `
+Chipsi mayai | fries:150 egg:100 oil:8 | chips omelette | plate
+Maharagwe | kidney:180 coconut_milk:50 onion:20 tomato:30 | tanzanian coconut beans | bowl
+Mkate wa kumimina | rice_flour:50 coconut_milk:40 sugar:12 | zanzibar rice bread | slice
+`);
+X('Togo', 'Togolese', AF, `
+Akassa with fried fish | cornmeal:100 water:150 fish:100 oil:10 | togo akassa | plate
+Togolese peanut cookies | peanuts:30 flour:20 sugar:10 | kluiklui | serving
+`);
+X('Tunisia', 'Tunisian', AF, `
+Bsissa | barley:50 sugar:15 olive_oil:8 water:100 | tunisian barley breakfast | bowl
+Vegetable ojja | egg:100 tomato:100 red_pepper:50 olive_oil:10 | vegetable ojja | plate
+Makroudh (Tunisian) | semolina:60 dates:40 oil:20 honey:15 | tunisian date cookie | serving (2)
+`);
+X('Uganda', 'Ugandan', AF, `
+Rolex (Ugandan) | flour:60 oil:10 egg:100 tomato:30 cabbage:30 | ugandan rolex | roll
+Kikomando | flour:70 oil:10 kidney:150 | chapati and beans | plate
+Groundnut paste on bread | bread:60 peanut_butter:30 | g-nut paste bread | serving
+`);
+X('Zambia', 'Zambian', AF, `
+Kalembula | spinach:150 peanuts:20 tomato:30 | sweet potato leaves | portion
+Zambian fritters | flour:60 sugar:10 oil:15 | vitumbuwa | serving (3)
+`);
+X('Zimbabwe', 'Zimbabwean', AF, `
+Bota | cornmeal:50 water:200 peanut_butter:20 sugar:8 | zimbabwe porridge | bowl
+Maputi | corn:40 | popped maize | bowl
+Mufushwa greens with sadza | kale:150 tomato:30 oil:8 cornmeal:110 water:220 | dried greens and sadza | plate
+`);
+X('Western Sahara', 'Sahrawi', TE, `
+Sahrawi lentil stew | lentils:180 onion:20 tomato:30 oil:8 | sahrawi lentils | bowl
+Dates with milk, Sahrawi | dates:40 milk:200 | dates and milk | serving
+`);
+// ---- round 3: Asia ----
+X('Afghanistan', 'Afghan', AS, `
+Sheer chai | green_tea:150 milk:120 sugar:10 sp_cardamom:0.5 | afghan milk tea | cup
+Afghan breakfast eggs (tukhm-e-banjan-e-rumi) | egg:100 tomato:100 onion:20 oil:10 | eggs with tomato | plate
+Kachalo bolani | flour:70 potato:80 oil:15 | potato bolani | piece
+Banjan borani | eggplant:200 yogurt:80 tomato:40 oil:15 | eggplant with yogurt | portion
+`);
+X('Armenia', 'Armenian', AS, `
+Lavash with cheese and herbs | flour:60 feta:40 parsley:10 | lavash breakfast | serving
+Jingalov hats | flour:70 spinach:80 parsley:10 oil:8 | herb flatbread | piece
+Gata with tea | flour:40 butter:20 sugar:15 black_tea:200 | gata and tea | serving
+`);
+X('Azerbaijan', 'Azerbaijani', AS, `
+Kuku (Azerbaijani) | egg:100 spinach:60 parsley:10 oil:8 | herb omelette | slice
+Gogal | flour:50 butter:15 sp_fennel:1 | turmeric pastry | piece
+Shakarbura | flour:30 butter:12 almonds:15 sugar:15 | almond pastry | piece
+`);
+X('Bahrain', 'Bahraini', AS, `
+Khubz with cheese and honey | pita:70 feta:30 honey:10 | bahraini breakfast | serving
+Bahraini balaleet | pasta:100 sugar:20 egg:50 butter:10 | sweet vermicelli bahrain | plate
+`);
+X('Bangladesh', 'Bangladeshi', AS, `
+Paratha and dal (Bangladeshi) | flour:80 ghee:12 lentils:120 | porota dal | plate
+Chotpoti | chickpeas:120 potato:50 egg_boiled:25 tamarind:10 onion:15 | bangladeshi chaat | bowl
+Fuchka | flour:30 oil:10 chickpeas:40 potato:30 tamarind:10 | bangladeshi pani puri | serving (6)
+Shingara | flour:50 potato:60 peanuts:10 oil:15 | bengali samosa | serving (2)
+Khichuri with egg | rice:80 lentils:50 egg_boiled:50 oil:10 | rainy day khichuri | plate
+`);
+X('Bhutan', 'Bhutanese', AS, `
+Ema datshi | chili:120 cheddar:50 onion:20 butter:5 | chili cheese bhutan | portion
+Suja | black_tea:150 butter:10 milk:50 salt:1 | butter tea | cup
+Zaow | rice:60 butter:5 | fried rice snack bhutan | bowl
+`);
+X('Brunei', 'Bruneian', AS, `
+Kuih cincin | rice_flour:40 brown_sugar:15 oil:12 | ring cookies | serving (3)
+Pulut panggang | sticky_rice:100 coconut_milk:20 dried_shrimp:5 | grilled sticky rice | piece
+`);
+X('Cambodia', 'Cambodian', AS, `
+Num banh chok samlor proher (vegetarian) | rice_noodles:180 coconut_milk:40 cucumber:30 green_beans:30 | khmer noodles vegetarian | bowl
+Nom krok | rice_flour:40 coconut_milk:50 spring_onion:5 | khmer coconut cakes | serving (6)
+Num pang | baguette:80 pickles:20 cucumber:20 tofu:40 | khmer sandwich | sandwich
+`);
+X('Georgia', 'Georgian', AS, `
+Adjarian khachapuri | flour:90 mozzarella:60 feta:30 egg:50 butter:10 | boat khachapuri | piece
+Imeruli khachapuri | flour:90 mozzarella:60 feta:30 | cheese bread | slice (2)
+Mchadi | cornmeal:80 water:40 | corn cake georgia | piece
+Lobiani | flour:90 kidney:80 onion:15 oil:8 | bean bread | slice (2)
+Churchkhela-style nut sweet | walnuts:20 raisins:20 flour:5 | nut sweet | piece
+`);
+X('Hong Kong', 'Hong Kong', TE, `
+French toast (Hong Kong) | bread:80 egg:40 peanut_butter:15 oil:15 maple:15 | hk french toast | serving
+Egg waffle | flour:50 egg:30 sugar:15 milk:40 | gai daan zai | waffle
+Cheung fun with sauce | rice_flour:60 soy:10 sesame:3 hoisin:10 | rice noodle roll street | plate
+Curry fish balls | fish:80 flour:15 curry:3 | hk fishball | stick
+`);
+X('Iraq', 'Iraqi', AS, `
+Kahi with date syrup | flour:60 butter:20 molasses:20 | iraqi pastry with dibis | serving
+Bagila bil dihin | fava:150 bread:60 egg_fried:50 butter:10 | fava bread breakfast | plate
+Iraqi falafel sandwich | chickpeas:100 oil:15 pita:70 tomato:20 pickles:10 | iraqi falafel | sandwich
+`);
+X('Jordan', 'Jordanian', AS, `
+Jordanian falafel and hummus breakfast | chickpeas:100 oil:15 hummus:60 pita:70 | jordanian breakfast | plate
+Mutabbal | eggplant:150 tahini:20 yogurt:20 lemon:5 | smoky eggplant dip | portion
+Mujaddara (Jordanian) | lentils:150 bulgur:80 onion:50 olive_oil:15 | lentil bulgur | plate
+`);
+X('Kazakhstan', 'Kazakh', AS, `
+Kazakh milk tea with baursak | black_tea:150 milk:80 flour:40 oil:10 | shai and baursak | serving
+Pumpkin manty | flour:60 pumpkin:80 onion:15 butter:8 | pumpkin manty | serving (3)
+`);
+X('Kuwait', 'Kuwaiti', AS, `
+Gers ogaily | flour:35 sugar:20 egg:20 sp_cardamom:0.5 sesame:3 | kuwaiti cake | slice
+Nakhi | chickpeas:180 cumin:1 lemon:5 | kuwaiti chickpeas | bowl
+`);
+X('Kyrgyzstan', 'Kyrgyz', AS, `
+Kattama | flour:70 butter:15 onion:20 | kyrgyz layered bread | piece
+Samsa with pumpkin | flour:50 pumpkin:60 onion:15 butter:8 | pumpkin samsa | serving (2)
+`);
+X('Laos', 'Lao', AS, `
+Khao niao with jaew | sticky_rice:150 tomato:40 chili:5 garlic:3 | sticky rice and dip | plate
+Lao papaya salad (vegan) | papaya:150 tomato:30 lime:10 soy:8 chili:3 peanuts:10 | tam mak hoong vegan | plate
+Khao jee sandwich, vegetarian | baguette:80 cucumber:30 carrots_raw:20 tofu:40 | lao baguette | sandwich
+`);
+X('Malaysia', 'Malaysian', AS, `
+Nasi lemak (vegetarian) | rice:180 coconut_milk:40 peanuts:15 cucumber:30 egg_boiled:50 chili:5 | vegetarian nasi lemak | plate
+Roti telur | flour:80 ghee:12 egg:50 | egg roti canai | piece
+Kaya toast (Malaysian) | bread:60 butter:10 jam:20 | roti bakar kaya | serving
+Apam balik | flour:50 sugar:15 peanuts:15 butter:8 | peanut pancake turnover | piece
+Kuih keria | sweet_potato:80 flour:15 sugar:15 oil:12 | sweet potato doughnuts | serving (3)
+Cucur udang | flour:50 shrimp:30 bean_sprouts:20 oil:15 | prawn fritters | serving (3)
+`);
+X('Maldives', 'Maldivian', AS, `
+Roshi with mashuni | flour:70 tuna:50 coconut_meat:30 onion:10 | maldivian breakfast | plate
+Gulha | flour:40 tuna:30 coconut_meat:15 oil:12 | fish balls maldives | serving (4)
+Kulhi boakibaa | rice:60 tuna:50 coconut_meat:20 oil:8 | spicy fish cake | slice
+`);
+X('Mongolia', 'Mongolian', AS, `
+Boortsog with milk tea | flour:50 oil:12 sugar:5 milk:150 green_tea:100 | boortsog breakfast | serving
+Vegetable buuz | flour:60 cabbage:50 potato:30 onion:15 | veggie dumplings mongolia | serving (4)
+`);
+X('Myanmar', 'Burmese', AS, `
+Mohinga (vegetarian) | rice_noodles:150 chickpea_flour:20 banana:0 onion:30 lemongrass:5 water:300 | vegetarian mohinga | bowl
+Burmese tofu salad | chickpea_flour:60 cucumber:40 onion:15 peanuts:10 soy:5 | shan tofu salad | plate
+Htamin jin | rice:180 tomato:60 potato:40 oil:10 | fermented rice balls | serving (3)
+Mont lone yay paw | sticky_rice:60 brown_sugar:15 coconut_meat:10 | jaggery rice balls | serving (5)
+`);
+X('Nepal', 'Nepali', AS, `
+Vegetable momo | flour:60 cabbage:60 carrots:20 onion:15 oil:5 | veg momo | serving (8)
+Dal bhat (vegan) | lentils:150 rice:200 spinach:60 oil:8 | vegan dal bhat | plate
+Chiura with yogurt | rice:60 yogurt:150 sugar:10 | beaten rice with curd | bowl
+Aloo sandeko | potato:180 oil:10 chili:2 sesame:3 | nepali spiced potato | portion
+Juju dhau | yogurt:200 sugar:10 | king curd | cup
+`);
+X('North Korea', 'North Korean', AS, `
+Kimchi rice (North Korean) | rice:200 kimchi:60 sesame_oil:3 | north korean kimchi bap | plate
+Potato pancakes (North Korean) | potato:150 oil:12 | gamja jeon north | serving (3)
+`);
+X('Oman', 'Omani', AS, `
+Omani khubz ragag with egg | flour:40 egg:50 oil:5 | omani crepe bread | serving
+Chickpea dango | chickpeas:180 lemon:5 | omani boiled chickpeas | bowl
+Kahwa with dates | coffee:100 dates:30 sp_cardamom:0.5 | omani coffee | serving
+`);
+X('Palestine', 'Palestinian', AS, `
+Zaatar and olive oil with bread | pita:70 olive_oil:15 sp_thyme:3 sesame:3 | zeit and zaatar | serving
+Hummus msabaha | chickpeas:150 tahini:20 olive_oil:10 lemon:5 | warm whole chickpea hummus | bowl
+Ka'ak with falafel | flour:70 sesame:8 chickpeas:60 oil:12 | jerusalem kaak falafel | sandwich
+`);
+X('Qatar', 'Qatari', AS, `
+Qatari regag with cheese | flour:40 feta:30 oil:5 | regag cheese | serving
+Khanfaroosh | flour:30 rice_flour:20 sugar:15 egg:15 oil:12 sp_cardamom:0.5 | qatari fritters | serving (3)
+`);
+X('Saudi Arabia', 'Saudi', AS, `
+Ful with tamees | fava:180 olive_oil:10 cumin:1 flour:60 | saudi ful breakfast | plate
+Shakshuka (Saudi) | egg:100 tomato:120 onion:20 oil:10 | saudi eggs tomato | plate
+Masoob | bread:60 banana:100 honey:15 cream:20 | banana bread pudding saudi | bowl
+Saudi coffee with dates | coffee:100 dates:30 sp_cardamom:0.5 | gahwa and dates | serving
+`);
+X('Singapore', 'Singaporean', AS, `
+Chwee kueh | rice_flour:60 water:40 oil:8 radish_alt:0 | steamed rice cakes | serving (4)
+Prata with curry | flour:80 ghee:12 lentils:80 | roti prata | plate
+Ondeh ondeh | sticky_rice:40 brown_sugar:15 coconut_meat:10 | pandan balls | serving (5)
+`);
+X('Sri Lanka', 'Sri Lankan', AS, `
+Kiribath with lunu miris | rice:180 coconut_milk:50 onion:15 chili:3 | milk rice | slice (2)
+Pol roti | flour:60 coconut_meat:30 onion:10 | coconut roti | piece
+Egg hoppers | rice_flour:60 coconut_milk:40 egg:50 | appa with egg | serving (2)
+Vadai (Sri Lankan) | split_peas:80 onion:15 oil:15 | parippu vadai | serving (3)
+Kokis | rice_flour:40 coconut_milk:20 oil:15 | sri lankan crisp cookie | serving (3)
+`);
+X('Syria', 'Syrian', AS, `
+Syrian breakfast spread | pita:70 labneh_alt:0 yogurt:80 olives:20 tomato:40 olive_oil:8 | syrian breakfast | plate
+Fatayer bi sabanekh | flour:60 spinach:80 onion:15 olive_oil:10 lemon:5 | spinach pies | serving (3)
+Ma'amoul | semolina:40 butter:15 dates:25 | date cookies | serving (2)
+`);
+X('Taiwan', 'Taiwanese', AS, `
+Taiwanese soy milk breakfast | soy_milk:300 flour:40 oil:12 | dou jiang and youtiao | serving
+Fan tuan | sticky_rice:150 egg:30 flour:20 oil:10 | rice ball roll | roll
+Taiwanese fried chicken cutlet | chicken_breast:150 flour:20 oil:20 | ji pai | piece
+Pineapple cake (Taiwan) | flour:30 butter:15 sugar:10 pineapple:30 | feng li su | piece
+`);
+X('Tajikistan', 'Tajik', AS, `
+Non with tea and jam | flour:80 black_tea:200 jam:20 | tajik breakfast | serving
+Kurutob vegetarian | flour_tortilla:70 yogurt:100 tomato:60 onion:20 cucumber:40 oil:8 | vegetarian qurutob | plate
+`);
+X('Timor-Leste', 'Timorese', AS, `
+Tukir | cassava_cooked:150 coconut_milk:40 | timor cassava | portion
+Timorese coffee with bread | coffee:200 sugar:10 bread:60 | timor breakfast | serving
+`);
+X('Turkmenistan', 'Turkmen', AS, `
+Chorek | flour:80 oil:5 | turkmen bread | piece
+Pishme | flour:50 oil:15 sugar:5 | turkmen fried dough | serving (4)
+`);
+X('United Arab Emirates', 'Emirati', AS, `
+Khameer | flour:60 sugar:10 milk:30 dates:20 | emirati bread | piece
+Luqaimat with date syrup | flour:40 oil:15 molasses:20 sesame:3 | emirati sweet dumplings | serving (5)
+Emirati breakfast with eggs and tomato | egg:100 tomato:80 onion:20 oil:8 pita:60 | emirati eggs | plate
+`);
+X('Uzbekistan', 'Uzbek', AS, `
+Non with kaymak and honey | flour:80 cream:30 honey:15 | uzbek breakfast | serving
+Samsa with pumpkin (Uzbek) | flour:60 pumpkin:80 onion:20 butter:8 | uzbek pumpkin samsa | serving (2)
+Achichuk | tomato:150 onion:40 cucumber:50 | uzbek salad | portion
+`);
+X('Yemen', 'Yemeni', AS, `
+Malawah | flour:80 butter:20 | yemeni flaky bread | piece
+Ful Yemeni | fava:180 tomato:40 onion:20 oil:10 | yemeni ful | bowl
+Shakshouka (Yemeni) | egg:100 tomato:100 green_pepper:30 oil:10 | yemeni eggs | plate
+Yemeni tea with milk | black_tea:150 milk:80 sugar:12 sp_cardamom:0.5 | shai haleeb | cup
+`);
+// ---- round 3: Europe ----
+X('Albania', 'Albanian', EUR, `
+Petulla | flour:60 oil:15 feta:20 | albanian fried dough | serving (3)
+Jani me fasule | kidney:200 onion:20 tomato_paste:10 oil:12 mint:2 | albanian bean soup | bowl
+Trileçe | sponge:50 milk:60 condensed:20 cream:20 | tres leches albania | slice
+`);
+X('Andorra', 'Andorran', EUR, `
+Coca de recapte | flour:60 red_pepper:40 eggplant:40 onion:20 olive_oil:10 | catalan vegetable flatbread | slice
+Crema catalana | milk:120 egg:25 sugar:20 cornstarch:5 | catalan cream | ramekin
+`);
+X('Austria', 'Austrian', EUR, `
+Semmel with butter and jam | roll:60 butter:10 jam:20 | austrian breakfast roll | roll
+Käsekrainer | sausage:100 cheddar:15 roll:50 mustard:5 | cheese sausage | serving
+Topfenstrudel | phyllo:30 cottage:80 sugar:15 egg:10 raisins:10 | quark strudel | slice
+Liptauer on bread | rye_bread:50 cottage:60 butter:10 paprika:1 | liptauer spread | serving
+Krautfleckerl | pasta:150 cabbage:120 onion:20 oil:10 | cabbage pasta | plate
+Gemüselaibchen | potato:100 carrots:40 zucchini:40 egg:15 breadcrumbs:15 oil:12 | vegetable patties | serving (3)
+`);
+X('Belarus', 'Belarusian', EUR, `
+Syrniki (Belarusian) | cottage:120 flour:20 egg:20 sugar:10 oil:10 | belarus cottage pancakes | serving (3)
+Babka (potato) | potato:200 onion:20 egg:20 oil:10 | potato bake belarus | slice
+Kholodnik | beets:100 kefir:200 cucumber:40 egg_boiled:25 | cold beet soup belarus | bowl
+`);
+X('Belgium', 'Belgian', EUR, `
+Liège waffle | flour:50 butter:15 sugar:15 egg:10 | gaufre de liege | waffle
+Belgian fries with mayonnaise | fries:200 mayo:30 | frites | cone
+Chicons au gratin, vegetarian | celery:150 milk:80 cheddar:30 butter:8 flour:8 | endive gratin | portion
+Pistolet with chocolate spread | roll:60 nutella:20 | belgian breakfast roll | roll
+Stoemp | potato:180 carrots:50 leeks:40 butter:10 | belgian mash | portion
+`);
+X('Bosnia and Herzegovina', 'Bosnian', EUR, `
+Sirnica | phyllo:60 cottage:60 egg:15 oil:10 | cheese pie bosnia | slice
+Zeljanica | phyllo:60 spinach:80 cottage:30 oil:10 | spinach pie bosnia | slice
+Krompiruša | phyllo:60 potato:80 onion:15 oil:10 | potato pie bosnia | slice
+Bosnian coffee with lokum | coffee:60 sugar:15 | bosanska kafa | serving
+`);
+X('Bulgaria', 'Bulgarian', EUR, `
+Mekitsi | flour:60 yogurt:20 oil:15 icing_sugar:5 | bulgarian fried dough | serving (2)
+Kachamak | cornmeal:60 water:200 feta:30 butter:8 | bulgarian polenta | bowl
+Lyutenitsa on bread | bread:60 red_pepper:50 tomato:30 oil:8 | lyutenitsa toast | serving
+Gyuvech, vegetarian | potato:80 eggplant:60 red_pepper:50 tomato:60 okra:30 oil:12 | vegetable gyuvech | bowl
+Boza | millet:40 sugar:20 water:250 | bulgarian millet drink | glass
+`);
+X('Croatia', 'Croatian', EUR, `
+Burek sa sirom | phyllo:60 cottage:60 oil:12 | croatian cheese burek | slice
+Fritule | flour:40 egg:10 raisins:10 oil:15 sugar:8 | croatian doughnuts | serving (5)
+Blitva | spinach:150 potato:100 olive_oil:12 garlic:3 | chard and potatoes | portion
+Zagorski štrukli | flour:50 cottage:60 cream:20 | baked cheese strukli | portion
+`);
+X('Cyprus', 'Cypriot', EUR, `
+Halloumi and tomato breakfast | halloumi:60 tomato:60 cucumber:50 olives:15 bread:50 | cypriot breakfast | plate
+Louvana | split_peas:150 onion:20 olive_oil:12 lemon:5 | yellow split pea puree | bowl
+Pourgouri | bulgur:150 tomato:40 onion:20 olive_oil:10 | cypriot bulgur pilaf | plate
+`);
+X('Czechia', 'Czech', EUR, `
+Smažený sýr | gouda:100 flour:10 egg:15 breadcrumbs:20 oil:15 fries:120 | fried cheese | plate
+Chlebíček | baguette:30 potato:20 mayo:10 ham_slice:15 egg_boiled:15 | open sandwich czech | piece
+Ovocné knedlíky | flour:60 cottage:30 strawberries:60 butter:10 sugar:10 | fruit dumplings | serving (3)
+Bramborová polévka | potato:150 carrots:30 mushrooms:30 water:250 | czech potato soup | bowl
+Koláče with poppy seed | flour:50 sugar:12 butter:10 milk:15 | czech poppy kolache | serving (2)
+`);
+X('Denmark', 'Danish', EUR, `
+Rugbrød with cheese | rye_bread:50 butter:5 cheddar:25 | danish rye with cheese | piece
+Smørrebrød with potato | rye_bread:50 butter:5 potato:60 mayo:10 onion:5 | potato open sandwich | piece
+Risalamande | rice:60 milk:100 cream:40 almonds:10 sugar:10 | danish rice pudding | bowl
+Øllebrød (alcohol-free) | rye_bread:80 water:150 sugar:15 milk:50 | rye bread porridge | bowl
+`);
+X('Estonia', 'Estonian', EUR, `
+Hapukapsasupp | sauerkraut:120 potato:60 barley:20 water:250 | sauerkraut soup estonia | bowl
+Kohuke | cottage:50 sugar:10 dark_choc:15 | curd snack bar | bar
+Kringel | flour:50 butter:15 sugar:12 sp_cardamom:0.5 | estonian sweet braid | slice
+`);
+X('Finland', 'Finnish', EUR, `
+Puuro with berries | oats:50 water:250 blueberries:50 butter:5 | finnish porridge | bowl
+Korvapuusti | flour:45 butter:15 sugar:12 milk:20 sp_cinnamon:1 | slapped ear cinnamon bun | bun
+Ruisleipä with cheese and cucumber | rye_bread:60 butter:5 cheddar:20 cucumber:30 | finnish rye breakfast | serving
+Pinaattiletut | flour:40 milk:100 egg:30 spinach:50 butter:8 | spinach pancakes | serving (3)
+`);
+X('Hungary', 'Hungarian', EUR, `
+Pogácsa | flour:50 butter:15 cheddar:15 sour_cream:10 | cheese scones hungary | serving (3)
+Kakaós csiga | flour:50 butter:12 sugar:12 cocoa_powder:5 milk:20 | cocoa roll | piece
+Főzelék with lentils | lentils:180 flour:8 oil:8 sour_cream:20 | lencsefozelek | bowl
+Rakott krumpli, vegetarian | potato:200 egg_boiled:50 sour_cream:50 butter:8 | layered potatoes | portion
+`);
+X('Iceland', 'Icelandic', EUR, `
+Hafragrautur | oats:50 water:250 milk:50 raisins:10 | icelandic porridge | bowl
+Flatkaka with butter | rye_bread:50 butter:10 | icelandic flatbread | piece
+Pönnukökur | flour:40 milk:100 egg:25 sugar:10 butter:8 | icelandic crepes | serving (3)
+`);
+X('Ireland', 'Irish', EUR, `
+Irish porridge with honey | oats:50 milk:200 honey:12 | irish oatmeal | bowl
+Vegetarian full Irish | egg_fried:100 potato:80 mushrooms:60 tomato:60 baked_beans:100 bread:40 | veggie full irish | plate
+Potato farls | potato:120 flour:30 butter:8 | potato bread | serving (2)
+Tayto-style cheese and onion crisps | potato:80 oil:15 cheddar:3 | crisps | bag
+Irish brown bread with butter | wholemeal:60 buttermilk:20 butter:10 | wheaten bread | slice (2)
+`);
+X('Kosovo', 'Kosovar', EUR, `
+Pite me spinaq | phyllo:60 spinach:80 cottage:30 oil:10 | kosovo spinach pie | slice
+Llokuma | flour:60 yogurt:20 oil:15 | kosovo fried dough | serving (3)
+`);
+X('Latvia', 'Latvian', EUR, `
+Pīrāgi, vegetarian | flour:50 butter:12 cabbage:50 onion:15 | cabbage pirags | serving (2)
+Biezpiena sieriņš | cottage:50 sugar:10 dark_choc:15 | latvian curd snack | bar
+Skābeņu zupa | spinach:120 potato:60 egg_boiled:25 sour_cream:20 water:200 | sorrel soup | bowl
+`);
+X('Liechtenstein', 'Liechtensteiner', EUR, `
+Rösti with fried egg | potato:200 butter:15 egg_fried:50 | alpine rosti egg | plate
+Apple strudel (Liechtenstein) | phyllo:30 apple:100 sugar:15 raisins:10 butter:10 | liechtenstein strudel | slice
+`);
+X('Lithuania', 'Lithuanian', EUR, `
+Varškėčiai | cottage:120 flour:20 egg:20 sugar:10 oil:10 sour_cream:20 | lithuanian curd pancakes | serving (3)
+Kibinai, vegetable | flour:60 butter:15 cabbage:50 mushrooms:30 | vegetable kibinai | piece
+Šakotis | flour:20 butter:20 sugar:20 egg:40 | tree cake | slice
+`);
+X('Luxembourg', 'Luxembourgish', EUR, `
+Quetschentaart | pie_crust:50 plum:100 sugar:15 | plum tart luxembourg | slice
+Kniddelen | flour:60 egg:30 milk:40 butter:10 | luxembourg dumplings | plate
+`);
+X('Malta', 'Maltese', EUR, `
+Pastizzi with ricotta | puff_pastry:60 ricotta:50 egg:5 | ricotta pastizzi | serving (2)
+Pastizzi with peas | puff_pastry:60 peas:50 onion:10 curry:1 | pea pastizzi | serving (2)
+Hobż biż-żejt | bread:80 tomato:50 olive_oil:12 capers:3 olives:10 | maltese bread with oil | serving
+Kapunata | eggplant:100 red_pepper:60 tomato:80 capers:5 olive_oil:15 | maltese ratatouille | portion
+`);
+X('Moldova', 'Moldovan', EUR, `
+Mămăligă with brânză | cornmeal:90 water:200 feta:40 | moldovan polenta and cheese | plate
+Vărzări | flour:60 cabbage:80 oil:12 | moldovan cabbage pie | piece
+`);
+X('Monaco', 'Monégasque', EUR, `
+Pan bagnat | baguette:100 tomato:50 egg_boiled:30 olives:15 olive_oil:12 lettuce:15 | nicoise sandwich | sandwich
+Monaco vegetable stew | tomato:150 zucchini:80 olives:15 olive_oil:12 potato:80 | provencal vegetable stew | bowl
+`);
+X('Montenegro', 'Montenegrin', EUR, `
+Priganice | flour:60 oil:15 honey:15 | montenegrin fritters with honey | serving (4)
+Raštan | kale:150 potato:80 oil:10 | montenegrin kale stew | bowl
+`);
+X('North Macedonia', 'Macedonian', EUR, `
+Mekici with feta | flour:60 yogurt:20 oil:15 feta:30 | macedonian fried dough cheese | serving (2)
+Pindjur | red_pepper:100 eggplant:60 tomato:60 oil:15 garlic:3 | macedonian relish | portion
+Gravče na tavče with bread | kidney:180 onion:30 oil:12 bread:50 | macedonian beans and bread | plate
+`);
+X('Norway', 'Norwegian', EUR, `
+Brødskive with brown cheese and jam | bread:40 butter:5 cheddar:20 jam:10 | norwegian open sandwich | piece
+Vafler (Norwegian) | flour:40 milk:60 egg:20 butter:10 sugar:8 jam:15 | norwegian waffles | serving (2)
+Skillingsbolle | flour:45 butter:15 sugar:12 milk:20 sp_cinnamon:1 | bergen cinnamon bun | bun
+Rømmegrøt | sour_cream:80 flour:15 milk:100 sugar:10 sp_cinnamon:0.5 | sour cream porridge | bowl
+`);
+X('Portugal', 'Portuguese', EUR, `
+Pastel de nata | puff_pastry:30 milk:40 egg:15 sugar:12 | portuguese custard tart | tart
+Torrada with butter | bread:80 butter:12 | portuguese toast | serving
+Tosta mista | bread:70 ham_slice:30 cheddar:25 butter:5 | portuguese toastie | sandwich
+Bolo do caco with garlic butter | flour:70 sweet_potato:20 butter:12 garlic:3 | madeira bread | piece
+Sopa de legumes | potato:80 carrots:40 zucchini:40 onion:20 olive_oil:8 water:250 | portuguese vegetable soup | bowl
+Feijoada vegetariana (Portuguese) | kidney:180 carrots:40 cabbage:40 tomato:40 rice:150 | portuguese bean stew veg | plate
+`);
+X('Romania', 'Romanian', EUR, `
+Covrigi | flour:70 sesame:5 | romanian pretzels | piece
+Zacuscă on bread | bread:60 eggplant:50 red_pepper:40 oil:10 | zacusca toast | serving
+Plăcintă cu brânză | flour:60 cottage:60 oil:10 | romanian cheese pie | piece
+Fasole bătută | kidney:180 olive_oil:12 garlic:3 onion:20 | romanian bean dip | portion
+`);
+X('San Marino', 'Sammarinese', EUR, `
+Cassoni | flour:60 spinach:60 olive_oil:8 | filled flatbread san marino | piece
+Bustrengo | cornmeal:30 flour:20 milk:60 apple:40 raisins:10 honey:10 | san marino cake | slice
+`);
+X('Serbia', 'Serbian', EUR, `
+Kifle | flour:50 butter:10 milk:20 | serbian rolls | serving (2)
+Proja | cornmeal:60 feta:25 egg:20 yogurt:30 oil:8 | serbian cornbread | slice
+Ajvar with bread | bread:60 red_pepper:60 eggplant:30 oil:10 | ajvar sandwich | serving
+Kačamak with yogurt | cornmeal:60 water:200 feta:20 yogurt:100 | serbian polenta | bowl
+`);
+X('Slovakia', 'Slovak', EUR, `
+Šúľance with poppy seed | potato:150 flour:40 butter:10 sugar:10 | potato noodles sweet | plate
+Pirohy | flour:60 potato:60 feta:20 butter:8 | slovak pierogi | serving (6)
+Langoš (Slovak) | flour:80 oil:20 garlic:3 cheddar:20 | slovak langos | piece
+`);
+X('Slovenia', 'Slovenian', EUR, `
+Ajdovi žganci | buckwheat:180 butter:10 | buckwheat spoonbread | bowl
+Prekmurska gibanica | phyllo:40 cottage:40 apple:30 walnuts:15 sugar:15 butter:10 | layered cake | slice
+Štruklji | flour:50 cottage:60 butter:10 | slovenian dumplings | portion
+`);
+X('Switzerland', 'Swiss', EUR, `
+Zopf with butter and jam | flour:60 butter:15 milk:20 jam:15 | swiss braided bread | slice (2)
+Raclette with potatoes | swiss:80 potato:200 pickles:20 | raclette | plate
+Cheese fondue (alcohol-free) | swiss:100 bread:80 milk:40 cornstarch:5 | fondue moitie-moitie | serving
+Basler Läckerli | flour:30 honey:20 almonds:10 | basel spice biscuits | serving (2)
+`);
+X('Ukraine', 'Ukrainian', EUR, `
+Varenyky with potato | flour:60 potato:80 onion:20 oil:8 | potato dumplings ukraine | serving (8)
+Varenyky with cherries | flour:60 cherries:80 sugar:10 sour_cream:20 | cherry varenyky | serving (8)
+Pampushky with garlic | flour:60 oil:10 garlic:3 | garlic buns | serving (2)
+Borscht, vegetarian | beets:120 cabbage:60 potato:60 carrots:30 kidney:40 water:250 | vegetarian borshch | bowl
+Kasha with mushrooms | buckwheat:180 mushrooms:60 onion:20 oil:8 | buckwheat mushrooms | plate
+`);
+X('Holy See (Vatican City)', 'Vatican', EUR, `
+Cornetto alla crema | croissant:60 milk:30 egg:10 sugar:8 | cream filled cornetto | pastry
+Pizza bianca | flour:80 olive_oil:15 | roman white pizza | slice
+`);
+// ---- round 3: Caribbean and Central America ----
+X('Antigua and Barbuda', 'Antiguan', NA, `
+Antiguan black pineapple slices | pineapple:200 | black pineapple | serving
+Johnny cakes (Antigua) | flour:60 butter:10 milk:25 oil:12 | antiguan johnny cakes | serving (2)
+`);
+X('Aruba', 'Aruban', TE, `
+Pastechi with cheese | flour:50 oil:15 gouda:30 | aruban pastechi | piece
+Funchi fries | cornmeal:80 water:150 oil:15 | fried funchi | portion
+`);
+X('Barbados', 'Barbadian', NA, `
+Bajan salt bread with cheese | roll:70 cheddar:30 | salt bread and cheese | serving
+Bajan coconut bread | flour:50 coconut_meat:25 sugar:15 butter:10 raisins:10 | barbados sweet bread | slice
+Cou-cou | cornmeal:70 okra:60 water:150 butter:8 | bajan cou cou | portion
+`);
+X('Belize', 'Belizean', NA, `
+Belizean powder buns | flour:50 sugar:15 butter:12 raisins:10 | powder bun | bun
+Garnaches | corn_tortilla:40 oil:10 refried:50 cheddar:15 cabbage:20 | belize garnaches | serving (3)
+Johnny cakes (Belizean) | flour:60 coconut_milk:20 butter:10 | belize johnny cakes | serving (2)
+`);
+X('Bermuda', 'Bermudian', TE, `
+Bermuda Johnny bread | flour:60 butter:10 milk:30 sugar:5 | johnny bread | slice
+Cassava pie (Bermudian, vegetarian) | cassava:120 egg:30 butter:15 sugar:20 | bermuda cassava pie | slice
+`);
+X('Costa Rica', 'Costa Rican', NA, `
+Gallo pinto vegano | rice:150 black_beans:100 red_pepper:20 onion:15 oil:8 | vegan gallo pinto | plate
+Tamal de elote | corn:150 milk:30 sugar:15 butter:8 | sweet corn tamal | piece
+Arreglados | roll:60 kidney:40 cheddar:20 | costa rican snack sandwich | piece
+Agua dulce | brown_sugar:30 water:250 milk:30 | costa rican sugar drink | cup
+`);
+X('Cuba', 'Cuban', NA, `
+Tostada cubana with café con leche | bread:70 butter:12 coffee:60 milk:150 sugar:10 | cuban breakfast | serving
+Congrí vegano | rice:180 black_beans:100 onion:15 green_pepper:20 oil:8 | vegan congri | plate
+Yuca con mojo | cassava_cooked:200 olive_oil:15 garlic:5 lime:8 | yuca mojo | portion
+Pastelito de guayaba | puff_pastry:60 guava:40 sugar:5 | guava pastry | pastry
+Croqueta de queso | cheddar:30 milk:30 flour:15 breadcrumbs:10 oil:10 | cheese croquettes cuba | serving (3)
+`);
+X('Curaçao', 'Curaçaoan', TE, `
+Pan dushi | flour:60 sugar:12 butter:10 | sweet bread curacao | roll
+Kokada (Curaçao) | coconut_meat:40 sugar:25 | curacao coconut sweet | piece
+`);
+X('Dominica', 'Dominican (Dominica)', NA, `
+Dominica bakes with cheese | flour:70 oil:15 cheddar:30 | fried bakes cheese | serving
+Dasheen with coconut | taro:200 coconut_milk:50 | dominica dasheen | plate
+`);
+X('Dominican Republic', 'Dominican', NA, `
+Mangú vegano | green_plantain:200 olive_oil:10 onion:40 vinegar:5 | vegan mangu | plate
+Yaniqueques | flour:60 oil:20 | dominican johnny cakes | serving (2)
+Locrio de berenjena | rice:200 eggplant:100 tomato_paste:15 oil:10 | eggplant rice | plate
+Batida de lechosa | papaya:150 milk:150 sugar:15 | papaya shake | glass
+`);
+X('El Salvador', 'Salvadoran', NA, `
+Pupusas de frijol | masa:120 refried:60 cabbage:40 | bean pupusas | serving (2)
+Pupusas de loroco | masa:120 mozzarella:40 spinach:15 | loroco pupusas | serving (2)
+Pastelitos salvadoreños de papa | masa:60 potato:50 oil:15 | potato pastelitos | serving (3)
+Quesadilla salvadoreña | flour:40 cheddar:30 sugar:20 butter:12 egg:15 sour_cream:20 | salvadoran cheese cake | slice
+`);
+X('Grenada', 'Grenadian', NA, `
+Grenadian bakes | flour:70 oil:15 | grenada bakes | serving (2)
+Callaloo soup (Grenada, vegan) | spinach:120 okra:40 coconut_milk:60 pumpkin:40 water:150 | vegan callaloo soup | bowl
+Nutmeg jam on bread | bread:60 jam:20 | grenada nutmeg jam toast | serving
+`);
+X('Guadeloupe', 'Guadeloupean', TE, `
+Accras de légumes | flour:40 spinach:30 carrots:20 oil:15 | vegetable accras | serving (4)
+Pain au beurre | flour:60 butter:15 sugar:10 | guadeloupe butter bread | slice
+`);
+X('Guatemala', 'Guatemalan', NA, `
+Desayuno chapín | egg_scrambled:100 black_beans:80 plantain_fried:80 cheddar:20 corn_tortilla:50 | guatemalan breakfast | plate
+Atol de elote | corn:100 milk:150 sugar:15 | corn drink | cup
+Tostadas guatemaltecas | taco_shell:30 black_beans:50 tomato:40 onion:10 | guatemalan tostadas | serving (2)
+Plátanos en mole | ripe_plantain:150 dark_choc:15 sesame:5 tomato:30 | plantains in mole | portion
+`);
+X('Haiti', 'Haitian', NA, `
+Diri kole ak pwa | rice:180 kidney:100 oil:10 onion:15 | haitian rice and beans | plate
+Akra (Haitian) | taro:100 flour:10 oil:15 | malanga fritters | serving (4)
+Labouyi bannann | green_plantain:100 milk:150 sugar:15 sp_cinnamon:0.5 | plantain porridge haiti | bowl
+Pen patat | sweet_potato:120 banana:40 coconut_milk:40 sugar:20 | sweet potato pudding haiti | slice
+`);
+X('Honduras', 'Honduran', NA, `
+Baleada sencilla | flour_tortilla:70 refried:60 sour_cream:20 | simple baleada | piece
+Baleada with egg and avocado | flour_tortilla:70 refried:60 egg_scrambled:50 avocado:40 sour_cream:15 | baleada especial | piece
+Pastelitos de perro (vegetarian) | masa:60 potato:50 oil:15 | honduran pastelitos | serving (3)
+`);
+X('Martinique', 'Martinican', TE, `
+Pain coco (Martinique) | flour:50 coconut_meat:20 sugar:12 butter:8 | martinique coconut bread | slice
+Lentilles créoles | lentils:180 onion:20 tomato:30 thyme_fresh:2 oil:8 | creole lentils | bowl
+`);
+X('Nicaragua', 'Nicaraguan', NA, `
+Gallo pinto nicaragüense | rice:150 kidney:100 onion:15 oil:10 | nicaraguan gallo pinto | plate
+Quesillo | corn_tortilla:50 mozzarella:50 sour_cream:30 onion:10 | nicaraguan quesillo | serving
+Rosquillas | cornmeal:40 feta:20 butter:10 egg:10 | corn cheese rings | serving (4)
+`);
+X('Panama', 'Panamanian', NA, `
+Hojaldras | flour:60 oil:15 sugar:5 | panamanian fry bread | piece
+Tortilla de maíz con queso blanco | masa:80 oil:10 feta:30 | panama corn tortilla breakfast | serving
+Patacones panameños | green_plantain:150 oil:15 | panama tostones | serving
+`);
+X('Puerto Rico', 'Puerto Rican', TE, `
+Pan sobao with butter | roll:70 butter:10 | puerto rican bread | roll
+Mallorca | flour:50 butter:12 sugar:12 egg:10 icing_sugar:5 | sweet roll puerto rico | piece
+Alcapurrias de yuca (vegetarian) | cassava:120 oil:15 | yuca fritters | serving (2)
+Arroz con habichuelas | rice:180 kidney:100 tomato_paste:10 oil:8 | rice and beans puerto rico | plate
+`);
+X('Saint Kitts and Nevis', 'Kittitian', NA, `
+Coconut dumplings (Kittitian) | flour:60 coconut_meat:15 water:30 | coconut dumplings | serving (3)
+Spicy plantains (St Kitts) | plantain_fried:150 chili:2 | kittitian plantains | serving
+`);
+X('Saint Lucia', 'Saint Lucian', NA, `
+Accra (Saint Lucia) | salt_cod:40 flour:40 oil:15 | saint lucia accra | serving (4)
+Bakes and cocoa tea | flour:70 oil:15 cocoa_powder:10 milk:150 sugar:12 | st lucian breakfast | serving
+`);
+X('Saint Vincent and the Grenadines', 'Vincentian', NA, `
+Vincy bakes | flour:70 oil:15 | vincentian bakes | serving (2)
+Arrowroot biscuits | tapioca:20 flour:15 butter:8 sugar:8 | svg arrowroot cookies | serving (2)
+`);
+X('The Bahamas', 'Bahamian', NA, `
+Bahamian grits breakfast | cornmeal:60 water:200 butter:10 egg_fried:50 | bahamian grits breakfast | plate
+Coconut tart (Bahamian) | pie_crust:40 coconut_meat:30 sugar:20 | bahamian coconut tart | slice
+`);
+X('Trinidad and Tobago', 'Trinidadian', NA, `
+Sweet bread and cocoa tea | flour:50 coconut_meat:20 sugar:15 butter:10 cocoa_powder:10 milk:150 | trini breakfast | serving
+Channa and aloo | chickpeas:120 potato:100 curry:4 oil:10 | curry channa aloo | bowl
+Vegan doubles | flour:60 oil:15 chickpeas:80 curry:3 tamarind:10 | doubles vegan | serving
+Pumpkin talkari | pumpkin:200 oil:8 garlic:3 | pumpkin choka | portion
+`);
+
 console.log(`everyday dishes left to real measured records: ${preferred.length}`);
 if (process.env.SHOW_PREFERRED) console.log(preferred.join('\n'));
 // ---- write out ----
