@@ -102,6 +102,8 @@ const GROUP_RULES: [FoodGroup, RegExp][] = [
 ];
 /** Dish words that decide the group wherever they appear ("Chicken curry" is a stew, "Apple juice" a drink). */
 const DISH_FIRST: [FoodGroup, RegExp][] = [
+  // Spice blends and pastes are measured by the spoon, whatever word comes first ("Suya spice").
+  ['sauces', /^(?:(?!\bwith\b)[^,])*?(?:\b(spice blend|spice mix|seasoning|curry powder|curry paste|dry rub|(garam|chaat|tandoori|biryani|sambar) masala|panch phoron|herbes de provence|five-spice|dukkah|harissa paste|ginger garlic paste|chimichurri|niter kibbeh|pepper mix)\b|\bspice\b(?! (cake|bun|bread|cookies?|biscuits?|latte)))/i], // only in the name's head: not "Chicken, rotisserie, original seasoning"
   ['protein_powder', /\b(protein powder|whey|casein|mass gainer|protein isolate)\b/i],
   ['beverages', /\b(juices?|smoothies?|shakes?|nectar|latte|(almond|soy|oat|rice|coconut|cashew) milk|milkshake|drink mix)\b/i],
   ['sauces', /\b(salad dressing|dressing|salad oil)\b/i],
@@ -353,7 +355,9 @@ export function unitOptions(f: Food): { key: string; label: string; grams: numbe
 export function startMeasure(f: Food): { unit: string; qty: string; grams: number } {
   const ms = measuresFor(f).filter((m) => m.grams > 0 && m.grams <= 500);
   const head = f.name.toLowerCase().split(/[ ,(]/)[0].replace(/(es|s)$/, '').replace(/[^a-z]/g, '');
-  const pick = ms.find((m) => head.length > 2 && new RegExp(`^1 (medium |large )?${head}`, 'i').test(m.label))
+  // Foods measured by the teaspoon first (spice blends) start at 1 teaspoon.
+  const pick = (/^1 (teaspoon|tsp)$/.test(f.portions?.[0]?.label ?? '') ? ms.find((m) => /^1 (teaspoon|tsp)$/.test(m.label)) : undefined)
+    ?? ms.find((m) => head.length > 2 && new RegExp(`^1 (medium |large )?${head}`, 'i').test(m.label))
     ?? ms.find((m) => /\b(medium|regular)\b/i.test(m.label) && !/slice|cup|tbsp|tsp/i.test(m.label))
     ?? ms.find((m) => /^1 (tbsp|tablespoon)/i.test(m.label) && /honey|syrup|oil|butter|sauce|jam|spread|sugar/i.test(f.name))
     ?? ms.find((m) => /^1 (piece|egg|fillet|breast|thigh|drumstick|wing|serving|portion|cup|bowl)\b/i.test(m.label));

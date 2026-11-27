@@ -12,7 +12,8 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { RECIPES } from './recipes-countries.mjs';
+import { RECIPES, K } from './recipes-countries.mjs';
+import { variantsOf } from './recipe-variants.mjs';
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const dest = join(root, 'public', 'data', 'foods.json');
@@ -37,8 +38,7 @@ let nextId = Math.max(0, ...Object.values(reg.ids).map((id) => Number(id.slice(1
 const idFor = (name) => (reg.ids[name] ??= `r${String(nextId++).padStart(3, '0')}`);
 
 const round = (v, d) => (v == null ? null : Math.round(v * 10 ** d) / 10 ** d);
-const out = [];
-for (const r of RECIPES) {
+function rowFor(r) {
   const parts = r.ingredients.map(([name, grams]) => {
     const row = byName.get(name);
     if (!row) throw new Error(`${r.name}: no record named "${name}"`);
@@ -59,13 +59,26 @@ for (const r of RECIPES) {
   const extra = Array.from({ length: file.extraFields.length }, (_, k) => value((row) => (row[11] ? row[11][k] : null)));
   const name = `${r.name}${r.aliases?.length ? ` (${r.aliases.join(', ')})` : ''}`;
   const note = `${r.cuisine} standard recipe, per ${r.yield} g cooked: ${parts.map((p) => `${p.grams} g ${p.row[1]} [${p.row[10] === 'w' ? 'FAO' : 'USDA'} ${p.row[0]}]`).join('; ')}`;
-  out.push([
+  return [
     idFor(r.name), name, Number(RECIPE_CAT), 'cooked',
     round(base[0], 2), round(base[1], 0), round(base[2], 2), round(base[3], 2), round(base[4], 2),
     r.portions, 'r', extra.map((v) => round(v, 2)), note,
-  ]);
+  ];
 }
+const out = RECIPES.map(rowFor);
 file.foods.push(...out);
+
+// Other versions of each dish (other proteins, vegetarian, vegan) go to a second file that the app
+// loads right after the main one, so the first load and the offline cache stay small.
+const names = new Set([...file.foods.map((row) => row[1].split(' (')[0].toLowerCase()), ...RECIPES.map((r) => r.name.toLowerCase())]);
+const variants = RECIPES.flatMap((r) => variantsOf(r, K, names));
+const more = variants.map((v) => {
+  const row = rowFor(v);
+  row[12] = row[12].replace(' standard recipe,', ` standard recipe (${v.kind === 'protein' ? 'version' : v.kind + ' version'} of ${v.of}),`);
+  return row;
+});
+writeFileSync(join(root, 'public', 'data', 'foods-more.json'), JSON.stringify({ foods: more }));
+console.log(`Added ${more.length} versions: ${['protein', 'vegetarian', 'vegan'].map((k) => `${variants.filter((v) => v.kind === k).length} ${k}`).join(', ')}.`);
 writeFileSync(dest, JSON.stringify(file));
 writeFileSync(REG_FILE, `${JSON.stringify(reg, null, 1)}\n`);
 console.log(`Added ${out.length} standard-recipe dishes.`);

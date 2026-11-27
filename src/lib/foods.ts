@@ -100,7 +100,7 @@ export function loadFoodDb(): Promise<FoodDb> {
         return r.json() as Promise<FoodsFile>;
       })
       .then((file) => {
-        const foods: Food[] = file.foods.filter((r) => !isAlcoholic(r[1], file.categories[r[2]])).map(([key, name, cat, state, protein, kcal, fat, carbs, fiber, portions, src, extra, note]) => {
+        const toFood = ([key, name, cat, state, protein, kcal, fat, carbs, fiber, portions, src, extra, note]: FoodsFile['foods'][number]): Food => {
           const usda = src === 's' || src === 'f';
           // Recipe rows carry their other names in brackets: "Egusi soup (egushi, melon seed soup)".
           const m = src === 'r' ? /^(.*?) \((.*)\)$/.exec(name) : null;
@@ -121,7 +121,18 @@ export function loadFoodDb(): Promise<FoodDb> {
             source: SOURCE_OF[src],
             ...(file.checkNotes?.[`${src}:${key}`] && { checkNote: file.checkNotes[`${src}:${key}`] }),
           };
-        });
+        };
+        const foods: Food[] = file.foods.filter((r) => !isAlcoholic(r[1], file.categories[r[2]])).map(toFood);
+        // Other versions of the dishes (other proteins, vegetarian, vegan) load right after, without holding up the app.
+        void fetch(`${import.meta.env.BASE_URL}data/foods-more.json`)
+          .then((r) => (r.ok ? (r.json() as Promise<Pick<FoodsFile, 'foods'>>) : null))
+          .then((more) => {
+            if (!more?.foods || !loadedById) return;
+            const extra = more.foods.filter((r) => !isAlcoholic(r[1], file.categories[r[2]])).map(toFood).filter((f) => !loadedById!.has(f.id));
+            for (const f of extra) loadedById.set(f.id, f);
+            index = [...(index ?? []), ...extra.map(toIndexed)];
+          })
+          .catch(() => {});
         const byId = new Map(foods.map((f) => [f.id, f]));
         loadedById = byId;
         redirectIds = new Map(Object.entries(file.redirects ?? {}).map(([from, to]) => { const [fs, fk] = from.split(':'); const [ts, tk] = to.split(':'); return [`${ID_PREFIX[fs as SourceCode]}:${fk}`, `${ID_PREFIX[ts as SourceCode]}:${tk}`]; }));

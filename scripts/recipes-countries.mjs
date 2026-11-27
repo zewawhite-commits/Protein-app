@@ -2388,6 +2388,629 @@ Bint al sahn | flour:50 butter:20 egg:15 honey:20 | honey cake yemen | slice
 Shafut | yogurt:150 flour_tortilla:40 cucumber:30 mint:2 | yogurt bread salad | bowl
 `);
 
+
+// ======================= SPICE BLENDS FROM AROUND THE WORLD (for building your own dishes) =======================
+/** Blends made from the single-spice records; measured by the teaspoon. Spices with no record (sumac, star anise, nigella, grains of selim) are left out rather than guessed. */
+Object.assign(K, {
+  sp_allspice: 'Spices, allspice, ground', sp_anise: 'Spices, anise seed', sp_basil: 'Spices, basil, dried', sp_bay: 'Spices, bay leaf', sp_caraway: 'Spices, caraway seed',
+  sp_cardamom: 'Spices, cardamom', sp_celery_seed: 'Spices, celery seed', sp_chili_powder: 'Spices, chili powder', sp_cinnamon: 'Spices, cinnamon, ground', sp_cloves: 'Spices, cloves, ground',
+  sp_coriander: 'Spices, coriander seed', sp_cumin: 'Spices, cumin seed', sp_curry: 'Spices, curry powder', sp_fennel: 'Spices, fennel seed', sp_fenugreek: 'Spices, fenugreek seed',
+  sp_garlic: 'Spices, garlic powder', sp_ginger: 'Spices, ginger, ground', sp_mace: 'Spices, mace, ground', sp_marjoram: 'Spices, marjoram, dried', sp_mustard: 'Spices, mustard seed, ground',
+  sp_nutmeg: 'Spices, nutmeg, ground', sp_onion: 'Spices, onion powder', sp_oregano: 'Spices, oregano, dried', sp_paprika: 'Spices, paprika', sp_pepper: 'Spices, pepper, black',
+  sp_cayenne: 'Spices, pepper, red or cayenne', sp_white_pepper: 'Spices, pepper, white', sp_rosemary: 'Spices, rosemary, dried', sp_sage: 'Spices, sage, ground', sp_tarragon: 'Spices, tarragon, dried',
+  sp_thyme: 'Spices, thyme, dried', sp_turmeric: 'Spices, turmeric, ground', sp_dill: 'Spices, dill weed, dried', sp_parsley: 'Spices, parsley, dried',
+  thyme_fresh: 'Thyme, fresh', crackers: 'Crackers, saltine', spring_onion: 'Onions, spring or scallions (includes tops and bulb), raw', calabash_nutmeg: 'Calabash nutmeg, seed, dried', soumbala: 'African locust bean, fermented (soumbala)',
+});
+const SPICE_PORTIONS = [['1 teaspoon', 2.5], ['1 tablespoon', 7]];
+const PASTE_PORTIONS = [['1 teaspoon', 5], ['1 tablespoon', 15]];
+function SPICES(text, portions) {
+  const before = NEW.length;
+  L('Worldwide spices and seasonings', 'Spice blend', WW, text);
+  for (const r of NEW.slice(before)) r.portions = portions;
+}
+SPICES(`
+Berbere spice blend | sp_cayenne:35 sp_paprika:25 sp_fenugreek:8 sp_coriander:8 sp_ginger:6 sp_cardamom:4 sp_cloves:2 sp_allspice:3 sp_pepper:5 sp_cinnamon:2 salt:2 | berbere; ethiopian spice | 100 g
+Mitmita spice blend | sp_cayenne:60 sp_cardamom:15 sp_cloves:10 salt:15 | mitmita; ethiopian hot spice | 100 g
+Jerk seasoning, dry | sp_allspice:20 sp_thyme:15 sp_cayenne:10 sp_garlic:12 sp_onion:12 brown_sugar:15 sp_pepper:6 sp_cinnamon:4 sp_nutmeg:3 salt:3 | jamaican jerk seasoning; jerk spice rub | 100 g
+Suya spice | peanuts:50 sp_cayenne:15 sp_ginger:10 sp_garlic:8 sp_onion:8 sp_paprika:7 salt:2 | yaji; suya pepper; kuli kuli spice | 100 g
+Ras el hanout spice blend | sp_cumin:15 sp_coriander:15 sp_ginger:12 sp_turmeric:10 sp_cinnamon:10 sp_pepper:8 sp_paprika:10 sp_cardamom:5 sp_allspice:5 sp_nutmeg:5 sp_cloves:5 | ras el hanout; moroccan spice | 100 g
+Za'atar spice blend | sp_thyme:40 sesame:30 sp_oregano:15 sp_marjoram:10 salt:5 | zaatar; zatar; thyme sesame blend | 100 g
+Baharat spice blend | sp_pepper:20 sp_cumin:15 sp_coriander:15 sp_cinnamon:10 sp_cloves:8 sp_paprika:15 sp_cardamom:7 sp_nutmeg:10 | baharat; seven spice; lebanese 7 spice | 100 g
+Five-spice powder | sp_anise:30 sp_cinnamon:25 sp_fennel:25 sp_cloves:10 sp_pepper:10 | chinese five spice | 100 g
+Cajun seasoning | sp_paprika:30 sp_garlic:15 sp_onion:15 sp_cayenne:10 sp_pepper:10 sp_oregano:8 sp_thyme:7 salt:5 | creole seasoning; cajun spice | 100 g
+Italian seasoning | sp_oregano:25 sp_basil:25 sp_thyme:15 sp_rosemary:15 sp_marjoram:15 sp_sage:5 | italian herbs; mixed herbs | 100 g
+Herbes de Provence | sp_thyme:30 sp_rosemary:20 sp_marjoram:20 sp_oregano:15 sp_basil:10 sp_tarragon:5 | provence herbs | 100 g
+Chaat masala | sp_cumin:25 sp_coriander:20 sp_pepper:10 sp_ginger:10 salt:25 sp_cayenne:10 | chaat spice | 100 g
+Tandoori masala | sp_paprika:30 sp_cumin:15 sp_coriander:15 sp_ginger:10 sp_garlic:10 sp_turmeric:5 sp_cayenne:5 sp_cardamom:5 sp_cinnamon:5 | tandoori spice | 100 g
+Panch phoron | sp_cumin:25 sp_fennel:25 sp_fenugreek:25 sp_mustard:25 | bengali five seed | 100 g
+Sambar powder | sp_coriander:30 sp_cayenne:20 sp_cumin:15 sp_fenugreek:10 sp_pepper:10 sp_mustard:5 sp_turmeric:5 red_lentils:5 | sambar masala | 100 g
+Biryani masala | sp_coriander:20 sp_cumin:15 sp_cinnamon:12 sp_cardamom:12 sp_cloves:8 sp_pepper:10 sp_nutmeg:5 sp_mace:5 sp_bay:5 sp_ginger:8 | biryani spice | 100 g
+Mixed spice | sp_cinnamon:40 sp_nutmeg:20 sp_allspice:20 sp_ginger:10 sp_cloves:10 | british mixed spice; pudding spice | 100 g
+Shawarma spice blend | sp_cumin:20 sp_coriander:15 sp_paprika:20 sp_turmeric:10 sp_cinnamon:10 sp_pepper:10 sp_garlic:10 sp_cloves:5 | shawarma seasoning | 100 g
+Adobo seasoning, dry | sp_garlic:30 sp_onion:15 sp_oregano:15 sp_pepper:10 sp_turmeric:5 salt:25 | latin adobo seasoning; all purpose seasoning | 100 g
+Seafood seasoning | sp_celery_seed:30 sp_paprika:25 sp_mustard:10 sp_pepper:10 sp_cayenne:5 sp_bay:5 sp_ginger:5 sp_mace:5 salt:5 | old bay style; crab boil seasoning | 100 g
+Dukkah | hazelnut:40 sesame:25 sp_coriander:15 sp_cumin:10 sp_pepper:5 salt:5 | duqqa; egyptian nut spice | 100 g
+Pepper soup spice | calabash_nutmeg:40 sp_ginger:20 sp_cayenne:20 sp_cloves:10 sp_pepper:10 | nigerian pepper soup seasoning; ehuru blend | 100 g
+Curry powder, Caribbean | sp_turmeric:30 sp_coriander:25 sp_cumin:15 sp_fenugreek:8 sp_allspice:7 sp_ginger:7 sp_pepper:5 sp_cayenne:3 | jamaican curry powder; trini curry | 100 g
+Garam masala, Pakistani | sp_cumin:20 sp_coriander:20 sp_cardamom:15 sp_pepper:15 sp_cinnamon:10 sp_cloves:10 sp_nutmeg:5 sp_bay:5 | pakistani garam masala | 100 g
+Chili lime seasoning | sp_chili_powder:50 sp_cayenne:10 sp_garlic:10 salt:30 | tajin style | 100 g
+Taco spice mix, homemade | sp_chili_powder:35 sp_cumin:25 sp_paprika:15 sp_garlic:8 sp_onion:8 sp_oregano:5 salt:4 | homemade taco seasoning | 100 g
+Barbecue dry rub | brown_sugar:30 sp_paprika:25 sp_garlic:10 sp_onion:10 sp_pepper:10 sp_chili_powder:10 salt:5 | bbq rub | 100 g
+Steak seasoning | sp_pepper:35 sp_garlic:20 sp_onion:15 sp_coriander:10 sp_paprika:10 salt:10 | montreal style steak spice | 100 g
+Pumpkin spice, homemade | sp_cinnamon:50 sp_ginger:20 sp_nutmeg:15 sp_cloves:10 sp_allspice:5 | pumpkin pie spice homemade | 100 g
+Soumbala seasoning | soumbala:80 sp_cayenne:10 salt:10 | dawadawa; iru; netetu seasoning | 100 g
+`, SPICE_PORTIONS);
+SPICES(`
+Harissa paste | chili:50 olive_oil:20 garlic:10 sp_cumin:5 sp_coriander:5 sp_caraway:5 salt:5 | harissa; north african chili paste | 100 g
+Chimichurri | parsley:40 olive_oil:40 vinegar:10 garlic:5 sp_oregano:3 sp_cayenne:2 | chimichurri sauce | 100 g
+Green seasoning, Caribbean | coriander:30 spring_onion:25 thyme_fresh:10 garlic:15 green_pepper:20 | trini green seasoning; bajan seasoning | 100 g
+Jerk marinade, wet | onion:30 chili:15 sp_allspice:5 sp_thyme:3 soy:15 lime:10 brown_sugar:7 garlic:5 oil:10 | jerk paste | 100 g
+Thai red curry paste | chili:35 onion:20 garlic:12 lemongrass:12 ginger:8 dried_shrimp:5 sp_coriander:4 sp_cumin:2 salt:2 | red curry paste | 100 g
+Ginger garlic paste | ginger:50 garlic:45 oil:5 | adrak lehsun paste | 100 g
+Niter kibbeh | butter:90 sp_fenugreek:2 sp_cumin:2 sp_cardamom:2 sp_turmeric:2 garlic:2 | ethiopian spiced butter | 100 g
+Pepper mix, Nigerian | chili:40 red_pepper:40 onion:20 | ata lilo; blended pepper | 100 g
+`, PASTE_PORTIONS);
+
+// ======================= MORE BREAKFASTS AND SNACKS =======================
+L('Worldwide breakfast', 'Breakfast', WW, `
+Oatmeal with dates and walnuts | oats:50 milk:200 dates:20 walnuts:10 | date porridge | bowl
+Oatmeal with mango | oats:50 milk:200 mango:80 | mango porridge | bowl
+Oatmeal with almond butter | oats:50 milk:200 almonds:15 banana:50 | almond oats | bowl
+Oatmeal with cocoa and peanut butter | oats:50 milk:200 cocoa_powder:6 peanut_butter:15 | chocolate pb oats | bowl
+Oatmeal with pumpkin and spice | oats:50 milk:180 pumpkin:60 sp_cinnamon:1 maple:10 | pumpkin spice oats | bowl
+Oatmeal with coconut milk | oats:50 coconut_milk:80 water:150 banana:50 | coconut porridge | bowl
+Oatmeal with soy milk and berries | oats:50 soy_milk:200 blueberries:50 | vegan berry oats | bowl
+Oatmeal with egg whites | oats:50 water:200 egg_white:100 blueberries:40 | egg white oats | bowl
+Oatmeal with yogurt and honey | oats:50 milk:150 yogurt:80 honey:10 | yogurt porridge | bowl
+Steel-cut oats with milk | oats:50 milk:150 water:100 | steel cut porridge | bowl
+Overnight oats with mango and coconut | oats:50 coconut_milk:60 yogurt:80 mango:60 | tropical overnight oats | jar
+Overnight oats with chocolate | oats:50 milk:120 cocoa_powder:6 yogurt:80 maple:10 | chocolate overnight oats | jar
+Overnight oats with apple pie spice | oats:50 milk:120 apple:60 sp_cinnamon:1 yogurt:60 | apple pie overnight oats | jar
+Overnight oats with chia and berries | oats:40 chia:10 milk:150 raspberries:50 | chia overnight oats | jar
+Banana oat pancakes | oats:50 banana:80 egg:50 | 3 ingredient pancakes | stack (3)
+Oat waffles | oats:40 flour:20 egg:30 milk:60 oil:5 | oatmeal waffles | serving (2)
+Buttermilk pancakes | flour:60 buttermilk:100 egg:25 butter:10 sugar:8 | buttermilk pancake stack | stack (3)
+Blueberry pancakes | flour:60 milk:90 egg:25 blueberries:50 butter:8 | blueberry pancake stack | stack (3)
+Chocolate chip pancakes | flour:60 milk:90 egg:25 dark_choc:15 butter:8 | choc chip pancakes | stack (3)
+Vegan pancakes | flour:60 soy_milk:100 oil:8 sugar:8 | egg-free pancakes | stack (3)
+Cottage cheese pancakes | cottage:100 egg:50 oats:30 | high protein pancakes | stack (3)
+Sweet potato pancakes | sweet_potato:100 egg:50 flour:20 | sweet potato flapjacks | stack (3)
+Breakfast quesadilla | flour_tortilla:70 egg_scrambled:100 cheddar:25 salsa:20 | egg quesadilla | quesadilla
+Breakfast tacos | corn_tortilla:60 egg_scrambled:100 cheddar:20 salsa:30 | egg tacos | serving (2)
+Breakfast wrap with egg and spinach | flour_tortilla:70 egg_scrambled:100 spinach:30 feta:20 | spinach egg wrap | wrap
+Egg muffins with vegetables | egg:150 red_pepper:30 spinach:20 onion:15 cheddar:15 | egg bites | serving (3)
+Shakshuka with bread | egg:100 tomato_canned:150 red_pepper:40 onion:30 olive_oil:10 bread:60 | eggs in tomato sauce | plate
+Green shakshuka | egg:100 spinach:100 kale:50 feta:20 olive_oil:10 | green eggs skillet | plate
+Eggs and avocado on rye | rye_bread:60 egg_poached:100 avocado:60 | avocado eggs rye | plate
+Smoked salmon and scrambled eggs | egg_scrambled:120 smoked_salmon:50 bread:40 | salmon eggs | plate
+Turkey sausage and eggs | turkey_mince:80 egg_scrambled:100 | turkey breakfast | plate
+Egg fried bread | bread:60 egg:50 oil:10 | eggy bread savory | serving (2 slices)
+Steak and eggs | beef_sirloin:150 egg_fried:100 | steak eggs | plate
+Hash with eggs and peppers | potato:150 red_pepper:40 onion:30 egg_fried:100 oil:10 | breakfast hash | plate
+Sweet potato hash | sweet_potato:150 onion:30 egg_fried:100 oil:10 | sweet potato breakfast hash | plate
+Avocado and tomato toast | bread:60 avocado:60 tomato:50 | avo tomato toast | serving (2 slices)
+Ricotta toast with honey | bread:60 ricotta:60 honey:10 | ricotta honey toast | serving (2 slices)
+Cream cheese and jam toast | bread:60 cream_cheese:30 jam:15 | cream cheese toast | serving (2 slices)
+Hummus toast | bread:60 hummus:50 cucumber:30 | hummus on toast | serving (2 slices)
+Banana toast with cinnamon | bread:60 banana:80 sp_cinnamon:1 honey:8 | banana cinnamon toast | serving (2 slices)
+Tomato toast | bread:60 tomato:80 olive_oil:8 | tomato on toast | serving (2 slices)
+Sardines on toast | bread:60 sardine:80 | sardine toast | plate
+Peanut butter bagel with banana | bagel:100 peanut_butter:25 banana:60 | pb banana bagel | bagel
+Bagel with egg and avocado | bagel:100 egg_fried:50 avocado:40 | avocado egg bagel | bagel
+Bagel with turkey and cheese | bagel:100 turkey:50 swiss:20 | turkey bagel | bagel
+Bagel with tuna | bagel:100 tuna:70 mayo:15 | tuna bagel | bagel
+Cinnamon raisin bagel with butter | bagel:100 raisins:15 butter:10 | raisin bagel | bagel
+Bagel with jam | bagel:100 jam:25 | jam bagel | bagel
+Everything bagel with cream cheese | bagel:100 sesame:5 cream_cheese:30 | everything bagel | bagel
+English muffin with peanut butter | english_muffin:60 peanut_butter:20 | pb english muffin | muffin
+English muffin with egg | english_muffin:60 egg_fried:50 | egg muffin | muffin
+Croissant with ham and egg | croissant:60 ham_slice:30 egg_fried:50 | breakfast croissant | croissant
+Croissant with chocolate spread | croissant:60 nutella:20 | chocolate croissant spread | croissant
+Granola with milk and banana | granola:50 milk:200 banana:60 | granola banana | bowl
+Granola with yogurt and berries | granola:40 greek_yogurt:150 blueberries:40 strawberries:40 | berry granola bowl | bowl
+Muesli with yogurt | oats:40 raisins:10 almonds:10 yogurt:150 | muesli yogurt | bowl
+Cornflakes with banana | cornflakes:30 milk:200 banana:60 | cereal and banana | bowl
+Bran-style cereal with milk | oats:30 raisins:15 milk:200 | bran cereal | bowl
+Rice porridge with egg | rice:100 water:200 egg:50 soy:5 | savory rice porridge | bowl
+Millet porridge | millet:150 milk:100 sugar:8 | millet breakfast porridge | bowl
+Quinoa porridge with berries | quinoa:120 milk:120 blueberries:40 maple:8 | quinoa berry porridge | bowl
+Buckwheat porridge with milk | buckwheat:150 milk:120 butter:5 | grechka with milk | bowl
+Teff porridge | teff:150 milk:100 honey:8 | teff breakfast | bowl
+Sorghum porridge | sorghum:50 water:200 milk:60 sugar:8 | sorghum breakfast porridge | bowl
+Amaranth porridge | amaranth:150 milk:100 honey:8 | amaranth breakfast | bowl
+Chia pudding with mango | chia:30 coconut_milk:60 milk:120 mango:60 | mango chia | jar
+Chia pudding with berries | chia:30 milk:180 raspberries:40 honey:8 | berry chia pudding | jar
+Greek yogurt with granola and honey | greek_yogurt:170 granola:30 honey:10 | yogurt granola honey | bowl
+Skyr bowl with fruit | greek_yogurt:170 banana:50 strawberries:40 | high protein yogurt bowl | bowl
+Cottage cheese with tomato and pepper | cottage:150 tomato:60 sp_pepper:0.5 | savory cottage cheese | bowl
+Cottage cheese on toast | bread:60 cottage:100 | cottage cheese toast | serving (2 slices)
+Fruit plate | apple:80 orange:100 banana:80 grapes:60 | breakfast fruit | plate
+Papaya with lime | papaya:200 lime:5 | papaya breakfast | plate
+Melon and yogurt | cantaloupe:150 yogurt:100 | melon yogurt | bowl
+Grapefruit-style citrus bowl | orange:200 honey:5 | citrus breakfast bowl | bowl
+Breakfast smoothie with oats | oats:30 banana:80 milk:200 peanut_butter:10 | oat breakfast shake | glass
+Protein smoothie bowl | banana:100 greek_yogurt:150 blueberries:50 granola:20 | protein bowl | bowl
+Tofu breakfast burrito | flour_tortilla:70 tofu:100 black_beans:50 salsa:30 avocado:30 | vegan breakfast burrito | burrito
+Vegan banana oat muffins | oats:30 flour:20 banana:50 maple:10 oil:8 | egg-free oat muffins | muffin
+Peanut butter oat bars | oats:40 peanut_butter:20 honey:10 | breakfast bars | bar
+Breakfast cookies | oats:30 banana:40 raisins:10 peanut_butter:10 | oat cookies breakfast | serving (2)
+Zucchini bread | flour:35 zucchini:30 sugar:18 oil:12 egg:12 | courgette loaf | slice
+Pumpkin bread | flour:35 pumpkin:35 sugar:20 oil:12 egg:12 sp_cinnamon:1 | pumpkin loaf | slice
+Cinnamon raisin toast | bread:60 raisins:10 butter:8 sp_cinnamon:1 | raisin toast | serving (2 slices)
+Sausage biscuit | flour:50 butter:15 buttermilk:30 sausage:50 | breakfast biscuit sandwich | biscuit
+Egg and cheese biscuit | flour:50 butter:15 buttermilk:30 egg_fried:50 cheddar:20 | egg cheese biscuit | biscuit
+`);
+L('Worldwide snacks and sides', 'Snack', WW, `
+Hummus with pita | hummus:80 pita:60 | pita and hummus | serving
+Hummus with vegetables | hummus:80 carrots_raw:60 cucumber:60 red_pepper:50 | crudites and hummus | serving
+Tzatziki with pita | yogurt:80 cucumber:30 garlic:2 olive_oil:5 pita:60 | pita and tzatziki | serving
+Baba ganoush with pita | eggplant:120 tahini:15 olive_oil:8 lemon:5 pita:60 | eggplant dip pita | serving
+Guacamole with vegetables | guacamole:80 carrots_raw:60 cucumber:60 | veggie guac | serving
+Cheese cubes | cheddar:40 | cheddar cubes | serving
+Cheese and apple | cheddar:30 apple:120 | apple and cheese | serving
+Cheese and grapes | cheddar:30 grapes:100 | grapes and cheese | serving
+String cheese | mozzarella:28 | mozzarella stick snack | stick
+Crackers with peanut butter | crackers:25 peanut_butter:20 | pb crackers | serving
+Crackers with hummus | crackers:25 hummus:40 | crackers and hummus | serving
+Rice cakes with avocado | rice_cake:20 avocado:50 | avocado rice cake | serving (2)
+Rice cakes with cottage cheese | rice_cake:20 cottage:60 | cottage rice cake | serving (2)
+Rice cake with chocolate spread | rice_cake:20 nutella:15 | chocolate rice cake | serving (2)
+Almonds, handful | almonds:30 | almonds | handful (30 g)
+Cashews, handful | cashews:30 | cashew nuts | handful (30 g)
+Peanuts, handful | peanuts:30 | roasted peanuts | handful (30 g)
+Walnuts, handful | walnuts:30 | walnut halves | handful (30 g)
+Pistachios, handful | pistachio:30 | pistachio nuts | handful (30 g)
+Spiced roasted nuts | almonds:15 cashews:15 peanuts:10 oil:3 sp_paprika:0.5 | spiced nuts | handful (43 g)
+Dried fruit mix | raisins:20 apricot_dried:20 dates:20 | dried fruit | handful (60 g)
+Dates with peanut butter | dates:40 peanut_butter:15 | stuffed dates | serving (3)
+Dates with almonds | dates:40 almonds:10 | almond stuffed dates | serving (3)
+Banana and nuts | banana:120 walnuts:15 | banana walnut snack | serving
+Orange slices | orange:150 | orange | serving
+Apple slices with cinnamon | apple:150 sp_cinnamon:0.5 | cinnamon apple | serving
+Frozen grapes | grapes:150 | grapes snack | cup
+Berries bowl | strawberries:80 blueberries:60 raspberries:40 | mixed berries | bowl
+Fruit skewers | strawberries:50 pineapple:50 grapes:50 melon_seed:0 | fruit kebabs | serving (3)
+Yogurt with berries | yogurt:150 blueberries:50 | berry yogurt | pot
+Greek yogurt with honey | greek_yogurt:170 honey:12 | honey greek yogurt | pot
+Kefir with fruit | kefir:200 strawberries:50 | kefir fruit | glass
+Protein yogurt bowl with nuts | greek_yogurt:170 almonds:15 | yogurt and almonds | bowl
+Hard boiled eggs with salt | egg_boiled:100 salt:0.5 | two boiled eggs | serving (2)
+Egg and cheese snack plate | egg_boiled:50 cheddar:25 cucumber:50 | protein snack box | plate
+Turkey roll-ups | turkey:60 cheddar:20 lettuce:10 | turkey cheese roll | serving (3)
+Ham and cheese roll-ups | ham_slice:50 swiss:20 | ham roll ups | serving (3)
+Tuna with crackers | tuna:80 crackers:25 | tuna crackers | serving
+Edamame with chili | edamame:150 sp_cayenne:0.5 salt:1 | spicy edamame | bowl
+Roasted seaweed snack | laver:5 sesame_oil:1 | seaweed snack | pack
+Kale chips | kale_raw:60 olive_oil:5 salt:0.5 | baked kale crisps | bowl
+Baked sweet potato chips | sweet_potato:120 oil:6 | sweet potato crisps | bowl
+Plantain chips | green_plantain:100 oil:15 salt:1 | chifles; plantain crisps | bag
+Cassava chips | cassava:100 oil:15 salt:1 | yuca chips | bag
+Pita chips | pita:50 olive_oil:5 | baked pita crisps | serving
+Homemade tortilla chips | corn_tortilla:60 oil:10 salt:1 | baked tortilla chips | serving
+Air-popped popcorn | popcorn:25 | plain popcorn | bowl
+Sweet and salty popcorn | popcorn:25 sugar:8 butter:5 salt:0.5 | kettle corn | bowl
+Cinnamon popcorn | popcorn:25 butter:5 sugar:5 sp_cinnamon:0.5 | cinnamon sugar popcorn | bowl
+Chocolate rice cakes | rice_cake:20 dark_choc:15 | chocolate topped rice cake | serving (2)
+Dark chocolate squares | dark_choc:25 | dark chocolate | serving (25 g)
+Chocolate almonds | almonds:20 dark_choc:15 | choc almonds | handful
+Peanut butter balls | peanut_butter:30 oats:20 honey:10 | pb bites | serving (3)
+Coconut energy balls | dates:30 coconut_meat:15 almonds:15 | coconut bliss balls | serving (3)
+Protein bar, homemade | oats:30 peanut_butter:20 greek_yogurt:30 honey:10 | homemade protein bar | bar
+Granola bites | granola:40 peanut_butter:10 | granola clusters | serving
+Banana bread slice with butter | flour:35 banana:40 sugar:15 butter:15 egg:10 | buttered banana bread | slice
+Toast with honey | bread:60 honey:15 butter:5 | honey toast | serving (2 slices)
+Mini pizza on pita | pita:60 marinara:30 mozzarella:30 | pita pizza | piece
+Cheese quesadilla snack | flour_tortilla:40 cheddar:30 | mini quesadilla | piece
+Pigs in blankets | sausage:60 puff_pastry:30 | sausage rolls mini | serving (4)
+Chicken wings, baked | wing:150 | baked wings | serving (5)
+Spicy chicken bites | chicken_breast:100 flour:10 oil:8 sp_cayenne:1 | chicken bites | serving
+Meatballs snack | beef_mince:100 breadcrumbs:10 egg:10 | cocktail meatballs | serving (5)
+Shrimp skewers | shrimp:100 olive_oil:5 garlic:2 | grilled prawn skewers | serving (2)
+Falafel with tahini | chickpeas:100 flour:10 oil:15 tahini:15 | falafel snack | serving (4)
+Samosas, vegetable | flour:50 potato:60 peas:20 oil:15 | veg samosa | serving (2)
+Spring rolls, chicken | flour:40 chicken_mince:40 cabbage:30 carrots:15 oil:12 | chicken spring rolls | serving (3)
+Vegetable pakora | chickpea_flour:40 onion:40 spinach:20 potato:30 oil:15 | bhaji fritters | serving (4)
+Corn fritters | corn_canned:80 flour:25 egg:20 oil:12 | sweetcorn fritters | serving (3)
+Zucchini fritters | zucchini:120 flour:20 egg:20 feta:15 oil:12 | courgette fritters | serving (3)
+Potato croquettes | potato:120 flour:10 egg:15 breadcrumbs:15 oil:12 | croquettes | serving (3)
+Cheese straws | puff_pastry:40 cheddar:20 | cheese twists | serving (3)
+Pretzels, soft | flour:80 butter:5 salt:1 | soft pretzel | pretzel
+Bruschetta with mushrooms | baguette:60 mushrooms:60 olive_oil:8 garlic:2 | mushroom crostini | serving (2)
+Caprese skewers | mozzarella:50 tomato:60 basil:2 balsamic:5 | caprese bites | serving (4)
+Stuffed peppers with cheese | red_pepper:120 cream_cheese:40 | stuffed mini peppers | serving
+Cucumber bites with cream cheese | cucumber:100 cream_cheese:30 | cucumber rounds | serving
+Pickles | pickles:60 | dill pickles | serving
+Olives | olives:40 | marinated olives | serving
+Coconut chunks | coconut_meat:50 | fresh coconut | serving
+Sugarcane sticks | sugarcane:150 | sugar cane | serving
+Roasted corn | corn:150 | grilled corn | cob
+Boiled peanuts | peanuts:60 water:40 salt:1 | salted boiled peanuts | serving
+Roasted plantain | ripe_plantain:150 | roast plantain | serving
+`);
+// ---- breakfasts and snacks country by country ----
+X('Nigeria', 'Nigerian', AF, `
+Akara and ogi | cowpeas:120 oil:20 onion:15 cornmeal:40 water:200 sugar:8 | akara and pap; akara and akamu | plate
+Bread and egg (Nigerian) | bread:80 egg:100 onion:15 tomato:20 oil:8 | bread and fried egg | plate
+Yam and egg sauce | yam:250 egg:100 tomato:60 onion:20 oil:12 | boiled yam and egg | plate
+Plantain and egg | plantain_fried:150 egg_scrambled:100 | dodo and egg | plate
+Custard and akara | milk:150 cornstarch:20 sugar:10 cowpeas:100 oil:15 | custard with akara | plate
+Moi moi and ogi | cowpeas:120 oil:12 red_pepper:20 cornmeal:40 water:200 | moin moin and pap; moi moi and akamu | plate
+Agege bread with butter | bread:120 butter:10 | agege bread | serving (2 slices)
+Bread and beans | bread:80 cowpeas:150 palm_oil:12 | ewa agoyin and bread | plate
+Puff puff | flour:60 sugar:12 oil:20 water:35 | puff-puff | serving (4)
+Chin chin | flour:50 sugar:12 butter:8 egg:8 oil:12 | chinchin | handful (50 g)
+Plantain chips (Nigerian) | green_plantain:100 oil:15 | ipekere | bag
+Kuli kuli | peanuts:50 oil:5 | groundnut cake | portion
+Coconut candy | coconut_meat:50 sugar:25 | coconut sweet | serving (3)
+Boiled groundnuts | peanuts:60 water:40 salt:1 | boiled peanuts nigeria | serving
+Roasted corn and coconut | corn:150 coconut_meat:40 | corn and coconut | serving
+Roasted corn and ube | corn:150 avocado:60 | corn and pear | serving
+Meat pie (Nigerian) | flour:60 butter:20 beef_mince:40 potato:20 carrots:10 | nigerian meat pie | pie
+Fish roll | flour:50 oil:15 sardine:30 | nigerian fish roll | roll
+Sausage roll (Nigerian) | flour:50 butter:15 sausage:30 | gala style sausage roll | roll
+Buns (Nigerian) | flour:60 sugar:12 oil:15 egg:10 | nigerian buns | serving (2)
+Egg roll (Nigerian) | flour:50 oil:15 egg_boiled:50 sugar:5 | nigerian egg roll | roll
+Zobo with pineapple | roselle:10 pineapple:60 sugar:20 water:250 | zobo drink | glass
+Kunu | millet:40 ginger:3 sugar:15 water:250 | kunu zaki | glass
+Tiger nut drink | coconut_meat:20 dates:20 water:250 | kunun aya | glass
+`);
+X('Ghana', 'Ghanaian', AF, `
+Koko with bread | millet:40 water:250 sugar:12 bread:60 | hausa koko and bread | bowl
+Tea bread with egg | bread:80 egg_fried:50 | ghana breakfast | plate
+Oblayo | cornmeal:50 water:200 sugar:10 milk:50 | corn porridge ghana | bowl
+Bofrot | flour:60 sugar:12 oil:20 | ghana doughnut | serving (3)
+Plantain chips (Ghanaian) | green_plantain:100 oil:15 | chips ghana | bag
+Nkate cake | peanuts:40 sugar:25 | peanut brittle ghana | piece
+Kose | cowpeas:100 oil:15 onion:15 | koose | serving (4)
+Ghana meat pie | flour:60 butter:20 beef_mince:40 onion:10 | ghana pie | pie
+Roasted plantain with peanuts | ripe_plantain:150 peanuts:30 | kofi brokeman | serving
+Asaana | corn:50 sugar:20 water:250 | caramelized corn drink | glass
+`);
+X('Kenya', 'Kenyan', AF, `
+Mandazi with chai | flour:60 sugar:10 coconut_milk:20 oil:15 black_tea:150 milk:100 | chai and mandazi | serving
+Uji | millet:40 water:250 sugar:10 lemon:3 | kenyan porridge | bowl
+Smocha | flour:50 oil:10 sausage:50 tomato:20 onion:10 | chapati sausage roll | roll
+Rolex (East African) | flour:60 oil:10 egg:100 cabbage:30 tomato:20 | chapati egg roll | roll
+Bhajia | potato:150 chickpea_flour:25 oil:15 | kenyan potato bhajia | portion
+Mutura snack | beef_mince:80 liver:20 onion:10 | street sausage | portion
+Viazi karai | potato:150 chickpea_flour:20 oil:15 turmeric:1 | battered potatoes | portion
+Roasted maize | corn:150 lemon:3 sp_cayenne:0.5 | mahindi choma | cob
+Samosa (Kenyan) | flour:40 beef_mince:50 onion:15 oil:15 | kenyan samosa | serving (2)
+`);
+X('Ethiopia', 'Ethiopian', AF, `
+Chechebsa | flour:80 butter:20 chili_powder:2 honey:10 | kita firfir | plate
+Ful (Ethiopian) | fava:200 tomato:30 onion:20 butter:10 egg:50 | ethiopian ful breakfast | plate
+Enkulal firfir | egg:120 tomato:40 onion:30 butter:10 chili:3 | ethiopian scrambled eggs | plate
+Kolo | sorghum:40 peanuts:20 | roasted barley snack | handful
+Dabo kolo | flour:40 oil:5 sugar:3 sp_cayenne:0.5 | ethiopian crunchy snack | handful
+Sambusa (Ethiopian) | flour:40 lentils:50 onion:15 oil:15 | lentil sambusa | serving (2)
+`);
+X('South Africa', 'South African', AF, `
+Mieliepap with milk and sugar | cornmeal:60 water:200 milk:80 sugar:10 | breakfast pap | bowl
+Maltabella-style sorghum porridge | sorghum:50 water:200 milk:80 sugar:10 | sorghum breakfast | bowl
+Rusks with coffee | flour:40 butter:12 sugar:10 buttermilk:15 coffee:200 milk:30 | beskuit | serving (2 rusks)
+Boerewors roll | sausage:100 roll:70 onion:20 tomato:20 | boerie roll | roll
+Vetkoek with apricot jam | flour:70 oil:20 jam:20 | vetkoek and jam | serving
+Droëwors | beef:40 | dried sausage | portion (40 g)
+Bunny chow, quarter | bread:150 chicken_thigh:100 potato:50 curry:4 oil:10 | quarter bunny | serving
+`);
+X('Jamaica', 'Jamaican', NA, `
+Callaloo and boiled dumplings | spinach:120 onion:15 oil:8 flour:60 water:30 | jamaican breakfast callaloo | plate
+Ackee and saltfish with fried dumplings | ackee:120 salt_cod:80 onion:20 oil:10 flour:70 | jamaican national breakfast | plate
+Mackerel rundown with green banana | mackerel:100 coconut_milk:60 green_plantain:150 | rundown breakfast | plate
+Liver and onions with dumplings | liver:120 onion:40 oil:8 flour:60 | jamaican liver breakfast | plate
+Fried plantain and eggs | plantain_fried:150 egg_fried:100 | plantain breakfast | plate
+Oats porridge (Jamaican) | oats:50 milk:150 condensed:20 sp_nutmeg:0.5 sp_cinnamon:0.5 | jamaican oats | bowl
+Banana porridge (Jamaican) | green_plantain:100 milk:150 condensed:20 sp_nutmeg:0.5 | green banana porridge | bowl
+Plantain porridge | green_plantain:100 milk:150 condensed:20 sp_cinnamon:0.5 | jamaican plantain porridge | bowl
+Fried bread and butter | bread:80 butter:10 | hard dough fried | serving (2 slices)
+Jamaican spice bun with cheese | flour:60 molasses:15 raisins:15 brown_sugar:10 cheddar:30 | bun and cheese | serving
+Coconut drops | coconut_meat:40 brown_sugar:25 ginger:2 | jamaican coconut drops | piece
+Tamarind balls | tamarind:30 sugar:25 | tambrin balls | serving (2)
+Peanut drops | peanuts:30 brown_sugar:20 | jamaican peanut brittle | piece
+Banana chips (Jamaican) | green_plantain:100 oil:15 | jamaican banana chips | bag
+Toto | flour:40 coconut_meat:20 brown_sugar:20 butter:10 | jamaican coconut cake | piece
+Coconut water with jelly | coconut_water:300 coconut_meat:40 | jelly coconut | coconut
+`);
+X('Trinidad and Tobago', 'Trinidadian', NA, `
+Doubles with channa | flour:60 oil:15 chickpeas:80 curry:3 | trini doubles | serving
+Sada roti with tomato choka | flour:80 water:40 tomato:100 onion:15 oil:8 | sada roti and choka | plate
+Sada roti with baigan choka | flour:80 water:40 eggplant:150 oil:8 garlic:3 | roti and baigan choka | plate
+Saheena | spinach:40 chickpea_flour:40 flour:15 oil:15 | dasheen fritters | serving (3)
+Kurma (Trinidad) | flour:50 sugar:20 butter:10 | trini kurma sweet | serving
+Tamarind ball (Trinidad) | tamarind:30 sugar:25 | trini tamarind ball | serving (2)
+`);
+X('Canada', 'Canadian', NA, `
+Back bacon and eggs | pork_loin:80 egg_fried:100 bread:40 | peameal breakfast | plate
+Maple oatmeal | oats:50 milk:200 maple:15 | maple porridge | bowl
+Blueberry bannock | flour:60 butter:10 milk:30 blueberries:30 | berry bannock | piece
+Maple butter tart | pie_crust:30 brown_sugar:20 butter:8 maple:10 egg:8 raisins:8 | mini butter tart | tart
+Ketchup chips-style crisps | potato:80 oil:15 ketchup:5 | ketchup crisps homemade | bag
+Timbit-style doughnut holes | flour:30 sugar:8 oil:10 | doughnut holes | serving (4)
+`);
+X('United States of America', 'American', NA, `
+Bacon, egg and cheese sandwich | roll:70 bacon:20 egg_fried:50 cheddar:20 | bec sandwich; bodega breakfast | sandwich
+Sausage, egg and cheese biscuit | flour:50 butter:15 buttermilk:30 sausage:50 egg_fried:50 cheddar:20 | sec biscuit | biscuit
+Denver omelette | egg:120 ham:40 green_pepper:30 onion:20 cheddar:20 butter:8 | western omelet | omelette
+Eggs Benedict | english_muffin:60 ham_slice:40 egg_poached:100 butter:20 egg:15 | eggs benny | plate
+Eggs Florentine | english_muffin:60 spinach:60 egg_poached:100 butter:20 egg:15 | eggs florentine | plate
+Breakfast skillet | potato:150 sausage:50 egg_fried:100 cheddar:25 onion:20 | skillet breakfast | plate
+Grits and eggs | cornmeal:50 water:200 butter:10 egg_scrambled:100 | grits breakfast | plate
+Cheese grits | cornmeal:50 water:180 cheddar:30 butter:10 | cheesy grits | bowl
+Chicken biscuit | flour:50 butter:15 buttermilk:30 chicken_fried:80 | fried chicken biscuit | biscuit
+Pop-tart-style toaster pastry | pie_crust:40 jam:20 icing_sugar:8 | toaster pastry | pastry
+Peanut butter crackers | crackers:25 peanut_butter:20 | pb crackers sandwich | pack
+Ants on a log with raisins | celery_raw:100 peanut_butter:30 raisins:15 | ants on a log | serving
+Chex-style snack mix | cornflakes:25 peanuts:15 crackers:10 butter:8 worcestershire:2 | party mix | cup
+Buffalo cauliflower bites | cauliflower:150 flour:15 oil:12 sp_cayenne:1 | cauliflower wings | serving
+Jalapeño poppers | green_pepper:100 cream_cheese:40 cheddar:15 breadcrumbs:10 | poppers | serving (4)
+Pigs in a blanket | sausage:60 flour:30 butter:10 | crescent dogs | serving (4)
+Beef jerky snack | beef:40 soy:3 | jerky | bag (40 g)
+`);
+X('United Kingdom', 'British', EUR, `
+Porridge with golden syrup | oats:50 milk:200 sugar:15 | scottish porridge syrup | bowl
+Bacon roll | roll:70 bacon:40 ketchup:10 | bacon bap; bacon butty roll | roll
+Sausage and egg muffin | english_muffin:60 sausage:50 egg_fried:50 | sausage egg muffin | muffin
+Kippers on toast | kipper:120 bread:60 butter:8 | kippers breakfast | plate
+Vegetarian fry-up | egg_fried:100 baked_beans:100 mushrooms:60 tomato:60 bread:30 | veggie full breakfast | plate
+Marmite-style yeast spread on toast | bread:60 butter:8 vegemite:5 | yeast extract toast | serving (2 slices)
+Hot cross bun with butter | flour:50 sugar:8 raisins:10 butter:15 | hot cross bun | bun
+Teacake with butter | flour:50 sugar:8 raisins:10 butter:10 | toasted teacake | teacake
+Digestive-style biscuits | flour:20 oats:5 butter:8 sugar:6 | digestive biscuits | serving (2)
+Pork pie | pie_crust:60 pork_shoulder:50 | pork pie | pie
+Cheese and pickle sandwich | bread:70 cheddar:40 pickles:20 | cheese pickle sarnie | sandwich
+Crisp sandwich | bread:70 butter:8 potato:20 oil:8 | crisp butty | sandwich
+`);
+X('France', 'French', EUR, `
+Tartine with butter and jam | baguette:80 butter:10 jam:20 | tartine beurre confiture | serving
+Croissant and café au lait | croissant:60 coffee:150 milk:100 | french breakfast | serving
+Pain aux raisins | croissant:60 raisins:15 milk:20 sugar:8 | raisin swirl | pastry
+Chausson aux pommes | puff_pastry:60 apple:50 sugar:8 | apple turnover | pastry
+Brioche with chocolate | flour:50 butter:15 egg:15 sugar:8 dark_choc:10 | pain brioche chocolat | serving
+Œufs cocotte | egg:100 cream:30 butter:5 | baked eggs in cream | ramekin
+Gougères | flour:20 butter:12 egg:20 swiss:15 | cheese puffs | serving (4)
+`);
+X('Spain', 'Spanish', EUR, `
+Tostada con tomate y aceite | baguette:70 tomato:50 olive_oil:10 | spanish breakfast toast | serving
+Churros con chocolate (breakfast) | flour:50 oil:20 sugar:8 milk:120 dark_choc:20 | churros breakfast | serving
+Tortilla de patatas pintxo | potato:80 egg:40 onion:15 olive_oil:10 baguette:30 | tortilla pincho | piece
+Magdalenas | flour:25 sugar:20 oil:12 egg:15 | spanish muffins | serving (2)
+Jamón and cheese bocadillo | baguette:90 ham:40 swiss:20 | bocadillo | sandwich
+`);
+X('Italy', 'Italian', EUR, `
+Cornetto with cappuccino | croissant:60 coffee:60 milk:120 | italian breakfast | serving
+Fette biscottate with jam | bread:30 jam:20 | rusks with jam | serving (3)
+Maritozzo | flour:50 sugar:10 butter:10 cream:40 | cream bun | bun
+Focaccia slice | flour:70 olive_oil:15 salt:1 | focaccia | slice
+Crostini with olive tapenade | baguette:50 olives:30 olive_oil:5 | olive crostini | serving (3)
+Grissini with prosciutto | flour:30 olive_oil:5 ham:30 | breadsticks and ham | serving
+`);
+X('Germany', 'German', EUR, `
+Brötchen with butter and jam | roll:60 butter:10 jam:20 | german breakfast roll | roll
+Brötchen with cheese and ham | roll:60 butter:8 swiss:20 ham_slice:20 | belegtes brötchen | roll
+Müsli with yogurt (German) | oats:40 almonds:10 raisins:10 yogurt:150 | german muesli | bowl
+Quark with fruit | cottage:150 strawberries:60 honey:8 | quark bowl | bowl
+Bauernfrühstück | potato:180 egg:100 bacon:20 onion:30 oil:10 | farmers breakfast | plate
+Pretzel with butter | flour:80 butter:10 salt:1 | butterbrezel | pretzel
+`);
+X('Netherlands', 'Dutch', EUR, `
+Ontbijtkoek | flour:30 rye_bread:10 sugar:20 sp_cinnamon:1 | dutch spice cake | slice
+Uitsmijter | bread:60 egg_fried:100 ham_slice:30 cheddar:20 | open egg sandwich | plate
+Stroopwafel | flour:20 butter:8 sugar:8 molasses:8 | syrup waffle | waffle
+Bitterballen | beef:30 flour:12 butter:8 milk:30 breadcrumbs:12 oil:10 | dutch meatballs snack | serving (4)
+`);
+X('Poland', 'Polish', EUR, `
+Twarożek on bread | rye_bread:60 cottage:100 spring_onion:10 | polish cottage cheese spread | serving
+Jajecznica | egg:150 butter:10 onion:15 | polish scrambled eggs | plate
+Owsianka | oats:50 milk:200 apple:50 | polish porridge | bowl
+Obwarzanek | flour:80 sesame:5 | krakow bagel | ring
+`);
+X('Russia', 'Russian', EUR, `
+Tvorog with sour cream | cottage:150 sour_cream:30 sugar:8 | tvorog breakfast | bowl
+Buterbrod with cheese | bread:40 butter:8 cheddar:20 | russian open sandwich | piece
+Semolina kasha | semolina:40 milk:200 sugar:10 butter:5 | mannaya kasha | bowl
+Oladyi | flour:50 kefir:80 egg:15 oil:10 sugar:8 | russian pancakes | serving (4)
+Pirozhki with potato | flour:50 potato:50 onion:10 oil:12 | potato pirozhki | serving (2)
+Sushki | flour:40 sugar:5 | russian bread rings | serving (5)
+`);
+X('Türkiye', 'Turkish', AS, `
+Turkish breakfast plate | bread:60 feta:40 olives:20 tomato:60 cucumber:60 egg_boiled:50 honey:10 | kahvalti | plate
+Sucuklu yumurta | sausage:50 egg_fried:100 | sujuk and eggs | plate
+Gözleme with cheese | flour:70 feta:40 spinach:20 butter:8 | turkish flatbread cheese | piece
+Poğaça | flour:50 butter:12 feta:15 yogurt:10 | turkish pastry | piece
+Açma | flour:50 butter:10 sugar:5 milk:15 | soft simit | piece
+Leblebi | chickpeas:50 | roasted chickpeas turkish | handful
+`);
+X('Lebanon', 'Lebanese', AS, `
+Labneh with olive oil and pita | yogurt:100 olive_oil:10 pita:60 | labneh breakfast | plate
+Ka'ak with za'atar | flour:70 sesame:8 sp_thyme:2 olive_oil:8 | street ka'ak | piece
+Foul and fatteh breakfast | fava:150 chickpeas:60 olive_oil:12 lemon:5 pita:40 | lebanese foul | bowl
+Cheese manakish | flour:80 mozzarella:40 olive_oil:5 | jibneh manoushe | piece
+`);
+X('India', 'Indian', AS, `
+Aloo poha with peanuts | rice:120 potato:40 peanuts:15 oil:8 turmeric:1 | batata poha | plate
+Rava idli | semolina:60 yogurt:40 | semolina idli | serving (3)
+Medu vada | lentils:100 oil:15 | urad vada | serving (2)
+Masala dosa | rice:80 lentils:30 potato:80 oil:10 | masala dosai | dosa
+Plain dosa with chutney | rice:80 lentils:30 oil:8 coconut_meat:20 | sada dosa | dosa
+Besan chilla | chickpea_flour:50 onion:20 tomato:20 oil:8 | gram flour pancake | serving (2)
+Moong dal chilla | lentils:100 onion:15 oil:8 | lentil crepe | serving (2)
+Paneer bhurji with paratha | paneer:80 onion:20 tomato:30 oil:8 flour:60 butter:8 | paneer scramble | plate
+Egg bhurji with pav | egg:100 onion:20 tomato:20 oil:8 roll:60 | anda bhurji | plate
+Bread omelette | bread:60 egg:100 onion:15 oil:8 | indian bread omelette | serving
+Sabudana khichdi | tapioca:60 potato:50 peanuts:15 ghee:8 | tapioca pearls breakfast | bowl
+Thepla | flour:60 fenugreek:2 yogurt:15 oil:8 | methi thepla | serving (2)
+Kachori | flour:50 lentils:30 oil:20 | dal kachori | serving (2)
+Pani puri | flour:30 oil:10 potato:40 chickpeas:30 tamarind:10 | golgappa | serving (6)
+Bhel puri | rice:40 potato:30 onion:15 tomato:15 peanuts:10 tamarind:10 | bhel | plate
+Sev puri | flour:30 oil:10 potato:30 onion:10 tamarind:10 | sev puri | serving (6)
+Aloo tikki | potato:120 breadcrumbs:10 oil:12 | potato patties | serving (2)
+Dabeli | roll:60 potato:70 peanuts:10 tamarind:8 butter:5 | kutchi dabeli | serving
+Murukku | rice_flour:30 chickpea_flour:10 oil:12 | chakli | handful
+Masala peanuts | peanuts:40 chickpea_flour:10 oil:8 | spiced peanuts | handful
+Banana chips (Kerala) | green_plantain:100 coconut_oil:20 | kerala chips | bag
+`);
+X('Pakistan', 'Pakistani', AS, `
+Paratha with omelette | flour:80 ghee:15 egg:100 onion:15 | anda paratha | plate
+Chana with puri | chickpeas:150 oil:30 flour:60 | chana puri | plate
+Nihari-style breakfast with naan | beef:100 flour:10 ghee:15 naan:90 | nihari naan | plate
+Lassi and paratha | yogurt:200 sugar:15 flour:80 ghee:15 | paratha lassi | serving
+Dahi baray | lentils:80 oil:10 yogurt:100 tamarind:8 | dahi bhalla | serving (3)
+Chana chaat | chickpeas:150 onion:20 tomato:30 tamarind:10 | chickpea chaat | bowl
+Fruit chaat | apple:60 banana:60 orange:60 guava:40 sugar:5 | pakistani fruit chaat | bowl
+Pakora (Pakistani) | chickpea_flour:40 onion:40 potato:30 oil:15 | pakoray | serving (4)
+`);
+X('China', 'Chinese', AS, `
+Youtiao with soy milk | flour:50 oil:15 soy_milk:250 | fried dough and soy milk | serving
+Baozi, pork | flour:60 pork_mince:40 cabbage:15 | pork bun | serving (2)
+Baozi, vegetable | flour:60 cabbage:30 mushrooms:20 tofu:20 | veg bun | serving (2)
+Mantou | flour:70 sugar:5 | steamed bun | bun
+Shaobing | flour:70 sesame:5 oil:10 | sesame flatbread | piece
+Tea eggs | egg_boiled:100 soy:5 black_tea:5 | cha ye dan | serving (2)
+Rice noodle rolls | rice_flour:60 shrimp:40 soy:10 oil:5 | cheung fun | plate
+Sesame balls | sticky_rice:40 kidney:20 sesame:8 oil:10 sugar:10 | jian dui | serving (3)
+Spicy cucumber salad | cucumber:150 garlic:3 vinegar:8 sesame_oil:5 chili:2 | pai huang gua | plate
+Roasted sweet potato (street) | sweet_potato:200 | kao hong shu | potato
+`);
+X('Japan', 'Japanese', AS, `
+Japanese breakfast set | rice_short:150 salmon:60 miso:12 tofu:30 egg:50 | washoku breakfast | tray
+Tamago kake gohan | rice_short:180 egg:50 soy:5 | egg on rice | bowl
+Japanese toast with egg | bread:80 egg_fried:50 mayo:8 | tamago toast | serving
+Onigiri with tuna mayo | rice_short:120 tuna:30 mayo:8 laver:2 | tuna mayo rice ball | serving (1)
+Onigiri with pickled plum | rice_short:120 laver:2 salt:1 | umeboshi rice ball | serving (1)
+Taiyaki | flour:40 egg:15 sugar:10 milk:20 kidney:30 | fish shaped cake | piece
+Senbei | rice_flour:30 soy:3 | rice crackers | serving
+Edamame (Japanese) | edamame:150 salt:1 | salted soybeans | bowl
+`);
+X('South Korea', 'Korean', AS, `
+Gyeran-ppang | flour:40 egg:60 sugar:10 milk:20 | egg bread | piece
+Tteokbokki snack cup | rice_short:120 chili_powder:5 sugar:8 fish:20 | rice cake snack | cup
+Hotteok with seeds | flour:50 brown_sugar:15 sesame:5 peanuts:5 oil:8 | seed hotteok | piece
+Korean corn dog | sausage:50 flour:40 oil:15 sugar:5 | korean hot dog | piece
+Bungeoppang | flour:40 egg:15 sugar:10 kidney:30 | korean fish bread | piece
+Gim snack | laver:5 sesame_oil:2 salt:0.5 | seasoned laver | pack
+`);
+X('Thailand', 'Thai', AS, `
+Jok | rice:60 pork_mince:40 egg:50 ginger:3 water:250 | thai rice porridge | bowl
+Patongo with pandan custard | flour:50 oil:15 milk:60 egg:15 sugar:15 | thai doughnuts | serving
+Khao tom | rice:80 pork_mince:40 water:250 garlic:3 | thai rice soup | bowl
+Moo ping with sticky rice | pork_loin:100 sticky_rice:120 soy:5 | grilled pork skewers | serving
+Khanom krok | rice_flour:40 coconut_milk:50 sugar:10 | coconut pancakes | serving (6)
+`);
+X('Vietnam', 'Vietnamese', AS, `
+Xoi ga | sticky_rice:180 chicken_meat:60 | sticky rice with chicken | plate
+Banh mi op la | baguette:80 egg_fried:100 soy:3 | egg banh mi | serving
+Banh cuon | rice_flour:60 pork_mince:40 mushrooms:10 | steamed rice rolls | plate
+Che chuoi | banana:100 coconut_milk:60 tapioca:15 sugar:10 | banana coconut pudding | bowl
+`);
+X('Philippines', 'Filipino', AS, `
+Pandesal with butter | flour:60 sugar:5 butter:10 | filipino bread rolls | serving (2)
+Champorado with tuyo | sticky_rice:60 cocoa_powder:10 sugar:20 milk:50 sardine:30 | chocolate porridge and fish | bowl
+Cornsilog | beef_brisket:80 rice:200 egg_fried:50 | corned beef rice egg | plate
+Banana cue | banana:150 brown_sugar:20 oil:10 | caramelised banana skewer | serving
+Kwek kwek | egg_boiled:60 flour:20 oil:10 | battered quail eggs | serving
+Fishballs (Filipino) | fish:60 flour:20 oil:12 | street fishballs | serving (8)
+Puto | rice_flour:40 sugar:10 milk:20 | steamed rice cakes | serving (3)
+`);
+X('Indonesia', 'Indonesian', AS, `
+Bubur ayam | rice:60 chicken_meat:60 soy:5 water:250 egg_boiled:25 | chicken rice porridge | bowl
+Lontong sayur | rice:150 coconut_milk:60 cabbage:40 egg_boiled:25 | rice cake curry | bowl
+Kerupuk | tapioca:20 shrimp:5 oil:5 | shrimp crackers | serving
+Klepon | rice_flour:40 brown_sugar:10 coconut_meat:10 | palm sugar rice balls | serving (5)
+Lemper | sticky_rice:80 chicken_meat:30 coconut_milk:15 | sticky rice roll | serving (2)
+`);
+X('Mexico', 'Mexican', NA, `
+Huevos a la mexicana | egg:120 tomato:50 onion:20 green_pepper:15 oil:8 corn_tortilla:50 | mexican scrambled eggs | plate
+Huevos divorciados | egg_fried:100 salsa:60 corn_tortilla:50 refried:50 | divorced eggs | plate
+Molletes con pico | baguette:80 refried:60 cheddar:30 tomato:30 onion:10 | molletes | serving (2)
+Tamal with atole | masa:100 chicken_meat:40 milk:200 cornmeal:20 sugar:10 | guajolota style breakfast | serving
+Atole | cornmeal:25 milk:200 sugar:15 sp_cinnamon:0.5 | atole de vainilla | cup
+Champurrado | cornmeal:25 milk:200 dark_choc:20 sugar:10 | chocolate atole | cup
+Esquites | corn:150 mayo:12 feta:10 lime:5 chili_powder:1 | corn cup | cup
+Fruta con chile | mango:80 cucumber:60 watermelon:80 lime:5 chili_powder:1 | fruit cup with chili | cup
+Pan dulce | flour:50 sugar:15 butter:10 egg:8 | mexican sweet bread | piece
+`);
+X('Brazil', 'Brazilian', SA, `
+Pão na chapa | bread:60 butter:12 | buttered griddled bread | serving
+Cuscuz nordestino | cornmeal:80 water:60 butter:8 egg_fried:50 | northeastern couscous | plate
+Tapioca with coconut and condensed milk | tapioca:50 coconut_meat:15 condensed:20 | sweet tapioca crepe | piece
+Misto quente | bread:70 ham_slice:30 mozzarella:30 butter:5 | ham cheese toastie brazil | sandwich
+Pastel de feira | flour:50 oil:15 beef_mince:40 | brazilian fried pastry | piece
+Pão de mel | flour:30 honey:15 dark_choc:15 | honey cake brazil | piece
+`);
+X('Colombia', 'Colombian', SA, `
+Calentado | rice:150 kidney:80 egg_fried:50 masa:50 | colombian breakfast leftovers | plate
+Huevos pericos with arepa | egg:100 tomato:30 spring_onion:10 oil:5 masa:80 | colombian eggs | plate
+Almojábana | cornmeal:30 feta:30 egg:10 milk:10 | colombian cheese bun | piece
+Arepa de huevo | masa:80 egg:50 oil:15 | egg arepa | piece
+`);
+X('Peru', 'Peruvian', SA, `
+Pan con chicharrón | baguette:80 pork_belly:70 sweet_potato:40 onion:15 | chicharron sandwich | sandwich
+Tamal peruano | masa:120 chicken_meat:40 olives:5 egg_boiled:15 | peruvian tamal | tamal
+Quinoa con leche | quinoa:120 milk:150 sugar:12 sp_cinnamon:0.5 | quinoa milk porridge | bowl
+Cancha | corn:50 oil:5 salt:1 | toasted corn | handful
+`);
+X('Argentina', 'Argentine', SA, `
+Tostadas with dulce de leche | bread:60 condensed:25 | toast with dulce de leche | serving (2 slices)
+Facturas | croissant:60 jam:10 | argentine pastries | pastry
+Tostado de jamón y queso | bread:70 ham_slice:30 swiss:25 | argentine toastie | sandwich
+`);
+X('Australia', 'Australian', OC, `
+Vegemite and cheese toast | bread:60 butter:5 vegemite:5 cheddar:20 | vegemite cheese | serving (2 slices)
+Big brekkie | egg_fried:100 bacon:30 sausage:60 mushrooms:50 tomato:50 bread:40 avocado:40 | aussie big breakfast | plate
+Bacon and egg roll | roll:70 bacon:30 egg_fried:50 bbq:10 | bacon egg roll | roll
+Bircher muesli (Australian) | oats:50 apple:50 yogurt:100 oj:30 | aussie bircher | bowl
+Banana bread with butter (café) | flour:40 banana:45 sugar:18 butter:20 egg:12 | cafe banana bread | slice
+Sausage roll (Australian) | puff_pastry:60 sausage:60 | aussie sausage roll | roll
+Tim Tam-style chocolate biscuit | flour:10 dark_choc:12 sugar:5 butter:3 | chocolate biscuit | biscuit
+Anzac slice | oats:20 flour:15 coconut_meat:8 butter:10 sugar:10 molasses:5 | anzac bar | piece
+`);
+X('New Zealand', 'New Zealander', OC, `
+Pikelets with jam and cream | flour:40 milk:40 egg:15 sugar:8 jam:15 cream:15 | kiwi pikelets | serving (3)
+Mince and cheese pie | pie_crust:70 beef_mince:70 cheddar:25 gravy:30 | nz pie | pie
+Kiwifruit snack | kiwi:150 | kiwifruit | serving (2)
+`);
+X('Morocco', 'Moroccan', AF, `
+Harcha with honey | semolina:60 butter:12 milk:30 honey:15 | semolina flatbread | piece
+Khlii with eggs | beef:40 egg:100 oil:8 | preserved meat eggs | plate
+Amlou on bread | almonds:20 olive_oil:10 honey:10 bread:60 | almond argan spread | serving
+Sfenj | flour:60 oil:20 sugar:5 | moroccan doughnut | piece
+Mint tea with pastries | green_tea:150 mint:2 sugar:15 flour:20 almonds:10 honey:10 | atay and sweets | serving
+`);
+X('Egypt', 'Egyptian', AF, `
+Egyptian breakfast plate | fava:150 pita:60 egg_boiled:50 feta:30 tomato:40 | ful breakfast set | plate
+Eish baladi with tahini | pita:80 tahini:20 | bread and tahini | serving
+Feteer with cheese | flour:70 butter:20 feta:40 | savory feteer | slice
+Roasted sweet potato (Egyptian street) | sweet_potato:200 | batata | potato
+Termes | fava:100 salt:1 | lupini beans | cup
+`);
+X('Iran', 'Iranian', AS, `
+Noon o panir o gerdoo | pita:80 feta:40 walnuts:15 mint:3 | bread cheese walnuts | plate
+Haleem (Iranian breakfast) | bulgur:80 turkey:60 sugar:10 butter:8 sp_cinnamon:0.5 | sweet wheat porridge | bowl
+Adasi | lentils:200 onion:20 oil:8 | lentil breakfast soup | bowl
+Nan-e berenji | rice_flour:30 sugar:15 butter:12 pistachio:3 | rice cookies | serving (3)
+`);
+X('Israel', 'Israeli', AS, `
+Israeli breakfast | egg_fried:100 cucumber:60 tomato:60 cottage:60 bread:60 | israeli breakfast plate | plate
+Bourekas with cheese | puff_pastry:60 feta:30 egg:10 | cheese bourekas | serving (2)
+Rugelach | flour:30 butter:15 cream_cheese:10 sugar:10 dark_choc:10 | rugelach | serving (2)
+Bamba-style peanut puffs | corn:25 peanut_butter:10 | peanut puffs | bag
+`);
+X('Vietnam', 'Vietnamese', AS, `
+Banh bao | flour:60 pork_mince:40 egg_boiled:15 | vietnamese steamed bun | bun
+`);
+X('Greece', 'Greek', EUR, `
+Bougatsa | phyllo:40 semolina:20 milk:80 sugar:15 butter:10 | custard pastry | piece
+Koulouri | flour:80 sesame:8 | greek sesame bread ring | ring
+Tiropita | phyllo:50 feta:50 egg:15 butter:10 | cheese pie | slice
+Greek yogurt with walnuts and honey (breakfast) | greek_yogurt_full:200 walnuts:20 honey:15 | greek breakfast yogurt | bowl
+`);
+X('Sweden', 'Swedish', EUR, `
+Knäckebröd with cheese | rye_bread:30 butter:5 cheddar:20 | crispbread and cheese | serving (2)
+Filmjölk with muesli | yogurt:200 oats:30 raisins:10 | swedish sour milk breakfast | bowl
+Kardemummabulle | flour:45 butter:15 sugar:12 milk:20 sp_cardamom:1 | cardamom bun | bun
+`);
+
 console.log(`everyday dishes left to real measured records: ${preferred.length}`);
 if (process.env.SHOW_PREFERRED) console.log(preferred.join('\n'));
 // ---- write out ----
@@ -2396,4 +3019,4 @@ const total = Object.keys(coverage).length;
 const out = Object.fromEntries(Object.entries(coverage).map(([c, v]) => [c, { demonym: v.demonym, region: v.region, dishes: [...new Set(v.dishes)] }]));
 writeFileSync(new URL('../src/data/countryDishes.ts', import.meta.url), `// Generated by scripts/recipes-countries.mjs: every country and territory with its dishes.\nexport const COUNTRY_DISHES: Record<string, { demonym: string; region: string; dishes: string[] }> = ${JSON.stringify(out)};\n`);
 console.error(`recipes-countries: ${NEW.length} new dishes, ${total} countries/territories/lists; ${missingRefs.length} references not found${missingRefs.length ? `: ${missingRefs.join('; ')}` : ''}`);
-export { RECIPES };
+export { RECIPES, K };

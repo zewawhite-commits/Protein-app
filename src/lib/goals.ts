@@ -44,7 +44,7 @@ const MEAT = /\b(chicken|beef|pork|lamb|turkey|veal|ham|bacon|sausages?|duck|goa
 const FISH = /\b(fish|salmon|tuna|shrimps?|prawns?|crustaceans|mollusks|cod|sardines?|catfish|tilapia|mackerel|anchov(y|ies)|crabs?|lobsters?|oysters?|mussels?|clams?|scallops?|squid|octopus|crayfish|periwinkles?|herring|trout|haddock|hake|croaker|stockfish|seafood|calamari|worcestershire|caesar dressing|dashi|bonito)\b/i;
 const ANIMAL = /\b(eggs?|milk|cheeses?|yogh?urts?|whey|casein|cream|butter|honey|ghee|mayonnaise|paneer|custard|kefir|buttermilk|lactose|pesto|mayo|mayonnaise|meringues?|lassi|tzatziki|labneh|ricotta|mozzarella|feta|parmesan)\b/i;
 /** Plant foods whose names contain an animal word ("peanut butter", "soy milk", "eggplant" is fine already). */
-const PLANT_ALIKE = /\b(peanut|almond|cashew|nut|seed|shea|cocoa|apple|soy|soya|sunflower|groundnut|sesame)\s+butter\b|\b(coconut|soy|soya|almond|oat|rice|cashew|hemp|pea)\s+(milk|cream|yogh?urt|cheese)\b|\bmeatless\b|\bveggie\b|\bvegan\b|\bcream of tartar\b|\bplant-based\b|\b(non-?dairy|dairy-free)\b/gi;
+const PLANT_ALIKE = /\b(peanut|almond|cashew|nut|seed|shea|cocoa|apple|soy|soya|sunflower|groundnut|sesame)\s+butter\b|\b(coconut|soy|soya|almond|oat|rice|cashew|hemp|pea)\s+(milk|cream|yogh?urt|cheese)\b|\byogh?urt, (coconut|soy|almond)( milk)?\b|\bcheese substitute\b|\bvegan mayonnaise\b|\bmeatless\b|\bveggie\b|\bvegan\b|\bcream of tartar\b|\bplant-based\b|\b(non-?dairy|dairy-free)\b/gi;
 
 const AVOID_RULES: Record<string, RegExp> = {
   Peanuts: /\bpeanut/i,
@@ -81,7 +81,7 @@ export function fitsPrefs(food: Pick<Food, 'name' | 'per100'>, p: { diet?: Diet;
  */
 export function fitsDiet(food: Pick<Food, 'name'> & { sourceNote?: string; recipe?: { ingredients: { name: string }[] } }, diet: Diet | undefined): boolean {
   if (!diet || diet === 'all') return true;
-  const ingredients = food.recipe ? food.recipe.ingredients.map((i) => i.name).join('; ') : /standard recipe|^Your recipe/i.test(food.sourceNote ?? '') ? food.sourceNote ?? '' : '';
+  const ingredients = food.recipe ? food.recipe.ingredients.map((i) => i.name).join('; ') : /standard recipe|^Your recipe/i.test(food.sourceNote ?? '') ? (food.sourceNote ?? '').replace(/\([^)]*version of [^)]*\)/, '') : ''; // "(vegan version of Goat pepper soup)" names the original dish, not an ingredient
   // Named as vegan / plant-based by its maker or recipe: trust that.
   if (/\b(vegan|plant-based|meatless)\b/i.test(food.name) && !ingredients) return true;
   const text = `${food.name}; ${ingredients}`.replace(PLANT_ALIKE, ' ');
