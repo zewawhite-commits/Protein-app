@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPortal } from 'react-dom';
-import { Award, X, Camera, ChefHat, ClipboardList, Dumbbell, MessageCircle, ShoppingBasket, Sparkle, TrendingUp, Utensils } from 'lucide-react';
+import { X, Camera, ChefHat, ClipboardList, Dumbbell, MessageCircle, ShoppingBasket, Sparkle, TrendingUp, Utensils } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 import { useHasTier } from '@/lib/perks';
 import { haptic } from './fx';
@@ -49,21 +49,42 @@ export function UpgradePrompt() {
   return createPortal(
     <div className="fixed inset-0 z-[60] flex flex-col bg-bg" role="dialog" aria-modal="true" aria-label="Reasons to try Plus">
       {!more ? (
-        <>
-          <div className="relative grid flex-[1.1] place-items-center bg-primary text-on-primary">
-            <button onClick={close} className="pt-safe absolute right-4 top-4 grid h-11 w-11 place-items-center rounded-full bg-black/10" aria-label="Close"><X size={22} /></button>
-            <Award size={150} strokeWidth={1.25} aria-hidden />
-          </div>
-          <div className="flex-1 px-6 pb-[max(env(safe-area-inset-bottom),1.5rem)] pt-7">
-            <h2 className="text-[26px] font-extrabold leading-tight tracking-tight">9 reasons to try Nutivili Plus</h2>
-            <p className="mt-2 text-[16px]">{first ? `You’ve been showing up, ${first}. Here’s what’s next.` : 'You’ve been showing up. Here’s what’s next.'}</p>
-            <p className="mt-4 text-[16px] leading-relaxed text-silver">If you want logging to take seconds and advice that actually knows your week, these are the biggest reasons people move to Plus.</p>
-            <div className="mt-6 grid grid-cols-2 gap-3">
-              <button onClick={close} className="btn-ghost !h-12">No thanks</button>
-              <button onClick={() => { haptic(); setMore(true); }} className="btn-primary !h-12">Read more</button>
+        <div className="flex min-h-0 flex-1 flex-col">
+          {/* Hero: a glimpse of what Plus does, not a generic badge. */}
+          <div className="relative shrink-0 overflow-hidden"  style={{ background: 'radial-gradient(120% 90% at 50% 0%, rgb(var(--accent) / .95), rgb(var(--accent) / .75) 45%, rgb(14 64 46) 100%)' }}>
+            <div className="pointer-events-none absolute -left-16 top-10 h-56 w-56 rounded-full bg-white/15 blur-3xl" />
+            <div className="pointer-events-none absolute -right-10 bottom-0 h-48 w-48 rounded-full bg-black/20 blur-3xl" />
+            <button onClick={close} className="absolute right-4 z-10 grid h-10 w-10 place-items-center rounded-full bg-white/20 text-white backdrop-blur-md" style={{ top: 'max(env(safe-area-inset-top), 1rem)' }} aria-label="Close"><X size={20} /></button>
+            <div className="relative flex h-full flex-col items-center justify-end gap-4 px-7 pb-7" style={{ paddingTop: 'calc(max(env(safe-area-inset-top), 1rem) + 3.5rem)' }}>
+              <span className="rounded-full bg-white/20 px-3 py-1 text-[11px] font-bold uppercase tracking-[.16em] text-white backdrop-blur-md">Nutivili Plus</span>
+              <div className="w-full max-w-[300px] space-y-3">
+                <div className="ml-auto w-[88%] -rotate-[1.5deg] rounded-[20px] bg-white px-3.5 py-3 shadow-[0_14px_34px_rgb(0_0_0/.28)]">
+                  <p className="text-[10px] font-bold uppercase tracking-[.12em] text-[#13996B]">Your coach</p>
+                  <p className="mt-1 text-[13px] leading-snug text-[#18201C]">Protein dipped midweek. Add eggs at breakfast to stay on track.</p>
+                </div>
+                <div className="w-[92%] rotate-1 rounded-[20px] bg-white px-3.5 py-3 shadow-[0_14px_34px_rgb(0_0_0/.28)]">
+                  <div className="flex items-center gap-3">
+                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-[#13996B]/10 text-[#13996B]"><Camera size={18} /></span>
+                    <span className="min-w-0 flex-1"><span className="block text-[13px] font-bold text-[#18201C]">Plate scanned</span><span className="block text-[12px] leading-tight text-[#6B746F]">640 kcal · 42 g protein</span></span>
+                    <span className="shrink-0 rounded-full bg-[#13996B] px-2 py-1 text-[9px] font-bold uppercase tracking-wide text-white">Unlimited</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-        </>
+          <div className="flex flex-1 flex-col overflow-y-auto px-6 pb-[max(env(safe-area-inset-bottom),1.25rem)] pt-6">
+            <h2 className="text-[28px] font-extrabold leading-[1.1] tracking-tight">{first ? `Nice work, ${first}.` : 'Nice work this week.'}<br /><span className="text-primary">Ready for more?</span></h2>
+            <ul className="mt-4 space-y-2.5 text-[15px]">
+              {REASONS.slice(0, 3).map((r) => (
+                <li key={r.t} className="flex items-center gap-3"><span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-primary/10 text-primary"><r.icon size={17} /></span><span className="font-semibold">{r.t}</span></li>
+              ))}
+            </ul>
+            <div className="min-h-4 flex-1" />
+            <button onClick={() => { haptic(); setMore(true); }} className="btn-primary mt-4 w-full !h-14 text-[16px]">See all 9 reasons</button>
+            <button onClick={close} className="mt-2 h-11 w-full text-[15px] font-semibold text-silver">Not now</button>
+            <p className="text-center text-[12px] text-dim">From $3.75/month billed yearly · cancel any time</p>
+          </div>
+        </div>
       ) : (
         <div className="flex-1 overflow-y-auto px-6 pb-[max(env(safe-area-inset-bottom),1.5rem)] pt-safe">
           <div className="flex items-center justify-between pt-4">
@@ -73,7 +94,7 @@ export function UpgradePrompt() {
           <ol className="mt-4 space-y-3.5">
             {REASONS.map((r, i) => (
               <li key={r.t} className="flex gap-3">
-                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary/12 text-primary"><r.icon size={18} /></span>
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary/10 text-primary"><r.icon size={18} /></span>
                 <span><span className="block font-bold">{i + 1}. {r.t}</span><span className="text-[14px] text-silver">{r.d}</span></span>
               </li>
             ))}
