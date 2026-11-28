@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { BadgeCheck, Copy, Gift, Loader2, Share2 } from 'lucide-react';
+import { BadgeCheck, ChevronRight, Copy, Gift, Loader2, Share2, UserPlus } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 import { isPremiumActive } from '@/lib/premium';
 import { useSession } from '@/lib/account';
@@ -53,14 +53,7 @@ export function InviteCard({ className }: { className?: string }) {
   if (!session || !perks) return null;
   const link = inviteLink(session.user.id);
   const left = Math.max(0, perks.maxReferrals - perks.referrals);
-  const share = async () => {
-    haptic();
-    const text = `I track my food with Nutivili AI — snap a meal and it works out the nutrition. Join with my link and get 14 days of Plus free:`;
-    try {
-      if (navigator.share) { await navigator.share({ title: 'Nutivili AI', text, url: link }); return; }
-    } catch { return; /* closed the share sheet */ }
-    try { await navigator.clipboard.writeText(`${text} ${link}`); toast('Invite link copied'); } catch { toast(link); }
-  };
+  const share = () => shareInvite(session.user.id);
   return (
     <div className={cx('card p-5', className)}>
       <div className="flex items-start gap-3">
@@ -110,5 +103,33 @@ function EnterCode({ createdAt }: { createdAt: string }) {
       </div>
       {err && <p className="mt-2 text-[13px] text-danger" role="alert">{err}</p>}
     </form>
+  );
+}
+
+/** Share the app: with your invite link when signed in (friend gets 14 days of Plus), else the app's address. */
+export async function shareInvite(userId?: string) {
+  haptic();
+  const link = userId ? inviteLink(userId) : window.location.origin;
+  const text = userId
+    ? 'I track my food with Nutivili AI: snap a meal and it works out the nutrition. Join with my link and get 14 days of Plus free:'
+    : 'I track my food with Nutivili AI: snap a meal and it works out the nutrition. Try it:';
+  try {
+    if (navigator.share) { await navigator.share({ title: 'Nutivili AI', text, url: link }); return; }
+  } catch { return; /* closed the share sheet */ }
+  try { await navigator.clipboard.writeText(`${text} ${link}`); toast('Invite link copied'); } catch { toast(link); }
+}
+
+/** "Invite your friends" row: at the top of Messages and in Profile, always visible. */
+export function InviteRow({ className }: { className?: string }) {
+  const session = useSession();
+  return (
+    <button onClick={() => void shareInvite(session?.user.id)} className={cx('flex w-full items-center gap-3 rounded-[22px] px-3 py-2.5 text-left', className)} data-testid="invite-row">
+      <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-raised text-ink"><UserPlus size={20} /></span>
+      <span className="min-w-0 flex-1">
+        <span className="block font-semibold">Invite your friends</span>
+        <span className="block truncate text-[13px] text-silver">{session ? 'They get 14 days of Plus free' : 'Share Nutivili AI'}</span>
+      </span>
+      <ChevronRight size={16} className="text-dim" />
+    </button>
   );
 }

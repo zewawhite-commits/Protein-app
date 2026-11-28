@@ -6432,6 +6432,436 @@ Tuvalu fish in coconut cream | fish:150 coconut_milk:70 | tuvalu fish coconut | 
 Tuvalu breadfruit chips | breadfruit:120 oil:15 | tuvalu chips | bag
 `);
 
+// ======================= ROUND 5: EUROPE, DEEPER =======================
+X('France', 'French', EUR, `
+Navarin d'agneau | lamb:150 potato:80 carrots:40 peas:30 stock:100 | spring lamb stew | bowl
+Daube provençale (alcohol-free) | beef:150 carrots:40 olives:15 tomato:40 stock:100 | provencal beef daube | bowl
+Petit salé aux lentilles | pork_belly:100 lentils:150 carrots:30 | salt pork with lentils | plate
+Choucroute garnie | sauerkraut:150 sausage:80 pork_shoulder:60 potato:100 | alsace choucroute | plate
+Baeckeoffe (alcohol-free) | pork_shoulder:60 lamb:50 beef:50 potato:120 onion:30 | alsace baeckeoffe | portion
+Flammekueche aux champignons | flour:60 sour_cream:50 mushrooms:50 onion:30 | mushroom tarte flambee | piece
+Potée auvergnate | pork_shoulder:80 cabbage:100 potato:80 carrots:40 sausage:30 | auvergne pot | bowl
+Truffade | potato:200 swiss:60 garlic:3 | auvergne truffade | portion
+Garbure | cabbage:80 kidney:60 potato:60 duck_meat:40 water:200 | bearn garbure | bowl
+Axoa | veal:130 red_pepper:60 onion:30 green_chili:10 | basque axoa | portion
+Piperade | red_pepper:120 tomato:100 onion:30 egg:50 olive_oil:10 | basque piperade | plate
+Gratin de courgettes | zucchini:200 milk:60 swiss:25 egg:20 | zucchini gratin | portion
+Tian provençal | zucchini:80 eggplant:80 tomato:80 olive_oil:15 | provencal tian | portion
+Pan bagnat (Nice) | baguette:100 tuna:40 egg_boiled:30 tomato:40 olives:15 olive_oil:10 | nice pan bagnat | sandwich
+Panisse | chickpea_flour:50 olive_oil:12 water:120 | marseille chickpea fries | serving
+Galette des rois | puff_pastry:60 almonds:25 butter:12 sugar:12 egg:10 | king cake | slice
+Bûche de Noël | sponge:50 dark_choc:20 cream:30 butter:10 | yule log | slice
+Clafoutis aux abricots | apricot_dried:40 egg:30 milk:60 flour:15 sugar:15 | apricot clafoutis | portion
+Tarte au citron meringuée | pie_crust:40 lemon:15 egg:25 sugar:25 meringue:10 | lemon meringue tart | slice
+Riz au lait (French) | rice:50 milk:180 sugar:18 | french rice pudding | bowl
+Œufs en meurette (alcohol-free) | egg_poached:100 bacon:20 mushrooms:30 stock:80 bread:30 | eggs in sauce | plate
+Crêpes au sucre | flour:30 milk:60 egg:20 sugar:10 butter:5 | sugar crepes | serving (2)
+Gaufre liégeoise au chocolat | flour:50 butter:15 sugar:15 dark_choc:15 | liege waffle chocolate | waffle
+`);
+X('Italy', 'Italian', EUR, `
+Pasta alla Genovese | pasta:180 beef:60 onion:120 olive_oil:12 parmesan:10 | neapolitan genovese | plate
+Pasta con le sarde | pasta:200 sardine:60 fennel_alt:0 raisins:10 pine_nuts:8 breadcrumbs:10 | sicilian sardine pasta | plate
+Pasta alla Puttanesca | pasta:200 tomato_canned:100 olives:20 capers:5 olive_oil:10 | puttanesca | plate
+Spaghetti al pomodoro e basilico | pasta:220 tomato_canned:120 basil:3 olive_oil:12 | spaghetti pomodoro | plate
+Pasta e patate | pasta:100 potato:120 tomato:30 parmesan:15 olive_oil:10 | neapolitan pasta potatoes | bowl
+Pasta e fagioli alla veneta | pasta:60 kidney:120 potato:40 olive_oil:10 water:150 | venetian pasta beans | bowl
+Bigoli in salsa | pasta:200 sardine:40 onion:60 olive_oil:15 | venetian bigoli | plate
+Pizzoccheri | buckwheat:0 pasta:150 cabbage:60 potato:60 swiss:40 butter:15 | valtellina pizzoccheri | plate
+Casoncelli | pasta:150 beef_mince:40 breadcrumbs:10 butter:15 parmesan:10 | bergamo casoncelli | plate
+Agnolotti del plin | pasta:150 beef_mince:40 pork_mince:20 butter:15 parmesan:10 | piedmont agnolotti | plate
+Vincisgrassi | pasta:120 beef_mince:60 chicken_meat:30 milk:60 parmesan:15 | marche lasagna | portion
+Culurgiones | pasta:120 potato:60 feta:20 mint:2 tomato_canned:60 | sardinian culurgiones | plate
+Malloreddus alla campidanese | pasta:180 sausage:50 tomato_canned:80 parmesan:10 | sardinian gnocchetti | plate
+Fregola con arselle | couscous:150 clams:100 tomato:40 olive_oil:10 | sardinian fregola clams | plate
+Panelle | chickpea_flour:60 oil:15 water:120 | palermo chickpea fritters | serving
+Arancine al burro | rice_short:100 ham:20 mozzarella:20 breadcrumbs:15 oil:15 | palermo arancine | piece
+Sfincione | flour:80 tomato_canned:50 onion:30 sardine:10 parmesan:10 | palermo pizza | slice
+Caponata di pesce spada-style | fish:120 eggplant:100 tomato:50 olives:10 capers:5 | swordfish caponata | portion
+Peperoni ripieni | red_pepper:200 breadcrumbs:30 parmesan:15 olives:10 capers:3 olive_oil:10 | stuffed peppers italy | serving (2)
+Zucchine alla scapece | zucchini:200 olive_oil:15 vinegar:8 mint:2 | marinated zucchini | portion
+Friarielli e salsiccia | broccoli:150 sausage:100 olive_oil:10 | naples sausage greens | plate
+Melanzane a funghetto | eggplant:200 tomato:60 olive_oil:15 garlic:3 | eggplant naples | portion
+Fagioli all'uccelletto | kidney:200 tomato_canned:80 olive_oil:12 sage_alt:0 | tuscan beans tomato | bowl
+Acquacotta | onion:60 tomato:80 bread:50 egg_poached:50 olive_oil:10 water:200 | tuscan acquacotta | bowl
+Cecina | chickpea_flour:60 olive_oil:15 water:90 | tuscan chickpea flatbread | slice
+Torta pasqualina | phyllo:50 spinach:100 ricotta:60 egg:40 | ligurian easter pie | slice
+Erbazzone | flour:60 spinach:100 parmesan:20 bacon:10 | reggio greens pie | slice
+Crescentine | flour:60 lard:8 | modena crescentine | serving (3)
+Tigelle with prosciutto | flour:60 ham:30 | tigelle | serving (3)
+Passatelli in brodo | breadcrumbs:40 parmesan:25 egg:30 stock:300 | passatelli soup | bowl
+Cappelletti in brodo | pasta:100 pork_mince:30 parmesan:10 stock:300 | cappelletti soup | bowl
+Pane carasau with olive oil | flour:50 olive_oil:10 | sardinian flatbread | serving
+Seadas | flour:40 feta:40 oil:15 honey:20 | sardinian cheese pastry | piece
+Pastiera napoletana | pie_crust:50 ricotta:50 bulgur:30 sugar:20 egg:15 | neapolitan easter cake | slice
+Struffoli | flour:40 egg:15 honey:25 oil:15 | honey balls | serving
+Panna cotta ai frutti di bosco | cream:90 sugar:15 gelatine:2 raspberries:40 blueberries:20 | berry panna cotta | pot
+Semifreddo al torrone | cream:60 egg:20 sugar:20 almonds:15 | nougat semifreddo | slice
+Gelato al pistacchio | milk:80 cream:30 sugar:20 pistachio:15 | pistachio gelato | scoop (2)
+`);
+X('Spain', 'Spanish', EUR, `
+Migas extremeñas | bread:100 chorizo:30 pork_belly:20 olive_oil:15 garlic:4 | shepherd's migas | plate
+Gachas manchegas | flour:40 olive_oil:15 pork_belly:20 paprika:2 water:150 | la mancha gachas | bowl
+Cachopo | veal:150 ham:30 swiss:30 breadcrumbs:20 egg:15 oil:20 | asturian cachopo | portion
+Merluza a la sidra (alcohol-free) | fish:170 apple:30 olive_oil:10 | asturian hake | portion
+Bacalao al pil pil | salt_cod:150 olive_oil:30 garlic:5 | basque cod pil pil | portion
+Marmitako | tuna_steak:120 potato:120 red_pepper:40 tomato:40 water:150 | basque tuna stew | bowl
+Kokotxas-style hake in green sauce | fish:170 parsley:10 olive_oil:15 clams:40 | merluza en salsa verde | portion
+Piquillos rellenos de bacalao | red_pepper:120 salt_cod:60 milk:40 flour:8 | stuffed piquillo peppers | serving (3)
+Txangurro-style stuffed crab | crab:150 tomato:40 onion:20 breadcrumbs:10 | basque crab | portion
+Pintxo de tortilla | potato:60 egg:30 onion:10 olive_oil:6 baguette:20 | tortilla pintxo | piece
+Gilda | olives:15 sardine:10 green_chili:10 | basque gilda | skewer (2)
+Montadito de lomo | baguette:50 pork_loin:50 olive_oil:5 | pork montadito | piece
+Flamenquín | pork_loin:100 ham:30 breadcrumbs:20 egg:15 oil:20 | cordoba flamenquin | portion
+Salmorejo cordobés with egg and ham | tomato:250 bread:40 olive_oil:20 egg_boiled:25 ham:15 | cordoba salmorejo | bowl
+Berenjenas con miel | eggplant:150 flour:20 oil:20 molasses:15 | fried eggplant honey | portion
+Pescaíto frito | sardine:80 squid:60 fish:50 flour:20 oil:20 | andalusian fried fish | plate
+Rabo de toro | oxtail:200 carrots:40 tomato:40 stock:100 | oxtail stew cordoba | portion
+Huevos a la flamenca | egg:100 tomato_canned:100 peas:30 chorizo:20 ham:15 | flamenco eggs | plate
+Patatas a lo pobre | potato:200 green_pepper:40 onion:40 olive_oil:20 | poor man's potatoes | portion
+Ensaladilla rusa (Spanish) | potato:120 carrots:30 peas:20 tuna:30 egg_boiled:20 mayo:30 | spanish russian salad | portion
+Caldereta de mariscos | fish:100 shrimp:60 tomato:60 water:200 | menorca seafood stew | bowl
+Sobrassada on toast | bread:60 sausage:40 honey:8 | mallorca sobrasada | serving
+Ensaïmada mallorquina | flour:50 sugar:15 lard:15 egg:10 | mallorca ensaimada | piece
+Papas arrugadas con mojo | potato:200 salt:2 red_pepper:20 olive_oil:15 garlic:3 | canarian wrinkled potatoes | portion
+Gofio escaldado | cornmeal:50 stock:150 onion:15 | canarian gofio | bowl
+Ropa vieja canaria | chickpeas:120 beef:60 chicken_meat:40 potato:60 | canarian ropa vieja | plate
+Arroz a banda | rice_short:180 fish:60 shrimp:40 olive_oil:15 saffron:0.1 | alicante rice | plate
+Arroz con costra | rice_short:150 sausage:50 chicken_meat:40 chickpeas:30 egg:40 | elche crust rice | plate
+Olla gitana | chickpeas:120 pumpkin:80 green_beans:50 pear:40 olive_oil:10 | gypsy stew murcia | bowl
+Michirones | fava:180 chorizo:30 ham:15 | murcia broad beans | bowl
+Pan de Calatrava | bread:50 milk:120 egg:30 sugar:25 | murcia bread pudding | slice
+Torta de aceite | flour:40 olive_oil:15 sugar:10 sesame:3 | olive oil biscuit | piece
+Polvorones | flour:25 almonds:10 lard:12 sugar:12 | christmas polvorones | serving (2)
+Turrón de Jijona | almonds:30 honey:15 sugar:8 | soft almond nougat | piece
+Buñuelos de viento | flour:25 egg:20 milk:40 oil:12 sugar:10 | spanish puffs | serving (4)
+`);
+X('Germany', 'German', EUR, `
+Spätzle with lentils (Linsen mit Spätzle) | lentils:150 flour:60 egg:30 sausage:40 | swabian lentils | plate
+Zwiebelkuchen | flour:50 onion:120 sour_cream:40 egg:25 bacon:15 | onion tart | slice
+Saumagen-style pork and potato roll | pork_mince:100 potato:80 carrots:20 | palatinate saumagen | slice
+Pfälzer Leberknödel | liver:60 bread:40 egg:15 sauerkraut:100 mash:150 | liver dumplings | plate
+Rinderroulade with red cabbage | beef:150 bacon:15 pickles:15 cabbage:100 potato:150 | rouladen dinner | plate
+Kohlrouladen | cabbage_cooked:120 beef_mince:70 pork_mince:30 gravy:50 potato:120 | german cabbage rolls | plate
+Senfeier | egg_boiled:100 milk:80 mustard:15 flour:8 potato:150 | mustard eggs | plate
+Arme Ritter | bread:70 milk:60 egg:30 sugar:10 butter:10 | german french toast | serving (2)
+Dampfnudeln with vanilla sauce | flour:60 butter:10 sugar:10 milk:100 | steamed dumplings | serving (2)
+Reibekuchen with apple sauce | potato:150 egg:20 flour:10 oil:20 apple:60 | rhineland potato pancakes | plate
+Halve Hahn | rye_bread:60 gouda:50 butter:8 onion:10 mustard:5 | cologne cheese roll | serving
+Matjes with potatoes | herring:100 potato:150 sour_cream:30 onion:15 apple:20 | matjes hering | plate
+Fischbrötchen | roll:60 herring:60 onion:10 | fish roll | sandwich
+Bremer Knipp-style oat sausage | oats:40 pork_mince:60 | knipp | portion
+Thüringer Rostbratwurst | sausage:120 roll:60 mustard:10 | thuringian bratwurst | serving
+Schupfnudeln with sauerkraut | potato:150 flour:40 egg:10 sauerkraut:100 butter:10 | finger noodles | plate
+Bratkartoffeln mit Spiegelei | potato:200 bacon:20 onion:30 egg_fried:50 oil:10 | fried potatoes egg | plate
+Grüne Soße with eggs and potatoes | egg_boiled:100 sour_cream:60 parsley:15 potato:150 | frankfurt green sauce | plate
+Handkäse mit Musik | cottage:80 onion:30 vinegar:8 olive_oil:8 bread:40 | handkase | plate
+Leipziger Allerlei | peas:60 carrots:60 asparagus:60 mushrooms:40 butter:10 | leipzig mixed vegetables | portion
+Quarkkeulchen | cottage:100 potato:60 flour:20 egg:15 raisins:10 oil:10 | saxon quark pancakes | serving (3)
+Eierschecke | flour:30 cottage:60 egg:30 sugar:20 butter:10 | dresden cheesecake | slice
+Frankfurter Kranz | sponge:50 butter:20 sugar:15 hazelnut:10 jam:10 | frankfurt crown cake | slice
+Rote Grütze with vanilla sauce | raspberries:60 cherries:60 sugar:20 cornstarch:8 milk:80 | red berry pudding | bowl
+Rhabarberkuchen | flour:35 butter:12 sugar:20 rhubarb:80 egg:10 | rhubarb cake | slice
+Mohnkuchen | flour:35 sugar:20 butter:12 milk:30 | poppy seed cake | slice
+Spaghettieis | ice_cream:120 strawberries:40 sugar:5 | spaghetti ice cream | cup
+`);
+X('United Kingdom', 'British', EUR, `
+Lancashire hotpot with pickled red cabbage | lamb:120 potato:150 onion:40 cabbage:40 vinegar:5 | hotpot with red cabbage | plate
+Liver and onions with mash | liver:120 onion:60 gravy:50 mash:180 | liver and onions | plate
+Gammon, egg and chips | ham:150 egg_fried:50 fries:150 peas:50 | gammon egg chips | plate
+Steak and chips (pub) | beef_sirloin:200 fries:150 peas:50 mushrooms:40 tomato:40 | pub steak | plate
+Ham, egg and chips | ham_slice:80 egg_fried:100 fries:150 | ham egg chips | plate
+Chicken tikka masala (British curry house) | chicken_breast:130 tomato:80 cream:30 oil:12 rice:150 | ctm curry house | plate
+Chicken korma (British curry house) | chicken_breast:130 cream:40 coconut_milk:30 sugar:5 rice:150 | korma curry house | plate
+Pie, mash and liquor | puff_pastry:60 beef_mince:80 mash:180 parsley:5 stock:80 | london pie and mash | plate
+Fish supper, Scottish | fish:150 flour:25 oil:20 fries:150 | scottish fish supper | plate
+Mince and tatties | beef_mince:120 carrots:30 onion:20 gravy:40 potato:180 | scottish mince tatties | plate
+Arbroath smokie with butter | haddock:150 butter:10 | arbroath smokie | portion
+Lorne sausage roll | roll:60 beef_mince:60 pork_mince:20 | square sausage roll | roll
+Tattie scones | potato:100 flour:25 butter:8 | potato scones | serving (2)
+Clootie dumpling | flour:40 raisins:20 sugar:15 suet_alt:0 butter:10 milk:20 | scottish dumpling pudding | slice
+Cranachan (alcohol-free) | oats:20 cream:60 raspberries:60 honey:10 | scottish cranachan | glass
+Cornish cream tea | flour:50 butter:12 milk:20 jam:20 cream:30 black_tea:250 | cream tea | serving
+Pork pie with piccalilli | pie_crust:60 pork_shoulder:50 cauliflower:20 vinegar:5 | pork pie piccalilli | portion
+Yorkshire pudding wrap | yorkshire:60 beef:80 gravy:40 potato_roast:60 | roast in a yorkshire | wrap
+Vegetarian full English | egg_fried:100 veggie_patty:60 baked_beans:100 tomato:50 mushrooms:50 bread:30 | vegetarian english breakfast | plate
+Bara brith with butter | flour:40 raisins:25 brown_sugar:15 black_tea:20 egg:10 butter:10 | welsh bara brith butter | slice
+Welsh lamb cawl with cheese and bread | lamb:80 potato:80 leeks:50 cheddar:25 bread:40 water:200 | cawl with caerphilly | bowl
+Laverbread with cockles and bacon | laver:15 oats:20 clams:40 bacon:30 | welsh breakfast | plate
+Belfast bap with bacon | roll:80 bacon:40 | belfast bap | sandwich
+Champ with sausages (Northern Irish) | potato:200 spring_onion:20 milk:30 butter:10 sausage:80 | champ and sausages | plate
+Victoria plum crumble | plum:120 flour:25 butter:15 sugar:18 | plum crumble | portion
+Chocolate sponge with chocolate custard | flour:30 sugar:20 butter:15 egg:15 cocoa_powder:5 milk:100 | school pudding | portion
+Arctic roll | sponge:30 ice_cream:60 jam:10 | arctic roll | slice
+Custard cream-style biscuits | flour:20 butter:8 sugar:10 icing_sugar:5 | custard creams | serving (2)
+`);
+X('Poland', 'Polish', EUR, `
+Gołąbki w sosie pomidorowym | cabbage_cooked:120 pork_mince:60 rice:30 tomato_canned:80 | cabbage rolls tomato sauce | serving (2)
+Zrazy wołowe | beef:150 pickles:15 bacon:10 onion:15 buckwheat:150 | polish beef rolls | plate
+Kotlet mielony | pork_mince:120 breadcrumbs:15 egg:15 oil:12 potato:150 | polish minced cutlet | plate
+Placki po węgiersku | potato:150 egg:20 flour:15 oil:20 beef:60 paprika:2 | potato pancakes goulash | plate
+Krokiety z kapustą i grzybami | flour:40 milk:80 egg:20 sauerkraut:60 mushrooms:30 breadcrumbs:15 oil:15 | polish croquettes | serving (2)
+Pyzy | potato:180 flour:20 pork_mince:40 | stuffed potato dumplings | serving (4)
+Kluski śląskie | potato:180 cornstarch:30 butter:10 | silesian dumplings | plate
+Rolada śląska | beef:150 pickles:15 bacon:10 cabbage:100 | silesian roulade | plate
+Flaki | tripe:150 carrots:30 stock:200 | polish tripe soup | bowl
+Krupnik | barley:50 potato:60 carrots:30 chicken_meat:40 water:250 | barley soup | bowl
+Ogórkowa | pickles:80 potato:80 carrots:30 sour_cream:20 water:250 | pickle soup | bowl
+Kapuśniak (Polish) | sauerkraut:120 potato:60 pork_shoulder:40 water:250 | polish sauerkraut soup | bowl
+Chłodnik litewski | beets:100 kefir:200 cucumber:40 egg_boiled:25 dill:2 | polish cold beet soup | bowl
+Racuchy | flour:50 milk:60 egg:15 apple:50 oil:15 sugar:8 | apple pancakes | serving (4)
+Leniwe pierogi | cottage:120 flour:40 egg:20 butter:10 sugar:8 | lazy dumplings | plate
+Kremówka | puff_pastry:40 milk:80 egg:15 sugar:15 | cream cake | piece
+Faworki | flour:40 egg:15 sour_cream:10 oil:15 icing_sugar:8 | angel wings | serving (4)
+Mazurek | flour:30 butter:15 sugar:15 dark_choc:15 almonds:10 | easter mazurek | slice
+`);
+X('Netherlands', 'Dutch', EUR, `
+Hutspot met klapstuk | potato:180 carrots:80 onion:40 beef:100 | hutspot with beef | plate
+Andijviestamppot | potato:200 lettuce:80 bacon:30 | endive mash | plate
+Snert with rye bread | split_peas:100 sausage:40 rye_bread:40 water:250 | dutch pea soup rye | bowl
+Bruine bonen met spek | kidney:180 bacon:30 onion:20 apple:40 | brown beans bacon | plate
+Kapsalon | fries:150 chicken_meat:80 gouda:40 lettuce:30 | rotterdam kapsalon | box
+Broodje kroket | roll:60 beef:30 flour:12 butter:8 breadcrumbs:12 oil:10 mustard:5 | croquette roll | sandwich
+Uitsmijter ham kaas | bread:60 egg_fried:100 ham_slice:30 gouda:25 | dutch ham cheese eggs | plate
+Tompouce | puff_pastry:40 milk:60 egg:10 sugar:15 icing_sugar:10 | dutch cream slice | piece
+Vla with fruit | milk:150 sugar:15 cornstarch:10 strawberries:40 | dutch custard | bowl
+Ontbijtkoek with butter | flour:30 rye_bread:10 sugar:20 butter:8 | spiced cake butter | slice
+`);
+X('Belgium', 'Belgian', EUR, `
+Fish in green herb sauce, Flemish | fish:150 spinach:50 parsley:10 butter:10 | fish in green herb sauce | portion
+Chicons au jambon gratinés | celery:150 ham_slice:40 milk:80 swiss:25 potato:120 | belgian endives ham gratin | plate
+Chicken with prunes, Flemish | chicken_thigh:160 prunes:20 onion:20 | flemish chicken prunes | plate
+Américain préparé | beef_mince_raw:100 mayo:15 capers:3 baguette:60 | belgian filet americain | sandwich
+Mitraillette | baguette:120 fries:120 sausage:60 mayo:20 | belgian mitraillette | sandwich
+Speculoos cheesecake | shortbread:40 cream_cheese:60 sugar:15 | speculoos cheesecake | slice
+Riz au lait belge | rice:50 milk:180 sugar:18 | belgian rice pudding | bowl
+`);
+X('Portugal', 'Portuguese', EUR, `
+Caldeirada de peixe | fish:120 potato:100 tomato:50 red_pepper:30 olive_oil:12 | portuguese fish stew | bowl
+Arroz de tamboril-style monkfish rice | fish:130 rice:150 tomato:40 water:150 | monkfish rice | bowl
+Amêijoas à Bulhão Pato | clams:200 olive_oil:15 garlic:5 coriander:5 lemon:5 | clams bulhao pato | plate
+Carne assada | beef:160 potato:120 onion:30 | portuguese roast beef | plate
+Rojões à moda do Minho | pork_shoulder:150 potato:100 | minho pork | plate
+Alheira com ovo | sausage:100 egg_fried:50 fries:120 | alheira egg chips | plate
+Migas alentejanas | bread:100 pork_belly:40 olive_oil:15 garlic:4 | alentejo migas | plate
+Sopa de grão | chickpeas:120 spinach:40 potato:40 water:200 | chickpea soup portugal | bowl
+Bolinhos de bacalhau with rice | salt_cod:60 potato:80 egg:15 oil:15 rice:120 tomato:20 | cod cakes with rice | plate
+Pão com chouriço | flour:70 chorizo:30 | chorizo bread | piece
+Bola de Berlim | flour:50 sugar:12 oil:15 milk:40 egg:10 | portuguese berliner | doughnut
+Toucinho do céu | almonds:25 sugar:30 egg:30 | almond egg cake | slice
+Pastel de feijão | beans_alt:0 kidney:40 almonds:15 sugar:20 egg:15 pie_crust:20 | bean tart torres vedras | tart
+Serradura (Portuguese) | cream:60 condensed:30 shortbread:20 | portuguese sawdust pudding | cup
+`);
+X('Greece', 'Greek', EUR, `
+Briam with feta | potato:100 zucchini:100 eggplant:60 tomato:60 olive_oil:20 feta:30 | briam feta | portion
+Spanakorizo | rice:120 spinach:150 onion:20 olive_oil:15 lemon:8 | spinach rice | plate
+Prasorizo | rice:120 leeks:100 olive_oil:15 lemon:8 | leek rice | plate
+Arakas latheros | peas:200 potato:50 tomato:40 olive_oil:15 | peas in oil | portion
+Bamies | okra:200 tomato:80 olive_oil:15 | greek okra | portion
+Yemista with rice | tomato:150 red_pepper:100 rice:60 onion:20 olive_oil:15 | yemista | serving (2)
+Soutzoukakia | beef_mince:120 tomato_canned:80 rice:150 | smyrna meatballs | plate
+Bifteki with fries | beef_mince:150 onion:20 fries:120 | greek bifteki | plate
+Kotopoulo lemonato | chicken_leg:200 potato:120 lemon:15 olive_oil:12 | lemon chicken potatoes | plate
+Lamb fricassee | lamb:150 lettuce:80 egg:20 lemon:10 | arni fricassee | bowl
+Kakavia | fish:150 potato:80 onion:30 olive_oil:12 water:200 | greek fish soup | bowl
+Bakaliaros skordalia | salt_cod:100 flour:20 oil:20 potato:80 garlic:5 | fried cod garlic dip | plate
+Kolokithokeftedes with tzatziki | zucchini:150 feta:30 flour:20 egg:15 oil:15 yogurt:50 | zucchini balls tzatziki | serving (3)
+Lagana | flour:80 sesame:5 olive_oil:5 | clean monday bread | slice
+Tsoureki | flour:50 sugar:12 butter:10 egg:15 | greek easter bread | slice
+Halvas simigdalenios | semolina:40 sugar:30 oil:15 almonds:5 | semolina halva | portion
+Rizogalo | rice:50 milk:180 sugar:18 sp_cinnamon:0.5 | greek rice pudding | bowl
+`);
+X('Sweden', 'Swedish', EUR, `
+Ärtsoppa (vegetarian) | split_peas:100 onion:20 water:250 mustard:5 | vegetarian pea soup | bowl
+Pytt i panna with beets | potato:180 beef:60 onion:30 egg_fried:50 beets:30 | swedish hash beets | plate
+Kåldolmar | cabbage_cooked:120 beef_mince:70 rice:30 cranberries:15 | swedish cabbage rolls | serving (3)
+Isterband with dill potatoes | sausage:100 potato:150 dill:2 milk:40 | isterband | plate
+Laxpudding | salmon:80 potato:120 egg:30 milk:60 | salmon potato pudding | portion
+Stekt strömming | herring:120 flour:15 butter:10 mash:150 cranberries:15 | fried herring | plate
+Smörgåstårta | bread:60 shrimp:40 egg_boiled:20 mayo:25 cream_cheese:20 cucumber:20 | sandwich cake | slice
+Toast Skagen | bread:40 shrimp:60 mayo:20 sour_cream:10 dill:2 | shrimp toast | piece
+Våfflor with jam and cream | flour:40 milk:60 egg:20 butter:10 jam:20 cream:20 | swedish waffles | serving (2)
+Chokladbollar | oats:25 butter:12 sugar:12 cocoa_powder:4 coconut_meat:4 | chocolate balls | serving (2)
+Lussekatter | flour:45 butter:12 sugar:10 milk:20 saffron:0.1 raisins:4 | saffron buns | bun
+Ostkaka | cottage:100 egg:20 sugar:15 almonds:10 jam:15 | swedish cheesecake | portion
+`);
+X('Norway', 'Norwegian', EUR, `
+Torsk with potatoes and butter | cod:180 potato:150 butter:15 | norwegian cod dinner | plate
+Plukkfisk | cod:120 potato:120 milk:60 butter:10 | flaked fish stew | bowl
+Kålruletter | cabbage_cooked:120 pork_mince:60 beef_mince:40 milk:40 | norwegian cabbage rolls | serving (3)
+Sodd | lamb:100 beef_mince:40 carrots:40 potato:60 water:200 | trondheim sodd | bowl
+Svele | flour:40 buttermilk:60 egg:15 sugar:10 butter:8 | norwegian pancake | serving (2)
+Lefse with butter and cinnamon sugar | potato:60 flour:30 butter:15 sugar:8 sp_cinnamon:0.5 | lefse sweet | piece
+Riskrem | rice:40 milk:100 cream:50 sugar:15 raspberries:40 | rice cream | bowl
+Kvæfjordkake | flour:30 butter:15 sugar:20 egg:20 meringue:10 almonds:8 cream:20 | world's best cake | slice
+`);
+X('Denmark', 'Danish', EUR, `
+Biksemad | potato:150 beef:70 onion:30 egg_fried:50 beets:20 | danish hash | plate
+Æggekage | egg:120 milk:30 bacon:30 tomato:40 rye_bread:40 | danish omelette | plate
+Fiskefrikadeller with remoulade | fish:120 flour:15 egg:15 oil:12 mayo:20 | danish fish cakes | serving (3)
+Flæskesteg | pork_roast:150 potato:120 cabbage:80 gravy:50 | roast pork crackling | plate
+Brunede kartofler | potato:150 sugar:15 butter:10 | caramelized potatoes | portion
+Rugbrød with leverpostej | rye_bread:50 liver:30 butter:5 pickles:10 | rye with liver pate | piece
+Rødgrød med fløde | raspberries:60 cherries:60 sugar:20 cornstarch:8 cream:30 | red berry pudding cream | bowl
+Brunsviger | flour:50 butter:20 brown_sugar:25 | funen cake | slice
+Kanelsnegl | flour:45 butter:15 sugar:12 sp_cinnamon:1 | danish cinnamon snail | piece
+`);
+X('Finland', 'Finnish', EUR, `
+Kesäkeitto | carrots:60 peas:40 potato:60 cauliflower:40 milk:150 butter:10 | summer vegetable soup | bowl
+Silakkapihvit | herring:120 flour:15 butter:10 mash:150 | fried baltic herring | plate
+Lohilaatikko | salmon:80 potato:150 egg:30 milk:80 | salmon potato bake | portion
+Pyttipannu (Finnish) | potato:180 sausage:60 onion:30 egg_fried:50 | finnish hash | plate
+Mustikkakeitto | blueberries:100 sugar:15 cornstarch:8 water:100 | blueberry soup | bowl
+Korvapuusti with coffee | flour:45 butter:15 sugar:12 sp_cardamom:0.5 coffee:150 | pulla and coffee | serving
+Pulla | flour:50 butter:12 sugar:12 milk:20 sp_cardamom:0.5 | finnish cardamom bread | slice
+`);
+X('Ireland', 'Irish', EUR, `
+Irish breakfast roll | baguette:100 sausage:50 bacon:30 egg_fried:50 | breakfast roll | sandwich
+Chicken fillet roll | baguette:100 chicken_fried:100 lettuce:20 mayo:15 | chicken fillet roll | sandwich
+Garlic chips (Irish chipper) | fries:180 garlic:5 mayo:30 | garlic chips | portion
+Battered sausage and chips | sausage:80 flour:20 oil:15 fries:150 | battered sausage | plate
+Irish vegetable soup with brown bread | potato:60 carrots:50 leeks:40 onion:20 wholemeal:50 butter:8 water:200 | irish veg soup | bowl
+Brown bread ice cream | ice_cream:100 wholemeal:15 brown_sugar:8 | irish brown bread ice cream | scoop (2)
+`);
+X('Austria', 'Austrian', EUR, `
+Backhendl | chicken_leg:200 breadcrumbs:20 egg:15 oil:20 potato:120 | fried chicken vienna | plate
+Krautfleckerl with bacon | pasta:150 cabbage:100 bacon:20 | cabbage pasta bacon | plate
+Erdäpfelgulasch | potato:200 sausage:50 paprika:3 onion:30 | potato goulash vienna | bowl
+Frittatensuppe | flour:20 egg:15 milk:30 stock:300 | pancake strip soup | bowl
+Leberknödelsuppe | liver:40 bread:30 egg:10 stock:300 | liver dumpling soup | bowl
+Topfenknödel | cottage:80 breadcrumbs:20 butter:10 sugar:10 plum:40 | quark dumplings | serving (2)
+Salzburger Nockerl | egg:60 sugar:20 flour:5 | salzburg souffle | portion
+Esterházy torte | almonds:25 egg_white:30 sugar:20 butter:15 | esterhazy cake | slice
+`);
+X('Switzerland', 'Swiss', EUR, `
+Berner Platte | ham:50 sausage:50 pork_belly:30 sauerkraut:100 potato:100 kidney:40 | bern platter | plate
+Cholera (Valais pie) | puff_pastry:60 potato:60 apple:40 swiss:40 leeks:30 | valais cholera pie | slice
+Papet vaudois | leeks:150 potato:150 sausage:80 cream:20 | vaud leek potatoes | plate
+Gschwellti with cheese | potato:250 swiss:50 butter:10 | jacket potatoes cheese | plate
+Zuger Kirschtorte (alcohol-free) | sponge:40 almonds:15 butter:15 sugar:15 | zug cake | slice
+Meringues with double cream | meringue:15 cream:50 | gruyere meringue | serving
+`);
+X('Hungary', 'Hungarian', EUR, `
+Lecsó with rice | red_pepper:150 tomato:100 onion:30 oil:10 rice:150 | lecso rice | plate
+Bableves | kidney:120 pork_shoulder:40 carrots:30 sour_cream:20 water:250 | hungarian bean soup | bowl
+Tökfőzelék | butternut:200 sour_cream:30 dill:3 flour:8 | dill squash stew | bowl
+Krumplis tészta | pasta:150 potato:100 onion:30 oil:10 paprika:2 | potato pasta | plate
+Lángos with garlic only | flour:80 oil:20 garlic:4 | plain langos | piece
+Somlói galuska (Hungarian) | sponge:60 dark_choc:15 cream:30 walnuts:10 raisins:10 | somloi trifle | portion
+Rigó Jancsi | sponge:30 dark_choc:25 cream:40 | chocolate cream cube | piece
+Bejgli | flour:40 butter:15 walnuts:20 sugar:15 | walnut roll | slice
+`);
+X('Czechia', 'Czech', EUR, `
+Smažený řízek with potato salad | pork_loin:150 breadcrumbs:20 egg:15 oil:15 potato:150 mayo:20 | czech schnitzel potato salad | plate
+Španělský ptáček | beef:140 sausage:20 egg_boiled:20 pickles:10 rice:150 | spanish birds czech | plate
+Rajská omáčka | tomato_canned:150 beef:100 sugar:10 flour:60 | tomato sauce with dumplings | plate
+Bramboračka | potato:150 mushrooms:30 carrots:30 water:250 | czech potato soup mushrooms | bowl
+Utopenci | sausage:100 onion:30 vinegar:15 | pickled sausages | portion
+Nakládaný hermelín | cottage:80 onion:15 oil:15 bread:40 | marinated cheese | portion
+Ovocné knedlíky with plums | flour:60 cottage:30 plum:80 butter:10 sugar:10 | plum dumplings | serving (3)
+`);
+X('Romania', 'Romanian', EUR, `
+Ciorbă de fasole cu afumătură | kidney:120 pork_belly:30 tomato:40 water:250 | bean soup smoked | bowl
+Mâncare de cartofi | potato:200 tomato:60 onion:30 oil:10 | romanian potato stew | bowl
+Varză călită | cabbage:200 tomato_paste:15 oil:12 | braised cabbage | portion
+Iahnie de fasole | kidney:200 onion:30 tomato_paste:15 oil:10 | romanian bean stew | bowl
+Pilaf cu ciuperci | rice:150 mushrooms:80 onion:20 oil:10 | mushroom pilaf romania | plate
+Ardei umpluți | green_pepper:150 pork_mince:60 rice:30 tomato_canned:80 sour_cream:20 | romanian stuffed peppers | serving (2)
+Gogoși | flour:50 sugar:10 oil:15 milk:30 | romanian doughnuts | serving (2)
+Pasca | pie_crust:50 cottage:60 egg:20 sugar:15 raisins:10 | romanian easter cake | slice
+`);
+X('Ukraine', 'Ukrainian', EUR, `
+Borscht with pampushky | beets:120 cabbage:60 potato:60 beef:50 sour_cream:20 flour:50 garlic:3 | borshch and garlic buns | meal
+Zelenyi borshch | spinach:100 potato:80 egg_boiled:30 sour_cream:20 water:250 | green sorrel borscht | bowl
+Kruchenyky | beef:130 mushrooms:30 onion:20 sour_cream:20 | ukrainian beef rolls | serving (2)
+Mlyntsi with cottage cheese | flour:40 milk:80 egg:30 cottage:60 sugar:8 | ukrainian crepes cheese | serving (2)
+Kutia | wheat_alt:0 bulgur:80 honey:20 walnuts:15 raisins:10 | christmas kutia | bowl
+Pyrizhky with cabbage | flour:50 cabbage:60 oil:12 | cabbage pirozhki | serving (2)
+`);
+X('Russia', 'Russian', EUR, `
+Shchi (sour) with sour cream | sauerkraut:120 potato:60 carrots:30 beef:60 sour_cream:20 water:250 | kislye shchi | bowl
+Rassolnik | pickles:60 barley:30 potato:60 beef:50 water:250 | pickle barley soup | bowl
+Kurnik | flour:70 butter:20 chicken_meat:60 rice:30 egg_boiled:20 | festive chicken pie | slice
+Kotleta pozharskaya | chicken_mince:120 bread:20 butter:10 breadcrumbs:15 oil:10 | pozharsky cutlet | portion
+Pirog with cabbage | flour:60 butter:15 cabbage:80 egg_boiled:15 | cabbage pie | slice
+Vatrushka | flour:50 cottage:50 sugar:10 egg:10 | cheese bun | bun
+Sirniki with smetana and jam | cottage:120 flour:20 egg:20 oil:10 sour_cream:30 jam:15 | syrniki breakfast | plate
+Ponchiki | flour:50 sugar:10 oil:15 icing_sugar:8 | russian doughnuts | serving (3)
+`);
+X('Serbia', 'Serbian', EUR, `
+Pljeskavica with kajmak and lepinja | beef_mince:120 pork_mince:30 cream:20 flour:80 onion:20 | pljeskavica full | serving
+Đuveč | rice:80 red_pepper:60 eggplant:60 tomato:60 zucchini:50 oil:15 | serbian djuvec | portion
+Proja with kajmak | cornmeal:60 feta:25 egg:20 cream:20 | proja kajmak | slice
+Vasina torta | walnuts:30 sugar:20 egg:20 dark_choc:10 | vasa's cake | slice
+`);
+X('Croatia', 'Croatian', EUR, `
+Pašticada with gnocchi (Dalmatian) | beef:150 prunes:15 tomato_paste:10 gnocchi:150 | dalmatian pasticada gnocchi | plate
+Soparnik | flour:60 spinach:100 olive_oil:15 onion:20 | poljica soparnik | slice
+Purica s mlincima | turkey:150 flour:50 | turkey with mlinci | plate
+Ćevapi with ajvar | beef_mince:120 red_pepper:40 roll:60 | croatian cevapi ajvar | plate
+Kremšnita | puff_pastry:40 milk:80 egg:15 sugar:15 cream:20 | samobor cream slice | piece
+Paprenjak | flour:25 honey:12 walnuts:8 sp_pepper:0.3 | pepper biscuit | serving (2)
+`);
+X('Slovenia', 'Slovenian', EUR, `
+Prekmurska gibanica (Slovenian) | phyllo:40 cottage:40 apple:30 walnuts:15 sugar:15 butter:10 | slovenian gibanica | slice
+Bograč | beef:80 pork_shoulder:60 potato:80 paprika:3 water:150 | slovenian bograc | bowl
+Štruklji with tarragon | flour:50 cottage:60 butter:10 sp_tarragon:0.5 | tarragon struklji | portion
+`);
+X('Lithuania', 'Lithuanian', EUR, `
+Šaltibarščiai with potatoes | beets:100 kefir:200 cucumber:40 egg_boiled:25 potato:120 | pink soup with potatoes | meal
+Kibinai with lamb | flour:60 butter:15 lamb_mince:50 onion:15 | karaim kibinai | piece
+Bulviniai blynai | potato:150 egg:20 flour:15 oil:20 sour_cream:30 | lithuanian potato pancakes | serving (3)
+`);
+X('Estonia', 'Estonian', EUR, `
+Kartulisalat (Estonian) | potato:120 egg_boiled:30 pickles:20 ham:30 sour_cream:25 mayo:15 | estonian potato salad | portion
+Mannavaht | semolina:30 cranberries:60 sugar:20 water:150 | whipped semolina pudding | bowl
+Rukkileib with sprats | rye_bread:50 sardine:40 butter:5 onion:10 | estonian rye sprats | piece
+`);
+X('Latvia', 'Latvian', EUR, `
+Sklandrausis (Latvian) | rye_bread:30 potato:40 carrots:40 sugar:10 butter:8 | latvian sklandrausis | piece
+Skābeņu zupa with egg | spinach:120 potato:60 egg_boiled:30 sour_cream:20 water:200 | latvian sorrel soup | bowl
+Karbonāde with potatoes | pork_loin:150 breadcrumbs:20 egg:15 oil:15 potato:150 | latvian pork chop | plate
+`);
+X('Iceland', 'Icelandic', EUR, `
+Plokkfiskur with rye bread | haddock:150 potato:120 milk:60 butter:10 rye_bread:40 | fish stew and rye | plate
+Hangikjöt with potatoes | lamb:120 potato:150 peas:40 milk:40 | smoked lamb icelandic | plate
+Rúgbrauð with butter | rye_bread:60 butter:10 | icelandic rye bread | slice
+`);
+X('Albania', 'Albanian', EUR, `
+Tavë dheu | liver:60 cottage:40 tomato:50 green_pepper:30 | tirana clay pot | portion
+Jani me mish | lamb:100 kidney:100 tomato:40 onion:20 | meat and bean stew albania | bowl
+`);
+X('North Macedonia', 'Macedonian', EUR, `
+Turli tava | potato:80 eggplant:60 okra:40 red_pepper:40 tomato:60 pork_shoulder:60 | macedonian mixed bake | portion
+Pita zelnik | phyllo:60 spinach:80 feta:30 oil:10 | macedonian zelnik | slice
+`);
+X('Bosnia and Herzegovina', 'Bosnian', EUR, `
+Begova čorba with okra | chicken_meat:80 okra:40 carrots:30 sour_cream:20 water:250 | bosnian bey soup | bowl
+Sogan dolma | onion:150 beef_mince:60 rice:30 | stuffed onions | serving (4)
+Hurmašice | flour:30 butter:15 sugar:25 | date-shaped syrup cookies | serving (3)
+`);
+X('Montenegro', 'Montenegrin', EUR, `
+Jagnjetina ispod sača | lamb:150 potato:120 | lamb under the bell montenegro | plate
+Cicvara | cornmeal:40 cream:40 feta:30 butter:10 | montenegrin cheese polenta | bowl
+`);
+X('Moldova', 'Moldovan', EUR, `
+Mămăliguță with brânză and smântână | cornmeal:90 water:200 feta:40 sour_cream:30 | moldovan mamaliga plate | plate
+Plăcintă cu varză | flour:60 cabbage:80 oil:10 | cabbage placinta | piece
+`);
+X('Cyprus', 'Cypriot', EUR, `
+Kleftiko (Cypriot) | lamb:180 potato:100 oregano:1 lemon:8 | cypriot kleftiko | plate
+Louvi with greens | kidney:150 spinach:80 olive_oil:12 lemon:8 | black eyed peas greens | bowl
+Halloumi pitta | pita:70 halloumi:60 tomato:30 cucumber:30 | cypriot halloumi pitta | sandwich
+`);
+X('Malta', 'Maltese', EUR, `
+Bragioli | beef:140 bacon:15 egg_boiled:20 breadcrumbs:10 tomato_canned:60 | maltese beef olives | portion
+Kusksu | pasta:60 fava:80 peas:40 egg_poached:50 cottage:30 water:200 | maltese bean soup | bowl
+Pastizzi (Maltese ricotta) | puff_pastry:60 ricotta:50 | maltese cheesecakes | serving (2)
+`);
+X('Luxembourg', 'Luxembourgish', EUR, `
+Rieslingspaschtéit (alcohol-free) | puff_pastry:60 pork_mince:60 veal:30 egg:10 | luxembourg meat pie | slice
+Kachkéis on bread | cottage:60 butter:10 bread:60 mustard:5 | luxembourg cooked cheese | serving
+`);
+
 console.log(`everyday dishes left to real measured records: ${preferred.length}`);
 if (process.env.SHOW_PREFERRED) console.log(preferred.join('\n'));
 // ---- write out ----

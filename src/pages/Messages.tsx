@@ -10,6 +10,7 @@ import {
 } from '@/lib/dm';
 import { SharedRecipeCard, toShared } from '@/components/SharedRecipeCard';
 import { SignInButtons } from '@/components/SignIn';
+import { InviteRow } from '@/components/FreePro';
 import { Segmented, Sheet, cx } from '@/components/ui';
 import { haptic, toast } from '@/components/fx';
 
@@ -93,6 +94,7 @@ export default function Messages() {
         </div>
       )}
 
+      <div className="card mt-4 p-1.5"><InviteRow /></div>
       <div className="mt-4"><Segmented full value={tab} onChange={setTab} options={[{ value: 'inbox', label: 'Inbox' }, { value: 'requests', label: `Requests${counts.requests ? ` (${counts.requests})` : ''}` }, { value: 'archived', label: `Archived${counts.archived ? ` (${counts.archived})` : ''}` }]} /></div>
       {tab === 'requests' && <p className="mt-3 px-1 text-[13px] text-silver">Messages from people you don’t follow wait here. They can’t see whether you’ve read them. Accept to reply, or delete, block or report.</p>}
       {list === null ? <p className="mt-6 flex justify-center text-silver"><Loader2 className="animate-spin" /></p> : shown.length === 0 ? (

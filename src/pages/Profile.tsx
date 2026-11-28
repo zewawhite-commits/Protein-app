@@ -18,7 +18,7 @@ import { allPhotoIds, deletePhoto } from '@/lib/photos';
 import type { Theme } from '@/lib/types';
 import { ProfileForm } from '@/components/ProfileForm';
 import { ProfileHero } from '@/components/ProfileHero';
-import { InviteCard, TrialCard } from '@/components/FreePro';
+import { InviteCard, InviteRow, TrialCard } from '@/components/FreePro';
 import { CreditsCard } from '@/components/CreditsCard';
 import { PageHeader, Segmented, Sheet, cx, fmt } from '@/components/ui';
 import { ReminderSettings } from '@/components/Notifications';
@@ -110,6 +110,7 @@ export default function Profile({ mode = 'profile' }: { mode?: 'profile' | 'sett
             <Link to="/history" className="block"><Row icon={<CalendarDays size={18} />} label="Diary" chevron><span className="text-sm text-silver">Every meal, by date</span></Row></Link>
             <Link to="/goals" className="block"><Row icon={<Target size={18} />} label="My goals" chevron><span className="text-sm text-silver">{goalCount ? `${goalCount} active` : 'Weight, protein, water, workouts'}</span></Row></Link>
             <Link to="/settings#notifications" className="block"><Row icon={<Bell size={18} />} label="Reminders" chevron><span className="text-sm text-silver">{settings.reminders?.enabled ? `Meals at ${settings.reminders.breakfast} · ${settings.reminders.lunch} · ${settings.reminders.dinner}` : 'Off'}</span></Row></Link>
+            <InviteRow />
           </Group>
           <PersonalDetails profile={profile} unit={settings.bodyUnit} dailyKcal={dailyKcal} onEdit={() => setEditing(true)} />
           <PreferencesCard onEdit={() => setEditing(true)} />
