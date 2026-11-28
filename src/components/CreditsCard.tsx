@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { fetchUsage, type Usage } from '@/lib/premium';
 import { fmt } from './ui';
 
-const NAMES: [string, string][] = [['scan', 'Food photo scan'], ['coach', 'Coach message'], ['recipe', 'AI recipe'], ['import', 'Recipe import'], ['plan', 'Meal plan'], ['workout', 'AI workout plan'], ['ideas', 'Meal ideas']];
+const NAMES: [string, string][] = [['scan', 'Food photo scan'], ['coach', 'Coach message'], ['recipe', 'Personalised recipe'], ['import', 'Recipe import'], ['plan', 'Personalised meal plan'], ['workout', 'Personalised workout plan'], ['ideas', 'Meal ideas']];
 
 /** Plus members' AI credits, shown here only (no counters elsewhere in the app). */
 export function CreditsCard() {

@@ -87,7 +87,7 @@ export function RecipeView() {
       </div>
       <RecipeLibrary />
       <MyRecipes />
-      <PlanBadge needs="plus" what="AI recipes made for your goals" free="2 a month on Free" />
+      <PlanBadge needs="plus" what="Personalised recipes made for your goals" free="2 a month on Free" />
       <section className="card p-5">
         <p className="text-[19px] font-bold tracking-tight">Create a recipe with AI</p>
         <p className="mt-0.5 text-sm text-silver">Tell it what you have or fancy. It’s built around your targets and diet; nutrition comes from real food data.</p>

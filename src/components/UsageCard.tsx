@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { fetchUsage, type Usage } from '@/lib/premium';
 import { useSession } from '@/lib/account';
 
-const LABELS = { scan: 'AI scans', coach: 'Coach messages', workout: 'Workout guides', recipe: 'AI recipes', plan: 'Eating plans', ideas: 'Meal ideas' } as const;
+const LABELS = { scan: 'AI scans', coach: 'Coach messages', workout: 'Workout guides', recipe: 'Personalised recipes', plan: 'Personalised meal plans', ideas: 'Meal ideas' } as const;
 
 /** This month's AI usage, so people know where they stand before they hit a limit. */
 export function UsageCard() {

@@ -410,7 +410,7 @@ function SubscriptionGroup() {
               <p className="text-[12px] font-bold uppercase tracking-wide">Free <span className="font-semibold text-silver">· Your current plan</span></p>
               <p className="mt-1.5 text-silver">Food diary, search, barcode &amp; voice logging</p>
               <p className="text-silver">Recipe imports &amp; exercise tracking</p>
-              <ul className="mt-1.5 list-disc space-y-0.5 pl-5 text-silver"><li>3 AI photo scans a day</li><li>2 AI recipes &amp; 1 AI meal plan a month</li></ul>
+              <ul className="mt-1.5 list-disc space-y-0.5 pl-5 text-silver"><li>3 AI photo scans a day</li><li>2 personalised recipes &amp; 1 personalised meal plan a month</li></ul>
             </div>
             <div className="rounded-2xl bg-accent/10 p-3.5">
               <p className="text-[12px] font-bold uppercase tracking-wide">Plus <span className="font-semibold text-silver">· $8.99/month</span></p>
