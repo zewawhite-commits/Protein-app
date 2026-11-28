@@ -1,4 +1,5 @@
 import { InstallRow } from '@/components/InstallApp';
+import { PLUS_SHORT } from '@/lib/plans';
 import { AutoBackups, ShareReportRow } from '@/components/DataTools';
 import { SignInButtons } from '@/components/SignIn';
 import { useRef, useState } from 'react';
@@ -409,12 +410,12 @@ function SubscriptionGroup() {
               <p className="text-[12px] font-bold uppercase tracking-wide">Free <span className="font-semibold text-silver">· Your current plan</span></p>
               <p className="mt-1.5 text-silver">Food diary, search, barcode &amp; voice logging</p>
               <p className="text-silver">Recipe imports &amp; exercise tracking</p>
-              <ul className="mt-1.5 list-disc space-y-0.5 pl-5 text-silver"><li>3 AI food scans daily</li><li>2 AI recipes &amp; 1 meal plan monthly</li></ul>
+              <ul className="mt-1.5 list-disc space-y-0.5 pl-5 text-silver"><li>3 AI photo scans a day</li><li>2 AI recipes &amp; 1 AI meal plan a month</li></ul>
             </div>
             <div className="rounded-2xl bg-accent/10 p-3.5">
               <p className="text-[12px] font-bold uppercase tracking-wide">Plus <span className="font-semibold text-silver">· $8.99/month</span></p>
               <p className="mt-1.5 text-silver">Everything in Free, plus:</p>
-              <ul className="mt-1 list-disc space-y-0.5 pl-5 text-silver"><li>Unlimited AI food scans &amp; follow-ups</li><li>Interactive AI coach</li><li>Personalised meal plans, recipes &amp; workouts</li><li>Weekly progress reviews with your coach</li></ul>
+              <ul className="mt-1 list-disc space-y-0.5 pl-5 text-silver">{PLUS_SHORT.map((x) => <li key={x}>{x}</li>)}</ul>
             </div>
           </div>
           <Link to="/premium" className="block"><Row icon={<CreditCard size={18} />} label="Explore Plus" chevron><span className="text-sm font-semibold text-accent">$44.99/year · Save 58%</span></Row></Link>

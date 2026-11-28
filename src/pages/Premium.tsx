@@ -10,17 +10,18 @@ import {
   type PlanInfo, type Tier,
 } from '@/lib/premium';
 import { Segmented, cx } from '@/components/ui';
+import { CREDITS_NOTE, FREE_FEATURES, PLUS_FEATURES } from '@/lib/plans';
 
 /** Planned prices, shown until live plans load from the payment provider (which sets the real charge). */
 const PREVIEW = [
-  { tier: null, name: 'Free', perks: ['Unlimited diary, food search, barcode & voice logging', 'World recipe library, recipe imports, saved meals & exercise library', '3 AI photo scans a day', '2 AI recipes + 1 AI meal plan a month'], best: false },
-  { tier: 'pro' as Tier, name: 'Plus', perks: ['Unlimited AI photo scans and meal follow-ups', 'Personal AI nutrition coach that talks back', '12 AI recipes made for your calories and protein', '4 personalised AI meal plans and 8 AI workout plans a month', 'Weekly nutrition progress report', 'Restaurant menus: photo, QR code or link', 'Smart calorie target that adjusts to your progress', 'Advanced micronutrient analysis and nutrition reports', 'Adjusts to your cuisine & diet'], best: true },
+  { tier: null, name: 'Free', perks: FREE_FEATURES, best: false },
+  { tier: 'pro' as Tier, name: 'Plus', perks: PLUS_FEATURES, best: true },
 ];
 
 const TIER_INFO: Record<'free' | Tier, { name: string; perks: string[] }> = {
-  free: { name: 'Free', perks: ['Unlimited diary, food search, barcode & voice logging', 'World recipe library, recipe imports, saved meals & exercise library', '3 AI photo scans a day', '2 AI recipes + 1 AI meal plan a month', 'Feed and groups'] },
-  plus: { name: 'Plus', perks: ['Unlimited AI photo scans and meal follow-ups', 'Personal AI nutrition coach that talks back', '12 AI recipes made for your calories and protein', '4 personalised AI meal plans and 8 AI workout plans a month', 'Weekly nutrition progress report', 'Restaurant menus: photo, QR code or link', 'Smart calorie target that adjusts to your progress', 'Advanced micronutrient analysis and nutrition reports', 'Adjusts to your cuisine & diet'] },
-  pro: { name: 'Plus', perks: ['Unlimited AI photo scans and meal follow-ups', 'Personal AI nutrition coach that talks back', '12 AI recipes made for your calories and protein', '4 personalised AI meal plans and 8 AI workout plans a month', 'Weekly nutrition progress report', 'Restaurant menus: photo, QR code or link', 'Smart calorie target that adjusts to your progress', 'Advanced micronutrient analysis and nutrition reports', 'Adjusts to your cuisine & diet'] },
+  free: { name: 'Free', perks: FREE_FEATURES },
+  plus: { name: 'Plus', perks: PLUS_FEATURES },
+  pro: { name: 'Plus', perks: PLUS_FEATURES },
 };
 
 type Billing = 'monthly' | 'yearly';
@@ -141,6 +142,7 @@ export default function Premium() {
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="flex items-center gap-2 text-[18px] font-extrabold">{t.name}{t.best && <span className="rounded-full bg-primary px-2 py-0.5 text-xs font-bold text-on-primary">Most popular</span>}</p>
+                    {t.tier && <p className="mt-2 text-sm font-bold">Everything in Free, plus:</p>}
                     <ul className="mt-2 space-y-1 text-sm text-silver">{t.perks.map((x) => <li key={x} className="flex items-center gap-2"><Check size={15} className="text-accent" strokeWidth={3} />{x}</li>)}</ul>
                   </div>
                   <div className="text-right">
@@ -152,6 +154,7 @@ export default function Premium() {
               </div>
             ); })}
           </div>
+          <p className="mt-3 text-center text-xs text-silver">{CREDITS_NOTE}</p>
           <p className="mt-4 rounded-2xl bg-raised p-4 text-center text-sm text-silver">Subscriptions open soon. Everything in Free works now.</p>
           <p className="mt-3 text-center text-xs text-silver"><Link to="/terms" className="underline">Terms</Link> · <Link to="/refunds" className="underline">Cancellation & refunds</Link> · <Link to="/privacy" className="underline">Privacy</Link></p>
         </div>
@@ -180,12 +183,13 @@ export default function Premium() {
                   onClick={() => setTier(t)}
                   price={displayPrice(p)}
                   sub={`per ${intervalLabel(p.interval)}`}
-                  badge={save > 0 ? `Save ${save}%` : t === 'pro' ? 'Plans + ideas' : undefined}
+                  badge={save > 0 ? `Save ${save}%` : t === 'pro' ? 'Most popular' : undefined}
                   scans={p.scans}
                 />
               );
             })}
           </div>
+          <p className="mt-3 text-center text-xs text-silver">{CREDITS_NOTE}</p>
 
           {needsAccount ? (
             <div className="mt-6">
@@ -246,6 +250,7 @@ function TierCard({ tier, selected, onClick, price, sub, badge, scans }: { tier:
           <span className="text-xs text-silver">{sub}</span>
         </span>
       </div>
+      {tier !== 'free' && <p className="mt-2 text-sm font-bold">Everything in Free, plus:</p>}
       <ul className="mt-2 space-y-1">
         {perks.map((p) => (
           <li key={p} className="flex items-center gap-2 text-sm text-silver"><Check size={14} className={tier === 'free' ? 'text-dim' : 'text-accent'} strokeWidth={3} /> {p}</li>
