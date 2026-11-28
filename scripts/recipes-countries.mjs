@@ -7360,6 +7360,311 @@ Jeow bong | chili:20 garlic:5 brown_sugar:5 | lao chili paste | tablespoon
 Lao baguette with pâté | baguette:80 liver:30 cucumber:20 carrots_raw:20 | khao jee pate | sandwich
 `);
 
+// ======================= ROUND 7: BREAKFASTS AND SNACKS, COUNTRY BY COUNTRY =======================
+X('Portugal', 'Portuguese', EUR, `
+Galão with torrada | coffee:60 milk:150 bread:80 butter:12 | portuguese breakfast | serving
+Pão com manteiga e queijo | roll:60 butter:8 gouda:25 | bread butter cheese | serving
+Pastel de nata with bica | puff_pastry:30 milk:40 egg:15 sugar:12 coffee:40 | nata and espresso | serving
+Tremoços | fava:80 salt:1 | lupin beans snack | bowl
+`);
+X('Ireland', 'Irish', EUR, `
+Porridge with brown sugar and cream | oats:50 water:200 brown_sugar:10 cream:20 | irish porridge cream | bowl
+Boxty with egg | potato:120 flour:25 milk:30 butter:10 egg_fried:50 | boxty breakfast | plate
+Scones with butter and jam (Irish) | flour:50 butter:15 milk:20 jam:20 | irish scones | scone
+`);
+X('Belgium', 'Belgian', EUR, `
+Pistolet with ham and cheese | roll:60 ham_slice:30 gouda:20 butter:5 | belgian breakfast roll | roll
+Cramique | flour:50 raisins:15 butter:10 sugar:8 | raisin brioche | slice
+Couque suisse | flour:40 butter:12 milk:30 egg:10 sugar:10 dark_choc:8 | belgian pastry | pastry
+`);
+X('Switzerland', 'Swiss', EUR, `
+Gipfeli with coffee | croissant:60 coffee:150 milk:30 | swiss croissant | serving
+Swiss breakfast plate | bread:60 butter:10 jam:15 swiss:30 | swiss zmorge | plate
+Ovomaltine-style malted milk | milk:250 cocoa_powder:8 sugar:10 oats:5 | malt drink | glass
+`);
+X('Austria', 'Austrian', EUR, `
+Wiener Frühstück | roll:60 butter:10 jam:20 egg_boiled:50 coffee:150 | viennese breakfast | serving
+Topfengolatsche | puff_pastry:50 cottage:40 sugar:10 | quark pastry | pastry
+Kipferl | flour:40 butter:12 sugar:6 | austrian crescent | piece
+`);
+X('Hungary', 'Hungarian', EUR, `
+Zsíros kenyér-style bread with lard and onion | bread:60 lard:15 onion:15 paprika:1 | bread with lard | serving
+Tojásrántotta | egg:120 onion:20 green_pepper:20 lard:8 | hungarian scrambled eggs | plate
+Túrós batyu | puff_pastry:50 cottage:50 sugar:10 raisins:5 | quark pastry hungary | pastry
+Pogácsa with cheese | flour:50 butter:15 cheddar:20 | hungarian scones | serving (3)
+`);
+X('Czechia', 'Czech', EUR, `
+Rohlík s máslem a šunkou | roll:60 butter:8 ham_slice:30 | czech roll with ham | serving
+Vajíčková pomazánka on bread | egg_boiled:60 butter:10 mustard:3 bread:50 | egg spread czech | serving
+Bábovka | flour:40 sugar:20 butter:15 egg:15 cocoa_powder:3 | czech marble cake | slice
+`);
+X('Romania', 'Romanian', EUR, `
+Mămăliguță cu ou și brânză | cornmeal:60 water:150 egg_fried:50 feta:30 | polenta with egg and cheese | plate
+Covrigi with tea | flour:70 sesame:5 black_tea:200 | pretzel and tea | serving
+Pâine cu zacuscă | bread:60 eggplant:40 red_pepper:30 oil:8 | zacusca breakfast | serving
+`);
+X('Ukraine', 'Ukrainian', EUR, `
+Buterbrod with salo | rye_bread:50 pork_belly:25 garlic:2 | salo sandwich | piece
+Ukrainian breakfast eggs with sausage | egg_fried:100 sausage:60 bread:40 | ukrainian breakfast | plate
+Kasha manna (Ukrainian) | semolina:40 milk:200 sugar:10 butter:5 | semolina porridge ukraine | bowl
+Pampushky with honey | flour:60 oil:10 honey:15 | sweet pampushky | serving (2)
+`);
+X('Georgia', 'Georgian', AS, `
+Khachapuri penovani | puff_pastry:70 mozzarella:40 feta:20 | puff pastry khachapuri | piece
+Chvishtari | cornmeal:60 feta:40 egg:10 butter:8 | cheese corn cake | piece
+Matsoni with honey | yogurt:200 honey:15 | georgian yogurt honey | bowl
+`);
+X('Armenia', 'Armenian', AS, `
+Armenian breakfast plate | bread:60 feta:40 tomato:50 cucumber:50 parsley:5 | armenian breakfast | plate
+Ponchik | flour:50 sugar:10 oil:15 milk:40 | armenian custard doughnut | doughnut
+Sujukh | walnuts:20 raisins:20 | walnut grape sweet | piece
+`);
+X('Azerbaijan', 'Azerbaijani', AS, `
+Azerbaijani breakfast with tea | bread:60 feta:40 butter:10 honey:15 black_tea:200 | azeri breakfast | serving
+Kuku with herbs and bread | egg:100 spinach:40 parsley:10 oil:8 bread:40 | azeri kuku breakfast | plate
+Badambura | flour:30 butter:12 almonds:15 sugar:15 | almond pastry azerbaijan | piece
+`);
+X('Uzbekistan', 'Uzbek', AS, `
+Uzbek non with green tea | flour:80 green_tea:250 | non and choy | serving
+Somsa (Uzbek tandir) | flour:60 lamb_mince:50 onion:20 butter:8 | tandir somsa | piece
+Uzbek dried fruit and nuts | raisins:20 apricot_dried:20 walnuts:15 | quruq meva | handful
+`);
+X('Kazakhstan', 'Kazakh', AS, `
+Kazakh breakfast with baursak and kaymak | flour:50 oil:12 cream:20 jam:15 black_tea:150 milk:50 | kazakh dastarkhan breakfast | serving
+Irimshik | cottage:40 sugar:5 | sweet curd snack | serving
+`);
+X('Saudi Arabia', 'Saudi', AS, `
+Saudi breakfast plate | fava:120 egg_fried:50 flour:60 feta:30 olives:15 | saudi ful and eggs | plate
+Tamees with cheese | flour:70 feta:30 honey:10 | tamees bread | serving
+Dates with Arabic coffee | dates:40 coffee:100 sp_cardamom:0.5 | gahwa and dates | serving
+`);
+X('United Arab Emirates', 'Emirati', AS, `
+Regag with cheese and egg | flour:40 egg:50 feta:20 | emirati regag | serving
+Khameer with date syrup | flour:60 sugar:10 milk:30 molasses:15 | khameer dibs | piece
+`);
+X('Jordan', 'Jordanian', AS, `
+Jordanian breakfast spread | hummus:60 fava:60 falafel_alt:0 chickpeas:40 oil:10 pita:70 | jordanian falafel breakfast | plate
+Zaatar manaeesh (Jordanian) | flour:80 olive_oil:15 sp_thyme:3 sesame:3 | jordanian manakish | piece
+`);
+X('Syria', 'Syrian', AS, `
+Syrian fatteh breakfast | chickpeas:120 pita:40 yogurt:80 tahini:10 | syrian breakfast fatteh | bowl
+Ka'ak Halabi | flour:50 sesame:5 sp_anise:0.5 | aleppo biscuit rings | serving (3)
+`);
+X('Iraq', 'Iraqi', AS, `
+Kahi with geymar and date syrup | flour:60 butter:20 cream:30 molasses:15 | iraqi breakfast kahi | serving
+Iraqi eggs and tomato | egg:100 tomato:100 oil:10 bread:50 | iraqi breakfast eggs | plate
+`);
+X('Yemen', 'Yemeni', AS, `
+Fatoot | bread:60 egg:100 butter:10 tomato:30 | yemeni egg bread scramble | plate
+Malawah with honey | flour:80 butter:20 honey:15 | malawah breakfast | piece
+`);
+X('Bangladesh', 'Bangladeshi', AS, `
+Paratha with egg (Bangladeshi) | flour:80 ghee:12 egg:50 | dim porota | plate
+Khichuri with fried egg and pickle | rice:80 lentils:50 egg_fried:50 oil:10 | breakfast khichuri | plate
+Jhal muri | rice:40 peanuts:15 onion:15 chili:2 mustard:3 | spicy puffed rice | bowl
+Singara and tea | flour:50 potato:60 oil:15 black_tea:150 milk:40 sugar:8 | shingara cha | serving
+`);
+X('Sri Lanka', 'Sri Lankan', AS, `
+Coconut roti with lunu miris | flour:60 coconut_meat:30 onion:15 chili:3 | pol roti sambol | serving (2)
+Pittu with coconut milk | rice_flour:80 coconut_meat:20 coconut_milk:60 | pittu | plate
+Milk toffee, Sri Lankan | condensed:40 sugar:15 cashews:8 | sri lankan milk toffee | serving (3)
+Murukku (Sri Lankan) | rice_flour:30 chickpea_flour:10 oil:12 | sri lankan murukku | handful
+`);
+X('Nepal', 'Nepali', AS, `
+Sel roti with achar | rice_flour:60 sugar:15 oil:15 potato:40 | sel roti breakfast | serving
+Nepali tea with biscuits | black_tea:150 milk:80 sugar:10 shortbread:20 | chiya and biscuits | serving
+Chana chatpate | chickpeas:80 rice:30 onion:15 lemon:5 chili:2 | nepali street snack | bowl
+`);
+X('Myanmar', 'Burmese', AS, `
+Nan pyar with pe pyot | flour:70 kidney:80 oil:8 | naan with boiled peas | plate
+Burmese milk tea with samosa | black_tea:150 condensed:30 flour:40 potato:40 oil:12 | lahpet yay and samusa | serving
+Mont lin ma yar | rice_flour:40 egg:20 spring_onion:5 oil:8 | husband and wife snack | serving (6)
+`);
+X('Cambodia', 'Cambodian', AS, `
+Bai sach chrouk with egg | pork_loin:100 rice:180 egg_fried:50 | khmer breakfast egg | plate
+Num kong | rice_flour:40 sugar:10 oil:12 | khmer ring doughnut | piece
+Grilled corn with scallion oil | corn:150 spring_onion:10 oil:8 | pot ang | cob
+`);
+X('Laos', 'Lao', AS, `
+Khao piak sen breakfast bowl | rice_noodles:150 chicken_meat:60 stock:300 | lao breakfast noodles | bowl
+Khao niao with jeow and egg | sticky_rice:120 egg_fried:50 tomato:30 chili:3 | lao sticky rice breakfast | plate
+Khao tom (Lao banana sticky rice) | sticky_rice:100 banana:60 coconut_milk:20 | lao banana rice cake | parcel
+`);
+X('Malaysia', 'Malaysian', AS, `
+Nasi lemak bungkus (small) | rice:130 coconut_milk:30 peanuts:10 egg_boiled:25 cucumber:15 chili:3 | wrapped nasi lemak | packet
+Roti canai with curry and teh tarik | flour:80 ghee:12 lentils:80 black_tea:150 condensed:25 | mamak breakfast | serving
+Half-boiled eggs with soy | egg:100 soy:5 sp_pepper:0.5 | telur separuh masak | serving (2)
+Curry puff | flour:50 potato:50 chicken_meat:20 oil:15 curry:2 | karipap | serving (2)
+Pisang goreng (Malaysian) | banana:120 flour:25 oil:15 | malaysian fried banana | serving (2)
+`);
+X('Singapore', 'Singaporean', AS, `
+Prata kosong with sugar | flour:70 ghee:10 sugar:10 | plain prata sugar | piece
+Soft-boiled eggs and kopi | egg:100 soy:5 coffee:150 condensed:20 | kopi and eggs | serving
+Curry puff (Singapore) | flour:50 potato:50 chicken_meat:20 oil:15 curry:2 | singapore curry puff | serving (2)
+`);
+X('Taiwan', 'Taiwanese', AS, `
+Dan bing with soy milk | flour:50 egg:50 oil:10 soy_milk:250 | taiwanese breakfast set | serving
+Turnip cake (Taiwanese) | rice_flour:60 radish:80 oil:10 | lo bo gao taiwan | serving (2)
+Pepper bun | flour:60 pork_mince:40 spring_onion:10 sp_pepper:1 | hu jiao bing | bun
+Sweet potato balls | sweet_potato:60 tapioca:30 oil:12 | qq balls | serving
+`);
+X('Mongolia', 'Mongolian', AS, `
+Suutei tsai with boortsog | green_tea:150 milk:100 flour:40 oil:10 | mongolian breakfast | serving
+Khuushuur (small) | flour:40 lamb_mince:40 oil:12 | mini khuushuur | serving (2)
+`);
+X('Senegal', 'Senegalese', AF, `
+Café Touba with tapalapa bread | coffee:150 sugar:12 baguette:80 | senegal breakfast | serving
+Bouillie de mil (Senegal) | millet:50 milk:150 sugar:12 | senegal millet porridge | bowl
+Beignets (Senegal) | flour:60 sugar:10 oil:15 | senegalese beignets | serving (3)
+`);
+X("Côte d'Ivoire", 'Ivorian', AF, `
+Garba breakfast | cassava_cooked:150 fish:80 oil:15 onion:15 | ivorian garba morning | plate
+Alloco with egg (Ivorian) | plantain_fried:150 egg_boiled:50 | alloco oeuf | plate
+Gâteau de banane | banana:100 flour:40 sugar:10 oil:12 | ivorian banana fritters | serving (3)
+`);
+X('Cameroon', 'Cameroonian', AF, `
+Beignets-haricots with bouillie | flour:60 oil:15 sugar:5 kidney:100 cornmeal:40 water:150 | cameroon breakfast bhb | plate
+Bread with omelette spaghetti | baguette:80 egg:100 pasta:60 oil:10 | omelette spaghetti sandwich | sandwich
+Puff-puff with groundnuts | flour:60 sugar:10 oil:15 peanuts:20 | cameroon puff puff peanuts | serving
+`);
+X('Tanzania', 'Tanzanian', AF, `
+Chai and maandazi (Tanzanian) | black_tea:150 milk:100 sugar:10 flour:60 coconut_milk:20 oil:15 | chai na maandazi | serving
+Uji wa ulezi | millet:40 water:250 sugar:10 lemon:3 | finger millet porridge | bowl
+Mihogo ya kukaanga | cassava:150 oil:15 lemon:5 chili:1 | fried cassava tanzania | portion
+`);
+X('Uganda', 'Ugandan', AF, `
+Katogo for breakfast | green_plantain:180 kidney:80 tomato:40 oil:8 | breakfast katogo | bowl
+Uganda tea with chapati | black_tea:150 milk:100 sugar:10 flour:70 oil:10 | chai and chapati | serving
+Roasted cassava | cassava:150 | ugandan roast cassava | portion
+`);
+X('Zimbabwe', 'Zimbabwean', AF, `
+Bread with peanut butter and tea (Zimbabwe) | bread:80 peanut_butter:25 black_tea:200 milk:30 sugar:10 | zimbabwe breakfast | serving
+Bota with peanut butter | cornmeal:50 water:200 peanut_butter:25 | peanut butter porridge | bowl
+Mandazi (Zimbabwe) | flour:60 sugar:10 oil:15 | zimbabwe mandazi | serving (2)
+`);
+X('Zambia', 'Zambian', AF, `
+Sweet potatoes and tea (Zambia) | sweet_potato:200 black_tea:200 milk:30 sugar:10 | zambian breakfast | serving
+Samp porridge | corn:80 milk:150 sugar:10 | zambian samp porridge | bowl
+Vitumbuwa with tea | flour:60 sugar:10 oil:15 black_tea:150 | zambian fritters tea | serving
+`);
+X('Mozambique', 'Mozambican', AF, `
+Pão with butter and coffee | roll:70 butter:10 coffee:150 milk:40 | mozambique breakfast | serving
+Badjia with pão | cowpeas:100 oil:15 roll:60 | badjia sandwich | sandwich
+Chamuças | flour:40 beef_mince:40 onion:10 oil:15 | mozambican samosas | serving (3)
+`);
+X('Angola', 'Angolan', AF, `
+Papa de milho (Angola) | cornmeal:50 milk:150 sugar:12 | angolan corn porridge | bowl
+Pão com chouriço (Angola) | roll:70 chorizo:30 | angolan sausage bread | sandwich
+Mikate (Angola) | flour:60 sugar:10 oil:15 | angolan doughnuts | serving (3)
+`);
+X('Sudan', 'Sudanese', AF, `
+Sudanese ful breakfast with bread | fava:200 oil:10 feta:20 bread:60 | sudanese breakfast ful | plate
+Zalabia | flour:50 sugar:10 oil:15 | sudanese doughnuts | serving (3)
+Tea with milk and ginger (Sudan) | black_tea:150 milk:100 ginger:3 sugar:12 | shai bi laban zanjabil | cup
+`);
+X('Somalia', 'Somali', AF, `
+Anjero with suqaar | flour:70 water:80 beef:80 onion:20 | somali breakfast | plate
+Somali sweet bread | flour:50 sugar:12 butter:10 sp_cardamom:0.5 | somali bread | slice
+Sambuus (Somali snack) | flour:40 beef_mince:40 onion:10 oil:15 | somali sambuus | serving (2)
+`);
+X('Tunisia', 'Tunisian', AF, `
+Tunisian breakfast with harissa and olive oil | bread:80 olive_oil:15 olives:15 egg_boiled:50 | tunisian breakfast | plate
+Bambalouni with coffee | flour:60 oil:15 sugar:10 coffee:100 | sidi bou said breakfast | serving
+Fricassé (snack) | flour:60 oil:15 tuna:30 olives:8 egg_boiled:20 | tunisian fricasse snack | sandwich
+`);
+X('Algeria', 'Algerian', AF, `
+Algerian breakfast with kesra and dates | semolina:80 olive_oil:12 dates:30 milk:150 | algerian breakfast | serving
+Msemen with honey (Algerian) | flour:70 semolina:15 butter:10 honey:15 | algerian msemen | piece
+Garantita street snack | chickpea_flour:80 water:150 oil:15 egg:20 | algerian karantika snack | slice
+`);
+X('Libya', 'Libyan', AF, `
+Libyan breakfast with bsisa | barley:40 dates:20 olive_oil:10 milk:150 | libyan bsisa breakfast | bowl
+Sfinz with egg | flour:60 oil:20 egg:50 | sfinz bel adam | piece
+`);
+X('Cuba', 'Cuban', NA, `
+Tostada and café con leche (Cuban) | bread:70 butter:12 coffee:60 milk:150 sugar:10 | cuban breakfast | serving
+Cuban egg and ham sandwich | roll:70 egg_fried:50 ham_slice:30 | cuban breakfast sandwich | sandwich
+Mariquitas | green_plantain:100 oil:15 | cuban plantain chips | bag
+`);
+X('Dominican Republic', 'Dominican', NA, `
+Mangú with salami and cheese | green_plantain:200 sausage:50 cheddar:30 onion:20 | dominican breakfast | plate
+Avena caliente (Dominican) | oats:40 milk:200 sugar:15 sp_cinnamon:0.5 | dominican hot oatmeal | cup
+Empanadas (Dominican snack) | flour:50 oil:15 beef_mince:40 | dominican snack empanada | serving (2)
+`);
+X('Haiti', 'Haitian', NA, `
+Haitian spaghetti breakfast | pasta:180 sausage:40 tomato_paste:15 onion:20 oil:10 | espageti haitian | plate
+Akasan | cornmeal:40 milk:200 sugar:15 sp_cinnamon:0.5 | haitian corn drink | cup
+Pate kòde (snack) | flour:60 oil:15 salt_cod:30 | haitian pate | piece
+`);
+X('Puerto Rico', 'Puerto Rican', TE, `
+Mallorca with ham and cheese | flour:50 butter:12 sugar:12 ham_slice:30 swiss:20 | mallorca sandwich | sandwich
+Pan sobao and café | roll:70 butter:10 coffee:100 milk:100 | puerto rican breakfast | serving
+Alcapurrias | green_plantain:100 taro:40 beef_mince:40 oil:15 | puerto rican fritters | serving (2)
+`);
+X('Guatemala', 'Guatemalan', NA, `
+Huevos con frijoles y plátano | egg_fried:100 black_beans:80 plantain_fried:80 corn_tortilla:40 | guatemalan breakfast eggs | plate
+Mosh | oats:40 milk:200 sugar:12 sp_cinnamon:0.5 | guatemalan oatmeal drink | cup
+Tostada guatemalteca with guacamole | taco_shell:30 guacamole:40 feta:10 | guacamole tostada | serving (2)
+`);
+X('Honduras', 'Honduran', NA, `
+Desayuno típico hondureño | egg_fried:100 refried:60 plantain_fried:80 sour_cream:20 avocado:30 | honduran breakfast | plate
+Semita hondureña | flour:50 sugar:15 butter:10 | honduran sweet bread | slice
+Tajadas de plátano | green_plantain:120 oil:15 cabbage:30 | plantain chips honduras | portion
+`);
+X('El Salvador', 'Salvadoran', NA, `
+Desayuno típico salvadoreño | egg_scrambled:100 refried:60 plantain_fried:80 sour_cream:20 | salvadoran breakfast | plate
+Quesadilla salvadoreña with coffee | flour:40 cheddar:30 sugar:20 butter:12 egg:15 coffee:150 | salvadoran cheese cake coffee | serving
+Yuca frita (snack) | cassava:120 oil:15 | salvadoran yuca snack | portion
+`);
+X('Costa Rica', 'Costa Rican', NA, `
+Gallo pinto with eggs and natilla | rice:150 black_beans:100 egg_fried:50 sour_cream:20 | costa rican breakfast | plate
+Empanadas de chiverre-style squash empanada | flour:50 pumpkin:50 sugar:15 oil:12 | squash empanada | piece
+Prestiños | flour:40 oil:15 sugar:15 | costa rican fritters | serving (2)
+`);
+X('Panama', 'Panamanian', NA, `
+Hojaldre with fried egg | flour:60 oil:15 egg_fried:50 | panama breakfast hojaldra | plate
+Carimañola breakfast | cassava:100 beef_mince:40 oil:15 | panama carimanola breakfast | serving (2)
+Patacón chips | green_plantain:120 oil:15 | panama plantain chips | bag
+`);
+X('Venezuela', 'Venezuelan', SA, `
+Arepa with eggs perico | masa:90 egg:80 tomato:30 onion:15 oil:8 | arepa perico | arepa
+Empanada de carne (breakfast) | masa:60 beef_mince:40 oil:15 | venezuelan breakfast empanada | serving (2)
+Cachito de jamón with café | flour:60 butter:12 ham_slice:30 coffee:100 milk:60 | cachito coffee | serving
+`);
+X('Ecuador', 'Ecuadorian', SA, `
+Bolón mixto with coffee | green_plantain:180 cheddar:30 pork_belly:20 coffee:150 | bolon breakfast | serving
+Tigrillo with fried egg | green_plantain:150 egg_fried:50 feta:30 | tigrillo breakfast | plate
+Humitas with coffee | corn:150 feta:20 butter:8 coffee:150 | ecuador humitas breakfast | serving
+`);
+X('Bolivia', 'Bolivian', SA, `
+Salteña breakfast with coffee | flour:60 butter:10 beef:40 potato:20 coffee:150 | bolivian salteña breakfast | serving
+Api con buñuelo | corn:30 sugar:20 water:250 flour:40 oil:15 | api with bunuelo | serving
+Cuñapé with coffee | tapioca:40 cheddar:30 coffee:150 milk:40 | cunape breakfast | serving
+`);
+X('Chile', 'Chilean', SA, `
+Marraqueta with avocado | roll:80 avocado:60 | chilean avocado bread | serving
+Huevos revueltos con tomate (Chilean) | egg:100 tomato:60 oil:8 roll:50 | chilean scrambled eggs | plate
+Sopaipilla with pebre (snack) | flour:40 pumpkin:30 oil:15 tomato:30 onion:10 | sopaipilla pebre | serving (2)
+`);
+X('Paraguay', 'Paraguayan', SA, `
+Cocido paraguayo with chipa | green_tea:200 milk:80 sugar:15 tapioca:30 cheddar:20 | paraguayan breakfast | serving
+Mbeju breakfast | tapioca:50 cheddar:30 milk:20 butter:8 | mbeju morning | piece
+`);
+X('Fiji', 'Fijian', OC, `
+Fijian breakfast with roti and tea | flour:70 oil:10 black_tea:200 milk:30 sugar:10 | fiji roti breakfast | serving
+Topoi | flour:40 coconut_milk:40 sugar:10 | fijian dumplings in coconut | bowl
+Cassava chips (Fijian) | cassava:120 oil:15 | fiji cassava chips | bag
+`);
+X('Samoa', 'Samoan', OC, `
+Samoan breakfast with koko and pancakes | cocoa_powder:12 sugar:15 water:200 flour:50 banana:30 oil:12 | samoan breakfast | serving
+Pani popo for breakfast | flour:50 sugar:15 butter:10 coconut_milk:50 | coconut buns breakfast | bun
+`);
+X('Papua New Guinea', 'Papua New Guinean', OC, `
+Scones and tea (PNG) | flour:50 butter:10 milk:20 black_tea:200 sugar:10 | png scones tea | serving
+Roasted kaukau breakfast | sweet_potato:200 | png roast sweet potato | portion
+Peanuts (PNG market) | peanuts:40 | png peanuts | handful
+`);
+
 console.log(`everyday dishes left to real measured records: ${preferred.length}`);
 if (process.env.SHOW_PREFERRED) console.log(preferred.join('\n'));
 // ---- write out ----

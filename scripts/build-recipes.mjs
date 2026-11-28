@@ -13,7 +13,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { RECIPES, K, LATER, coverage } from './recipes-countries.mjs';
-import { variantsOf } from './recipe-variants.mjs';
+import { pairingsOf, variantsOf } from './recipe-variants.mjs';
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const dest = join(root, 'public', 'data', 'foods.json');
@@ -73,10 +73,13 @@ const later = RECIPES.filter((r) => LATER.has(r.name)).map(rowFor);
 // Other versions of each dish (other proteins, vegetarian, vegan) go to a second file that the app
 // loads right after the main one, so the first load and the offline cache stay small.
 const names = new Set([...file.foods.map((row) => row[1].split(' (')[0].toLowerCase()), ...RECIPES.map((r) => r.name.toLowerCase())]);
-const variants = RECIPES.flatMap((r) => variantsOf(r, K, names));
+const recipeByName = new Map(RECIPES.map((r) => [r.name, r]));
+const versions = RECIPES.flatMap((r) => variantsOf(r, K, names));
+// Complete meals: each dish, and each of its versions, with the staples it's eaten with.
+const variants = [...versions, ...[...RECIPES, ...versions].flatMap((r) => pairingsOf(r, K, names, recipeByName))];
 const more = variants.map((v) => {
   const row = rowFor(v);
-  row[12] = row[12].replace(' standard recipe,', ` standard recipe (${v.kind === 'protein' ? 'version' : v.kind + ' version'} of ${v.of}),`);
+  row[12] = row[12].replace(' standard recipe,', v.kind === 'meal' ? ` standard recipe (${v.served} served with ${v.staple}),` : ` standard recipe (${v.kind === 'protein' ? 'version' : v.kind + ' version'} of ${v.of}),`);
   return row;
 });
 writeFileSync(join(root, 'public', 'data', 'foods-more.json'), JSON.stringify({ foods: [...later, ...more] }));
@@ -85,14 +88,14 @@ console.log(`Second file: ${later.length} newer dishes + ${more.length} versions
 // Completion tracker (Owner page): per country, its dishes and the versions made from them.
 // Every dish counted here has a full ingredient list of measured USDA/FAO records (the build stops otherwise).
 const kindsOf = new Map();
-for (const v of variants) { const k = kindsOf.get(v.of) ?? { protein: 0, vegetarian: 0, vegan: 0 }; k[v.kind] += 1; kindsOf.set(v.of, k); }
+for (const v of variants) { const k = kindsOf.get(v.of) ?? { protein: 0, vegetarian: 0, vegan: 0, meal: 0 }; k[v.kind] += 1; kindsOf.set(v.of, k); }
 const recipeByShown = new Map(RECIPES.map((r) => [r.name.split(' (')[0], r]));
 const tracker = Object.entries(coverage).filter(([c]) => !c.startsWith('Worldwide')).map(([country, v]) => {
   const dishes = [...new Set(v.dishes)];
-  const t = { country, region: v.region, dishes: dishes.length, protein: 0, vegetarian: 0, vegan: 0, plantDishes: 0 };
+  const t = { country, region: v.region, dishes: dishes.length, protein: 0, vegetarian: 0, vegan: 0, meals: 0, plantDishes: 0 };
   for (const d of dishes) {
     const k = kindsOf.get(recipeByShown.get(d)?.name ?? d);
-    if (k) { t.protein += k.protein; t.vegetarian += k.vegetarian; t.vegan += k.vegan; }
+    if (k) { t.protein += k.protein; t.vegetarian += k.vegetarian; t.vegan += k.vegan; t.meals += k.meal; }
     if (/^(vegan|vegetarian)\b/i.test(d)) t.plantDishes += 1;
   }
   return t;
@@ -100,7 +103,7 @@ const tracker = Object.entries(coverage).filter(([c]) => !c.startsWith('Worldwid
 const everyday = Object.entries(coverage).filter(([c]) => c.startsWith('Worldwide')).reduce((s, [, v]) => s + new Set(v.dishes).size, 0);
 writeFileSync(join(root, 'public', 'data', 'coverage.json'), JSON.stringify({ target: 1000, everyday, countries: tracker }));
 console.log(`Tracker: ${tracker.length} countries and territories, ${everyday} everyday dishes.`);
-console.log(`Added ${more.length} versions: ${['protein', 'vegetarian', 'vegan'].map((k) => `${variants.filter((v) => v.kind === k).length} ${k}`).join(', ')}.`);
+console.log(`Added ${more.length} versions: ${['protein', 'vegetarian', 'vegan', 'meal'].map((k) => `${variants.filter((v) => v.kind === k).length} ${k}`).join(', ')}.`);
 writeFileSync(dest, JSON.stringify(file));
 writeFileSync(REG_FILE, `${JSON.stringify(reg, null, 1)}\n`);
 console.log(`Added ${out.length} standard-recipe dishes.`);

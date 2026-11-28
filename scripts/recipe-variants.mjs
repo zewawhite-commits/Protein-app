@@ -46,7 +46,7 @@ const MINCE_SWAPS = { beef: ['chicken', 'lamb', 'turkey'], chicken: ['beef', 'tu
 const WORD = { chicken: /\bchicken\b/i, beef: /\bbeef\b/i, goat: /\bgoat\b/i, lamb: /\b(lamb|mutton)\b/i, pork: /\bpork\b/i, turkey: /\bturkey\b/i, fish: /\bfish\b/i, shrimp: /\b(shrimp|prawns?)\b/i };
 const ANY_PROTEIN_WORD = /\b(chicken|beef|goat|lamb|mutton|pork|turkey|fish|shrimp|prawns?|salmon|tuna|cod|duck|crab|steak|meatballs?|sausages?|bacon|ham|seafood|lobster|octopus|squid|meat|camel|veal|rabbit)\b/gi;
 // Dish names that already mean one meat in another language: never put a different meat in them.
-const NAMED_MEAT = /\b(doro|pollo|poulet|frango|galinha|dak|gai|ayam|murgh|murg|djaj|dajaj|kuku|nyama|carne|boeuf|bœuf|gosht|ghosht|keema|kheema|ika|pescado|poisson|peixe|camar[aã]o|cerdo|porco|lech[oó]n|kambing|kuzu|agneau|cordero|mbuzi|bulgogi|galbi|tonkatsu|katsu|yakitori|carnitas|barbacoa|asado|churrasco|biltong|kilishi|suya|shawarma|gyros?|doner|souvlaki|kofta|kebab|jerk|tandoori|tikka|adobo|lechon|rendang|satay|sate|bistek|tapa|nihari|haleem|vindaloo|rogan|chili con carne|bacalhau|bacalao|tonkotsu|kazy|sv[ií]čkov[aá]|saltimbocca|bitoque|brochettes?|schnitzel|cutlets?|chops?|ribs|wings?|roast|stifado|souse)\b/i;
+const NAMED_MEAT = /\b(doro|pollo|poulet|frango|galinha|dak|gai|ayam|murgh|murg|djaj|dajaj|kuku|nyama|carne|boeuf|bœuf|gosht|ghosht|keema|kheema|ika|pescado|poisson|peixe|camar[aã]o|cerdo|porco|lech[oó]n|kambing|kuzu|agneau|cordero|mbuzi|bulgogi|galbi|tonkatsu|katsu|yakitori|carnitas|barbacoa|asado|churrasco|biltong|kilishi|suya|shawarma|gyros?|doner|souvlaki|kofta|kebab|jerk|tandoori|tikka|adobo|lechon|rendang|satay|sate|bistek|tapa|nihari|haleem|vindaloo|rogan|chili con carne|hipon|baboy|manok|baka|isda|daging|ikan|babi|udang|samak|lahm|laham|djej|kip|huhn|h[äa]hnchen|schwein|porc|cochon|frango|galinha|bife|ternera|cordero|chivo|cabrito|kambing|gosht|murgh|machli|jhinga|chingri|macher|maach|keema|bacalhau|bacalao|tonkotsu|kazy|sv[ií]čkov[aá]|saltimbocca|bitoque|brochettes?|schnitzel|cutlets?|chops?|ribs|wings?|roast|stifado|souse)\b/i;
 const GENERIC = /\b(stew|soup|curry|rice|sauce|stir.?fry|noodles?|pasta|spaghetti|salad|sandwich|wrap|bowl|tacos?|burrito|skewers|plate|porridge|biryani|pilaf|pilau|plov|pulao|tagine|casserole|fajitas?|quesadilla|fried rice|jollof|egusi|ogbono|okra|pepper soup|dumplings?|empanadas?|samosas?|lasagn[ae]|risotto|paella|chowder|broth|gumbo|jambalaya|pie|pot|hotpot)\b/i;
 const SOUTH_ASIAN = /Indian|Pakistani|Bangladeshi|Nepali|Sri Lankan|Bhutanese|Maldivian/;
 
@@ -150,6 +150,108 @@ export function variantsOf(r, K, names) {
   if (veg && hadMeat && ANIMAL.test(clean(veg.map(([n]) => n).join('; ')))) {
     const n = plantName('Vegetarian', main && !main.mince && SOUTH_ASIAN.test(r.cuisine) ? 'paneer' : sub);
     if (n) add(n, veg, 'vegetarian');
+  }
+  return out;
+}
+
+// ---------------------------------------------------------------------------------------------
+// Complete meals: a soup, stew, curry or sauce served with the staple it's eaten with in that
+// country (egusi soup with pounded yam, doro wat with injera, chicken curry with naan). Both parts
+// are real recipes or measured records, so the plate's numbers are their sum. Dishes that already
+// contain a staple (jollof, biryani, "X with rice") are not paired again.
+// ---------------------------------------------------------------------------------------------
+const ACCOMPANIED = /\b(soup|stew|curry|sauce|wat|wot|tibs|alicha|tagine|tajine|chili|dal|dhal|daal|korma|masala|vindaloo|madras|jalfrezi|karahi|goulash|gulasz|gulyás|pörkölt|paprikash|casserole|fricass[eé]e|ragout|ragù|bredie|potjie|potjiekos|mafe|maf[ée]|domoda|yassa|ndol[ée]|egusi|ogbono|efo|okra|okro|banga|afang|editan|atama|ofe|miyan|gbegiri|ewedu|kontomire|abunuabunu|nkatenkwan|abenkwan|jjigae|adobo|sinigang|kare-kare|rendang|gulai|caldo|guiso|seco|picadillo|ropa vieja|feijoada|moqueca|vatap[aá]|bob[oó]|estofado|chakalaka|matapa|calulu|muamba|moambe|kedjenou|stroganoff|bourguignon|blanquette|navarin|daube|carbonnade|stoofvlees|hachee|irio|githeri|maharagwe|isombe|matoke|dovi|ifisashi|nhedzi|bobotie|ackee|rundown|run down|oxtail|brown stew|curry goat|stew peas|callaloo)\b/i;
+const HAS_STAPLE = /^(Rice|Couscous|Pasta|Noodles|Bread|Cornmeal|Cassava|Yam, cooked|Yam, tuber, flour|Tortilla|Naan|Bread, naan|Chapatis|Injera|Semolina|Wheat flour|Bulgur|Quinoa|Potatoes, (boiled|mashed)|Rolls|Bagels|Croissants|Pita|Pancakes|Waffles|Taro|Plantains, green|Breadfruit|Millet|Sorghum|Teff|Fonio|Buckwheat|Barley|Gnocchi|Spaghetti|Macaroni)/i;
+
+/** staple label → how to build one portion of it: a recipe name (from RECIPES) or [record name, grams]. */
+const STAPLES = {
+  'pounded yam': { recipe: 'Pounded yam', grams: 250 }, eba: { recipe: 'Eba', grams: 250 }, amala: { recipe: 'Amala', grams: 250 },
+  fufu: { recipe: 'Fufu', grams: 250 }, semovita: { recipe: 'Semovita', grams: 250 }, banku: { recipe: 'Banku', grams: 250 },
+  ugali: { recipe: 'Ugali', grams: 250 }, nsima: { recipe: 'Ugali', grams: 250 }, nshima: { recipe: 'Ugali', grams: 250 }, sadza: { recipe: 'Ugali', grams: 250 },
+  pap: { recipe: 'Ugali', grams: 250 }, xima: { recipe: 'Ugali', grams: 250 }, posho: { recipe: 'Ugali', grams: 250 }, funge: { recipe: 'Funge', grams: 250 },
+  rice: { key: 'rice', grams: 180 }, injera: { record: 'Injera, Ethiopian bread', grams: 120 }, naan: { key: 'naan', grams: 90 },
+  chapati: { record: 'Chapatis, made without fat', grams: 60 }, roti: { record: 'Chapatis, made without fat', grams: 60 },
+  'corn tortillas': { key: 'corn_tortilla', grams: 60 }, couscous: { key: 'couscous', grams: 180 }, bread: { key: 'bread', grams: 60 },
+  'pita bread': { key: 'pita', grams: 60 }, 'mashed potatoes': { key: 'mash', grams: 200 }, 'boiled potatoes': { key: 'potato', grams: 200 },
+  taro: { record: 'Taro, cooked, without salt', grams: 150 }, 'green plantain': { record: 'Plantains, green, boiled', grams: 150 },
+  'egg noodles': { key: 'egg_noodles', grams: 160 },
+};
+
+/** What a cuisine's stews are eaten with (by demonym), most usual first; three at most. */
+export function staplesFor(demonym) {
+  const d = demonym ?? '';
+  if (/^Nigerian/.test(d)) return ['pounded yam', 'eba', 'amala'];
+  if (/^West African/.test(d)) return ['pounded yam', 'eba', 'fufu'];
+  if (/^Ghanaian/.test(d)) return ['fufu', 'banku', 'rice'];
+  if (/Cameroonian|Congolese|Gabonese|Equatoguinean|Central African|Togolese|Beninese|Ivorian/.test(d)) return ['fufu', 'rice'];
+  if (/Senegalese|Gambian|Guinean|Bissau|Sierra Leonean|Liberian|Malian|Mauritanian|Burkinab|Nigerien|Cape Verdean|Santomean/.test(d)) return ['rice'];
+  if (/Kenyan|Tanzanian|Ugandan|Rwandan|Burundian|South Sudanese/.test(d)) return ['ugali', 'rice', 'chapati'];
+  if (/Malawian/.test(d)) return ['nsima', 'rice'];
+  if (/Zambian/.test(d)) return ['nshima', 'rice'];
+  if (/Zimbabwean/.test(d)) return ['sadza', 'rice'];
+  if (/South African|Basotho|Batswana|Botswanan|Swazi|Namibian/.test(d)) return ['pap', 'rice'];
+  if (/Mozambican/.test(d)) return ['xima', 'rice'];
+  if (/Angolan/.test(d)) return ['funge', 'rice'];
+  if (/Ethiopian|Eritrean/.test(d)) return ['injera'];
+  if (/Moroccan|Algerian|Tunisian|Libyan|Sahrawi/.test(d)) return ['couscous', 'bread'];
+  if (/Egyptian|Sudanese|Somali|Djiboutian|Comorian|Malagasy|Mauritian|Seychellois|Réunionese/.test(d)) return ['rice', 'bread'];
+  if (/Lebanese|Syrian|Jordanian|Palestinian|Israeli|Iraqi|Iranian|Persian|Saudi|Emirati|Qatari|Kuwaiti|Bahraini|Omani|Yemeni|Turkish|Armenian|Georgian|Azerbaijani|Afghan|Uzbek|Kazakh|Kyrgyz|Tajik|Turkmen/.test(d)) return ['rice', 'pita bread'];
+  if (/Nepali|Bhutanese|Maldivian|Sri Lankan|Bangladeshi/.test(d)) return ['rice'];
+  if (/Indian|Pakistani/.test(d)) return ['rice', 'naan', 'chapati'];
+  if (/Chinese|Japanese|Korean|Thai|Vietnamese|Filipino|Indonesian|Malaysian|Singaporean|Cambodian|Lao|Burmese|Taiwanese|Hong Kong|Macanese|Bruneian|Timorese|Mongolian/.test(d)) return ['rice'];
+  if (/Mexican|Guatemalan|Salvadoran|Honduran|Nicaraguan|Costa Rican|Panamanian|Belizean/.test(d)) return ['rice', 'corn tortillas'];
+  if (/Jamaican|Trinidadian|Barbadian|Bahamian|Haitian|Dominican|Cuban|Puerto Rican|Grenadian|Antiguan|Kittitian|Lucian|Vincentian|Guyanese|Surinamese|Aruban|Curaçaoan|Martinican|Guadeloupean|Bermudian/.test(d)) return ['rice'];
+  if (/Brazilian|Argentine|Peruvian|Colombian|Venezuelan|Chilean|Ecuadorian|Bolivian|Uruguayan|Paraguayan/.test(d)) return ['rice'];
+  if (/Fijian|Samoan|Tongan|Papua|Solomon|Vanuatu|I-Kiribati|Marshallese|Micronesian|Palauan|Nauruan|Tuvaluan|Cook Islander|Niuean|Tahitian|Chamorro|New Caledonian/.test(d)) return ['rice', 'taro'];
+  if (/American|Canadian|Australian|New Zealander/.test(d)) return ['rice', 'mashed potatoes'];
+  if (/British|Irish|German|Austrian|Swiss|Dutch|Belgian|Polish|Czech|Slovak|Hungarian|Russian|Ukrainian|Belarusian|Lithuanian|Latvian|Estonian|Finnish|Swedish|Norwegian|Danish|Icelandic|Luxembourg|Liechtenstein/.test(d)) return ['boiled potatoes', 'mashed potatoes', 'bread'];
+  if (/French|Italian|Spanish|Portuguese|Greek|Cypriot|Maltese|Monégasque|Andorran|Sammarinese|Vatican|Croatian|Serbian|Bosnian|Montenegrin|Albanian|Macedonian|Kosovar|Slovenian|Bulgarian|Romanian|Moldovan/.test(d)) return ['bread', 'boiled potatoes', 'rice'];
+  return ['rice'];
+}
+
+let pairKeys = null;
+const wordKey = (n) => n.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\b(with|and|served|the|a)\b/g, ' ').replace(/[^a-z ]/g, ' ').split(/\s+/).filter(Boolean).sort().join(' ');
+
+/** A dish's complete-meal pairings. `recipes` maps recipe names to recipes (for swallows like eba). */
+export function pairingsOf(r, K, names, recipes) {
+  // Versions ("Egusi soup with goat") may pair too: their own "with" is fine, a second staple is not.
+  const isVersion = r.kind && r.kind !== 'meal';
+  if (/International|Spice blend|Breakfast|Snack|Salad|Sandwich/.test(r.cuisine) || !ACCOMPANIED.test(r.name) || (!isVersion && / with | and /i.test(r.name)) || / in pita|wrap|sandwich|roll\b|pie\b|tart\b|toast/i.test(r.name)) return [];
+  if (/cranberry|chutney|salsa|relish|pesto|\bdip\b|hot sauce|chili sauce|soy sauce|tomato sauce|b[ée]chamel|hollandaise|mayonnaise|ketchup|vinaigrette|gravy\b(?! with)|custard|caramel|chocolate|fruit/i.test(r.name)) return [];
+  if (r.ingredients.some(([n, g]) => HAS_STAPLE.test(n) && g >= 40)) return [];
+  if (/\b(fufu|eba|amala|pounded yam|ugali|nsima|nshima|sadza|pap|banku|kenkey|injera|rice|bread|naan|roti|chapati|couscous|noodles|pasta|tortillas?|potato(es)?|plantain|yam|cassava|taro|breadfruit|semovita|tuo|funge|xima|posho|dumplings?|polenta|grits|mash|fries|chips|frites)\b/i.test(r.name)) return [];
+  if (/sugar|honey|condensed|jam/i.test(r.ingredients.map(([n]) => n).join(' ')) && /sweet|dessert|pudding/i.test(r.name)) return [];
+  const serving = r.portions?.[0]?.[1] ?? r.yield;
+  const scale = serving / r.yield;
+  const dish = r.ingredients.map(([n, g]) => [n, Math.round(g * scale * 10) / 10]);
+  const out = [];
+  let labels = staplesFor(r.cuisine);
+  // Soups: Europe, the Americas and Oceania eat them with bread; most of Asia eats them on the side, not as a plate with rice.
+  if (/\b(soup|broth|chowder|bisque|consomm[eé]|velout[eé])\b/i.test(r.name)) {
+    if (/African|Nigerian|Ghanaian|Cameroonian|Congolese|Gabonese|Ivorian|Togolese|Beninese|Liberian|Sierra Leonean|Guinean|Senegalese|Gambian|Malian|Equatoguinean|Central African|Kenyan|Tanzanian|Ugandan|Rwandan|Burundian|Malawian|Zambian|Zimbabwean|Mozambican|Angolan|Batswana|Botswanan|Basotho|Swazi|Namibian|Ethiopian|Eritrean|Somali|Sudanese|Korean|Japanese|Jamaican|Trinidadian|Haitian|Dominican|Cuban|Puerto Rican|Mexican|Guatemalan|Salvadoran|Honduran|Nicaraguan|Costa Rican|Panamanian|Colombian|Venezuelan|Ecuadorian|Peruvian|Bolivian|Brazilian/.test(r.cuisine)) { /* keep */ }
+    else if (/Chinese|Thai|Vietnamese|Filipino|Indonesian|Malaysian|Singaporean|Cambodian|Lao|Burmese|Taiwanese|Hong Kong|Macanese|Bruneian|Timorese|Mongolian|Indian|Pakistani|Nepali|Bangladeshi|Sri Lankan|Bhutanese|Maldivian/.test(r.cuisine)) labels = [];
+    else labels = ['bread'];
+  }
+  for (const label of labels) {
+    // Mashed potatoes have milk and butter: not with a vegan dish.
+    if (r.kind === 'vegan' && label === 'mashed potatoes') continue;
+    const s = STAPLES[label];
+    let side;
+    if (s.recipe) { const sr = recipes.get(s.recipe); if (!sr) continue; side = sr.ingredients.map(([n, g]) => [n, Math.round((g * s.grams) / sr.yield * 10) / 10]); }
+    else side = [[s.record ?? K[s.key], s.grams]];
+    if (side.some(([n]) => !n)) continue;
+    const [, stem, tail = ''] = /^(.*?)((?:, (?:[A-ZÀ-Ý][^,]*|alcohol-free))*)$/.exec(r.name);
+    const name = `${stem}${/ with /i.test(stem) ? ', served with ' : ' with '}${label}${tail}`;
+    if (names.has(name.toLowerCase())) continue;
+    // "Egusi soup with pounded yam" = existing "Pounded yam and egusi soup": same words, same meal.
+    pairKeys ??= new Set([...names].map(wordKey));
+    if (pairKeys.has(wordKey(name))) continue;
+    pairKeys.add(wordKey(name));
+    names.add(name.toLowerCase());
+    const ingredients = [...dish, ...side];
+    const total = Math.round(ingredients.reduce((t, [, g]) => t + g, 0));
+    out.push({ ...r, name, aliases: [], ingredients, yield: total, kind: 'meal', of: r.of ?? r.name, served: r.name, staple: label,
+      portions: [['1 plate', total], ['1 small plate', Math.round(total * 0.7)], ['1 large plate', Math.round(total * 1.35)]] });
   }
   return out;
 }

@@ -28,7 +28,7 @@ describe('other versions of dishes (foods-more.json)', () => {
 
   it('every version says which dish it comes from and has real numbers', () => {
     for (const r of more) {
-      expect(r[12], r[1]).toMatch(/standard recipe( \((vegan |vegetarian )?version of .+\))?, per \d+(\.\d+)? g cooked:/);
+      expect(r[12], r[1]).toMatch(/standard recipe( \(((vegan |vegetarian )?version of|.+ served with) .+\))?, per \d+(\.\d+)? g cooked:/);
       expect(r[5], r[1]).toBeGreaterThan(0);
     }
   });

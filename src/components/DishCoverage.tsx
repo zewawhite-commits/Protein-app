@@ -3,7 +3,7 @@ import { COUNTRY_DISHES } from '@/data/countryDishes';
 import { dishPhotoKey } from '@/data/photoQueries';
 import { cx } from './ui';
 
-interface Row { country: string; region: string; dishes: number; protein: number; vegetarian: number; vegan: number; plantDishes: number }
+interface Row { country: string; region: string; dishes: number; protein: number; vegetarian: number; vegan: number; meals?: number; plantDishes: number }
 interface Coverage { target: number; everyday: number; countries: Row[] }
 
 /**
@@ -29,7 +29,7 @@ export function DishCoverage() {
     const withTotals = data.countries.map((c) => {
       const names = COUNTRY_DISHES[c.country]?.dishes ?? [];
       const withPhoto = names.filter((d) => photos.has(dishPhotoKey(d))).length;
-      return { ...c, versions: c.protein + c.vegetarian + c.vegan, total: c.dishes + c.protein + c.vegetarian + c.vegan, withPhoto };
+      return { ...c, versions: c.protein + c.vegetarian + c.vegan, meals: c.meals ?? 0, total: c.dishes + c.protein + c.vegetarian + c.vegan + (c.meals ?? 0), withPhoto };
     });
     const term = q.trim().toLowerCase();
     const list = withTotals.filter((c) => (region === 'All' || c.region === region) && (!term || c.country.toLowerCase().includes(term)));
@@ -39,8 +39,8 @@ export function DishCoverage() {
   if (!data) return null;
   const all = data.countries;
   const sum = (f: (r: Row) => number) => all.reduce((s, r) => s + f(r), 0);
-  const dishes = sum((r) => r.dishes); const versions = sum((r) => r.protein + r.vegetarian + r.vegan);
-  const reached = all.filter((r) => r.dishes + r.protein + r.vegetarian + r.vegan >= data.target).length;
+  const dishes = sum((r) => r.dishes); const versions = sum((r) => r.protein + r.vegetarian + r.vegan + (r.meals ?? 0));
+  const reached = all.filter((r) => r.dishes + r.protein + r.vegetarian + r.vegan + (r.meals ?? 0) >= data.target).length;
   const regions = ['All', ...new Set(all.map((r) => r.region))];
 
   return (
@@ -49,7 +49,7 @@ export function DishCoverage() {
       <p className="mt-1 text-sm leading-relaxed text-silver">Goal: {data.target.toLocaleString()} real dishes per country. Only dishes built from measured ingredient records count — no padding, no invented foods.</p>
       <div className="mt-4 grid grid-cols-3 gap-2 text-center">
         <div className="rounded-2xl bg-raised p-3"><p className="text-xl font-extrabold">{dishes.toLocaleString()}</p><p className="text-xs text-silver">country dishes</p></div>
-        <div className="rounded-2xl bg-raised p-3"><p className="text-xl font-extrabold">{versions.toLocaleString()}</p><p className="text-xs text-silver">versions</p></div>
+        <div className="rounded-2xl bg-raised p-3"><p className="text-xl font-extrabold">{versions.toLocaleString()}</p><p className="text-xs text-silver">versions &amp; meals</p></div>
         <div className="rounded-2xl bg-raised p-3"><p className="text-xl font-extrabold">{reached}/{all.length}</p><p className="text-xs text-silver">at goal</p></div>
       </div>
       <p className="mt-2 text-xs text-silver">Plus {data.everyday.toLocaleString()} everyday dishes that belong to no country (salads, oats, desserts…).</p>
@@ -70,7 +70,7 @@ export function DishCoverage() {
               <p className="shrink-0 text-sm font-bold tabular-nums">{c.total.toLocaleString()}<span className="font-normal text-silver"> / {data.target.toLocaleString()}</span></p>
             </div>
             <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-surface"><div className="h-full rounded-full bg-accent" style={{ width: `${Math.min(100, (c.total / data.target) * 100)}%` }} /></div>
-            <p className="mt-1.5 text-xs text-silver">{c.dishes} dishes · {c.versions} versions ({c.vegan} vegan, {c.vegetarian} vegetarian, {c.protein} other protein) · {c.withPhoto} with an approved photo</p>
+            <p className="mt-1.5 text-xs text-silver">{c.dishes} dishes · {c.versions} versions ({c.vegan} vegan, {c.vegetarian} vegetarian, {c.protein} other protein) · {c.meals} complete meals with a staple · {c.withPhoto} with an approved photo</p>
           </li>
         ))}
       </ul>

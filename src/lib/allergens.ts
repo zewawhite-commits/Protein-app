@@ -87,7 +87,7 @@ export function allergensIn(text: string, avoid: string[]): string[] {
 export function foodAllergens(food: { name: string; source?: string; sourceNote?: string; recipe?: { ingredients?: { name?: string }[] } }, avoid: string[]): string[] {
   if (!avoid.length) return [];
   // Standard recipes list their ingredients in the source note ("…: 100 g Melon seed…; 20 g Shrimp, dried…").
-  const note = food.source === 'recipe' && food.sourceNote ? food.sourceNote.replace(/\([^)]*version of [^)]*\)/, '').replace(/\[[^\]]*\]/g, '').split(/[;:]/) : [];
+  const note = food.source === 'recipe' && food.sourceNote ? food.sourceNote.replace(/\([^)]*(version of|served with) [^)]*\)/, '').replace(/\[[^\]]*\]/g, '').split(/[;:]/) : [];
   const parts = [food.name, ...(food.recipe?.ingredients ?? []).map((i) => i.name ?? ''), ...note];
   return [...new Set(parts.flatMap((p) => allergensIn(p, avoid)))];
 }

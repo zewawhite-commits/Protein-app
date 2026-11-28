@@ -85,7 +85,7 @@ export function fitsDiet(food: Pick<Food, 'name'> & { source?: string; sourceNot
   if ((food.source === 'off' || food.source === 'usda-branded') && diet !== 'pescatarian') {
     return diet === 'vegan' ? /\b(vegan|plant-based)\b/i.test(food.name) : /\b(vegan|vegetarian|veggie|plant-based|meatless)\b/i.test(food.name);
   }
-  const ingredients = food.recipe ? food.recipe.ingredients.map((i) => i.name).join('; ') : /standard recipe|^Your recipe/i.test(food.sourceNote ?? '') ? (food.sourceNote ?? '').replace(/\([^)]*version of [^)]*\)/, '') : ''; // "(vegan version of Goat pepper soup)" names the original dish, not an ingredient
+  const ingredients = food.recipe ? food.recipe.ingredients.map((i) => i.name).join('; ') : /standard recipe|^Your recipe/i.test(food.sourceNote ?? '') ? (food.sourceNote ?? '').replace(/\([^)]*(version of|served with) [^)]*\)/, '') : ''; // "(vegan version of Goat pepper soup)" names the original dish, not an ingredient
   // Named as vegan / plant-based by its maker or recipe: trust that.
   if (/\b(vegan|plant-based|meatless)\b/i.test(food.name) && !ingredients) return true;
   const text = `${food.name}; ${ingredients}`.replace(PLANT_ALIKE, ' ');
