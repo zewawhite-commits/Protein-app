@@ -7943,6 +7943,165 @@ Sasoun | chicken_thigh:100 papaya:60 garlic:3 | timorese chicken papaya soup | b
 Timorese fried bananas | banana:120 flour:20 oil:12 | timor banana fritters | 3 pieces
 `);
 
+// ======================= ROUND 10: MORE REAL DISHES, NEXT-LOWEST COUNTRIES =======================
+X('Bermuda', 'Bermudian', TE, `
+Hoppin' John (Bermudian) | rice:150 cowpeas:80 bacon:15 onion:15 | bermuda peas and rice | plate
+Bermuda pawpaw casserole | papaya:150 beef_mince:60 cheddar:25 onion:15 | pawpaw montespan | portion
+Bermuda codfish and potato breakfast with egg | salt_cod:80 potato:150 egg_boiled:50 olive_oil:10 | bermudian sunday breakfast egg | plate
+`);
+X('Cook Islands', 'Cook Islands', OC, `
+Cook Islands chop suey | rice_noodles:120 chicken_meat:60 cabbage:40 carrots:20 soy:10 oil:10 | rarotonga chop suey | plate
+Cook Islands raw fish with taro and rukau | fish:100 coconut_milk:40 lime:10 taro:150 spinach:60 | island plate rarotonga | plate
+Cook Islands chicken and taro in coconut | chicken_thigh:120 taro:150 coconut_milk:60 | rarotonga chicken taro | plate
+Banana and coconut porridge (Rarotonga) | banana:120 coconut_milk:60 tapioca:15 | cook islands banana porridge | bowl
+`);
+X('Dominica', 'Dominican (Dominica)', NA, `
+Dominica stew chicken with rice and peas | chicken_thigh:150 brown_sugar:5 rice:150 kidney:50 coconut_milk:25 | dominica stew chicken | plate
+Dominica fish broth | fish:120 potato:60 carrots:30 water:300 lime:5 | dominica fish water | bowl
+Dominica coconut dumplings | flour:60 coconut_meat:20 water:30 | dominica dumplings | 3 dumplings
+Dominica bake and fish | flour:70 oil:12 fish:80 | bake and fish dominica | serving
+Dominica provisions with saltfish | taro:100 green_plantain:100 yam:80 salt_cod:60 oil:10 | ground provisions saltfish | plate
+`);
+X('Federated States of Micronesia', 'Micronesian', OC, `
+Chuukese fish with rice | fish:150 rice:150 soy:5 | chuuk fish and rice | plate
+Pohnpeian breadfruit with coconut cream | breadfruit_cooked:200 coconut_milk:50 | pohnpei breadfruit | portion
+Micronesian chicken and rice soup | chicken_meat:80 rice:60 water:300 onion:15 | fsm chicken rice soup | bowl
+Yap taro with fish | taro:200 fish:100 coconut_milk:30 | yapese taro fish | plate
+`);
+X('French Polynesia', 'Tahitian', OC, `
+Poisson cru with rice | tuna_raw:120 lime:15 coconut_milk:50 cucumber:30 tomato:30 rice:150 | tahiti raw fish plate | plate
+Chevrettes au coco | shrimp:130 coconut_milk:60 garlic:3 rice:150 | tahitian shrimp coconut | plate
+Pua roti | pork_roast:150 soy:10 | tahitian roast pork | portion
+Casse-croûte tahitien | baguette:120 tuna:50 butter:10 | tahiti sandwich | sandwich
+Mahi mahi à la vanille | fish:160 cream:40 butter:10 rice:150 | vanilla fish tahiti | plate
+`);
+X('Republic of the Congo', 'Congolese', AF, `
+Poulet à la moambé (Brazzaville) | chicken_thigh:150 palm_oil:20 tomato:40 rice:150 | brazzaville moambe | plate
+Poisson salé with saka saka | salt_cod:60 spinach:150 palm_oil:15 cassava_cooked:150 | brazzaville salted fish cassava leaves | plate
+Maboké de poisson | fish:160 onion:20 tomato:30 chili:3 | brazzaville fish in leaves | portion
+Fumbwa with chikwangue | spinach:120 peanut_butter:30 palm_oil:10 cassava_cooked:200 | brazzaville fumbwa | plate
+Beignets with bouillie | flour:60 sugar:10 oil:15 cornmeal:30 water:200 | brazzaville breakfast | serving
+`);
+X('Central African Republic', 'Central African', AF, `
+Gozo with ngunza | cassava_cooked:250 spinach:120 palm_oil:15 | car cassava with cassava leaves | plate
+Kanda ti nyama | beef_mince:120 peanut_butter:20 onion:20 | car meatballs peanut | portion
+Central African chicken in peanut sauce | chicken_thigh:150 peanut_butter:35 tomato:40 rice:150 | car poulet sauce arachide | plate
+Makara | flour:60 sugar:10 oil:15 | car fritters | 4 pieces
+Central African fish with okra | fish:130 okra:100 palm_oil:10 cassava_cooked:150 | car fish okra | plate
+`);
+X('Equatorial Guinea', 'Equatoguinean', AF, `
+Succotash guineano | corn:100 cowpeas:80 tomato:40 onion:20 oil:10 | equatorial guinea succotash | bowl
+Pescado con salsa de cacahuete | fish:150 peanut_butter:30 tomato:40 rice:150 | equatoguinean fish peanut | plate
+Pollo con salsa de cacahuete (Guinea Ecuatorial) | chicken_thigh:150 peanut_butter:30 tomato:40 rice:150 | malabo chicken peanut | plate
+Plátano frito con pescado | plantain_fried:120 fish:120 | malabo plantain and fish | plate
+Malabo pepper soup | fish:120 chili:5 onion:20 water:300 | equatoguinean pepper soup | bowl
+`);
+X('Guinea-Bissau', 'Bissau-Guinean', AF, `
+Caldo de peixe | fish:150 palm_oil:15 tomato:40 onion:20 rice:150 | bissau fish stew | plate
+Frango de churrasco (Bissau) | chicken_leg:180 lime:10 rice:150 | bissau grilled chicken | plate
+Bissau oyster stew | clams:120 onion:20 lime:5 rice:150 | ostras bissau | plate
+Bissau rice and beans | rice:150 cowpeas:100 palm_oil:10 | bissau feijao com arroz | plate
+`);
+X('New Caledonia', 'New Caledonian', TE, `
+Bougna with chicken | chicken_thigh:150 yam:100 sweet_potato:80 taro:60 coconut_milk:60 | kanak chicken bougna | portion
+Cerf en civet | beef:150 onion:20 tomato:30 rice:150 | new caledonia deer stew | plate
+Bami (New Caledonia) | egg_noodles:150 chicken_meat:60 cabbage:40 soy:10 oil:10 | noumea bami | plate
+Salade de poulpe | squid:120 tomato:40 onion:15 lime:10 olive_oil:10 | new caledonia octopus salad | portion
+`);
+X('Niue', 'Niuean', OC, `
+Niue chop suey | rice_noodles:120 chicken_meat:60 cabbage:40 soy:10 oil:10 | niuean chop suey | plate
+Niue fish and chips | fish:150 flour:20 oil:15 fries:150 | niue fish chips | plate
+Niue taro chips | taro:120 oil:15 | niue taro crisps | bag
+Niue pawpaw with coconut cream | papaya:150 coconut_milk:40 | niuean pawpaw | bowl
+`);
+X('Solomon Islands', 'Solomon Islander', OC, `
+Solomon fish soup | fish:120 kale:50 coconut_milk:50 water:200 | solomons fish soup | bowl
+Solomon pork and taro | pork_shoulder:120 taro:180 coconut_milk:40 | solomon islands pork taro | plate
+Fried fish with kumara (Honiara) | fish:150 oil:12 sweet_potato:150 | honiara fish kumara | plate
+Solomon cassava cake | cassava:120 coconut_milk:40 sugar:20 | solomons cassava cake | slice
+`);
+X('Curaçao', 'Curaçaoan', TE, `
+Guiambo | okra:120 fish:60 pork_shoulder:40 water:200 | curacao okra soup | bowl
+Karni stoba | beef:150 tomato:40 onion:20 potato:60 | curacao beef stew | bowl
+Bitterballen (Curaçao) | beef_mince:40 flour:15 breadcrumbs:15 oil:12 | curacao bitterballen | 5 pieces
+Sopi di galina | chicken_meat:100 potato:60 carrots:30 water:300 | curacao chicken soup | bowl
+Johnny cake (Curaçao) | flour:60 butter:8 sugar:5 oil:10 | yaniqueque curacao | piece
+`);
+X('Democratic Republic of the Congo', 'Congolese (DRC)', AF, `
+Fufu with beans (Kinshasa) | cassava_cooked:200 kidney:120 palm_oil:10 | kinshasa fufu madesu | plate
+Grilled tilapia with chikwangue | fish:200 cassava_cooked:150 chili:3 | kinshasa grilled fish kwanga | plate
+Matembele | spinach:150 palm_oil:12 onion:15 | sweet potato leaves congo | portion
+Makayabu with rice | salt_cod:70 tomato:50 palm_oil:12 rice:150 | congolese salted fish rice | plate
+Poulet mayo | chicken_leg:180 oil:12 fries:120 mayo:20 | kinshasa chicken fries | plate
+`);
+X('Kiribati', 'I-Kiribati', OC, `
+Kiribati fish soup | fish:120 onion:15 water:300 lime:5 | i-kiribati fish soup | bowl
+Kiribati rice and tuna | rice:180 tuna:80 | kiribati tuna rice | plate
+Kiribati coconut crab soup | crab:100 coconut_milk:50 water:200 | kiribati crab soup | bowl
+`);
+X('Kuwait', 'Kuwaiti', AS, `
+Kuwaiti machboos dyay | chicken_thigh:150 rice:180 tomato:40 onion:20 | kuwaiti chicken machboos | plate
+Kuwaiti mutabbaq zubaidi | fish:160 rice:180 onion:20 | kuwaiti pomfret rice | plate
+Kuwaiti harees | bulgur:80 chicken_meat:60 ghee:10 | kuwait harees | bowl
+Kuwaiti gers ogaily | flour:40 sugar:25 egg:20 cardamom:1 | kuwaiti saffron cake | slice
+Kuwaiti balaleet with egg | rice_noodles:80 sugar:15 egg:50 | kuwait balaleet | bowl
+`);
+X('Liberia', 'Liberian', AF, `
+Liberian cassava leaf with rice | spinach:150 palm_oil:20 beef:60 fish:40 rice:180 | liberia cassava leaf | plate
+Liberian jollof with chicken | rice:200 tomato_paste:20 oil:15 chicken_thigh:100 | liberia jollof chicken | plate
+Liberian fried fish with plantain | fish:150 oil:15 plantain_fried:100 | liberia fish plantain | plate
+Liberian kala | flour:60 sugar:10 oil:15 | liberian donut | 3 pieces
+`);
+X('Maldives', 'Maldivian', AS, `
+Mas riha with rice | tuna:120 coconut_milk:60 curry:5 rice:180 | maldivian fish curry rice | plate
+Roshi with mas huni | flour:70 oil:8 tuna:50 coconut_meat:30 onion:10 lime:5 | maldivian breakfast | serving
+Gulha | flour:30 tuna:30 coconut_meat:15 oil:12 | maldivian fish balls | 5 pieces
+Kulhi boakibaa | rice_flour:50 tuna:40 coconut_meat:20 oil:8 | maldivian fish cake | slice
+Garudhiya with rice and lime | tuna:100 water:300 rice:150 lime:5 | maldives fish soup rice | plate
+`);
+X('Palau', 'Palauan', OC, `
+Palauan chicken adobo with rice | chicken_thigh:150 soy:15 vinegar:15 garlic:5 rice:150 | palau adobo | plate
+Palauan fried fish with tapioca | fish:150 oil:12 cassava_cooked:150 | palau fish tapioca | plate
+Palauan coconut crab | crab:150 coconut_milk:40 | palau coconut crab | portion
+`);
+X('Saint Kitts and Nevis', 'Kittitian', NA, `
+Stewed saltfish with spicy plantains and johnnycakes | salt_cod:80 tomato:40 onion:20 oil:10 plantain_fried:80 flour:50 | st kitts national dish | plate
+Kittitian goat water | goat:120 tomato:40 flour:10 water:300 | st kitts goat water | bowl
+Kittitian conkies | cornmeal:50 coconut_meat:20 sugar:20 pumpkin:30 | conkie | piece
+Kittitian rice and peas with chicken | rice:150 kidney:50 coconut_milk:25 chicken_thigh:120 | st kitts rice peas chicken | plate
+`);
+X('San Marino', 'Sammarinese', EUR, `
+Piadina with prosciutto and squacquerone | flour:80 lard:10 ham:40 ricotta:40 | san marino piadina | piece
+Cappelletti in brodo | flour:50 egg:20 pork_mince:30 parmesan:10 stock:250 | san marino cappelletti | bowl
+Nidi di rondine | pasta:120 ham:30 mozzarella:30 marinara:60 | swallow's nests pasta | portion
+Torta Titano | flour:30 sugar:20 hazelnut:15 dark_choc:15 butter:15 | san marino cake | slice
+`);
+X('Seychelles', 'Seychellois', AF, `
+Kari koko zourit | squid:150 coconut_milk:60 curry:4 rice:150 | octopus coconut curry seychelles | plate
+Seychelles grilled fish with rice | fish:160 lime:5 chili:3 rice:150 | seychelles grilled fish | plate
+Ladob | ripe_plantain:120 coconut_milk:80 sugar:15 cinnamon:1 | seychelles banana dessert | bowl
+Seychelles lentil curry | lentils:150 coconut_milk:40 curry:4 rice:150 | seychelles dal | plate
+Shark chutney | fish:80 lime:10 onion:15 oil:8 | seychelles satini reken | portion
+`);
+X('Suriname', 'Surinamese', SA, `
+Pom with chicken and rice | taro:120 chicken_thigh:100 oj:20 rice:120 | surinamese pom plate | plate
+Roti kip (Surinamese) | flour:80 oil:10 chicken_thigh:120 potato:60 green_beans:40 curry:4 | surinamese chicken roti | plate
+Bami (Surinamese) | egg_noodles:150 chicken_meat:60 cabbage:30 soy:10 oil:10 | surinamese bami | plate
+Saoto soup | chicken_meat:80 bean_sprouts:30 potato:40 egg_boiled:25 water:300 | saoto | bowl
+Broodje pom | roll:70 taro:60 chicken_meat:40 | pom sandwich | sandwich
+Bara (Surinamese) | flour:40 split_peas:20 oil:12 | surinamese bara | 2 pieces
+`);
+X('Tuvalu', 'Tuvaluan', OC, `
+Tuvalu fried fish with rice | fish:150 oil:12 rice:150 | tuvalu fish rice | plate
+Tuvalu pulaka chips | taro:120 oil:15 | tuvalu taro chips | bag
+Tuvalu chicken in coconut | chicken_thigh:150 coconut_milk:60 | tuvalu coconut chicken | portion
+`);
+X('Western Sahara', 'Sahrawi', TE, `
+Sahrawi tea with bread | green_tea:200 sugar:15 mint:2 bread:60 | atay sahrawi | serving
+Sahrawi lentil stew | lentils:150 tomato:40 onion:20 oil:10 | sahrawi lentils | bowl
+Sahrawi rice with fish | rice:180 fish:120 tomato:40 oil:10 | sahrawi fish rice | plate
+`);
+
 console.log(`everyday dishes left to real measured records: ${preferred.length}`);
 if (process.env.SHOW_PREFERRED) console.log(preferred.join('\n'));
 // ---- write out ----
