@@ -41,6 +41,8 @@ const wkey = (n) => norm(n.replace(/,/g, ' ')).split(' ').filter(Boolean).sort()
 const realByWords = new Map();
 for (const n of dbNames) { const segs = n.split(' (')[0].split(', '); for (const k of [wkey(segs.join(' ')), wkey(segs.slice(0, 2).join(' '))]) if (k && !realByWords.has(k)) realByWords.set(k, n); }
 const PREFER_REAL = new Set();
+/** Same check against dishes already built ("Khinkali, mushroom" = "Mushroom khinkali"): no near-duplicates. */
+const dishByWords = new Map(RECIPES.map((r) => [wkey(r.name), r.name]));
 const KEEP_OURS = new Set(['Scrambled eggs', 'Mashed potatoes', 'Chicken nuggets', 'Potato salad', 'Rice salad', 'Chocolate milk', 'Potato wedges', 'Chicken and vegetable soup', 'Chicken rice soup', 'Mushroom soup']);
 
 function C(country, demonym, dishes, region) {
@@ -54,8 +56,8 @@ function C(country, demonym, dishes, region) {
     }
     const [rawName, spec, aliases = '', unit = 'serving'] = d;
     const name = rawName.replace(/\s*\(([^)]+)\)/g, ', $1'); // brackets are read as other names by the app
-    const real = PREFER_REAL.has(rawName) ? realByWords.get(wkey(rawName)) : undefined;
-    if (real) { list.dishes.push(real.split(' (')[0]); preferred.push(`${rawName} -> ${real}`); continue; }
+    const real = PREFER_REAL.has(rawName) ? realByWords.get(wkey(rawName)) ?? dishByWords.get(wkey(rawName)) : undefined;
+    if (real) { list.dishes.push(real.split(' (')[0]); if (realByWords.get(wkey(rawName)) === real) preferred.push(`${rawName} -> ${real}`); continue; }
     const seen = known.get(norm(rawName)) ?? made.get(norm(name));
     if (seen) { list.dishes.push(seen.split(' (')[0]); continue; }
     const ingredients = spec.trim().split(/\s+/).map((t) => { const [k, g] = t.split(':'); if (!K[k]) throw new Error(`${country} / ${name}: unknown key ${k}`); return [K[k], Number(g)]; });
@@ -65,6 +67,7 @@ function C(country, demonym, dishes, region) {
       portions: [[`1 ${unit}`, Math.round(total)], [`1 small ${unit}`, Math.round(total * 0.7)], [`1 large ${unit}`, Math.round(total * 1.35)]] });
     known.set(norm(rawName), name);
     made.set(norm(name), name);
+    if (!dishByWords.has(wkey(name))) dishByWords.set(wkey(name), name);
     list.dishes.push(name);
   }
 }
@@ -5023,6 +5026,769 @@ Siga | okra:120 fish:60 palm_oil:12 rice:150 | bissau okra | plate
 X('Western Sahara', 'Sahrawi', TE, `
 Sahrawi couscous with vegetables | couscous:180 carrots:40 zucchini:40 chickpeas:40 | vegetable couscous sahrawi | plate
 Sahrawi grilled lamb with bread | lamb:150 flour:60 | sahrawi lamb bread | plate
+`);
+
+Object.assign(K, { mung: 'Mung beans, mature seeds, cooked, boiled, without salt', pomegranate_juice: 'Pomegranate juice, 100%', pine_nuts: 'Pine nuts', lotus_root: 'Lotus root, cooked, boiled, drained, without salt' });
+// ======================= ROUND 4: ASIA =======================
+X('China', 'Chinese', AS, `
+Kung pao chicken with rice | chicken_thigh:130 peanuts:20 chili:5 soy:12 oil:12 rice:180 | gong bao ji ding | plate
+Twice-cooked pork | pork_belly:120 cabbage:60 green_pepper:30 soy:10 oil:10 | hui guo rou | plate
+Fish-fragrant pork | pork_loin:120 carrots:30 bamboo:30 soy:10 vinegar:5 oil:10 | yu xiang rou si | plate
+Shuizhu fish | fish:170 bean_sprouts:60 chili:6 oil:20 | sichuan boiled fish | bowl
+Dandan noodles, vegetarian | egg_noodles:180 tofu:50 peanut_butter:15 soy:10 chili:3 | vegetarian dan dan | bowl
+Mapo tofu with rice | tofu:200 pork_mince:40 chili:4 soy:10 oil:10 rice:150 | mapo tofu rice | plate
+Mapo tofu, vegan | tofu:200 mushrooms:40 chili:4 soy:10 oil:10 | vegan mapo tofu | portion
+Sichuan cold noodles | egg_noodles:180 cucumber:40 sesame_oil:8 chili:3 vinegar:8 | liang mian | bowl
+Chongqing small noodles | egg_noodles:180 chili:5 peanuts:10 soy:10 oil:10 | xiao mian | bowl
+Saliva chicken | chicken_meat:130 chili:5 sesame:5 soy:10 oil:10 | kou shui ji | plate
+Hot pot (mixed) | beef:60 tofu:60 mushrooms:50 cabbage:60 shrimp:40 stock:300 | huoguo | bowl
+Char siu with rice | pork_loin:120 hoisin:20 honey:10 rice:180 | cha siu fan | plate
+Roast duck with rice | duck_meat:120 rice:180 soy:8 | siu ngaap fan | plate
+Hainanese chicken (Cantonese white cut) | chicken_meat:140 ginger:5 rice:180 | bai qie ji | plate
+Steamed spare ribs with black bean | ribs:150 soy:8 garlic:3 | dim sum ribs | serving
+Har gow | flour:30 shrimp:40 | shrimp dumplings | serving (4)
+Siu mai | flour:25 pork_mince:40 shrimp:20 | pork shrimp dumplings | serving (4)
+Lo mai gai | sticky_rice:120 chicken_meat:40 mushrooms:15 | sticky rice in lotus leaf | parcel
+Radish cake, Cantonese | rice_flour:60 radish:80 ham:10 oil:10 | lo bak go | serving (2)
+Wonton noodle soup | egg_noodles:120 pork_mince:40 shrimp:30 stock:300 | wonton mein | bowl
+Beef chow fun | rice_noodles:200 beef:80 bean_sprouts:40 soy:12 oil:12 | gon chow ngau ho | plate
+Clay pot rice | rice:200 sausage:40 chicken_meat:50 soy:10 | bo zai fan | pot
+Congee with pork and egg | rice:60 pork_mince:40 egg:30 water:300 | pork congee | bowl
+Steamed egg custard (Chinese) | egg:100 water:100 soy:3 | zheng dan | bowl
+Xiaolongbao | flour:50 pork_mince:50 stock:20 | soup dumplings | serving (6)
+Shengjian bao | flour:60 pork_mince:50 oil:10 sesame:3 | pan-fried buns | serving (4)
+Hong shao rou | pork_belly:150 soy:15 sugar:10 | red braised pork | portion
+Lion's head meatballs | pork_mince:150 cabbage:80 soy:10 | shizitou | serving (2)
+Scallion oil noodles | egg_noodles:180 oil:15 soy:12 onion:15 | cong you ban mian | bowl
+Beggar's chicken-style roast | chicken_meat:150 soy:10 | jiaohua ji | portion
+Dongpo pork | pork_belly:120 soy:15 sugar:8 | dongpo rou | portion
+West Lake fish in vinegar sauce | fish:170 vinegar:15 sugar:10 soy:8 | xihu cu yu | portion
+Peking duck with pancakes | duck_meat:100 flour:40 hoisin:20 cucumber:20 onion:10 | beijing kao ya | serving
+Zhajiangmian, vegetarian | egg_noodles:180 tofu:60 mushrooms:40 soy:15 cucumber:30 | vegetarian zhajiang | bowl
+Jiaozi, pork and cabbage | flour:60 pork_mince:50 cabbage:30 | boiled dumplings | serving (10)
+Jiaozi, egg and chive | flour:60 egg:40 spring_onion:20 | vegetarian jiaozi | serving (10)
+Guotie | flour:60 pork_mince:50 cabbage:20 oil:8 | potstickers | serving (8)
+Lamb skewers (Xinjiang) | lamb:150 sp_cumin:2 chili_powder:2 | yangrou chuan | serving (5)
+Big plate chicken | chicken_thigh:150 potato:100 green_pepper:30 egg_noodles:80 | da pan ji | plate
+Lagman (Xinjiang) | egg_noodles:180 lamb:70 tomato:40 green_pepper:30 | xinjiang laghman | plate
+Polo (Xinjiang pilaf) | rice:180 lamb:80 carrots:60 oil:15 | xinjiang pilaf | plate
+Liangpi | rice_flour:80 cucumber:40 bean_sprouts:20 chili:3 vinegar:8 | cold skin noodles | bowl
+Biangbiang noodles | flour:120 chili:4 oil:15 bean_sprouts:30 | biang biang mian | bowl
+Yangrou paomo | flour:80 lamb:80 stock:250 | lamb soup with bread | bowl
+Guilin rice noodles | rice_noodles:200 beef:50 peanuts:10 stock:150 | guilin mifen | bowl
+Crossing-the-bridge noodles | rice_noodles:180 chicken_meat:50 egg:25 stock:300 | yunnan guoqiao mixian | bowl
+Hunan chili pork | pork_belly:120 green_pepper:60 chili:5 oil:10 | nong jia xiao chao rou | plate
+Steamed fish head with chili-style fish | fish:180 chili:10 oil:10 | duo jiao yu | portion
+Three cup chicken | chicken_thigh:150 soy:10 sesame_oil:10 basil:5 | san bei ji | plate
+Egg fried rice with shrimp (Yangzhou) | rice:220 shrimp:50 egg:40 ham:20 peas:20 oil:10 | yangzhou fried rice | plate
+Ma po eggplant, vegan | eggplant:200 soy:10 chili:3 oil:15 garlic:3 | vegan yu xiang qiezi | plate
+Buddha's delight | tofu:80 mushrooms:50 cabbage:60 carrots:30 bamboo:30 soy:10 | luohan zhai | plate
+Di san xian | eggplant:100 potato:100 green_pepper:60 oil:20 soy:10 | earth three treasures | plate
+Hot and sour potato shreds | potato:200 vinegar:10 chili:2 oil:12 | suan la tu dou si | plate
+Stir-fried bok choy with garlic | pak_choi:200 garlic:4 oil:8 | qing chao | plate
+Tiger salad | cucumber:80 coriander:10 green_chili:20 onion:20 sesame_oil:5 | lao hu cai | plate
+Smashed cucumber with garlic | cucumber:200 garlic:5 vinegar:8 sesame_oil:5 | pai huang gua | plate
+Tomato egg noodle soup | egg_noodles:150 tomato:100 egg:50 stock:200 | xihongshi jidan mian | bowl
+Mooncake, lotus seed | flour:40 kidney:40 sugar:15 oil:10 | yuebing | piece
+Nian gao (sweet) | sticky_rice:80 brown_sugar:25 | new year cake | slice
+Zongzi | sticky_rice:120 pork_belly:30 kidney:20 | rice dumpling | parcel
+Tang yuan with black sesame | sticky_rice:60 sesame:15 sugar:15 | glutinous balls | bowl
+Douhua, sweet | tofu:150 brown_sugar:15 ginger:3 | tofu pudding | bowl
+Eight treasure porridge | rice:30 kidney:20 peanuts:10 dates:10 raisins:10 water:250 | babao zhou | bowl
+Red bean soup | kidney:60 sugar:20 water:250 | hong dou tang | bowl
+Pineapple bun with butter (bolo yau) | flour:60 sugar:15 butter:20 egg:10 | bolo yau | bun
+Dragon beard-style candy | sugar:20 peanuts:10 coconut_meat:5 | long xu tang | serving
+`);
+X('India', 'Indian', AS, `
+Chole bhature | chickpeas:180 tomato:50 onion:30 oil:30 flour:80 | chole bhature | plate
+Rajma masala | kidney:180 tomato:60 onion:30 oil:12 | rajma | bowl
+Dal makhani | lentils:150 kidney:30 butter:15 cream:20 tomato:40 | dal makhni | bowl
+Dal tadka | red_lentils:150 ghee:10 garlic:3 cumin:1 | tadka dal | bowl
+Sarson ka saag with makki ki roti | spinach:200 butter:15 cornmeal:80 | saag and makki roti | plate
+Kadhi pakora | yogurt:150 chickpea_flour:40 oil:15 onion:20 | punjabi kadhi | bowl
+Amritsari kulcha | flour:90 potato:60 butter:12 | stuffed kulcha | piece
+Paneer tikka | paneer:150 yogurt:30 red_pepper:30 onion:20 oil:5 | paneer tikka | serving
+Paneer butter masala | paneer:120 tomato:80 butter:15 cream:25 cashews:10 | paneer makhani | portion
+Kadai paneer | paneer:120 green_pepper:50 tomato:60 onion:30 oil:12 | karahi paneer | portion
+Palak paneer with roti | paneer:100 spinach:150 cream:15 oil:10 flour:60 | palak paneer roti | plate
+Matar paneer | paneer:100 peas:80 tomato:60 oil:12 | matar paneer | portion
+Aloo gobi | potato:120 cauliflower:120 oil:15 turmeric:1 | aloo gobhi | portion
+Aloo matar | potato:150 peas:80 tomato:50 oil:12 | potato peas curry | portion
+Dum aloo | potato:200 yogurt:40 oil:15 | kashmiri dum aloo | portion
+Baingan masala | eggplant:200 tomato:60 onion:30 oil:15 | eggplant masala | portion
+Chana masala with rice | chickpeas:180 tomato:60 onion:30 oil:12 rice:150 | chole chawal | plate
+Navratan korma | potato:50 carrots:40 peas:40 cauliflower:40 paneer:30 cream:30 cashews:10 | nine gem curry | portion
+Mixed vegetable curry (Indian) | potato:60 carrots:50 peas:40 cauliflower:50 tomato:50 oil:12 | mix veg | portion
+Butter chicken with naan | chicken_thigh:150 butter:15 cream:30 tomato:80 naan:90 | murgh makhani naan | plate
+Chicken tikka with mint chutney | chicken_breast:150 yogurt:30 mint:5 | chicken tikka | serving
+Chicken korma | chicken_thigh:150 yogurt:40 cream:20 cashews:15 onion:30 | murgh korma | portion
+Chicken chettinad | chicken_thigh:160 coconut_meat:20 tomato:40 onion:30 oil:12 | chettinad chicken | portion
+Mutton rogan josh | lamb:150 yogurt:40 oil:15 chili_powder:3 | rogan josh | portion
+Laal maas | lamb:150 yogurt:30 chili_powder:5 ghee:15 | rajasthani red mutton | portion
+Goan fish curry | fish:160 coconut_milk:80 tamarind:8 rice:150 | goan curry rice | plate
+Goan prawn curry | shrimp:150 coconut_milk:80 tamarind:8 | prawn xec xec | bowl
+Pork vindaloo (Goan) | pork_shoulder:150 vinegar:15 chili_powder:5 oil:10 | vindalho | portion
+Chicken xacuti | chicken_thigh:150 coconut_meat:25 onion:30 oil:10 | goan xacuti | portion
+Kerala beef fry | beef:150 coconut_meat:20 onion:30 coconut_oil:12 | beef ularthiyathu | portion
+Kerala sadya plate | rice:200 lentils:60 coconut_meat:30 pumpkin:50 yogurt:50 banana:50 | onam sadya | plate
+Avial | carrots:50 green_beans:50 potato:50 coconut_meat:30 yogurt:30 coconut_oil:8 | aviyal | portion
+Thoran | cabbage:150 coconut_meat:30 coconut_oil:8 | cabbage thoran | portion
+Appam with vegetable stew | rice_flour:80 coconut_milk:80 potato:60 carrots:30 | appam stew | plate
+Puttu and kadala curry | rice_flour:80 coconut_meat:20 chickpeas:120 coconut_milk:30 | puttu kadala | plate
+Idiyappam with egg curry | rice_flour:80 egg_boiled:50 coconut_milk:40 onion:20 | string hoppers egg | plate
+Malabar parotta with chicken | flour:90 oil:15 chicken_thigh:100 | parotta chicken | plate
+Hyderabadi chicken biryani | rice:200 chicken_thigh:120 yogurt:40 onion:30 ghee:12 | dum biryani | plate
+Vegetable biryani | rice:200 carrots:40 peas:30 green_beans:30 potato:40 yogurt:30 ghee:10 | veg biryani | plate
+Mirchi ka salan | green_chili:100 peanuts:20 sesame:10 tamarind:8 oil:12 | hyderabadi chili curry | portion
+Haleem (Hyderabadi) | bulgur:60 lentils:40 lamb:80 ghee:15 | hyderabadi haleem | bowl
+Pesarattu | mung:120 onion:15 oil:8 | green moong dosa | dosa
+Bisi bele bath | rice:100 lentils:60 carrots:30 green_beans:30 tamarind:8 ghee:8 | karnataka rice lentils | plate
+Mysore masala dosa | rice:80 lentils:30 potato:80 butter:10 | mysore dosa | dosa
+Ragi mudde with saaru | millet:150 lentils:80 tomato:30 | finger millet balls | plate
+Lemon rice | rice:200 peanuts:15 oil:10 lemon:10 turmeric:1 | chitranna | plate
+Curd rice | rice:180 yogurt:150 | thayir sadam | bowl
+Tamarind rice | rice:200 tamarind:15 peanuts:15 oil:12 | puliyodarai | plate
+Sambar rice | rice:180 lentils:60 carrots:30 tamarind:8 | sambar sadam | plate
+Rasam with rice | tomato:80 tamarind:10 lentils:20 rice:180 | rasam sadam | plate
+Kothu parotta | flour:80 oil:15 egg:50 onion:20 tomato:20 | kothu | plate
+Chicken 65 | chicken_breast:150 cornstarch:15 oil:15 chili_powder:2 | chicken 65 | portion
+Gobi manchurian | cauliflower:150 flour:20 oil:15 soy:10 ketchup:10 | gobi manchurian | portion
+Chilli paneer | paneer:120 cornstarch:10 green_pepper:40 soy:10 oil:12 | chilli paneer | portion
+Hakka noodles | egg_noodles:180 cabbage:40 carrots:30 soy:10 oil:10 | indo chinese noodles | plate
+Macher jhol | fish:160 potato:60 tomato:30 mustard:5 oil:10 | bengali fish curry | bowl
+Chingri malai curry | shrimp:150 coconut_milk:80 oil:8 | prawn malai | bowl
+Shukto | eggplant:50 potato:50 sweet_potato:50 milk:30 mustard:3 | bengali mixed veg | portion
+Luchi with aloo dum | flour:60 oil:20 potato:150 | luchi aloo | plate
+Kosha mangsho | lamb:150 onion:40 oil:15 yogurt:20 | bengali mutton | portion
+Mishti doi | yogurt:150 sugar:20 | sweet yogurt | pot
+Rasgulla | cottage:60 sugar:30 | rosogolla | serving (2)
+Sandesh | cottage:60 sugar:15 | bengali sandesh | serving (2)
+Litti chokha | flour:80 chickpea_flour:30 eggplant:80 potato:60 ghee:10 | bihar litti | plate
+Dal baati churma | flour:90 ghee:25 lentils:100 sugar:15 | rajasthani dal baati | plate
+Gatte ki sabzi | chickpea_flour:60 yogurt:80 oil:12 | gatte curry | portion
+Ker sangri-style bean curry | green_beans:150 oil:12 | rajasthani beans | portion
+Pyaaz kachori | flour:50 onion:40 oil:20 | onion kachori | piece
+Undhiyu | potato:60 sweet_potato:60 eggplant:60 green_beans:40 peanuts:10 oil:15 | gujarati mixed veg | portion
+Khandvi | chickpea_flour:40 yogurt:50 oil:5 | khandvi rolls | serving (6)
+Handvo | rice:60 lentils:40 zucchini:40 yogurt:30 oil:8 | savoury cake | slice
+Misal pav | lentils:120 onion:20 oil:10 roll:60 | misal | plate
+Pav bhaji with butter | potato:100 cauliflower:40 peas:30 tomato:50 butter:20 roll:80 | pav bhaji butter | plate
+Kanda poha | rice:120 onion:30 peanuts:15 oil:8 | maharashtrian poha | plate
+Sabudana vada | tapioca:60 potato:60 peanuts:15 oil:15 | sago fritters | serving (3)
+Puran poli | flour:60 lentils:60 brown_sugar:20 ghee:10 | maharashtrian sweet flatbread | piece
+Modak | rice_flour:40 coconut_meat:25 brown_sugar:15 | ganesh modak | serving (2)
+Rogan josh (Kashmiri) | lamb:150 yogurt:40 oil:15 | kashmiri lamb | portion
+Kashmiri yakhni | lamb:150 yogurt:80 sp_fennel:1 | yakhni | portion
+Thukpa (Ladakhi) | egg_noodles:150 chicken_meat:60 carrots:30 stock:250 | ladakh thukpa | bowl
+Momos, chicken (Indian) | flour:60 chicken_mince:60 onion:15 | chicken momos | serving (8)
+Bamboo shoot pork (Naga) | pork_shoulder:150 bamboo:60 chili:4 | naga pork | portion
+Jadoh | rice:180 pork_shoulder:60 | khasi rice | plate
+Masor tenga | fish:150 tomato:80 lemon:10 oil:8 | assamese sour fish | bowl
+Chicken tikka masala with rice | chicken_breast:130 tomato:80 cream:30 oil:10 rice:150 | ctm rice | plate
+Egg biryani | rice:200 egg_boiled:100 onion:30 yogurt:30 ghee:10 | anda biryani | plate
+Gulab jamun | milk:40 flour:15 sugar:30 oil:10 | gulab jamun | serving (2)
+Jalebi | flour:40 sugar:35 oil:15 | jalebi | serving (3)
+Rasmalai | cottage:50 milk:100 sugar:20 pistachio:5 | ras malai | serving (2)
+Kulfi | milk:150 sugar:20 pistachio:5 | kulfi | stick
+Barfi | milk:60 sugar:25 cashews:10 | burfi | serving (2)
+Laddoo, motichoor | chickpea_flour:30 sugar:25 ghee:10 | boondi laddu | serving (2)
+Payasam | rice:30 milk:150 brown_sugar:25 cashews:8 | kheer payasam | bowl
+Shrikhand | greek_yogurt:150 sugar:25 sp_cardamom:0.5 | shrikhand | bowl
+Mango lassi | yogurt:150 mango:100 sugar:10 | mango lassi | glass
+Filter coffee | coffee:100 milk:100 sugar:10 | south indian coffee | cup
+Nimbu pani | lemon:20 sugar:20 water:250 salt:1 | indian lemonade | glass
+`);
+X('Pakistan', 'Pakistani', AS, `
+Chicken karahi | chicken_thigh:160 tomato:80 oil:15 ginger:5 | karahi | portion
+Mutton karahi | lamb:160 tomato:80 oil:15 | gosht karahi | portion
+Nihari with naan | beef:150 flour:10 ghee:15 naan:90 | nihari | plate
+Paya | beef:120 onion:30 oil:15 water:200 | trotters | bowl
+Sindhi biryani | rice:200 chicken_thigh:120 potato:50 yogurt:40 oil:15 | sindhi biryani | plate
+Pulao (Pakistani beef) | rice:200 beef:100 onion:30 oil:12 | yakhni pulao | plate
+Seekh kebab with naan | beef_mince:150 onion:20 naan:90 | seekh kebab | plate
+Chapli kebab with naan | beef_mince:150 tomato:20 onion:20 oil:15 naan:90 | peshawar chapli | plate
+Saag gosht | spinach:150 lamb:120 oil:12 | spinach mutton | portion
+Aloo keema with paratha | beef_mince:100 potato:80 flour:80 ghee:12 | keema paratha | plate
+Daal chana | split_peas:180 onion:20 oil:10 | chana dal | bowl
+Bhindi gosht | okra:120 lamb:100 tomato:40 oil:12 | okra mutton | portion
+Shami kebab | beef_mince:80 split_peas:40 egg:15 oil:12 | shami kabab | serving (2)
+Gol gappay | flour:30 oil:10 chickpeas:40 potato:30 tamarind:10 | pani puri pakistan | serving (6)
+Bun kebab | roll:70 lentils:40 beef_mince:40 egg:20 oil:10 | karachi bun kabab | sandwich
+Samosa chaat | flour:40 potato:50 chickpeas:80 yogurt:40 tamarind:10 oil:15 | samosa chaat | plate
+Sheer khurma | pasta:30 milk:200 sugar:20 dates:15 almonds:8 | eid sheer khurma | bowl
+Gajar ka halwa (Pakistani) | carrots:150 milk:100 sugar:25 ghee:10 | carrot halwa pakistan | portion
+Kashmiri chai | green_tea:150 milk:120 sugar:10 pistachio:3 | pink tea | cup
+`);
+X('Bangladesh', 'Bangladeshi', AS, `
+Kacchi biryani | rice:200 lamb:120 potato:50 yogurt:40 ghee:12 | dhaka kacchi | plate
+Morog polao | rice:200 chicken_thigh:100 ghee:12 | chicken polao | plate
+Beef kala bhuna | beef:150 onion:40 oil:15 | chittagong beef | portion
+Ilish bhapa | fish:150 mustard:10 oil:10 | steamed hilsa | portion
+Shutki bhorta | dried_shrimp:20 onion:20 chili:3 oil:5 | dried fish mash | portion
+Dal bhat with bhorta | lentils:120 rice:200 potato:60 eggplant:40 oil:10 | bangladeshi dal bhat | plate
+Panta bhat | rice:200 water:100 onion:15 chili:2 | fermented rice | bowl
+Haleem (Bangladeshi) | bulgur:60 lentils:40 beef:80 ghee:12 | dhaka haleem | bowl
+Chingri bhuna | shrimp:150 onion:40 oil:12 | prawn bhuna | portion
+Mishti doi (Bogura) | yogurt:150 sugar:22 | bogura doi | pot
+Pitha puli | rice_flour:50 coconut_meat:25 brown_sugar:15 | puli pitha | serving (3)
+Bhapa pitha | rice_flour:60 coconut_meat:20 brown_sugar:15 | steamed winter pitha | serving (2)
+`);
+X('Sri Lanka', 'Sri Lankan', AS, `
+Rice and curry (Sri Lankan) | rice:200 lentils:60 chicken_thigh:80 coconut_milk:40 cabbage:40 | lankan rice and curry | plate
+Lamprais | rice:150 chicken_meat:50 egg_boiled:25 eggplant:40 ghee:8 | dutch burgher lamprais | parcel
+Kottu roti | flour:80 oil:15 chicken_meat:60 cabbage:40 egg:30 | chicken kottu | plate
+Fish ambul thiyal | fish:160 tamarind:10 chili_powder:2 | sour fish curry | portion
+Jackfruit curry | jackfruit:200 coconut_milk:60 curry:3 | polos curry | portion
+Dhal curry with coconut | red_lentils:150 coconut_milk:60 onion:15 turmeric:1 | parippu curry | bowl
+Gotu kola sambol | spinach_raw:60 coconut_meat:30 onion:10 lime:5 | gotu kola salad | portion
+Kiri hodi | coconut_milk:120 onion:15 turmeric:1 | coconut milk gravy | bowl
+Isso wade | lentils:80 shrimp:30 oil:15 | prawn vadai | serving (3)
+Watalappan | coconut_milk:80 egg:30 brown_sugar:25 cashews:5 | sri lankan watalappam | portion
+Kavum | rice_flour:40 brown_sugar:20 oil:15 | oil cake | serving (2)
+`);
+X('Nepal', 'Nepali', AS, `
+Dal bhat tarkari | lentils:120 rice:200 potato:60 cauliflower:50 spinach:40 oil:10 | nepali thali | plate
+Chicken momo with achar | flour:60 chicken_mince:60 onion:15 tomato:30 sesame:5 | momo achar | serving (8)
+Jhol momo | flour:60 chicken_mince:60 tomato:40 sesame:5 water:150 | soup momo | bowl
+Thukpa (Nepali) | egg_noodles:150 chicken_meat:50 carrots:30 cabbage:30 stock:250 | nepali thukpa | bowl
+Chowmein (Nepali) | egg_noodles:180 cabbage:40 carrots:30 egg:30 oil:12 | nepali chowmein | plate
+Sekuwa | goat:150 chili:3 oil:5 | nepali grilled meat | serving
+Choila | buffalo_alt:0 beef:120 chili:3 mustard:5 | newari choila | portion
+Bara (Newari) | lentils:100 oil:12 egg:25 | newari lentil pancake | serving (2)
+Yomari | rice_flour:60 brown_sugar:20 sesame:8 | newari yomari | serving (2)
+Gundruk sadeko | spinach:80 onion:15 tomato:30 oil:5 | gundruk salad | portion
+Kwati | kidney:60 chickpeas:40 fava:40 lentils:40 water:250 | nine bean soup | bowl
+`);
+X('Japan', 'Japanese', AS, `
+Tonkotsu ramen | egg_noodles:180 pork_belly:50 egg_boiled:25 stock:350 | pork bone ramen | bowl
+Shoyu ramen with chashu | egg_noodles:180 pork_belly:40 egg_boiled:25 soy:10 stock:300 | shoyu ramen | bowl
+Miso ramen | egg_noodles:180 pork_mince:40 corn_canned:30 miso:20 stock:300 | sapporo miso ramen | bowl
+Tsukemen | egg_noodles:200 pork_belly:40 soy:15 stock:150 | dipping ramen | bowl
+Vegan ramen (miso) | egg_noodles:0 rice_noodles:180 tofu:60 corn_canned:30 miso:20 water:300 | vegan miso ramen | bowl
+Kitsune udon | pasta:200 tofu:50 soy:10 stock:250 | fox udon | bowl
+Tempura udon | pasta:200 shrimp:40 flour:15 oil:12 stock:250 | tempura udon | bowl
+Curry udon | pasta:200 beef:50 curry:10 onion:20 stock:200 | curry udon | bowl
+Tempura soba | soba:200 shrimp:40 flour:15 oil:12 stock:200 | tempura soba | bowl
+Yakisoba | egg_noodles:180 pork_belly:40 cabbage:50 worcestershire:10 | fried soba | plate
+Yakiniku don | beef:120 soy:10 sugar:5 rice_short:200 | grilled beef bowl | bowl
+Katsudon | pork_loin:120 breadcrumbs:20 egg:50 oil:12 rice_short:200 | pork cutlet bowl | bowl
+Tendon | shrimp:60 eggplant:40 sweet_potato:40 flour:20 oil:15 rice_short:200 | tempura rice bowl | bowl
+Unadon-style grilled fish bowl | fish:120 soy:10 sugar:8 rice_short:200 | kabayaki don | bowl
+Kaisendon | salmon_raw:50 tuna_raw:50 shrimp:30 rice_short:200 | seafood rice bowl | bowl
+Chicken karaage | chicken_thigh:150 cornstarch:15 soy:8 oil:15 | japanese fried chicken | serving
+Tonkatsu with cabbage | pork_loin:150 breadcrumbs:20 egg:15 oil:15 cabbage:60 | pork cutlet | plate
+Chicken nanban | chicken_thigh:150 flour:10 egg:15 oil:12 vinegar:8 mayo:20 | miyazaki chicken | plate
+Hayashi rice | beef:100 onion:50 ketchup:20 rice_short:200 | hashed beef rice | plate
+Japanese curry rice, vegetable | potato:80 carrots:50 onion:40 curry:10 rice_short:200 | vegetable kare raisu | plate
+Takoyaki | flour:40 squid:30 egg:15 mayo:10 | octopus balls | serving (6)
+Hiroshima okonomiyaki | flour:40 cabbage:100 egg:50 egg_noodles:80 pork_belly:30 | hiroshima style | piece
+Gyoza (Japanese) | flour:50 pork_mince:50 cabbage:30 oil:8 | japanese potstickers | serving (6)
+Agedashi tofu | tofu:150 cornstarch:10 oil:12 soy:8 stock:50 | fried tofu in broth | serving
+Hiyayakko | tofu:150 soy:5 ginger:3 spring_onion:5 | cold tofu | serving
+Nasu dengaku | eggplant:200 miso:20 sugar:5 oil:8 | miso eggplant | serving
+Kinpira gobo | carrots:100 soy:8 sesame_oil:5 sugar:3 | braised root | portion
+Spinach goma-ae | spinach:150 sesame:10 soy:5 sugar:3 | sesame spinach | portion
+Sukiyaki | beef:100 tofu:60 cabbage:60 mushrooms:30 soy:15 sugar:10 egg:50 | sukiyaki | bowl
+Shabu-shabu | beef:100 tofu:50 cabbage:60 mushrooms:30 stock:200 | shabu shabu | bowl
+Oden | egg_boiled:50 fish:50 tofu:50 radish:80 stock:250 | oden | bowl
+Nikuman | flour:60 pork_mince:40 cabbage:15 | pork bun japan | bun
+Inari sushi | rice_short:120 tofu:40 sugar:8 soy:5 | inarizushi | serving (2)
+Nigiri, salmon | rice_short:80 salmon_raw:40 | salmon nigiri plate | serving (4)
+Maki, cucumber | rice_short:120 cucumber:30 laver:3 | kappa maki | roll (6)
+Chirashi sushi | rice_short:200 salmon_raw:40 tuna_raw:40 egg:30 | scattered sushi | bowl
+Mochi with kinako | sticky_rice:80 soy_milk:0 sugar:10 | kinako mochi | serving (2)
+Dango | rice_flour:60 soy:5 sugar:10 | mitarashi dango | skewer (2)
+Matcha-style green tea ice cream | ice_cream:100 green_tea:5 | matcha ice cream | scoop (2)
+Castella | flour:30 sugar:30 egg:40 honey:8 | kasutera | slice
+Melon pan | flour:60 sugar:15 butter:12 egg:10 | melon bread | bun
+`);
+X('South Korea', 'Korean', AS, `
+Dolsot bibimbap | rice_short:200 beef:50 spinach:30 bean_sprouts:30 carrots:20 egg_fried:50 sesame_oil:5 | stone bowl bibimbap | bowl
+Bibimbap, vegan | rice_short:200 tofu:80 spinach:30 bean_sprouts:30 carrots:20 mushrooms:30 sesame_oil:5 | vegan bibimbap | bowl
+Kimchi jjigae | kimchi:120 pork_belly:50 tofu:80 water:250 | kimchi stew | bowl
+Budae jjigae | sausage:50 ham_slice:30 kimchi:60 egg_noodles:80 tofu:40 stock:250 | army stew | bowl
+Galbitang | ribs:150 radish:60 egg_noodles:40 stock:300 | short rib soup | bowl
+Seolleongtang | beef:80 rice_short:100 stock:350 | ox bone soup | bowl
+Samgyetang | chicken_meat:200 sticky_rice:40 garlic:5 ginger:3 water:300 | ginseng chicken soup | bowl
+Miyeok guk | wakame:10 beef:50 sesame_oil:5 water:300 | seaweed soup | bowl
+Naengmyeon | soba:180 beef:40 egg_boiled:25 cucumber:30 stock:250 | cold noodles | bowl
+Japchae with beef | rice_noodles:120 beef:60 spinach:40 carrots:20 soy:12 sesame_oil:8 | japchae beef | plate
+Bulgogi with rice | beef:150 soy:15 sugar:8 onion:30 rice_short:200 | bulgogi rice | plate
+Jeyuk bokkeum | pork_shoulder:150 chili_powder:5 onion:30 sugar:5 rice_short:200 | spicy pork | plate
+Dakgangjeong | chicken_thigh:150 cornstarch:15 oil:15 sugar:10 soy:8 | sweet crispy chicken | serving
+Korean fried chicken, yangnyeom | chicken_fried:200 sugar:15 chili_powder:4 | yangnyeom chicken | serving
+Haemul pajeon | flour:60 spring_onion:40 squid:40 shrimp:30 egg:25 oil:12 | seafood pancake | pancake
+Bindaetteok | mung:80 pork_mince:30 kimchi:30 oil:12 | mung bean pancake | pancake
+Gamja jorim | potato:180 soy:12 sugar:8 | braised potatoes | portion
+Japchae, vegan | rice_noodles:120 spinach:40 carrots:20 mushrooms:40 soy:12 sesame_oil:8 | vegan japchae | plate
+Kongnamul muchim | bean_sprouts:150 sesame_oil:5 garlic:2 | soybean sprout side | portion
+Sigeumchi namul | spinach:150 sesame_oil:5 sesame:3 | spinach namul | portion
+Tteokguk | rice_short:150 beef:40 egg:25 stock:300 | rice cake soup | bowl
+Rabokki | rice_short:100 egg_noodles:80 chili_powder:5 sugar:8 egg_boiled:25 | ramen tteokbokki | plate
+Gimbap, tuna | rice_short:180 tuna:40 mayo:10 laver:3 cucumber:20 | tuna kimbap | roll
+Kimchi bokkeumbap with egg | rice:220 kimchi:80 egg_fried:50 oil:8 | kimchi fried rice egg | plate
+Bingsu with red bean | condensed:30 kidney:60 sugar:10 milk:80 | patbingsu | bowl
+Yakgwa | flour:40 honey:20 sesame_oil:8 | honey cookie | serving (2)
+Sikhye | rice:30 sugar:20 water:250 | rice punch | glass
+`);
+X('Thailand', 'Thai', AS, `
+Gaeng keow wan gai | chicken_thigh:130 coconut_milk:120 eggplant:40 basil:5 curry:6 rice:150 | thai green curry rice | plate
+Gaeng phed (red curry) | pork_shoulder:120 coconut_milk:120 bamboo:40 curry:6 rice:150 | red curry pork | plate
+Massaman curry with beef | beef:120 coconut_milk:120 potato:60 peanuts:15 rice:150 | massaman beef | plate
+Panang curry | chicken_thigh:130 coconut_milk:100 curry:6 rice:150 | phanaeng | plate
+Gaeng som | fish:120 tamarind:15 cabbage:50 water:200 | sour orange curry | bowl
+Gaeng jued | tofu:80 pork_mince:40 cabbage:50 stock:250 | clear soup | bowl
+Tom yum goong | shrimp:120 mushrooms:40 lemongrass:5 lime:10 fish_sauce:8 water:250 | tom yum prawn | bowl
+Tom yum, vegan | tofu:100 mushrooms:60 lemongrass:5 lime:10 soy:8 water:250 | vegan tom yum | bowl
+Som tam thai | papaya:150 green_beans:30 tomato:30 peanuts:15 lime:10 fish_sauce:8 | papaya salad | plate
+Yam woon sen | rice_noodles:80 shrimp:50 pork_mince:30 lime:10 fish_sauce:8 | glass noodle salad | plate
+Nam tok moo | pork_shoulder:120 lime:10 fish_sauce:8 rice:15 | waterfall pork | plate
+Pad prik king | green_beans:120 pork_shoulder:80 curry:5 oil:10 | dry curry beans | plate
+Pad pak ruam | broccoli:60 carrots:40 cabbage:60 mushrooms:30 oyster_sauce:10 oil:10 | stir fried mixed veg | plate
+Pad kee mao | rice_noodles:200 chicken_breast:80 basil:5 chili:4 soy:12 oil:12 | drunken noodles (no alcohol) | plate
+Rad na | rice_noodles:200 pork_shoulder:60 broccoli:60 cornstarch:8 soy:10 | gravy noodles | plate
+Boat noodles | rice_noodles:150 beef:60 stock:250 | kuay teow reua | bowl
+Khao man gai with sauce | chicken_breast:130 rice:200 soy:10 ginger:3 | hainanese chicken thai | plate
+Khao kha moo | pork_shoulder:130 egg_boiled:50 rice:200 soy:10 | braised pork leg rice | plate
+Khao moo daeng | pork_loin:120 rice:200 egg_boiled:25 | red pork rice | plate
+Kai jeow | egg:120 oil:15 fish_sauce:5 rice:180 | thai omelette rice | plate
+Gai yang with sticky rice | chicken_leg:200 sticky_rice:150 | isaan grilled chicken | plate
+Sai ua | pork_mince:100 lemongrass:5 chili:3 | northern thai sausage | portion
+Nam prik ong | pork_mince:80 tomato:80 chili:3 cucumber:50 | northern chili dip | portion
+Kanom jeen nam ngiao | rice_noodles:180 pork_shoulder:50 tomato:60 stock:200 | northern noodle curry | bowl
+Satay gai | chicken_breast:120 coconut_milk:20 peanuts:20 | chicken satay | serving (4)
+Thai fish cakes | fish:100 curry:5 green_beans:15 oil:12 | tod mun pla | serving (4)
+Kluay buat chee | banana:120 coconut_milk:80 sugar:10 | banana in coconut milk | bowl
+Thong yip | egg:40 sugar:30 | golden egg sweets | serving (3)
+Khanom chan | rice_flour:40 coconut_milk:40 sugar:15 | layered dessert | serving (3)
+Cha manao | black_tea:200 lime:10 sugar:20 | thai lime tea | glass
+`);
+X('Vietnam', 'Vietnamese', AS, `
+Pho bo tai | rice_noodles:180 beef:80 onion:20 stock:350 | rare beef pho | bowl
+Pho ga | rice_noodles:180 chicken_meat:80 onion:20 stock:350 | chicken pho | bowl
+Pho chay | rice_noodles:180 tofu:80 mushrooms:40 water:350 | vegetarian pho | bowl
+Bun rieu | rice_noodles:150 crab:40 tomato:60 tofu:30 stock:250 | crab noodle soup | bowl
+Mi quang | rice_noodles:150 pork_shoulder:50 shrimp:40 peanuts:10 stock:100 | quang noodles | bowl
+Cao lau | egg_noodles:150 pork_loin:60 bean_sprouts:30 | hoi an noodles | bowl
+Bun cha Hanoi | rice_noodles:150 pork_mince:60 pork_belly:40 fish_sauce:10 lettuce:30 | hanoi bun cha | bowl
+Bun bo Nam Bo | rice_noodles:150 beef:80 peanuts:15 lettuce:30 fish_sauce:10 | southern beef noodle salad | bowl
+Bun chay | rice_noodles:150 tofu:80 lettuce:30 peanuts:10 soy:10 | vegan vermicelli bowl | bowl
+Com ga Hoi An | rice:200 chicken_meat:100 turmeric:1 | hoi an chicken rice | plate
+Thit kho trung | pork_belly:120 egg_boiled:50 coconut_water:80 fish_sauce:8 rice:150 | caramel pork eggs | plate
+Canh chua ca | fish:120 pineapple:40 tomato:40 tamarind:10 water:250 | sour fish soup | bowl
+Ga xao sa ot | chicken_thigh:150 lemongrass:5 chili:3 oil:10 | lemongrass chicken | plate
+Bo luc lac | beef:150 onion:30 soy:10 oil:10 rice:150 | shaking beef | plate
+Chao ga | rice:60 chicken_meat:60 ginger:3 water:300 | chicken congee | bowl
+Banh mi thit | baguette:80 pork_loin:60 pickles:20 cucumber:20 mayo:10 | pork banh mi | sandwich
+Banh mi chay | baguette:80 tofu:60 pickles:20 cucumber:20 | vegan banh mi | sandwich
+Banh khot | rice_flour:40 coconut_milk:30 shrimp:30 oil:10 | mini savory pancakes | serving (6)
+Nem ran | rice_noodles:30 pork_mince:50 carrots:15 oil:15 | fried spring rolls | serving (4)
+Goi ga | chicken_meat:100 cabbage:80 peanuts:10 lime:10 fish_sauce:8 | chicken cabbage salad | plate
+Rau muong xao toi | spinach:200 garlic:5 oil:8 | morning glory stir fry | plate
+Dau phu sot ca chua | tofu:150 tomato:100 oil:10 | tofu in tomato sauce | plate
+Che dau xanh | mung:80 coconut_milk:40 sugar:20 | mung bean sweet soup | bowl
+Banh flan | egg:40 milk:80 sugar:20 coffee:10 | vietnamese flan | ramekin
+Sinh to bo | avocado:100 condensed:30 milk:100 | avocado smoothie vietnam | glass
+`);
+X('Indonesia', 'Indonesian', AS, `
+Nasi goreng kampung | rice:220 egg_fried:50 chili:3 soy:10 oil:12 | village fried rice | plate
+Mie goreng (Indonesian) | egg_noodles:180 chicken_meat:50 cabbage:30 soy:12 oil:12 | indonesian fried noodles | plate
+Gado-gado | potato:60 green_beans:50 cabbage:50 bean_sprouts:30 tofu:50 egg_boiled:25 peanut_butter:30 | gado gado | plate
+Ketoprak | tofu:80 rice_noodles:60 bean_sprouts:30 peanut_butter:25 soy:8 | ketoprak | plate
+Pecel | spinach:60 bean_sprouts:40 green_beans:40 peanut_butter:30 rice:150 | nasi pecel | plate
+Ayam penyet | chicken_fried:180 tofu:50 tempeh:50 chili:5 rice:150 | smashed chicken | plate
+Ayam bakar | chicken_leg:200 soy:10 brown_sugar:8 rice:150 | grilled chicken indonesia | plate
+Rendang daging with rice | beef:130 coconut_milk:60 chili:5 rice:150 | beef rendang rice | plate
+Gulai kambing | goat:150 coconut_milk:100 curry:5 | goat curry indonesia | bowl
+Sayur lodeh | zucchini:60 eggplant:60 green_beans:40 tofu:40 coconut_milk:100 | vegetables in coconut | bowl
+Sayur asem | corn:40 green_beans:40 peanuts:15 tamarind:10 water:250 | sour vegetable soup | bowl
+Rawon | beef:100 stock:300 bean_sprouts:20 | black beef soup | bowl
+Soto betawi | beef:100 milk:80 coconut_milk:50 potato:40 | jakarta beef soup | bowl
+Nasi kuning | rice:180 coconut_milk:40 turmeric:1 egg_boiled:25 | yellow rice | plate
+Nasi padang | rice:180 beef:60 egg_boiled:25 spinach:40 coconut_milk:30 | padang rice | plate
+Tempe orek | tempeh:120 soy:10 brown_sugar:8 oil:10 | sweet soy tempeh | portion
+Tahu gejrot | tofu:120 brown_sugar:10 vinegar:8 chili:2 | cirebon tofu | portion
+Perkedel | potato:120 egg:15 oil:12 | potato fritters indonesia | serving (3)
+Siomay | fish:80 tofu:40 potato:40 cabbage:30 peanut_butter:20 | bandung siomay | plate
+Bakwan sayur | flour:40 cabbage:30 carrots:20 bean_sprouts:20 oil:15 | vegetable fritters | serving (3)
+Es campur | coconut_milk:40 condensed:20 jackfruit:30 tapioca:15 sugar:10 | mixed ice | bowl
+Kolak pisang | banana:100 sweet_potato:50 coconut_milk:60 brown_sugar:15 | banana compote | bowl
+Bubur sumsum | rice_flour:40 coconut_milk:80 brown_sugar:20 | rice flour pudding | bowl
+`);
+X('Malaysia', 'Malaysian', AS, `
+Nasi lemak with sambal and anchovies | rice:180 coconut_milk:40 dried_shrimp:10 peanuts:15 egg_boiled:50 cucumber:20 chili:5 | nasi lemak bungkus | plate
+Laksa (curry) | rice_noodles:150 chicken_meat:50 shrimp:30 tofu:30 coconut_milk:100 curry:6 | curry laksa | bowl
+Asam laksa | rice_noodles:150 fish:80 tamarind:10 cucumber:20 water:250 | penang asam laksa | bowl
+Mee rebus | egg_noodles:180 sweet_potato:40 egg_boiled:25 stock:150 | mee rebus | bowl
+Nasi kerabu | rice:180 fish:50 coconut_meat:20 cabbage:30 bean_sprouts:20 | blue rice salad | plate
+Ayam percik | chicken_leg:200 coconut_milk:40 | kelantan grilled chicken | portion
+Rendang tok | beef:130 coconut_milk:60 coconut_meat:15 | perak rendang | portion
+Ikan bakar | fish:180 chili:5 oil:8 | grilled fish malaysia | portion
+Murtabak | flour:80 beef_mince:60 egg:50 onion:20 oil:15 | martabak malaysia | piece
+Roti john | baguette:80 beef_mince:50 egg:50 onion:15 oil:10 | roti john | sandwich
+Char kway teow, vegetarian | rice_noodles:200 tofu:50 egg:30 bean_sprouts:30 soy:10 oil:15 | vegetarian ckt | plate
+Satay with ketupat | chicken_breast:120 peanuts:25 rice:100 cucumber:20 | satay kajang | plate
+Lok lok | fish:40 tofu:40 sausage:30 | lok lok skewers | serving
+Cendol | coconut_milk:60 brown_sugar:25 kidney:20 rice_flour:15 | cendol | bowl
+Kuih seri muka | sticky_rice:60 coconut_milk:40 sugar:15 egg:10 | pandan layer cake | serving (2)
+Ais kacang | kidney:30 corn_canned:20 condensed:25 sugar:10 | abc ice | bowl
+Milo dinosaur | milk:200 cocoa_powder:20 sugar:10 | milo ais | glass
+`);
+X('Singapore', 'Singaporean', AS, `
+Hainanese chicken rice (Singapore) | chicken_meat:140 rice:200 ginger:3 soy:8 | singapore chicken rice | plate
+Chilli crab with mantou | crab:180 tomato_paste:20 egg:20 chili:5 flour:60 | singapore chilli crab | plate
+Black pepper crab | crab:180 butter:15 sp_pepper:3 | black pepper crab | portion
+Hokkien mee (Singapore) | egg_noodles:100 rice_noodles:80 shrimp:50 squid:30 egg:30 | hokkien prawn mee | plate
+Laksa (Katong) | rice_noodles:150 shrimp:50 tofu:30 coconut_milk:120 | katong laksa | bowl
+Mee siam | rice_noodles:150 tofu:40 egg_boiled:25 tamarind:10 | mee siam | plate
+Rojak | pineapple:50 cucumber:40 tofu:30 peanuts:15 brown_sugar:10 | singapore rojak | plate
+Satay bee hoon | rice_noodles:150 peanut_butter:30 pork_loin:40 spinach:40 | satay bee hoon | plate
+Popiah | flour:30 jicama:60 carrots:20 egg:20 peanuts:10 | fresh spring roll singapore | roll (2)
+Fish head curry-style fish curry | fish:150 coconut_milk:80 eggplant:50 okra:40 curry:6 | singapore fish curry | bowl
+Chwee kueh with chai poh | rice_flour:60 water:40 radish:20 oil:8 | steamed rice cakes | serving (4)
+Kopi with kaya toast set | coffee:150 condensed:20 bread:60 jam:20 butter:10 egg_boiled:100 | kopi set | serving
+`);
+X('Philippines', 'Filipino', AS, `
+Chicken adobo with rice | chicken_thigh:160 soy:15 vinegar:15 garlic:5 rice:180 | adobong manok | plate
+Pork adobo with rice | pork_belly:140 soy:15 vinegar:15 garlic:5 rice:180 | adobong baboy | plate
+Adobong kangkong | spinach:200 soy:10 vinegar:10 garlic:4 oil:8 | water spinach adobo | plate
+Sinigang na baboy | pork_shoulder:120 tamarind:15 spinach:40 radish:40 water:250 | pork sinigang | bowl
+Sinigang na hipon | shrimp:120 tamarind:15 spinach:40 radish:40 water:250 | shrimp sinigang | bowl
+Kare-kare | oxtail:150 peanut_butter:35 eggplant:50 green_beans:40 | oxtail peanut stew | bowl
+Kare-kare, vegetable | eggplant:80 green_beans:60 pak_choi:60 peanut_butter:35 tofu:60 | vegan kare kare | bowl
+Bicol express | pork_belly:120 coconut_milk:80 chili:5 | bicol express | portion
+Laing | spinach:150 coconut_milk:100 chili:3 | taro leaves coconut | portion
+Pinakbet | eggplant:60 pumpkin:60 okra:40 green_beans:40 pork_belly:30 fish_sauce:8 | pakbet | portion
+Tinolang manok | chicken_thigh:150 green_papaya_alt:0 papaya:60 spinach:30 ginger:5 water:250 | tinola | bowl
+Bulalo | beef:120 corn:60 cabbage:50 water:300 | beef marrow soup | bowl
+Nilagang baka | beef:120 potato:60 cabbage:50 corn:40 water:250 | boiled beef soup | bowl
+Lechon kawali | pork_belly:150 oil:10 | crispy pork belly | portion
+Sisig | pork_shoulder:120 onion:30 egg:25 lemon:5 | pork sisig | sizzling plate
+Tokwa't baboy | tofu:100 pork_belly:60 vinegar:10 soy:8 onion:15 | tofu and pork | plate
+Menudo (Filipino) | pork_shoulder:120 liver:30 potato:50 carrots:30 tomato_paste:15 | filipino menudo | plate
+Caldereta | goat:150 potato:50 carrots:30 tomato_paste:15 olives:10 | kaldereta | plate
+Mechado | beef:140 tomato_paste:15 potato:50 soy:10 | beef mechado | plate
+Arroz valenciana (Filipino) | sticky_rice:150 chicken_thigh:60 sausage:30 coconut_milk:30 | filipino paella | plate
+Palabok | rice_noodles:180 shrimp:40 egg_boiled:25 pork_belly:20 | pancit palabok | plate
+Pancit bihon | rice_noodles:150 chicken_meat:50 cabbage:40 carrots:20 soy:10 | bihon | plate
+Lumpiang shanghai | flour:30 pork_mince:60 carrots:15 oil:15 | fried spring rolls ph | serving (5)
+Lumpiang sariwa | flour:30 sweet_potato:40 green_beans:30 tofu:30 peanuts:10 | fresh lumpia | roll
+Tortang talong | eggplant:120 egg:60 oil:12 | eggplant omelette | piece
+Ginisang monggo | mung:150 spinach:30 pork_belly:20 | sauteed mung beans | bowl
+Bistek with rice | beef:130 soy:15 lemon:10 onion:30 rice:180 | bistek rice | plate
+Halo-halo | kidney:20 banana:30 jackfruit:20 evaporated:50 sugar:15 ice_cream:40 | halo halo | glass
+Bibingka | rice_flour:60 coconut_milk:40 egg:20 sugar:15 butter:8 | rice cake ph | piece
+Puto bumbong | sticky_rice:80 coconut_meat:15 brown_sugar:10 butter:5 | purple rice cake | serving
+Biko | sticky_rice:100 coconut_milk:50 brown_sugar:30 | sweet rice cake | slice
+Maja blanca | coconut_milk:80 cornstarch:15 corn_canned:30 sugar:15 | coconut corn pudding | slice
+Buko pie | pie_crust:50 coconut_meat:50 condensed:30 | young coconut pie | slice
+Ensaymada | flour:50 butter:15 sugar:12 cheddar:15 | ensaymada | bun
+Taho | tofu:150 brown_sugar:20 tapioca:15 | silken tofu snack | cup
+`);
+X('Türkiye', 'Turkish', AS, `
+Iskender kebab | beef:120 bread:60 yogurt:80 butter:12 tomato_paste:10 | iskender | plate
+Adana kebab with rice | lamb_mince:150 rice:150 tomato:40 | adana kebab | plate
+Döner plate | beef:120 rice:150 tomato:40 lettuce:30 yogurt:30 | doner rice plate | plate
+Tavuk şiş | chicken_breast:150 yogurt:20 red_pepper:30 | chicken shish | serving
+Hünkar beğendi | lamb:120 eggplant:150 milk:60 butter:10 cheddar:15 | sultan's delight | plate
+İmam bayıldı | eggplant:200 tomato:60 onion:40 olive_oil:20 | fainting imam | portion
+Kuru fasulye, vegan | kidney:200 tomato_paste:15 olive_oil:12 onion:20 | vegan turkish beans | bowl
+Etli nohut | chickpeas:150 lamb:60 tomato_paste:10 | chickpea stew with meat | bowl
+Mantı | flour:70 beef_mince:40 yogurt:80 butter:10 | turkish dumplings | plate
+Pide with cheese | flour:90 cheddar:50 egg:20 | kasarli pide | piece
+Pide with minced meat | flour:90 beef_mince:60 tomato:20 | kiymali pide | piece
+Çiğ köfte (vegan) | bulgur:80 tomato_paste:20 onion:20 lettuce:30 | vegan cig kofte | serving
+Mercimek köftesi | red_lentils:80 bulgur:40 onion:20 olive_oil:10 | lentil balls | serving (4)
+Yaprak sarma | rice:60 onion:20 olive_oil:15 lemon:5 | stuffed vine leaves | serving (6)
+Börek, spinach and feta | phyllo:60 spinach:60 feta:40 egg:15 | ispanakli borek | slice
+Sigara böreği | phyllo:40 feta:40 oil:15 | cheese cigars | serving (3)
+Kumpir | potato_baked:300 butter:15 cheddar:30 corn_canned:20 olives:10 | stuffed baked potato | potato
+Balık ekmek | fish:120 baguette:80 onion:15 lettuce:15 | fish sandwich istanbul | sandwich
+Tantuni | beef:100 flour_tortilla:60 tomato:30 onion:15 | mersin tantuni | wrap
+Midye dolma | mussels:80 rice:40 onion:10 olive_oil:8 | stuffed mussels | serving (6)
+Ezogelin çorbası | red_lentils:60 bulgur:20 tomato_paste:10 mint:2 water:250 | ezogelin soup | bowl
+Tarhana çorbası | flour:30 yogurt:30 tomato_paste:10 water:250 | tarhana soup | bowl
+Künefe | phyllo:40 mozzarella:40 sugar:25 butter:15 pistachio:5 | kunefe | portion
+Baklava | phyllo:40 walnuts:25 butter:15 sugar:20 | turkish baklava | serving (2)
+Lokum | sugar:25 cornstarch:8 | turkish delight | serving (3)
+Aşure | bulgur:30 chickpeas:20 kidney:20 dried_fruit_alt:0 apricot_dried:15 raisins:10 sugar:20 | noah's pudding | bowl
+Turkish tea with simit | black_tea:200 sugar:8 flour:80 sesame:8 | cay and simit | serving
+`);
+X('Iran', 'Iranian', AS, `
+Ghormeh sabzi with rice | lamb:100 kidney:60 spinach:80 parsley:20 lemon:8 rice:180 | herb stew | plate
+Fesenjan | chicken_thigh:150 walnuts:40 pomegranate_juice:60 rice:150 | pomegranate walnut stew | plate
+Gheimeh | lamb:100 split_peas:60 tomato_paste:15 fries:40 rice:150 | split pea stew | plate
+Chelo kabab koobideh | beef_mince:150 rice:200 tomato:60 butter:10 | koobideh rice | plate
+Joojeh kabab | chicken_breast:150 saffron:0.1 lemon:5 rice:200 | saffron chicken kebab | plate
+Baghali polo ba mahicheh | rice:180 fava:60 dill:5 lamb:120 | dill rice with lamb shank | plate
+Tahchin | rice:180 chicken_meat:80 yogurt:60 egg:25 saffron:0.1 | saffron rice cake | slice
+Kashk bademjan, vegan | eggplant:200 onion:30 walnuts:10 oil:15 mint:2 | eggplant dip vegan | portion
+Mirza ghasemi | eggplant:200 tomato:60 egg:50 garlic:5 oil:12 | smoky eggplant eggs | portion
+Ash-e jo | barley:60 kidney:30 chickpeas:30 spinach:40 water:250 | barley soup | bowl
+Dizi | lamb:100 chickpeas:50 kidney:30 potato:60 tomato:40 water:200 | abgoosht | bowl
+Kuku sibzamini | potato:150 egg:60 oil:12 | potato kuku | slice
+Sholeh zard (saffron pudding) | rice:50 sugar:30 saffron:0.1 water:150 | persian rice pudding | bowl
+Faloodeh | rice_noodles:40 sugar:25 lemon:10 water:100 | persian sorbet | cup
+Doogh | yogurt:150 water:150 mint:2 salt:1 | persian yogurt drink | glass
+`);
+X('Lebanon', 'Lebanese', AS, `
+Kibbeh bil sanieh | bulgur:60 beef_mince:80 onion:20 pine_nuts:8 olive_oil:10 | baked kibbeh | slice
+Shish tawook | chicken_breast:150 yogurt:20 garlic:4 lemon:5 | chicken shish lebanese | serving
+Kafta bil sanieh | beef_mince:120 potato:100 tomato:60 | kafta tray bake | portion
+Batata harra | potato:200 olive_oil:15 garlic:4 coriander:5 chili:2 | spicy potatoes | portion
+Fattoush | lettuce:60 tomato:50 cucumber:50 pita:30 olive_oil:12 lemon:8 | fattoush salad | bowl
+Tabbouleh | parsley:60 bulgur:30 tomato:60 olive_oil:15 lemon:10 | tabouleh | bowl
+Loubieh bi zeit | green_beans:200 tomato:60 olive_oil:15 | green beans in oil | portion
+Moussaka (Lebanese, vegan) | eggplant:150 chickpeas:60 tomato:80 olive_oil:15 | maghmour | portion
+Fatayer bi jibneh | flour:60 feta:40 | cheese fatayer | serving (2)
+Riz a djej | rice:180 chicken_meat:100 beef_mince:30 almonds:10 | rice with chicken lebanese | plate
+Mloukhieh (Lebanese) | spinach:150 chicken_meat:80 rice:150 | lebanese molokhia | plate
+Knefeh bi jibn | semolina:40 mozzarella:40 sugar:25 butter:12 | lebanese knefe | portion
+Maamoul with walnuts | semolina:40 butter:15 walnuts:20 sugar:8 | walnut maamoul | serving (2)
+Jallab | molasses:30 raisins:10 water:250 | jallab drink | glass
+`);
+X('Israel', 'Israeli', AS, `
+Shakshuka with feta | egg:100 tomato:120 red_pepper:40 feta:30 olive_oil:10 | israeli shakshuka | plate
+Hummus with ful | chickpeas:120 tahini:20 fava:60 olive_oil:10 | hummus ful | bowl
+Falafel in pita | chickpeas:100 oil:15 pita:70 tahini:15 tomato:20 cucumber:20 | falafel pita | sandwich
+Sabich with amba | pita:70 eggplant:80 egg_boiled:50 tahini:15 mango:15 | sabich amba | sandwich
+Schnitzel in pita | chicken_breast:120 breadcrumbs:20 oil:15 pita:70 | schnitzel pita | sandwich
+Jerusalem mixed grill | chicken_meat:80 liver:40 onion:30 pita:70 | meorav yerushalmi | sandwich
+Shawarma laffa | chicken_thigh:120 flour_tortilla:80 tahini:15 tomato:20 | laffa shawarma | wrap
+Israeli couscous salad | pasta:120 cucumber:40 tomato:40 parsley:10 olive_oil:10 | ptitim salad | bowl
+Matzo ball soup | flour:30 egg:20 chicken_meat:50 carrots:30 stock:250 | kneidlach soup | bowl
+Cholent | beef:80 potato:80 kidney:50 barley:30 water:150 | hamin | bowl
+Challah with butter | flour:60 egg:10 sugar:6 oil:5 butter:8 | challah | slice (2)
+Sufganiyot | flour:50 sugar:10 oil:15 jam:20 | hanukkah doughnut | doughnut
+Latkes with apple sauce | potato:150 egg:20 flour:10 oil:20 apple:60 | potato latkes | serving (3)
+Babka, chocolate | flour:40 butter:15 sugar:15 dark_choc:20 | chocolate babka | slice
+`);
+X('Syria', 'Syrian', AS, `
+Kibbeh halabieh | bulgur:60 beef_mince:70 oil:15 | aleppo kibbeh | serving (3)
+Shish barak | flour:50 beef_mince:40 yogurt:120 | dumplings in yogurt | bowl
+Fattet makdous | eggplant:150 beef_mince:50 yogurt:80 pita:30 | eggplant fatteh | bowl
+Yalanji | rice:70 tomato:40 parsley:10 olive_oil:15 | vegan stuffed vine leaves | serving (6)
+Mujaddara (Syrian) | lentils:150 bulgur:60 onion:50 olive_oil:15 | syrian mujaddara | plate
+Mutabbal shawandar | beets:150 tahini:20 yogurt:30 | beetroot dip | portion
+Halawet el jibn | semolina:30 mozzarella:30 cream:30 sugar:20 | cheese rolls dessert | serving (2)
+`);
+X('Jordan', 'Jordanian', AS, `
+Mansaf | lamb:150 rice:200 yogurt:120 almonds:10 bread:30 | jordanian mansaf | plate
+Maqluba with eggplant | rice:180 chicken_thigh:100 eggplant:100 oil:15 | jordanian maqluba | plate
+Zarb | lamb:100 chicken_thigh:80 potato:80 carrots:40 | bedouin underground bbq | plate
+Musakhan rolls | chicken_meat:80 onion:40 olive_oil:15 flour_tortilla:50 | musakhan wraps | serving (3)
+Galayet bandora with bread | tomato:200 olive_oil:15 onion:20 pita:60 | tomato pan with bread | plate
+Kunafa nabulsiyeh | phyllo:40 mozzarella:40 sugar:25 butter:15 | nabulsi kunafa | portion
+`);
+X('Saudi Arabia', 'Saudi', AS, `
+Kabsa with chicken | rice:220 chicken_thigh:140 tomato:40 onion:30 raisins:10 almonds:8 oil:12 | chicken kabsa | plate
+Kabsa with lamb | rice:220 lamb:130 tomato:40 onion:30 oil:12 | lamb kabsa | plate
+Mandi | rice:220 chicken_thigh:150 oil:10 | yemeni-style mandi saudi | plate
+Mathbi | lamb:150 rice:180 | stone grilled meat | plate
+Saleeg with chicken | rice:200 chicken_meat:100 milk:120 butter:10 | hejazi saleeg | plate
+Harees (Saudi) | bulgur:100 lamb:80 butter:10 water:150 | saudi harees | bowl
+Margoog | flour:60 lamb:60 zucchini:40 tomato:40 water:200 | najdi dumpling stew | bowl
+Sambusa (Saudi) | flour:40 beef_mince:40 oil:15 | ramadan sambusa | serving (2)
+Kleija | flour:50 dates:20 butter:15 sp_cardamom:0.5 | qassim date cookie | serving (2)
+`);
+X('United Arab Emirates', 'Emirati', AS, `
+Harees (Emirati) | bulgur:100 chicken_meat:80 ghee:10 water:150 | emirati harees | bowl
+Thareed (Emirati) | bread:60 lamb:80 zucchini:40 potato:40 water:200 | emirati thareed | bowl
+Madrooba | rice:100 salt_cod:40 butter:10 water:150 | salted fish porridge | bowl
+Machboos samak | rice:200 fish:120 tomato:40 onion:30 oil:12 | fish machboos | plate
+Saloona | chicken_thigh:120 potato:50 tomato:40 zucchini:40 | emirati stew | bowl
+`);
+X('Qatar', 'Qatari', AS, `
+Machboos (Qatari) | rice:200 chicken_thigh:120 tomato:40 onion:30 | qatari machboos | plate
+Murabyan (Qatari) | rice:200 shrimp:100 onion:30 | qatari shrimp rice | plate
+Balaleet (Qatari) | pasta:100 sugar:20 egg:50 butter:10 saffron:0.1 | qatari balaleet | plate
+`);
+X('Kuwait', 'Kuwaiti', AS, `
+Machboos laham | rice:200 lamb:130 tomato:40 onion:30 | kuwaiti lamb machboos | plate
+Mutabbaq samak | fish:150 rice:180 onion:30 | kuwaiti fish rice | plate
+Jireesh (Kuwaiti) | bulgur:80 chicken_meat:60 yogurt:40 | kuwaiti jireesh | bowl
+`);
+X('Bahrain', 'Bahraini', AS, `
+Machboos (Bahraini) | rice:200 chicken_thigh:120 tomato:40 | bahraini machboos | plate
+Muhammar with fish | rice:200 dates:20 fish:120 | sweet rice with fish | plate
+Gers ogaily (Bahraini) | flour:35 sugar:20 egg:20 sp_cardamom:0.5 | bahraini cake | slice
+`);
+X('Oman', 'Omani', AS, `
+Shuwa with rice | lamb:160 rice:180 garlic:3 | omani shuwa rice | plate
+Majboos (Omani) | rice:200 chicken_thigh:120 tomato:40 | omani majboos | plate
+Mishkak | beef:150 garlic:3 | omani skewers | serving (3)
+Harees (Omani) | bulgur:100 chicken_meat:80 ghee:10 | omani harees | bowl
+`);
+X('Yemen', 'Yemeni', AS, `
+Mandi (Yemeni) | rice:220 lamb:150 oil:10 | yemeni mandi | plate
+Haneeth | lamb:180 rice:150 | slow roast lamb | plate
+Zurbian | rice:200 lamb:120 potato:60 yogurt:30 | yemeni biryani | plate
+Fattah (Yemeni) | flour:80 honey:20 butter:15 | yemeni fatta sweet | bowl
+Lahoh with honey | flour:70 honey:15 | yemeni pancake | serving (2)
+`);
+X('Iraq', 'Iraqi', AS, `
+Dolma (Iraqi) | rice:80 onion:30 tomato:40 lamb_mince:40 | iraqi dolma | serving (6)
+Quzi | lamb:150 rice:180 almonds:10 raisins:10 | iraqi quzi | plate
+Tepsi baytinjan | eggplant:150 beef_mince:60 tomato:60 potato:60 | eggplant casserole | portion
+Kubba halab | rice:80 beef_mince:50 oil:15 | rice kubba | serving (2)
+Klecha | flour:40 butter:15 dates:20 | iraqi date cookies | serving (2)
+`);
+X('Afghanistan', 'Afghan', AS, `
+Kabuli pulao | rice:200 lamb:100 carrots:40 raisins:15 almonds:8 oil:12 | qabili palau | plate
+Mantu | flour:60 beef_mince:50 onion:15 yogurt:60 lentils:20 | afghan mantu | serving (5)
+Ashak | flour:60 spring_onion:40 yogurt:60 beef_mince:30 | leek dumplings | serving (6)
+Aushak, vegetarian | flour:60 spring_onion:40 yogurt:60 split_peas:20 | vegetarian aushak | serving (6)
+Qorma-e-sabzi | spinach:150 lamb:80 oil:12 | afghan spinach stew | bowl
+Kofta chalaw | beef_mince:120 tomato:60 rice:180 | meatballs and rice | plate
+Chapli kebab (Afghan) | beef_mince:150 onion:20 oil:15 | afghan chapli | serving (2)
+Sheer yakh | milk:150 sugar:20 pistachio:5 | afghan ice cream | scoop (2)
+`);
+X('Uzbekistan', 'Uzbek', AS, `
+Plov (Tashkent) | rice:180 lamb:90 carrots:70 chickpeas:30 oil:20 | tashkent osh | plate
+Manti (Uzbek) | flour:60 lamb_mince:60 onion:30 | uzbek manti | serving (4)
+Chuchvara | flour:50 beef_mince:40 stock:200 | uzbek dumplings soup | bowl
+Mastava | rice:50 lamb:60 potato:50 carrots:30 tomato:30 water:250 | rice soup uzbek | bowl
+Dimlama | lamb:100 potato:80 cabbage:60 carrots:40 red_pepper:30 | layered stew | bowl
+Naryn | egg_noodles:120 lamb:80 onion:20 | naryn | plate
+Uzbek salad (achik-chuchuk) | tomato:120 onion:30 cucumber:40 | tomato onion salad | portion
+`);
+X('Kazakhstan', 'Kazakh', AS, `
+Beshbarmak (beef) | egg_noodles:150 beef:120 onion:30 stock:100 | five fingers | plate
+Kuyrdak (beef) | beef:120 liver:40 potato:80 onion:20 oil:10 | kazakh fry | plate
+Manti (Kazakh) | flour:60 lamb_mince:60 pumpkin:20 onion:20 | kazakh manti | serving (4)
+Samsa (Kazakh) | flour:60 lamb_mince:50 onion:20 butter:10 | kazakh samsa | serving (2)
+Kurt | yogurt:60 | dried yogurt balls | serving
+`);
+X('Kyrgyzstan', 'Kyrgyz', AS, `
+Beshbarmak (Kyrgyz) | egg_noodles:150 lamb:120 onion:30 | kyrgyz beshbarmak | plate
+Oromo | flour:60 lamb_mince:50 pumpkin:40 onion:20 | steamed roll | slice (2)
+Plov (Kyrgyz) | rice:180 lamb:90 carrots:70 oil:18 | kyrgyz plov | plate
+Shorpo | lamb:100 potato:80 carrots:30 water:250 | kyrgyz soup | bowl
+`);
+X('Tajikistan', 'Tajik', AS, `
+Oshi plov (Tajik) | rice:180 lamb:90 carrots:70 chickpeas:30 oil:18 | tajik osh | plate
+Qurutob with lamb | flour_tortilla:70 yogurt:100 lamb:60 tomato:40 onion:20 | qurutob gosht | plate
+Shirchoy | black_tea:150 milk:100 butter:10 salt:1 | tajik milk tea | cup
+`);
+X('Turkmenistan', 'Turkmen', AS, `
+Palaw (Turkmen) | rice:180 lamb:90 carrots:70 oil:18 | turkmen palaw | plate
+Gutap with pumpkin | flour:60 pumpkin:80 onion:20 oil:10 | pumpkin gutap | serving (2)
+Gutap with meat | flour:60 lamb_mince:50 onion:20 oil:10 | meat gutap | serving (2)
+`);
+X('Mongolia', 'Mongolian', AS, `
+Buuz | flour:60 lamb_mince:60 onion:20 | mongolian dumplings | serving (5)
+Khorkhog | lamb:180 potato:80 carrots:40 | mongolian hot stone lamb | plate
+Guriltai shul | egg_noodles:100 lamb:60 carrots:20 water:250 | noodle soup mongolia | bowl
+Bansh with tea | flour:50 lamb_mince:40 milk:120 green_tea:100 | dumplings in milk tea | bowl
+`);
+X('Myanmar', 'Burmese', AS, `
+Mohinga with fish | rice_noodles:150 fish:80 chickpea_flour:15 lemongrass:5 water:300 | mohinga | bowl
+Ohn no khao swe | egg_noodles:150 chicken_meat:70 coconut_milk:100 chickpea_flour:10 | coconut chicken noodles | bowl
+Nan gyi thoke | rice_noodles:150 chicken_meat:50 chickpea_flour:15 egg_boiled:25 | thick noodle salad | plate
+Burmese pork curry | pork_belly:150 ginger:5 onion:30 oil:15 | wet thar hin | portion
+Burmese fish curry | fish:150 tomato:40 onion:30 turmeric:1 oil:15 | nga hin | portion
+Shan tofu with noodles | chickpea_flour:60 rice_noodles:120 peanuts:10 | shan tofu noodles | bowl
+Shwe yin aye | coconut_milk:100 sticky_rice:30 tapioca:15 sugar:15 bread:20 | golden heart cooler | bowl
+`);
+X('Cambodia', 'Cambodian', AS, `
+Fish amok | fish:160 coconut_milk:80 curry:5 egg:20 | amok trey | portion
+Lok lak | beef:150 onion:30 lime:5 rice:150 egg_fried:50 | cambodian lok lak | plate
+Samlor korko | pumpkin:60 green_beans:40 eggplant:40 pork_shoulder:50 rice:20 water:250 | stirring soup | bowl
+Kuy teav (vegetarian) | rice_noodles:180 tofu:60 bean_sprouts:30 water:300 | vegetarian kuy teav | bowl
+Num banh chok with fish curry | rice_noodles:180 fish:60 coconut_milk:50 lemongrass:5 | khmer noodles fish | bowl
+Bai cha | rice:220 sausage:40 egg:30 soy:10 oil:12 | cambodian fried rice | plate
+Num ansom | sticky_rice:120 kidney:20 banana:40 coconut_milk:20 | khmer sticky rice cake | parcel
+`);
+X('Laos', 'Lao', AS, `
+Larb (Lao) | chicken_mince:130 lime:10 fish_sauce:8 rice:15 mint:3 | lao larb | portion
+Larb tofu | tofu:150 lime:10 soy:8 rice:15 mint:3 | vegan larb | portion
+Khao poon | rice_noodles:150 chicken_meat:60 coconut_milk:80 curry:5 | lao noodle curry | bowl
+Sai oua (Lao) | pork_mince:100 lemongrass:5 | lao sausage | portion
+Mok kai | chicken_meat:120 lemongrass:5 egg:15 | steamed chicken lao | portion
+Khao jee with eggs | sticky_rice:120 egg:50 | grilled sticky rice | serving (2)
+`);
+X('Taiwan', 'Taiwanese', AS, `
+Gua bao | flour:60 pork_belly:60 peanuts:10 sugar:5 | taiwanese pork bun | serving (2)
+Mee sua with pork | rice_noodles:150 pork_shoulder:40 stock:250 | mee sua | bowl
+Danzai noodles | egg_noodles:150 pork_mince:40 shrimp:20 stock:250 | tainan noodles | bowl
+Three cup tofu | tofu:180 soy:10 sesame_oil:10 basil:5 | san bei tofu | plate
+Taiwanese popcorn chicken | chicken_thigh:150 cornstarch:20 oil:15 basil:3 | yan su ji | serving
+Scallion pancake with egg (Taiwanese) | flour:60 egg:50 oil:12 spring_onion:10 | dan bing | piece
+Shaved ice with mango | mango:150 condensed:25 sugar:10 | mango shaved ice | bowl
+Aiyu jelly | gelatine:3 lemon:10 sugar:20 water:200 | aiyu | cup
+`);
+X('Hong Kong', 'Hong Kong', TE, `
+Pineapple bun with butter (HK) | flour:60 sugar:15 butter:20 egg:10 | bo lo yau hk | bun
+Wonton noodles (HK) | egg_noodles:120 shrimp:50 pork_mince:30 stock:300 | wanton mein | bowl
+Baked pork chop rice | rice:200 pork_loin:120 tomato:60 cheddar:20 | hk baked rice | plate
+Satay beef noodles | rice_noodles:150 beef:60 peanut_butter:15 stock:200 | satay ngau yuk mein | bowl
+Macaroni with ham and egg | pasta:100 ham_slice:30 egg_fried:50 stock:250 | hk breakfast macaroni | bowl
+Mango pomelo sago | mango:100 tapioca:20 coconut_milk:40 orange:30 | yeung chi kam lo | bowl
+`);
+X('Macau', 'Macanese', TE, `
+Galinha à portuguesa | chicken_thigh:150 coconut_milk:60 curry:4 potato:60 | portuguese chicken macau | plate
+African chicken (Macanese) | chicken_leg:200 peanut_butter:20 chili:3 | galinha africana | portion
+Portuguese egg tart (Macau) | puff_pastry:30 milk:40 egg:15 sugar:12 | macau egg tart | tart
+Almond cookies (Macau) | flour:20 almonds:10 sugar:10 lard:6 | macau almond cookies | serving (3)
+`);
+X('Brunei', 'Bruneian', AS, `
+Ambuyat with dips | tapioca:80 water:200 fish:40 chili:3 | brunei ambuyat set | plate
+Nasi lemak (Brunei) | rice:180 coconut_milk:40 egg_boiled:50 peanuts:15 | brunei nasi lemak | plate
+Beef rendang (Brunei) | beef:130 coconut_milk:60 | brunei rendang | portion
+`);
+X('Timor-Leste', 'Timorese', AS, `
+Batar da'an with rice | corn:100 pumpkin:80 kidney:50 rice:120 | timor corn stew rice | plate
+Timorese grilled fish | fish:170 lime:8 chili:2 | ikan sabuko | portion
+`);
+X('North Korea', 'North Korean', AS, `
+Pyongyang raengmyon with egg | soba:180 egg_boiled:50 beef:30 cucumber:30 stock:250 | cold noodles egg | bowl
+Injo gogi bap (tofu rice) | tofu:100 rice:180 soy:10 chili_powder:3 | tofu skin rice | plate
+Kimchi (North Korean white kimchi) | cabbage:150 radish:30 salt:2 | baek kimchi | portion
+`);
+X('Georgia', 'Georgian', AS, `
+Khinkali, beef and pork | flour:70 beef_mince:40 pork_mince:30 onion:10 | georgian dumplings | serving (4)
+Khinkali, mushroom | flour:70 mushrooms:80 onion:15 butter:5 | mushroom khinkali | serving (4)
+Chkmeruli | chicken_meat:150 milk:80 garlic:8 butter:10 | garlic milk chicken | portion
+Mtsvadi | pork_shoulder:180 onion:30 | georgian skewers | serving
+Kharcho | beef:100 rice:30 walnuts:20 tomato_paste:15 water:250 | beef walnut soup | bowl
+Ajapsandali | eggplant:100 red_pepper:60 tomato:80 potato:50 oil:15 | georgian ratatouille | portion
+Satsivi | chicken_meat:120 walnuts:40 garlic:4 | chicken in walnut sauce | portion
+`);
+X('Armenia', 'Armenian', AS, `
+Khorovats | pork_shoulder:180 onion:30 | armenian barbecue | serving
+Dolma (Armenian) | rice:50 beef_mince:60 onion:20 | grape leaf dolma armenia | serving (6)
+Harissa (Armenian wheat stew) | bulgur:80 chicken_meat:80 butter:10 | armenian harissa | bowl
+Spas | yogurt:200 barley:20 egg:15 | yogurt soup | bowl
+Ishkhan-style trout | trout:180 butter:10 | grilled trout armenia | portion
+`);
+X('Azerbaijan', 'Azerbaijani', AS, `
+Dushbara with vinegar | flour:40 lamb_mince:40 stock:250 vinegar:5 | azeri dumpling soup | bowl
+Lyulya kebab | lamb_mince:150 onion:20 | lula kebab | serving (2)
+Piti | lamb:120 chickpeas:40 potato:50 water:250 | sheki piti | pot
+Dolma (Azerbaijani) | rice:50 lamb_mince:60 onion:20 | azeri dolma | serving (6)
+Shekerbura (Azerbaijani) | flour:30 butter:12 walnuts:15 sugar:15 | novruz pastry | piece
+`);
+X('Cyprus', 'Cypriot', EUR, `
+Souvla | pork_shoulder:180 | cypriot souvla | portion
+Sheftalia | pork_mince:120 onion:20 parsley:5 | cypriot sausage | serving (2)
+Afelia | pork_shoulder:150 coriander_seed:2 | cypriot pork | portion
+Makaronia tou fournou | pasta:150 beef_mince:70 milk:80 halloumi:20 | cypriot pastitsio | portion
+`);
+X('Palestine', 'Palestinian', AS, `
+Maqluba (Palestinian) | rice:180 chicken_thigh:100 cauliflower:80 eggplant:60 oil:15 | palestinian maqluba | plate
+Mussakhan platter | chicken_leg:180 onion:60 olive_oil:20 flour:70 | musakhan taboon | plate
+Fattet hummus (Palestinian) | chickpeas:150 pita:40 yogurt:60 tahini:15 | palestinian fatteh | bowl
+Knafeh (Nablus) | phyllo:40 mozzarella:40 sugar:25 butter:15 | nablus knafeh | portion
+`);
+X('Maldives', 'Maldivian', AS, `
+Mas riha | tuna_steak:120 coconut_milk:80 curry:4 rice:150 | maldivian fish curry | plate
+Bambukeylu hiti | breadfruit:150 coconut_milk:60 curry:3 | breadfruit curry | bowl
+Fihunu mas | fish:170 chili:3 | grilled fish maldives | portion
+`);
+X('Bhutan', 'Bhutanese', AS, `
+Kewa datshi with red rice | potato:150 cheddar:40 brown_rice:150 | kewa datshi rice | plate
+Phaksha paa | pork_belly:120 chili:10 radish:60 | pork with chilies | portion
+Jasha maru | chicken_meat:120 tomato:40 ginger:5 | bhutanese chicken | bowl
 `);
 
 console.log(`everyday dishes left to real measured records: ${preferred.length}`);
