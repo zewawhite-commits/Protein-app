@@ -4,7 +4,6 @@ import { Logo } from '@/components/Logo';
 import { BrandName } from '@/components/fx';
 import { USD_PRICES } from '@/lib/prices';
 import { SUPPORT_EMAIL } from './Legal';
-import { useStore } from '@/store/useStore';
 
 const usd = (n: number) => `$${n.toFixed(2)}`;
 const M = USD_PRICES.plus_monthly, Y = USD_PRICES.plus_yearly;
@@ -26,27 +25,6 @@ const FAQ: [string, string][] = [
   ['What’s included in Free and Plus?', 'Free: the full food diary, search, barcode and voice logging, recipes, water, sleep, steps and exercise, reports and graphs, plus 3 AI food scans a day. Plus ($8.99 a month or $44.99 a year) adds unlimited AI scans, the AI coach, and personalised meal plans, recipes and workouts.'],
   ['Can I cancel, and is my data secure?', 'Cancel any time in Profile → Subscription in two taps; you keep Plus until the end of the period you paid for, and your data stays yours. Your diary is private, sent over encrypted connections, never sold, and you can download or delete everything from Profile.'],
 ];
-
-/** Green (the default) or pink: chosen here before sign-up, kept for the account, changeable later in Profile. */
-function ColourPick() {
-  const accent = useStore((s) => s.settings.accent ?? 'green');
-  const updateSettings = useStore((s) => s.updateSettings);
-  const opts = [{ value: 'green', label: 'Green', swatch: 'rgb(14 142 98)' }, { value: 'pink', label: 'Pink', swatch: 'rgb(214 51 132)' }] as const;
-  return (
-    <div className="mt-6 flex flex-wrap items-center gap-3" data-testid="colour-pick">
-      <span className="text-[14px] font-semibold text-silver">Pick your colour:</span>
-      <div role="radiogroup" aria-label="App colour" className="flex gap-2">
-        {opts.map((o) => (
-          <button key={o.value} role="radio" aria-checked={accent === o.value} onClick={() => updateSettings({ accent: o.value })}
-            className={`flex h-10 items-center gap-2 rounded-full border-2 px-4 text-[14px] font-semibold transition ${accent === o.value ? 'border-ink' : 'border-line'}`}>
-            <span className="h-4 w-4 rounded-full" style={{ background: o.swatch }} />{o.label}
-          </button>
-        ))}
-      </div>
-      <span className="text-[13px] text-dim">You can change it any time in Profile.</span>
-    </div>
-  );
-}
 
 /** The public website: what Nutivili is, for people who haven't signed in yet. */
 export default function Landing() {
@@ -74,7 +52,6 @@ export default function Landing() {
             <a href="#how" className="btn-ghost !h-12 !px-6">See how it works</a>
           </div>
           <p className="mt-3 text-[13px] text-dim">Free for ever · No card needed · Works on any phone, in the browser</p>
-          <ColourPick />
 
         </section>
 
