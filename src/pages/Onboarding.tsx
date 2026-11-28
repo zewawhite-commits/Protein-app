@@ -59,7 +59,7 @@ const AIMS: Option<string>[] = [
 
 const PLAN_CHOICES = [
   { tier: 'free' as const, name: 'Free', badge: '', perks: ['Unlimited diary, food search, barcode & voice logging', 'World recipe library, recipe imports, saved meals & exercise library', '3 AI photo scans a day', '2 AI recipes + 1 AI meal plan a month'] },
-  { tier: 'pro' as const, name: 'Plus', badge: 'Everything included', perks: ['Unlimited AI photo scans and meal follow-ups', '300 AI credits a month for the coach, recipes and plans', 'Personal AI nutrition coach that talks back', '12 AI recipes made for your calories and protein', '4 personalised AI meal plans and 8 AI workout plans a month', 'Weekly nutrition progress report', 'Restaurant menus: photo, QR code or link', 'Smart calorie target that adjusts to your progress', 'Advanced micronutrient analysis and nutrition reports', 'Adjusts to your cuisine & diet', 'No ads'] },
+  { tier: 'pro' as const, name: 'Plus', badge: 'Everything included', perks: ['Unlimited AI photo scans and meal follow-ups', 'Personal AI nutrition coach that talks back', '12 AI recipes made for your calories and protein', '4 personalised AI meal plans and 8 AI workout plans a month', 'Weekly nutrition progress report', 'Restaurant menus: photo, QR code or link', 'Smart calorie target that adjusts to your progress', 'Advanced micronutrient analysis and nutrition reports', 'Adjusts to your cuisine & diet'] },
 ];
 
 /** Setup answers are kept on this phone until setup is finished, so leaving the app (to open the
