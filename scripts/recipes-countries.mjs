@@ -6862,6 +6862,504 @@ Rieslingspaschtéit (alcohol-free) | puff_pastry:60 pork_mince:60 veal:30 egg:10
 Kachkéis on bread | cottage:60 butter:10 bread:60 mustard:5 | luxembourg cooked cheese | serving
 `);
 
+// ======================= ROUND 6: THE COUNTRIES WITH THE FEWEST DISHES =======================
+X('Holy See (Vatican City)', 'Vatican', EUR, `
+Spaghetti alla gricia (Roman) | pasta:200 bacon:35 parmesan:20 sp_pepper:1 | roman gricia | plate
+Saltimbocca alla romana with spinach | veal:130 ham_slice:20 butter:10 spinach:100 | saltimbocca spinach | plate
+Fettuccine Alfredo (Roman original) | pasta:200 butter:25 parmesan:30 | fettuccine burro e parmigiano | plate
+Abbacchio alla scottadito | lamb_chops:180 olive_oil:5 lemon:5 | roman lamb chops | plate
+Pollo alla romana | chicken_thigh:160 red_pepper:80 tomato:60 olive_oil:10 | roman chicken peppers | portion
+Trippa alla romana | tripe:150 tomato_canned:80 parmesan:15 mint:2 | roman tripe | portion
+Maritozzi con la panna | flour:50 sugar:10 butter:10 cream:40 | roman cream buns | bun
+Puntarelle-style chicory salad | lettuce:120 olive_oil:12 vinegar:5 sardine:5 garlic:2 | roman chicory salad | bowl
+`);
+X('Tonga', 'Tongan', OC, `
+Lu sipi | lamb:100 spinach:100 coconut_milk:60 onion:15 | lamb in taro leaves | portion
+Lu moa | chicken_meat:100 spinach:100 coconut_milk:60 onion:15 | chicken in taro leaves | portion
+Feke | squid:150 coconut_milk:60 onion:15 | tongan octopus | portion
+Kapisi pulu | beef_brisket:80 cabbage:150 coconut_milk:40 | corned beef cabbage tonga | portion
+Manioke with coconut cream and fish | cassava_cooked:180 coconut_milk:50 fish:80 | tongan cassava fish | plate
+Keke 'isite | flour:50 sugar:10 oil:15 banana:30 | tongan doughnuts | serving (3)
+Vai siaine | banana:100 coconut_milk:80 sugar:10 | tongan banana drink | glass
+`);
+X('Réunion', 'Réunionese', TE, `
+Cari poulet with rice and grains | chicken_thigh:150 tomato:60 turmeric:1 rice:150 lentils:60 | cari poulet grains | plate
+Rougail saucisse with lentilles de Cilaos | sausage:100 tomato:100 onion:30 rice:150 lentils:60 | rougail saucisse cilaos | plate
+Civet de zourites-style octopus curry | squid:150 tomato:50 onion:20 oil:10 rice:150 | civet zourite | plate
+Cari de légumes (Réunion) | potato:80 carrots:50 green_beans:50 tomato:40 turmeric:1 rice:150 | reunion vegetable cari | plate
+Samoussas réunionnais | flour:40 potato:40 peas:10 oil:15 | reunion samosas | serving (3)
+Bouchons | flour:40 pork_mince:50 soy:5 | reunion steamed dumplings | serving (5)
+Gâteau patate (Réunion) | sweet_potato:100 sugar:20 butter:10 egg:15 coconut_meat:10 | sweet potato cake reunion | slice
+Achards de légumes (Réunion) | cabbage:60 carrots_raw:40 green_beans:30 turmeric:1 oil:10 vinegar:5 | reunion achards | portion
+`);
+X('São Tomé and Príncipe', 'Santomean', AF, `
+Calulu de peixe (São Tomé) | fish:150 okra:60 spinach:40 palm_oil:15 | sao tome fish calulu | bowl
+Feijoada santomense | kidney:150 pork_shoulder:40 sausage:30 rice:150 | sao tome feijoada | plate
+Peixe grelhado com banana | fish:170 plantain:150 | grilled fish with banana | plate
+Djogo | fish:80 spinach:80 palm_oil:15 green_plantain:60 | sao tome djogo | bowl
+Angu de banana | green_plantain:200 palm_oil:10 | mashed plantain sao tome | portion
+Mousse de chocolate de São Tomé | dark_choc:40 cream:50 egg:20 sugar:10 | sao tome chocolate mousse | pot
+`);
+X('Brunei', 'Bruneian', AS, `
+Kelupis | sticky_rice:100 coconut_milk:20 | brunei sticky rice parcel | serving (2)
+Udang sambal serai | shrimp:150 lemongrass:5 chili:5 oil:10 | prawn lemongrass sambal | portion
+Daging masak lada hitam | beef:150 onion:30 sp_pepper:2 oil:10 | black pepper beef brunei | portion
+Kuih mor | flour:30 butter:12 sugar:10 | brunei butter cookies | serving (3)
+Kuih penyaram | rice_flour:40 brown_sugar:20 oil:15 | brunei saucer cakes | serving (2)
+Pais ikan | fish:150 coconut_meat:20 chili:3 turmeric:1 | fish in banana leaf brunei | portion
+`);
+X('Monaco', 'Monégasque', EUR, `
+Fougasse monégasque with anise | flour:50 sugar:10 butter:10 almonds:5 sp_anise:0.5 | monaco fougasse | slice
+Tourte de blettes | pie_crust:60 spinach:80 raisins:10 parmesan:10 sugar:10 | swiss chard pie monaco | slice
+Socca with salad | chickpea_flour:60 olive_oil:15 water:90 lettuce:40 | socca salad monaco | plate
+Pissaladière monégasque | flour:60 onion:100 olives:15 sardine:10 olive_oil:10 | monaco onion tart | slice
+Salade niçoise monégasque | tuna:60 egg_boiled:50 tomato:60 olives:15 lettuce:40 olive_oil:10 | monaco nicoise | bowl
+`);
+X('Kosovo', 'Kosovar', EUR, `
+Tavë kosi (Kosovar) | lamb:120 yogurt:120 egg:30 rice:20 | kosovo baked lamb yogurt | portion
+Fli with honey | flour:60 cream:30 butter:15 honey:15 | flija with honey | slice
+Pite me kungull | phyllo:60 pumpkin:80 sugar:10 oil:10 | pumpkin pie kosovo | slice
+Japrak (Kosovar) | rice:60 beef_mince:50 onion:15 | kosovo stuffed vine leaves | serving (6)
+Qebapa | beef_mince:120 onion:20 | kosovo kebab | serving (10)
+Bakllava (Kosovar) | phyllo:40 walnuts:25 butter:15 sugar:20 | kosovo baklava | serving (2)
+`);
+X('Macau', 'Macanese', TE, `
+Tacho | pork_belly:60 sausage:40 chicken_meat:50 cabbage:100 | macanese tacho | bowl
+Capela | beef_mince:80 pork_mince:40 breadcrumbs:15 olives:10 cheddar:15 | macanese meatloaf | slice
+Diabo | beef:60 chicken_meat:50 sausage:30 potato:60 mustard:5 | devil's stew macau | bowl
+Bacalhau with potatoes (Macanese) | salt_cod:100 potato:120 olive_oil:15 olives:10 | macanese cod | plate
+Duck rice, Macanese | duck_meat:100 rice:180 | macanese duck rice | plate
+Batatada | sweet_potato:60 coconut_milk:40 sugar:20 egg:20 | macanese potato cake | slice
+`);
+X('North Korea', 'North Korean', AS, `
+Kimchi jjigae (North Korean) | kimchi:120 pork_belly:40 tofu:60 water:250 | north korean kimchi stew | bowl
+Mandu guk (Pyongyang) | flour:40 pork_mince:40 tofu:20 stock:300 | dumpling soup pyongyang | bowl
+Rice cake and bean paste | rice_short:120 kidney:40 sugar:10 | north korean rice cake | serving
+Potato noodles (Ryanggang) | potato:150 cornstarch:30 stock:150 | ryanggang potato noodles | bowl
+Kimchi pancake (North Korean) | flour:50 kimchi:80 oil:12 | north korean kimchijeon | pancake
+Hamhung naengmyeon | rice_noodles:150 fish:40 chili_powder:3 cucumber:30 | hamhung cold noodles | bowl
+`);
+X('Andorra', 'Andorran', EUR, `
+Trinxat with bacon | potato:150 cabbage_cooked:100 bacon:30 olive_oil:8 | andorran trinxat bacon | portion
+Civet de senglar-style pork stew (alcohol-free) | pork_shoulder:150 onion:30 dark_choc:5 stock:100 | andorran civet | portion
+Mushroom rice, Andorran | rice_short:150 mushrooms:80 olive_oil:10 | mushroom rice andorra | plate
+Coca de llardons | flour:50 pork_belly:20 sugar:15 pine_nuts:5 | crackling coca | slice
+Crema andorrana | milk:120 egg:25 sugar:20 cornstarch:5 | andorran custard | ramekin
+`);
+X('Antigua and Barbuda', 'Antiguan', NA, `
+Antiguan ducana and saltfish | sweet_potato:120 coconut_meat:30 flour:20 sugar:10 salt_cod:60 | ducana saltfish plate | plate
+Seasoned rice (Antigua) | rice:180 chicken_meat:60 peas:30 carrots:20 | antiguan seasoned rice | plate
+Goat water (Antigua) | goat:120 tomato:40 flour:10 water:250 | antiguan goat water | bowl
+Johnny cakes with saltfish | flour:60 oil:15 salt_cod:60 onion:15 | antigua johnny cakes saltfish | plate
+Pineapple tart, Antiguan | pie_crust:40 pineapple:50 sugar:15 | antigua pineapple tart | tart
+`);
+X('Comoros', 'Comorian', AF, `
+Pilao comorien with chicken | rice:220 chicken_thigh:100 onion:30 oil:12 cardamom:1 | comorian chicken pilao | plate
+Ntrovi ya mfi | fish:150 green_plantain:150 coconut_milk:60 | fish with plantain coconut | plate
+Ambrevades au coco | kidney:150 coconut_milk:60 | pigeon peas coconut | bowl
+Mkatra ya ndrovi | flour:60 banana:40 coconut_milk:20 | banana bread comoros | slice
+Achards comoriens | papaya:80 carrots_raw:30 vinegar:10 chili:2 | comorian pickle | portion
+`);
+X('Cook Islands', 'Cook Islander', TE, `
+Rukau with chicken | spinach:150 coconut_milk:60 chicken_meat:60 | rukau chicken | portion
+Ika mata with taro | fish:120 coconut_milk:60 lime:10 taro:120 | ika mata taro plate | plate
+Mitiore | coconut_meat:60 onion:15 shrimp:20 | fermented coconut relish | portion
+Cook Islands donut | flour:50 sugar:10 oil:15 | rarotonga donut | serving (2)
+Banana poke | banana:120 tapioca:20 coconut_milk:40 sugar:10 | banana poke cook islands | portion
+`);
+X('Liechtenstein', 'Liechtensteiner', EUR, `
+Ribel with apple sauce | cornmeal:80 milk:150 butter:12 apple:60 | ribel apple | bowl
+Cold cut plate, Liechtenstein | ham_slice:50 swiss:40 bread:50 pickles:15 | liechtenstein cold plate | plate
+Rösti with egg and cheese | potato:200 butter:15 egg_fried:50 swiss:20 | rosti egg cheese | plate
+Birnbrot | flour:40 pear:40 figs:20 raisins:15 sugar:10 | pear bread | slice
+`);
+X('Martinique', 'Martinican', TE, `
+Colombo de cabri (Martinique) | goat:160 curry:5 potato:60 rice:180 | martinique goat colombo | plate
+Blaff de poisson | fish:170 lime:15 onion:20 water:200 | fish blaff | bowl
+Court-bouillon (Martinique) | fish:160 tomato:60 onion:20 oil:10 rice:150 | martinique court bouillon | plate
+Matété de crabe | crab:120 rice:150 tomato:30 onion:15 | crab rice | plate
+Christophine gratinée | chayote:200 milk:60 cheddar:25 butter:8 | stuffed chayote | portion
+Blanc-manger coco (Martinique) | coconut_milk:100 milk:40 sugar:20 gelatine:2 | martinique coconut pudding | portion
+`);
+X('San Marino', 'Sammarinese', EUR, `
+Strozzapreti al ragù | pasta:200 beef_mince:60 tomato_canned:80 | san marino strozzapreti | plate
+Roast chicken, Sammarinese | chicken_leg:200 olive_oil:10 garlic:3 | sammarinese roast chicken | portion
+Piada with sausage and greens | flour:70 olive_oil:8 sausage:60 spinach:40 | piadina sausage greens | piece
+Cacciatello | milk:100 egg:30 sugar:20 | san marino custard | portion
+`);
+X('Turkmenistan', 'Turkmen', AS, `
+Dograma with lamb | bread:60 lamb:100 tomato:40 onion:20 stock:200 | turkmen dograma lamb | bowl
+Unash | egg_noodles:120 kidney:50 pumpkin:50 water:250 | turkmen noodle bean soup | bowl
+Shashlyk (Turkmen) | lamb:150 onion:30 | turkmen shashlik | serving (2)
+Fitchi | flour:80 lamb_mince:70 onion:20 | turkmen meat pie | slice
+Chorba (Turkmen) | lamb:80 potato:60 tomato:40 water:250 | turkmen chorba | bowl
+`);
+X('Burundi', 'Burundian', AF, `
+Beans with cassava leaves | kidney:150 spinach:80 palm_oil:10 | burundi beans greens | bowl
+Fried plantain with beans | plantain_fried:150 kidney:100 | burundi plantain beans | plate
+Rice with fish (Lake Tanganyika) | rice:180 fish:120 tomato:40 onion:20 oil:8 | tanganyika fish rice | plate
+Sweet potato with peanut sauce | sweet_potato:200 peanut_butter:25 | burundi sweet potato peanut | plate
+Ugali with sukuma (Burundi) | cassava_cooked:200 kale:100 oil:8 | burundi ugali greens | plate
+`);
+X('Cabo Verde', 'Cape Verdean', AF, `
+Canja de galinha (Cabo Verde) | chicken_meat:80 rice:40 water:300 | cape verde chicken soup | bowl
+Atum grelhado | tuna_steak:180 olive_oil:8 potato:120 | grilled tuna cabo verde | plate
+Morreia frita | fish:150 flour:15 oil:15 | fried moray eel cabo verde | portion
+Doce de papaia | papaya:150 sugar:30 | papaya sweet | portion
+Pudim de queijo | cottage:60 egg:30 sugar:25 milk:40 | cheese pudding cabo verde | slice
+`);
+X('Niue', 'Niuean', TE, `
+Nane pia with banana | tapioca:40 coconut_milk:40 banana:60 sugar:10 | niue arrowroot banana | bowl
+Fish in coconut (Niue) | fish:150 coconut_milk:70 | niue fish coconut | portion
+Taro with coconut cream (Niue) | taro:200 coconut_milk:50 | niue taro | plate
+Pitako with banana | breadfruit:120 banana:60 coconut_milk:30 | niue breadfruit pudding | portion
+`);
+X('Palestine', 'Palestinian', AS, `
+Mujaddara (Palestinian) | lentils:150 rice:100 onion:60 olive_oil:15 | palestinian mujaddara | plate
+Sumaghiyyeh | beef:100 chickpeas:60 tahini:15 lemon:8 | gaza sumac stew | bowl
+Fatteh ghazawiyeh | bread:50 chickpeas:100 tomato:60 tahini:15 | gaza fatteh | bowl
+Mussakhan rolls (Palestinian) | chicken_meat:80 onion:40 olive_oil:15 flour_tortilla:50 | palestinian musakhan rolls | serving (3)
+Waraq dawali | rice:60 tomato:40 olive_oil:15 lemon:5 | palestinian stuffed grape leaves | serving (6)
+Shakshuka (Palestinian) | egg:100 tomato:120 onion:20 olive_oil:10 | palestinian shakshuka | plate
+Ka'ak bi simsim with za'atar and egg | flour:70 sesame:8 egg_boiled:50 sp_thyme:2 | jerusalem kaak breakfast | serving
+Hareeseh | semolina:50 sugar:25 butter:12 coconut_meat:8 | palestinian semolina cake | piece
+`);
+X('Saint Lucia', 'Saint Lucian', NA, `
+Saint Lucian lambi curry | clams:150 curry:5 coconut_milk:40 rice:150 | st lucia conch curry | plate
+Callaloo soup (Saint Lucian) | spinach:120 okra:40 coconut_milk:60 crab:30 water:150 | st lucia callaloo | bowl
+Saltfish accra with bread | salt_cod:40 flour:40 oil:15 bread:60 | st lucia breakfast accra | plate
+Bakes with cocoa tea (St Lucia) | flour:70 oil:15 cocoa_powder:10 milk:150 sugar:12 | st lucia bakes cocoa | serving
+Saint Lucian banana bread | flour:35 banana:45 sugar:15 butter:10 egg:10 | st lucia banana bread | slice
+`);
+X('Aruba', 'Aruban', TE, `
+Keshi yena with chicken | gouda:60 chicken_meat:80 olives:10 raisins:8 tomato:30 | aruba keshi yena | portion
+Stoba di cabrito | goat:150 tomato:40 onion:20 potato:60 | aruban goat stew | bowl
+Pisca hasa | fish:170 oil:10 green_plantain:100 | aruban fried fish | plate
+Funchi with fish (Aruba) | cornmeal:80 water:180 butter:8 fish:100 | funchi and fish | plate
+Ayaca | masa:80 chicken_meat:40 olives:5 raisins:5 | aruban christmas tamal | parcel
+Bolo di cashupete | flour:30 cashews:20 sugar:20 butter:15 egg:15 | cashew cake aruba | slice
+`);
+X('Guinea-Bissau', 'Bissau-Guinean', AF, `
+Jollof (Bissau) | rice:220 chicken_thigh:80 tomato_paste:20 oil:15 | bissau jollof | plate
+Peixe grelhado com arroz | fish:170 rice:180 onion:20 lime:5 | bissau grilled fish rice | plate
+Mafé (Bissau) | peanut_butter:40 chicken_thigh:100 sweet_potato:50 rice:150 | bissau mafe | plate
+Cashew fruit juice-style drink | mango:80 sugar:15 water:200 | caju-style juice | glass
+`);
+X('Kiribati', 'I-Kiribati', OC, `
+Kiribati fried fish with rice | fish:150 oil:12 rice:180 | i-kiribati fish rice | plate
+Coconut crab with coconut cream (Kiribati) | crab:150 coconut_milk:40 | kiribati coconut crab | portion
+Breadfruit chips (Kiribati) | breadfruit:120 oil:15 | kiribati chips | bag
+Kamaimai porridge | rice:60 coconut_milk:40 sugar:15 water:150 | coconut syrup porridge | bowl
+`);
+X('Luxembourg', 'Luxembourgish', EUR, `
+Bouneschlupp with bacon | green_beans:120 potato:80 bacon:20 cream:20 water:200 | bean soup bacon | bowl
+Sausages with mustard and potatoes, Luxembourg | sausage:120 mustard:10 potato:150 | luxembourg sausage potatoes | plate
+Paschtéit | puff_pastry:60 pork_mince:60 egg:10 | luxembourg meat pastry | slice
+Quetschentaart with cream | pie_crust:50 plum:100 sugar:15 cream:20 | plum tart cream | slice
+Bouchée à la reine (Luxembourg) | puff_pastry:50 chicken_meat:70 mushrooms:30 milk:60 | lux vol au vent | plate
+`);
+X('New Caledonia', 'New Caledonian', TE, `
+Bougna with fish | yam:120 sweet_potato:80 fish:100 coconut_milk:60 | fish bougna | portion
+Beef stew with rice, New Caledonian | beef:130 tomato:40 onion:20 rice:150 | caledonian beef stew | plate
+Salade de papaye verte | papaya:150 lime:10 chili:2 onion:10 | green papaya salad caledonia | bowl
+Crevettes à la vanille | shrimp:150 cream:30 butter:10 | caledonian vanilla prawns | portion
+`);
+X('Oman', 'Omani', AS, `
+Kabsa (Omani) | rice:220 chicken_thigh:130 tomato:40 onion:30 oil:12 | omani kabsa | plate
+Mushaltat | flour:70 butter:20 honey:15 | omani layered pastry | slice
+Omani lentil soup | red_lentils:80 onion:20 cumin:1 lemon:5 water:250 | shorbat adas omani | bowl
+Qabooli laham | rice:200 lamb:120 chickpeas:30 raisins:10 | omani qabooli | plate
+Khubz rakhal with honey | flour:40 honey:15 | omani thin bread honey | serving
+`);
+X('Uruguay', 'Uruguayan', SA, `
+Asado de tira | ribs:200 | uruguayan short ribs | portion
+Milanesa a la napolitana (Uruguayan) | beef:150 breadcrumbs:20 egg:15 oil:15 marinara:40 mozzarella:30 | uruguayan milanesa | portion
+Torta frita with mate | flour:60 oil:15 green_tea:200 | torta frita and mate | serving
+Ñoquis (Uruguayan, 29th) | gnocchi:220 marinara:80 parmesan:10 | uruguayan gnocchi | plate
+Capelettis a la Caruso | pasta:180 ham_slice:20 cream:40 mushrooms:30 parmesan:10 | caruso sauce pasta | plate
+Pascualina con huevo | pie_crust:70 spinach:120 egg:40 ricotta:20 | uruguayan pascualina | slice
+Fainá (Uruguayan) | chickpea_flour:60 olive_oil:12 water:90 | uruguayan faina | slice
+Choripán (Uruguayan) | sausage:100 baguette:80 | uruguay chorizo bread | sandwich
+Pancho | sausage:60 roll:50 mustard:5 ketchup:10 | uruguayan hot dog | hot dog
+Bizcochos with dulce de leche | croissant:50 condensed:20 | uruguayan pastries dulce | pastry
+Postre chajá | sponge:50 meringue:10 peach:40 cream:30 condensed:10 | chaja dessert | slice
+Arroz con leche (Uruguayan) | rice:50 milk:180 sugar:18 sp_cinnamon:0.5 | uruguayan rice pudding | bowl
+`);
+X('Belarus', 'Belarusian', EUR, `
+Babka with sour cream | potato:200 egg:20 bacon:20 sour_cream:30 | belarus potato babka | slice
+Kalduny with mushrooms | flour:50 potato:80 mushrooms:40 sour_cream:20 | mushroom kalduny | serving (3)
+Mokanka | cottage:60 sour_cream:30 milk:50 bread:40 | belarus cheese dip | bowl
+Halubtsy (Belarusian) | cabbage_cooked:120 pork_mince:60 rice:30 | belarus cabbage rolls | serving (3)
+Syrniki with sour cream (Belarus) | cottage:120 flour:20 egg:20 oil:10 sour_cream:30 | belarus syrniki | serving (3)
+`);
+X('Curaçao', 'Curaçaoan', TE, `
+Keshi yena (Curaçao) | gouda:60 chicken_meat:80 olives:10 raisins:8 | curacao keshi yena | portion
+Kabritu stoba | goat:150 tomato:40 onion:20 | curacao goat stew | bowl
+Sòpi di pisca | fish:120 potato:60 water:250 | curacao fish soup | bowl
+Pastechi with meat | flour:50 oil:15 beef_mince:40 | curacao pastechi | piece
+Arepa di pampuna | pumpkin:80 flour:30 sugar:10 oil:12 | pumpkin pancakes curacao | serving (3)
+`);
+X('Eritrea', 'Eritrean', AF, `
+Zigni beef with injera | beef:130 onion:50 butter:12 chili_powder:4 flour:120 | eritrean zigni injera | plate
+Hamli | spinach:150 onion:20 oil:10 | eritrean greens | portion
+Fata (Eritrean) | bread:60 fava:120 yogurt:40 chili_powder:2 | eritrean fata | bowl
+Kitcha with tea | flour:80 black_tea:200 sugar:10 | kitcha and shai | serving
+Honey bread, Eritrean | flour:70 honey:15 | eritrean honey bread | slice
+`);
+X('French Polynesia', 'Tahitian', TE, `
+Poulet fafa | chicken_thigh:150 spinach:100 coconut_milk:60 | tahitian chicken taro leaves | bowl
+Chao men (Tahiti) | egg_noodles:150 chicken_meat:50 shrimp:30 cabbage:40 soy:10 | tahitian chow mein | plate
+Ma'a tahiti plate | pork_shoulder:80 breadfruit:100 fish:60 coconut_milk:30 | tahitian feast plate | plate
+Firi firi with coffee | flour:50 coconut_milk:25 sugar:10 oil:15 coffee:150 | tahiti breakfast | serving
+`);
+X('Grenada', 'Grenadian', NA, `
+Grenadian callaloo with dumplings | spinach:120 coconut_milk:50 flour:50 | callaloo dumplings grenada | plate
+Saltfish souse | salt_cod:80 cucumber:40 lime:10 onion:15 | grenada saltfish souse | portion
+Grenadian bakes and buljol | flour:70 oil:15 salt_cod:60 tomato:30 | bakes and buljol | plate
+Nutmeg-spiced rice pudding | rice:50 milk:180 sugar:18 sp_nutmeg:0.5 | grenada rice pudding | bowl
+`);
+X('Guadeloupe', 'Guadeloupean', TE, `
+Bokit au poulet | flour:70 oil:15 chicken_meat:60 lettuce:15 | chicken bokit | sandwich
+Dombré aux crevettes | flour:60 shrimp:80 tomato:40 | guadeloupe dombre prawns | plate
+Fricassée de chatrou-style octopus | squid:150 tomato:40 onion:20 rice:150 | guadeloupe octopus | plate
+Gratin de christophine | chayote:200 milk:60 cheddar:25 | guadeloupe chayote gratin | portion
+Tourment d'amour | pie_crust:40 coconut_meat:25 sugar:20 egg:10 | les saintes tart | tart
+`);
+X('Kuwait', 'Kuwaiti', AS, `
+Jireesh with chicken | bulgur:80 chicken_meat:60 yogurt:40 | kuwaiti jireesh chicken | bowl
+Gabout (Kuwaiti) | flour:60 lamb:80 tomato:40 | kuwaiti stuffed dumplings | bowl
+Kuwaiti chicken biryani | rice:200 chicken_thigh:120 yogurt:30 oil:12 | kuwaiti biryani | plate
+Zubaidi with rice | fish:170 rice:180 | kuwaiti pomfret | plate
+Gers ogaily (Kuwaiti) | flour:35 sugar:20 egg:20 sp_cardamom:0.5 | kuwaiti saffron cake | slice
+`);
+X('Madagascar', 'Malagasy', AF, `
+Lasopy | beef:80 carrots:40 potato:60 leeks:30 water:250 | malagasy soup | bowl
+Hen'omby ritra | beef:150 onion:30 garlic:3 rice:150 | malagasy simmered beef | plate
+Trondro gasy | fish:150 tomato:50 onion:20 rice:150 | malagasy fish | plate
+Tsaramaso | kidney:150 tomato:40 pork_shoulder:40 rice:150 | malagasy beans | plate
+Sakay | chili:20 garlic:5 ginger:5 oil:10 | malagasy chili paste | teaspoon
+`);
+X('Mongolia', 'Mongolian', AS, `
+Bansh (Mongolian) | flour:50 lamb_mince:50 onion:15 | mongolian small dumplings | serving (8)
+Tsuivan with beef | egg_noodles:180 beef:80 carrots:30 cabbage:40 oil:10 | beef tsuivan | plate
+Budaatai huurga | rice:180 beef:80 carrots:30 onion:20 oil:10 | mongolian fried rice | plate
+Mutton soup, Mongolian | lamb:100 potato:60 carrots:30 water:250 | mongolian mutton soup | bowl
+Aaruul | yogurt:60 | dried curd | serving
+`);
+X('North Macedonia', 'Macedonian', EUR, `
+Komplet lepinja | flour:80 egg:50 feta:30 cream:20 | komplet lepinja | piece
+Polneti piperki | red_pepper:150 rice:60 beef_mince:50 tomato:40 | macedonian stuffed peppers | serving (2)
+Shopska (Macedonian) | tomato:100 cucumber:80 red_pepper:40 feta:30 | macedonian shopska | bowl
+Kifli (Macedonian) | flour:50 butter:10 milk:20 | macedonian crescents | serving (2)
+`);
+X('Saint Vincent and the Grenadines', 'Vincentian', NA, `
+Buljol (Vincentian) | salt_cod:80 tomato:40 onion:20 oil:8 | vincy buljol | portion
+Pelau (Vincentian) | rice:200 chicken_thigh:100 kidney:50 coconut_milk:30 | vincy pelau | plate
+Fried jackfish | fish:170 flour:15 oil:15 | vincy fried jackfish | portion
+Arrowroot porridge | tapioca:30 milk:200 sugar:15 | vincy arrowroot porridge | bowl
+`);
+X('Slovenia', 'Slovenian', EUR, `
+Jota with sausage | sauerkraut:80 kidney:80 potato:60 sausage:40 water:250 | jota slovenian sausage | bowl
+Ajdovi žganci with sauerkraut | buckwheat:180 butter:10 sauerkraut:80 | buckwheat spoonbread cabbage | plate
+Kremšnita (Bled) | puff_pastry:40 milk:80 egg:15 sugar:15 cream:20 | bled cream cake | piece
+Matevž with sausage | kidney:120 potato:100 sausage:60 | bean potato mash sausage | plate
+Obara | chicken_meat:80 pork_shoulder:40 potato:60 carrots:30 water:200 | slovenian stew | bowl
+`);
+X('Tuvalu', 'Tuvaluan', OC, `
+Palusami with fish (Tuvalu) | spinach:120 coconut_milk:70 fish:60 | tuvalu palusami fish | portion
+Fried breadfruit with fish | breadfruit:150 oil:12 fish:100 | tuvalu breadfruit fish | plate
+Coconut toddy porridge | rice:60 coconut_milk:40 sugar:10 water:150 | tuvalu porridge | bowl
+`);
+X('Angola', 'Angolan', AF, `
+Funje com feijão | cassava_cooked:200 kidney:120 palm_oil:10 | funje and beans | plate
+Moamba de peixe com funje | fish:150 palm_oil:20 okra:40 cassava_cooked:150 | fish moamba funje | plate
+Kitaba | peanuts:40 chili:2 | angolan peanut paste | portion
+Chicken stew, Angolan | chicken_thigh:150 tomato:40 onion:20 rice:150 | angolan chicken stew | plate
+Bolo de ginguba | flour:30 peanuts:25 sugar:20 butter:12 egg:15 | peanut cake angola | slice
+`);
+X('Armenia', 'Armenian', AS, `
+Ghapama with rice and fruit | pumpkin:200 rice:60 dates:15 raisins:15 butter:10 | armenian ghapama | portion
+Tolma with cabbage | cabbage_cooked:120 beef_mince:60 rice:30 | cabbage tolma | serving (3)
+Ishli kufta | bulgur:60 beef_mince:70 walnuts:10 oil:15 | stuffed kufta | serving (3)
+Lahmajun (Armenian) | flour:70 beef_mince:50 tomato:30 onion:15 | armenian lahmajun | piece
+Zhingyalov hats with greens | flour:60 spinach:80 parsley:10 oil:8 | karabakh herb bread | piece
+Nazook | flour:30 butter:15 sugar:15 | armenian nazook | serving (2)
+`);
+X('Bhutan', 'Bhutanese', AS, `
+Ema datshi with red rice | chili:100 cheddar:40 brown_rice:150 | ema datshi rice | plate
+Shakam paa | beef:100 radish:60 chili:10 | dried beef with radish | portion
+Momo (Bhutanese cheese) | flour:60 cheddar:40 cabbage:30 | bhutanese cheese momo | serving (6)
+Hoentay | buckwheat:0 flour:60 spinach:40 cheddar:30 | buckwheat dumplings bhutan | serving (4)
+Puta | soba:180 butter:10 | buckwheat noodles bhutan | plate
+`);
+X('El Salvador', 'Salvadoran', NA, `
+Pupusas de chicharrón | masa:120 pork_shoulder:50 | pork pupusas | serving (2)
+Sopa de res (Salvadoran) | beef:100 corn:50 yam:50 cabbage:40 water:250 | salvadoran beef soup | bowl
+Pollo encebollado | chicken_thigh:150 onion:60 tomato:30 rice:150 | onion chicken salvador | plate
+Tamales pisques | masa:100 kidney:40 | bean tamales salvador | serving (2)
+Pan con pavo | roll:90 turkey:90 tomato:30 cucumber:20 | salvadoran turkey sandwich | sandwich
+Atol shuco | cornmeal:40 kidney:20 water:250 | black corn atole | cup
+Semita | flour:50 sugar:15 butter:12 jam:20 | salvadoran semita | slice
+`);
+X('Honduras', 'Honduran', NA, `
+Sopa de caracol with rice | clams:100 coconut_milk:100 yam:50 rice:120 | honduran conch soup rice | bowl
+Pastelitos hondureños de carne | masa:60 beef_mince:40 rice:15 oil:15 | honduran meat pastelitos | serving (3)
+Tapado olanchano | beef:80 green_plantain:80 cassava_cooked:60 coconut_milk:60 | olancho tapado | bowl
+Plátanos fritos con frijoles y crema | plantain_fried:120 refried:60 sour_cream:20 | honduran plantain beans | plate
+Rosquillas en miel | cornmeal:40 feta:20 brown_sugar:20 | honduran rosquillas honey | serving (4)
+Horchata hondureña | rice:30 milk:100 sugar:20 sp_cinnamon:0.5 water:150 | honduran horchata | glass
+`);
+X('Mozambique', 'Mozambican', AF, `
+Caril de amendoim with chicken | chicken_thigh:140 peanut_butter:35 tomato:40 rice:150 | peanut curry mozambique | plate
+Badjia | cowpeas:100 oil:15 onion:10 | mozambique bean fritters | serving (4)
+Prego (Mozambican) | roll:80 beef_sirloin:90 garlic:3 chili:2 | mozambican prego | sandwich
+Bolo de mandioca | cassava:100 coconut_milk:40 sugar:20 egg:15 | cassava cake mozambique | slice
+`);
+X('Palau', 'Palauan', OC, `
+Palauan chicken with taro | chicken_thigh:150 taro:120 coconut_milk:40 | palau chicken taro | plate
+Kesoes | taro:150 coconut_milk:40 sugar:10 | palauan taro pudding | portion
+Palauan fish soup with coconut | fish:120 coconut_milk:50 water:200 | palau coconut fish soup | bowl
+`);
+X('Panama', 'Panamanian', NA, `
+Sancocho de gallina (Panamanian) | chicken_thigh:120 yam:100 corn:40 coriander:5 water:250 | panama hen sancocho | bowl
+Ceviche panameño | fish:120 lime:20 onion:20 chili:3 | panamanian ceviche | cup
+Arroz con pollo y ensalada de papa | rice:180 chicken_thigh:80 potato:80 mayo:15 beets:20 | panama sunday plate | plate
+Tortilla de maíz con huevo | masa:80 oil:10 egg_fried:50 | panama tortilla egg | plate
+Pescado frito con patacones | fish:170 oil:15 green_plantain:150 | panama fried fish patacones | plate
+Bienmesabe panameño | rice:40 milk:150 sugar:20 | panama sweet rice | bowl
+`);
+X('Qatar', 'Qatari', AS, `
+Thareed (Qatari) | bread:60 lamb:80 zucchini:40 tomato:40 water:200 | qatari thareed | bowl
+Madrouba (Qatari) | rice:100 chicken_meat:60 butter:10 water:150 | qatari madrouba | bowl
+Saloona (Qatari) | lamb:100 potato:60 tomato:50 zucchini:40 | qatari saloona | bowl
+Luqaimat (Qatari) | flour:40 oil:15 molasses:20 | qatari luqaimat | serving (5)
+`);
+X('Rwanda', 'Rwandan', AF, `
+Akabenzi | pork_belly:150 chili:3 | rwandan pork | portion
+Ibirayi | potato:200 oil:12 | rwandan fried potatoes | portion
+Imboga with rice | spinach:120 kidney:60 tomato:30 rice:150 | rwandan vegetables rice | plate
+Ugali with beans (Rwanda) | cornmeal:110 water:220 kidney:120 | rwandan ugali beans | plate
+Mandazi (Rwandan) | flour:60 sugar:10 oil:15 | rwandan mandazi | serving (2)
+`);
+X('Saint Kitts and Nevis', 'Kittitian', NA, `
+Saltfish with spicy plantains and coconut dumplings | salt_cod:70 plantain_fried:100 flour:50 coconut_meat:15 | kittitian national dish | plate
+Conch stew (St Kitts) | clams:150 tomato:40 onion:20 | kittitian conch stew | bowl
+Johnny cakes (St Kitts) | flour:60 oil:15 | kittitian johnny cakes | serving (2)
+Sweet potato pudding, Kittitian | sweet_potato:120 coconut_milk:40 sugar:15 | kittitian sweet potato pudding | slice
+`);
+X('Slovakia', 'Slovak', EUR, `
+Halušky s kapustou | potato:150 flour:50 sauerkraut:80 bacon:15 | sauerkraut halusky | plate
+Zemiakové placky | potato:150 flour:20 egg:20 oil:20 garlic:3 | slovak potato pancakes | serving (3)
+Kapustnica with mushrooms (Christmas) | sauerkraut:120 sausage:40 mushrooms:30 prunes:10 water:250 | christmas cabbage soup | bowl
+Parené buchty | flour:60 sugar:10 jam:20 butter:10 | steamed buns slovakia | serving (2)
+Šišky | flour:50 sugar:10 oil:15 jam:15 | slovak doughnuts | serving (2)
+`);
+X('Suriname', 'Surinamese', SA, `
+Pom (with chicken) | taro:150 chicken_thigh:100 oj:10 | surinamese pom chicken | portion
+Roti kip | flour:80 oil:10 chicken_thigh:100 potato:60 green_beans:40 curry:3 | surinamese roti chicken | plate
+Bami goreng (Surinamese) | egg_noodles:180 chicken_meat:60 cabbage:40 soy:12 | surinamese bami | plate
+Nasi goreng (Surinamese) | rice:220 chicken_meat:60 soy:12 oil:10 egg_fried:50 | surinamese nasi | plate
+Saoto soep | chicken_meat:70 rice_noodles:40 bean_sprouts:30 potato:40 stock:250 | surinamese saoto | bowl
+Bojo | cassava:100 coconut_meat:30 sugar:25 raisins:10 | cassava coconut cake | slice
+`);
+X('The Bahamas', 'Bahamian', NA, `
+Chicken souse with johnnycake | chicken_meat:120 potato:60 lime:15 flour:50 butter:8 water:200 | bahamian souse breakfast | bowl
+Steamed conch | clams:150 tomato:40 onion:20 green_pepper:20 | bahamian steamed conch | portion
+Bahamian macaroni and cheese | pasta:150 cheddar:50 egg:20 evaporated:40 | bahamian baked mac | slice
+Grilled snapper, Bahamian | fish:180 lime:8 butter:8 | bahamian grilled snapper | portion
+Benny cake | sesame:30 sugar:25 | bahamian sesame candy | piece
+`);
+X('Albania', 'Albanian', EUR, `
+Tavë me presh | leeks:150 rice:40 olive_oil:12 | leek casserole albania | portion
+Pispili | cornmeal:60 spinach:80 feta:30 oil:10 | albanian cornbread greens | slice
+Trahana (Albanian) | flour:30 yogurt:40 water:200 butter:8 | albanian trahana soup | bowl
+Kabuni | rice:60 lamb:40 raisins:15 sugar:15 butter:10 | albanian sweet rice | bowl
+`);
+X('Benin', 'Beninese', AF, `
+Amiwo with chicken (Beninese) | cornmeal:100 tomato_paste:20 chicken_thigh:100 oil:15 | benin red corn paste chicken | plate
+Sauce d'arachide béninoise | peanut_butter:35 fish:60 tomato:40 rice:150 | benin peanut sauce | plate
+Gboma with akassa | spinach:120 palm_oil:15 fish:60 cornmeal:80 water:150 | gboma akassa | plate
+Atchomon | flour:50 sugar:10 oil:15 | benin crunchy doughnuts | handful
+`);
+X('Nicaragua', 'Nicaraguan', NA, `
+Gallo pinto with eggs and cheese | rice:150 kidney:100 oil:10 egg_fried:50 feta:30 | nica breakfast | plate
+Carne asada nicaragüense | beef:150 rice:120 kidney:60 cabbage:40 | nica carne asada plate | plate
+Sopa de queso | cornmeal:40 feta:40 milk:80 water:150 | nicaraguan cheese soup | bowl
+Tres leches (Nicaraguan) | sponge:60 milk:40 condensed:30 evaporated:30 | nica tres leches | slice
+Buñuelos de yuca | cassava:100 feta:20 egg:10 oil:15 sugar:10 | nica yuca bunuelos | serving (3)
+`);
+X('Solomon Islands', 'Solomon Islander', OC, `
+Solomon chicken curry | chicken_thigh:140 coconut_milk:60 curry:4 rice:150 | solomon chicken curry | plate
+Roasted kumara with coconut | sweet_potato:200 coconut_milk:40 | solomon kumara | plate
+Tuna and rice (Solomon) | tuna:100 rice:180 | solomon tuna rice | plate
+`);
+X('Timor-Leste', 'Timorese', AS, `
+Tukir with chicken | chicken_thigh:150 cassava_cooked:80 lemongrass:3 | timorese tukir chicken | plate
+Budu | tomato:100 lime:10 chili:3 | timorese tomato relish | portion
+Feijoada timorense | kidney:150 pork_shoulder:40 rice:150 | timor feijoada | plate
+Batar da'an (vegan) | corn:120 pumpkin:100 kidney:60 | timorese corn stew vegan | bowl
+`);
+X('Montenegro', 'Montenegrin', EUR, `
+Kačamak with kajmak | cornmeal:60 potato:60 cream:25 feta:20 | montenegrin kacamak kajmak | bowl
+Popeci | veal:130 ham:20 swiss:20 breadcrumbs:20 oil:15 | montenegrin popeci | portion
+Brav u mlijeku | lamb:150 milk:120 potato:80 | lamb in milk | bowl
+Priganice with cheese | flour:60 oil:15 feta:30 | priganice cheese | serving (4)
+`);
+X('Seychelles', 'Seychellois', AF, `
+Kari bourzwa | fish:150 coconut_milk:60 curry:4 rice:150 | seychelles red snapper curry | plate
+Papaya chutney, Seychellois | papaya:120 lime:10 chili:2 onion:10 | seychelles papaya salad | portion
+Grilled fish with creole sauce | fish:170 tomato:50 onion:20 oil:8 | seychelles grilled fish | portion
+Nougat coco | coconut_meat:40 sugar:25 | seychelles coconut nougat | piece
+`);
+X('Uganda', 'Ugandan', AF, `
+Luwombo with beef | beef:150 peanut_butter:20 tomato:40 green_plantain:150 | beef luwombo | plate
+Kalo | millet:150 water:150 | millet bread uganda | portion
+Ugandan fish stew (tilapia) | fish:170 tomato:60 onion:20 oil:10 cornmeal:100 water:200 | tilapia stew posho | plate
+Roasted groundnuts, Ugandan | peanuts:40 | roasted g-nuts uganda | handful
+Kabalagala | banana:80 flour:40 oil:15 | ugandan banana pancakes | serving (4)
+`);
+X('Western Sahara', 'Sahrawi', TE, `
+Sahrawi lentils with bread | lentils:180 onion:20 tomato:30 oil:8 flour:60 | sahrawi lentil plate | plate
+Sahrawi rice with lamb | rice:200 lamb:100 onion:30 oil:12 | sahrawi lamb rice | plate
+Zrig (Sahrawi) | yogurt:200 sugar:15 water:100 | sahrawi milk drink | glass
+`);
+X('Bulgaria', 'Bulgarian', EUR, `
+Kyufte | beef_mince:70 pork_mince:50 onion:20 | bulgarian meatballs | serving (2)
+Tarator with walnuts | yogurt:150 cucumber:80 walnuts:15 dill:2 water:60 | bulgarian tarator walnuts | bowl
+Sirene po shopski | feta:80 tomato:60 egg:50 red_pepper:30 butter:10 | shopska baked cheese | portion
+Yaitsa po panagyurski | egg_poached:100 yogurt:100 feta:20 butter:10 | panagyurishte eggs | plate
+Bob chorba | kidney:150 carrots:30 onion:20 mint:2 water:250 | bulgarian bean soup | bowl
+Kozunak | flour:50 sugar:15 butter:12 egg:15 raisins:10 | bulgarian easter bread | slice
+`);
+X('Cambodia', 'Cambodian', AS, `
+Prahok ktis | pork_mince:80 coconut_milk:80 fish_sauce:5 cucumber:40 | prahok dip | portion
+Cha kroeung sach ko | beef:130 lemongrass:5 green_beans:40 oil:10 | lemongrass beef stir fry | plate
+Nom pang pate | baguette:80 ham_slice:30 pickles:20 cucumber:20 | khmer baguette | sandwich
+Ansam chek | sticky_rice:100 banana:60 coconut_milk:20 | banana sticky rice cake | parcel
+Bobor | rice:60 chicken_meat:50 ginger:3 water:300 | khmer rice porridge | bowl
+`);
+X('Cyprus', 'Cypriot', EUR, `
+Koupepia (Cypriot) | rice:50 beef_mince:60 tomato:40 | cypriot stuffed vine leaves | serving (6)
+Halloumi and lountza sandwich | pita:70 halloumi:50 ham_slice:40 tomato:20 | halloumi lountza | sandwich
+Tavas | lamb:150 potato:80 onion:30 tomato:40 | cypriot tavas | portion
+Gemista (Cypriot) | tomato:150 zucchini:80 rice:50 beef_mince:40 | cypriot stuffed vegetables | serving (2)
+Loukoumades (Cypriot) | flour:40 oil:15 honey:20 | cypriot honey balls | serving (5)
+`);
+X('Jordan', 'Jordanian', AS, `
+Mansaf with jameed | lamb:150 rice:200 yogurt:120 almonds:10 | jordanian mansaf jameed | plate
+Shrak bread with labneh | flour:60 yogurt:60 olive_oil:8 | shrak labneh | serving
+Kubbeh bil laban (Jordanian) | bulgur:50 beef_mince:60 yogurt:150 | jordanian kubbeh yogurt | bowl
+Hummus and falafel plate (Amman) | chickpeas:150 tahini:20 olive_oil:10 pita:60 | amman breakfast | plate
+Muhallabia (Jordanian) | milk:150 sugar:15 cornstarch:12 pistachio:5 | jordanian milk pudding | cup
+`);
+X('Laos', 'Lao', AS, `
+Tam mak hoong with sticky rice | papaya:150 tomato:30 lime:10 fish_sauce:8 sticky_rice:120 | lao papaya salad rice | plate
+Ping gai | chicken_leg:200 lemongrass:3 garlic:3 | lao grilled chicken | portion
+Khao piak khao | rice:60 chicken_meat:60 ginger:3 water:300 | lao rice porridge | bowl
+Jeow bong | chili:20 garlic:5 brown_sugar:5 | lao chili paste | tablespoon
+Lao baguette with pâté | baguette:80 liver:30 cucumber:20 carrots_raw:20 | khao jee pate | sandwich
+`);
+
 console.log(`everyday dishes left to real measured records: ${preferred.length}`);
 if (process.env.SHOW_PREFERRED) console.log(preferred.join('\n'));
 // ---- write out ----
