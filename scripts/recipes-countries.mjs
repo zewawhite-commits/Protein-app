@@ -4535,6 +4535,496 @@ Kittitian stewed goat | goat:150 tomato:40 onion:20 | stewed goat st kitts | por
 Coconut tart (Kittitian) | pie_crust:40 coconut_meat:30 sugar:20 | kittitian coconut tart | tart
 `);
 
+// ======================= ROUND 4: AFRICA =======================
+X('Nigeria', 'Nigerian', AF, `
+Ofe nsala | catfish:150 yam:40 water:250 onion:15 chili:3 | white soup | bowl
+Ofe onugbu | spinach:120 cocoyam:40 palm_oil:20 beef:80 stock:150 | bitterleaf soup | bowl
+Ofe oha | spinach:120 cocoyam:40 palm_oil:20 beef:80 stock:150 | oha soup | bowl
+Ofe owerri | spinach:120 cocoyam:40 palm_oil:20 goat:80 stock:150 | owerri soup | bowl
+Ofe akwu with rice | palm_oil:30 beef:80 rice:180 | banga stew with rice | plate
+Ji mmiri oku | yam:150 goat:80 water:250 chili:3 | yam pepper soup | bowl
+Ukodo | yam:180 goat:100 water:200 chili:3 | urhobo yam pepper soup | bowl
+Owo soup with starch | palm_oil:25 fish:80 cassava_cooked:200 | urhobo owo | plate
+Afang soup | spinach:150 palm_oil:25 beef:80 dried_shrimp:5 stock:150 | efik afang | bowl
+Editan soup | spinach:150 palm_oil:25 fish:80 stock:150 | editan | bowl
+Atama soup | spinach:120 palm_oil:30 clams:40 fish:60 stock:150 | atama | bowl
+Ekpang nkukwo | cocoyam:200 spinach:80 palm_oil:20 dried_shrimp:5 | ekpang | portion
+Abak atama | palm_oil:30 spinach:100 fish:80 | palm fruit atama | bowl
+Efo riro | spinach:180 palm_oil:20 beef:80 red_pepper:40 | yoruba vegetable stew | bowl
+Gbegiri | cowpeas:150 palm_oil:12 water:150 | bean soup gbegiri | bowl
+Ewedu soup | spinach:120 water:150 | jute leaf soup | bowl
+Amala with gbegiri and ewedu | cassava_cooked:250 cowpeas:80 palm_oil:8 spinach:60 | abula | plate
+Asaro | yam:250 palm_oil:20 red_pepper:40 onion:20 | yam porridge yoruba | bowl
+Ikokore | cocoyam:200 palm_oil:20 fish:60 | ijebu water yam pottage | bowl
+Ofada stew with plantain | green_pepper:80 palm_oil:25 beef:60 plantain_fried:120 | ayamase plantain | plate
+Ewa riro | cowpeas:200 palm_oil:15 red_pepper:30 | stewed beans yoruba | bowl
+Dodo ikire | ripe_plantain:120 palm_oil:20 chili:2 | ikire plantain | serving
+Lafun with efo | cassava_cooked:250 spinach:100 palm_oil:15 | lafun | plate
+Tuwo shinkafa with miyan kuka | rice:200 spinach:60 beef:60 water:150 | tuwo and kuka | plate
+Miyan taushe | pumpkin:150 spinach:60 peanut_butter:25 beef:60 | pumpkin soup hausa | bowl
+Miyan geda | peanut_butter:40 beef:70 spinach:50 water:150 | groundnut soup hausa | bowl
+Dan wake | cowpeas:80 flour:40 oil:10 | hausa bean dumplings | plate
+Masa (Hausa) | rice:120 oil:10 sugar:5 | waina | serving (4)
+Fura da nono | millet:60 yogurt:200 sugar:10 | fura and fermented milk | bowl
+Kilishi with onions | beef:50 onion:20 | kilishi | portion
+Gwaten doya | yam:200 palm_oil:15 red_pepper:30 | hausa yam porridge | bowl
+Alkubus | flour:80 water:50 | steamed bread | piece
+Kosai (Hausa) | cowpeas:120 oil:15 | hausa akara | serving (5)
+Banga soup with starch | palm_oil:40 fish:80 cassava_cooked:200 | delta banga | plate
+Black soup (Edo) | spinach:150 palm_oil:15 fish:60 goat:60 | omoebe | bowl
+Groundnut soup (Edo) | peanut_butter:40 goat:80 water:150 | ukpoho | bowl
+Pepper soup, catfish | catfish:200 onion:20 chili:5 water:250 | point and kill | bowl
+Fisherman soup | fish:100 shrimp:50 clams:40 palm_oil:15 water:200 | rivers fisherman soup | bowl
+Ukwa porridge | kidney:200 palm_oil:10 corn:40 | breadfruit porridge | bowl
+Abacha with ugba | cassava_cooked:150 palm_oil:20 kidney:30 onion:10 | african salad with ugba | plate
+Isi ewu | goat:150 palm_oil:20 onion:15 | goat head pepper | portion
+Nkwobi with utazi | beef:150 palm_oil:20 | cow foot nkwobi | portion
+Okpa | cowpeas:150 palm_oil:20 | bambara pudding | wrap
+Ayamase stew | green_pepper:120 palm_oil:30 beef:80 egg_boiled:30 | designer stew | portion
+Coconut rice (Nigerian) | rice:200 coconut_milk:60 tomato_paste:10 chicken_meat:60 | nigerian coconut rice | plate
+Fried rice (Nigerian party) | rice:220 liver:30 carrots:30 peas:20 curry:2 oil:15 | party fried rice | plate
+Native jollof (palm oil) | rice:220 palm_oil:20 fish:50 spinach:30 | concoction rice | plate
+Yam pottage with fish | yam:220 palm_oil:20 fish:60 | yam porridge with fish | bowl
+Beans and plantain porridge | cowpeas:150 ripe_plantain:100 palm_oil:15 | beans dodo porridge | bowl
+Moi moi elemi meje | cowpeas:120 oil:15 egg_boiled:30 fish:20 | seven lives moin moin | wrap
+Suya chicken | chicken_breast:150 peanuts:10 chili_powder:3 onion:20 | chicken suya | serving
+Asun | goat:150 chili:5 onion:20 oil:8 | spicy goat asun | portion
+Peppered gizzard | gizzard:150 red_pepper:40 oil:10 | peppered gizzard | portion
+Ofe akwu vegan | palm_oil:30 spinach:80 mushrooms:80 | vegan banga | bowl
+Gizdodo vegan (mushroom) | mushrooms:150 plantain_fried:120 red_pepper:30 oil:8 | mushroom dodo | plate
+Boli and groundnuts | plantain:200 peanuts:40 | bole and groundnut | plate
+Agidi with akara | cornmeal:60 water:150 cowpeas:100 oil:15 | eko and akara | plate
+Abacha ncha (vegan) | cassava_cooked:150 palm_oil:20 garden_egg_alt:0 eggplant_raw:40 | vegan african salad | plate
+Zobo with ginger | roselle:10 ginger:5 sugar:20 water:250 | zobo ginger | glass
+Kunu aya | coconut_meat:20 dates:20 water:250 | tiger nut milk | glass
+Fura (pounded millet balls) | millet:80 | fura balls | portion
+Nigerian salad | lettuce:60 cabbage:40 carrots_raw:30 baked_beans:40 egg_boiled:30 mayo:25 | nigerian salad | bowl
+Nigerian Scotch-egg-style snack | egg_boiled:50 sausage:40 breadcrumbs:15 oil:10 | nigerian scotch egg | piece
+Gala-style sausage roll | flour:50 butter:15 sausage:30 | gala | roll
+Plantain mosa | ripe_plantain:100 flour:15 oil:15 | mosa | serving (5)
+Dundun with egg sauce | yam:200 oil:15 egg:100 tomato:50 onion:15 | fried yam with egg sauce | plate
+`);
+X('Ghana', 'Ghanaian', AF, `
+Abunuabunu | spinach:150 palm_oil:20 goat:80 water:150 | ghana green soup | bowl
+Nkontomire stew with yam | spinach:150 palm_oil:20 egg_boiled:50 yam:200 | kontomire and yam | plate
+Garden egg stew | eggplant:150 palm_oil:20 fish:60 onion:20 | ghana garden egg stew | portion
+Okro stew (Ghanaian) | okra:150 palm_oil:15 fish:60 crab:40 | okro stew | bowl
+Akple with fetri detsi | cornmeal:150 water:150 okra:80 fish:60 | ewe akple | plate
+Fante kenkey with fish | cornmeal:200 fish:120 chili:3 | fanti kenkey | plate
+Gari foto | cassava_cooked:120 egg:50 tomato:40 onion:20 oil:12 | gari and egg | plate
+Gari and beans | cassava_cooked:100 cowpeas:150 palm_oil:12 plantain_fried:60 | gob3 | plate
+Yam balls | yam:150 egg:20 flour:10 oil:15 | ghana yam balls | serving (4)
+Atadwe milkye | coconut_meat:40 sugar:20 | tiger nut coconut sweet | piece
+Tuo zaafi with ayoyo | millet:200 spinach:100 beef:60 | tz and ayoyo | plate
+Wasawasa | sorghum:150 spinach:60 oil:8 | dawadawa wasawasa | plate
+Koko with koose (spicy) | millet:40 water:250 sugar:10 ginger:3 cowpeas:80 oil:12 | spicy koko | bowl
+Brukina | millet:60 yogurt:200 sugar:10 | burkina milk drink | glass
+Shito with fried yam | yam:200 oil:20 dried_shrimp:10 chili:5 | yam chips and shito | plate
+Pinkaso | flour:60 sugar:10 oil:15 | ghana pancake doughnut | serving (2)
+Ghana bread with avocado | bread:80 avocado:60 | sugar bread avocado | serving
+Tatale with beans | ripe_plantain:120 flour:20 oil:15 cowpeas:100 | tatale and beans | plate
+`);
+X('Senegal', 'Senegalese', AF, `
+Thieboudienne rouge | rice:220 fish:120 tomato_paste:20 cabbage:40 cassava_cooked:40 carrots:30 oil:15 | ceebu jen | plate
+Thieboudienne blanc | rice:220 fish:120 cabbage:40 cassava_cooked:40 carrots:30 oil:15 | white ceebu jen | plate
+Thiou poulet | chicken_thigh:150 tomato:50 potato:60 carrots:30 rice:150 | senegalese chicken stew | plate
+Mafé (Senegalese) | peanut_butter:40 beef:100 sweet_potato:60 rice:150 | senegal mafe | plate
+Yassa poisson | fish:170 onion:80 lemon:15 mustard:5 rice:150 | fish yassa | plate
+Yassa végétarien | onion:100 lemon:15 mustard:5 kidney:100 rice:150 | vegetarian yassa | plate
+Domoda (Senegalese) | peanut_butter:35 pumpkin:80 beef:60 rice:150 | senegal domoda | plate
+Caldou | fish:150 lemon:10 okra:30 onion:30 rice:150 | casamance caldou | plate
+Bassi salté | millet:150 beef:60 cabbage:40 sweet_potato:40 raisins:10 | millet couscous senegal | plate
+Accara (Senegalese) | cowpeas:100 oil:15 onion:20 | senegalese accara | serving (5)
+Dibi | lamb:150 onion:30 mustard:5 | grilled lamb dakar | portion
+Thiakry with mango | millet:80 yogurt:120 sugar:15 mango:50 | thiakry mango | bowl
+Ngalakh | millet:60 peanut_butter:25 sugar:15 water:100 | easter ngalakh | bowl
+Café Touba | coffee:150 sugar:12 | spiced coffee touba | cup
+`);
+X("Côte d'Ivoire", 'Ivorian', AF, `
+Sauce arachide (Ivorian) | peanut_butter:40 chicken_thigh:100 tomato:40 rice:150 | ivorian peanut sauce | plate
+Sauce kplala | spinach:150 palm_oil:15 fish:60 | kplala | bowl
+Kabato with sauce gombo | cornmeal:150 water:150 okra:80 fish:50 | kabato | plate
+Foutou igname | yam:250 | pounded yam ivory coast | portion
+Poisson braisé with attiéké | fish:180 cassava_cooked:180 tomato:30 onion:20 oil:10 | braised fish attieke | plate
+Choukouya | lamb:150 onion:30 | ivorian grilled lamb | portion
+Claclo | ripe_plantain:120 flour:20 oil:15 | ivorian plantain fritters | serving (4)
+Gnamankoudji | ginger:20 sugar:25 lemon:5 water:250 | ivorian ginger juice | glass
+Dégué (Ivorian) | millet:60 yogurt:150 sugar:15 | ivorian degue | bowl
+`);
+X('Cameroon', 'Cameroonian', AF, `
+Ndolé with miondo | spinach:150 peanuts:40 shrimp:40 beef:60 oil:15 cassava_cooked:150 | ndole and miondo | plate
+Kati kati with corn fufu | chicken_thigh:180 palm_oil:15 cornmeal:150 water:150 | kati kati | plate
+Okok sucré | spinach:150 peanut_butter:30 sugar:10 cassava_cooked:100 | sweet okok | plate
+Pepper soup (Cameroonian) | goat:120 chili:4 water:250 | cameroon pepper soup | bowl
+Taro with yellow soup | taro:250 palm_oil:20 beef:60 water:100 | achu | plate
+Beignets-haricots-bouillie | flour:60 oil:15 sugar:5 kidney:100 cornmeal:40 water:200 | bhb | plate
+Sanga (vegan) | corn:100 spinach:100 sugar:5 | vegan sanga | bowl
+Poulet braisé camerounais | chicken_leg:220 oil:8 chili:2 | cameroon grilled chicken | portion
+Folong | spinach:150 peanut_butter:25 palm_oil:10 | folong greens | portion
+`);
+X('Ethiopia', 'Ethiopian', AF, `
+Yetsom beyaynetu | lentils:100 split_peas:80 cabbage:60 kale:60 chickpea_flour:40 oil:20 flour:120 | fasting platter | platter
+Misir alicha | red_lentils:150 onion:30 turmeric:1 oil:10 | mild lentil stew | bowl
+Gomen besiga | kale:150 beef:80 oil:10 | collards with beef | portion
+Doro wat with injera | chicken_leg:150 egg_boiled:50 onion:60 butter:15 chili_powder:4 flour:120 | doro wat injera | plate
+Siga wat | beef:150 onion:50 butter:15 chili_powder:4 | beef wat | bowl
+Yebeg alicha | lamb:150 onion:40 butter:10 turmeric:1 | lamb alicha | bowl
+Kitfo leb leb | beef_mince:150 butter:15 chili_powder:2 cottage:30 | lightly cooked kitfo | portion
+Gored gored | beef:150 butter:15 chili_powder:2 | gored gored | portion
+Tegabino | chickpea_flour:70 oil:15 onion:20 water:150 | thick shiro pot | bowl
+Azifa | lentils:150 onion:20 lemon:10 mustard:5 | green lentil salad | bowl
+Timatim salata | tomato:120 onion:20 chili:3 lemon:5 oil:8 | tomato salad ethiopia | portion
+Kategna | flour:80 butter:15 chili_powder:3 | injera with spiced butter | serving
+Dabo | flour:70 honey:8 | ethiopian bread | slice
+Ambasha | flour:70 oil:8 sp_coriander:1 | tigray bread | slice
+Buticha | chickpea_flour:50 onion:15 lemon:5 oil:8 | chickpea mash | portion
+Fossolia | green_beans:150 carrots:60 onion:20 oil:10 | ethiopian green beans | portion
+Spris (Ethiopian layered juice) | avocado:80 mango:80 papaya:60 | ethiopian juice layers | glass
+`);
+X('Kenya', 'Kenyan', AF, `
+Githeri | corn:120 kidney:100 onion:15 tomato:20 oil:8 | kenyan corn and beans | bowl
+Irio | potato:150 peas:60 corn:40 spinach:40 | kenyan mash | portion
+Sukuma wiki with ugali | kale:150 tomato:40 onion:20 oil:8 cornmeal:110 water:220 | sukuma ugali | plate
+Nyama choma with kachumbari | goat:180 tomato:60 onion:20 | kenyan roast meat | plate
+Pilau (Kenyan) | rice:200 beef:80 onion:30 oil:12 | swahili pilau kenya | plate
+Biryani (Mombasa) | rice:200 chicken_thigh:100 potato:50 yogurt:30 oil:12 | swahili biryani | plate
+Wali na maharage | rice:180 kidney:120 coconut_milk:40 | rice and beans coast | plate
+Mahamri | flour:60 coconut_milk:25 sugar:10 oil:15 sp_cardamom:0.5 | swahili doughnut | serving (2)
+Mbaazi wa nazi | kidney:150 coconut_milk:80 | pigeon peas in coconut | bowl
+Viazi karai with kachumbari | potato:150 chickpea_flour:20 oil:15 tomato:40 onion:15 | potato bhajia salsa | plate
+Kenyan fish stew (Luo) | fish:170 tomato:60 onion:30 oil:10 cornmeal:100 water:200 | fish and ugali | plate
+Kienyeji chicken stew | chicken_leg:180 tomato:50 onion:30 oil:8 | kienyeji | bowl
+Matumbo stew | tripe:150 tomato:50 onion:30 oil:8 | tripe stew kenya | bowl
+Mutura with kachumbari | beef_mince:80 liver:20 tomato:40 onion:15 | mutura plate | plate
+Ndengu | lentils:180 coconut_milk:40 onion:20 | green gram stew | bowl
+Managu | spinach:150 milk:30 onion:15 | african nightshade | portion
+Terere | spinach:150 onion:15 oil:5 | amaranth greens | portion
+Chapati with beans (Kenyan) | flour:80 oil:10 kidney:150 tomato:30 | chapo beans | plate
+Ugali with sour milk | cornmeal:110 water:220 yogurt:200 | ugali mala | plate
+`);
+X('Tanzania', 'Tanzanian', AF, `
+Urojo | potato:80 chickpea_flour:20 lemon:10 coconut_meat:10 water:250 | zanzibar mix | bowl
+Zanzibar pizza | flour:50 egg:40 beef_mince:40 onion:15 oil:12 | zanzibar pizza | piece
+Pweza wa nazi | squid:150 coconut_milk:80 tomato:30 | octopus in coconut | bowl
+Samaki wa kupaka | fish:170 coconut_milk:80 lemon:10 | grilled fish coconut sauce | portion
+Kachori (Tanzanian) | potato:100 chickpea_flour:20 oil:15 | tanzanian kachori | serving (3)
+Mishkaki with chapati | beef:120 flour:70 oil:10 | mishkaki chapati | plate
+Ndizi kaanga | ripe_plantain:150 oil:12 | fried bananas tanzania | portion
+Mtori | green_plantain:150 beef:50 water:200 | banana soup | bowl
+Kashata | coconut_meat:40 sugar:25 peanuts:10 | coconut peanut candy | piece
+Chai ya tangawizi | black_tea:200 ginger:5 sugar:10 milk:50 | ginger tea | cup
+`);
+X('Uganda', 'Ugandan', AF, `
+Matooke with groundnut sauce | green_plantain:250 peanut_butter:35 | matoke and gnuts | plate
+Posho and beans | cornmeal:110 water:220 kidney:150 | posho beans | plate
+Malewa | bamboo:120 peanut_butter:20 | smoked bamboo shoots | portion
+Eshabwe with millet | ghee:20 milk:50 millet:150 | ankole ghee sauce | plate
+Firinda | kidney:180 tomato:30 onion:15 | mashed beans uganda | bowl
+Kikalayi | beef:150 onion:30 tomato:30 oil:10 | fried beef uganda | portion
+Ugandan chapati with egg (Rolex, double) | flour:80 oil:12 egg:150 cabbage:30 | double rolex | roll
+Mandazi (Ugandan) | flour:60 sugar:10 oil:15 | ugandan mandazi | serving (2)
+`);
+X('Rwanda', 'Rwandan', AF, `
+Isombe with ubugali | spinach:150 peanut_butter:25 palm_oil:12 cassava_cooked:200 | isombe and cassava | plate
+Mizuzu | ripe_plantain:150 oil:15 | fried plantains rwanda | portion
+Ubugari | cassava_cooked:250 | rwandan cassava paste | portion
+Agatogo | green_plantain:200 beef:60 tomato:40 palm_oil:8 | rwandan plantain stew | bowl
+`);
+X('South Africa', 'South African', AF, `
+Bobotie with yellow rice | beef_mince:130 bread:20 egg:25 milk:40 raisins:10 curry:3 rice:150 turmeric:1 | bobotie and rice | plate
+Potjiekos (South African) | lamb:120 potato:80 carrots:40 pumpkin:40 onion:20 | potjie | bowl
+Cape Malay chicken curry | chicken_thigh:150 potato:60 tomato:40 curry:5 rice:150 | cape malay curry | plate
+Denningvleis | lamb:150 tamarind:10 onion:30 rice:150 | cape malay lamb | plate
+Waterblommetjie bredie | lamb:120 green_beans:100 potato:60 | waterblommetjie stew | bowl
+Tomato bredie | lamb:120 tomato_canned:120 potato:60 | tomato stew south africa | bowl
+Umleqwa | chicken_leg:200 onion:20 water:150 | free range chicken stew | bowl
+Mogodu | tripe:150 onion:20 water:150 | tripe south africa | bowl
+Amagwinya with polony | flour:70 oil:20 ham_slice:30 | vetkoek polony | serving
+Kota | bread:150 fries:80 ham_slice:20 cheddar:20 egg_fried:50 sausage:30 | spatlo | sandwich
+Gatsby | baguette:150 fries:120 sausage:60 ketchup:20 | cape town gatsby | sandwich
+Pap and wors | cornmeal:100 water:200 sausage:120 tomato:40 | pap en wors | plate
+Samp and beans (vegan) | corn:120 kidney:100 onion:15 | umngqusho vegan | bowl
+Morogo with chakalaka | spinach:120 baked_beans:80 carrots:30 cornmeal:80 water:160 | morogo chakalaka | plate
+Butternut soup (South African) | butternut:250 onion:20 cream:20 | butternut soup | bowl
+Bunny chow, bean | bread:150 kidney:120 potato:50 curry:5 oil:10 | vegetarian bunny chow | serving
+Sosatie with apricot | chicken_thigh:150 apricot_dried:20 onion:15 | chicken sosaties | serving (2)
+Snoek on the braai | fish:180 jam:15 butter:10 | braaied snoek | portion
+Pickled fish (Cape) | fish:150 onion:40 vinegar:20 curry:3 sugar:10 | cape pickled fish | portion
+Hertzoggies | pie_crust:30 jam:15 coconut_meat:15 sugar:10 | coconut jam tarts | serving (2)
+Peppermint crisp tart | shortbread:40 condensed:30 cream:40 dark_choc:10 | peppermint tart | slice
+Amasi with pap | cornmeal:80 water:180 yogurt:200 | maas and pap | bowl
+`);
+X('Morocco', 'Moroccan', AF, `
+Couscous aux sept légumes | couscous:180 carrots:40 zucchini:40 pumpkin:40 cabbage:30 chickpeas:40 turnip_alt:0 | seven vegetable couscous | plate
+Tajine kefta mkaouara | beef_mince:120 tomato:100 egg:50 onion:20 | meatball tagine with eggs | portion
+Tajine poulet citron | chicken_thigh:160 olives:20 lemon:10 onion:30 | chicken preserved lemon tagine | portion
+Tajine d'agneau aux pruneaux | lamb:150 prunes:30 almonds:10 onion:30 | lamb prune tagine | portion
+Tanjia | beef:160 garlic:4 lemon:10 | marrakech tanjia | portion
+Mrouzia | lamb:140 raisins:20 almonds:10 honey:10 | sweet lamb | portion
+Pastilla au poulet | phyllo:50 chicken_meat:80 almonds:15 egg:20 sugar:8 | chicken bastilla | slice
+Pastilla aux fruits de mer | phyllo:50 shrimp:50 fish:40 rice_noodles:20 | seafood pastilla | slice
+Loubia (Moroccan) | kidney:200 tomato:60 olive_oil:12 cumin:1 | moroccan white beans | bowl
+Lentilles à la marocaine | lentils:200 tomato:50 olive_oil:10 cumin:1 | moroccan lentils | bowl
+Batbout | flour:70 semolina:10 | moroccan pita | piece
+Maakouda | potato:150 egg:20 flour:10 oil:15 | potato fritters morocco | serving (4)
+Sardine kefta | sardine:100 onion:15 coriander:5 oil:8 | sardine balls | serving (4)
+Briouats au fromage | phyllo:40 feta:40 oil:12 | cheese briouats | serving (3)
+Chebakia | flour:40 sesame:8 honey:25 oil:15 | sesame honey cookie | serving (3)
+Ghriba | almonds:30 sugar:15 egg:10 | almond cookie | serving (2)
+Sellou | flour:30 almonds:20 sesame:10 sugar:15 butter:10 | moroccan sellou | portion
+Avocado smoothie (Moroccan) | avocado:100 milk:200 sugar:15 | jus d'avocat | glass
+`);
+X('Algeria', 'Algerian', AF, `
+Couscous algérois | couscous:180 chicken_thigh:100 carrots:40 zucchini:40 chickpeas:40 | algiers couscous | plate
+Chtitha djedj | chicken_thigh:160 chickpeas:40 paprika:2 oil:10 | algerian chicken stew | bowl
+Tajine zitoune | chicken_thigh:150 olives:40 carrots:30 | olive tagine | portion
+Mtewem | beef_mince:100 chickpeas:40 garlic:5 oil:10 | garlic meatballs | portion
+Dobara | chickpeas:150 fava:50 cumin:1 oil:10 | biskra dobara | bowl
+Garantita sandwich | baguette:80 chickpea_flour:50 oil:10 egg:10 | karantika sandwich | sandwich
+Bourek annabi | phyllo:40 beef_mince:40 egg:20 oil:12 | annaba bourek | serving (2)
+Rfiss | semolina:60 dates:30 butter:15 | algerian rfiss | portion
+Mbesses | semolina:50 sugar:15 oil:12 | semolina cake algeria | slice
+Kalb el louz | semolina:40 almonds:15 sugar:20 butter:10 | algerian almond cake | piece
+`);
+X('Tunisia', 'Tunisian', AF, `
+Couscous au poisson | couscous:180 fish:120 tomato_paste:15 potato:40 pumpkin:40 | tunisian fish couscous | plate
+Ojja merguez | sausage:80 egg:100 tomato:100 red_pepper:40 | tunisian ojja | plate
+Tajine tunisien | egg:100 chicken_meat:60 feta:30 potato:40 | tunisian frittata tagine | slice
+Mechouia salad | red_pepper:120 tomato:80 tuna:30 egg_boiled:25 olive_oil:12 | grilled salad tunisia | plate
+Brik à l'oeuf | phyllo:30 egg:50 tuna:30 oil:15 | tunisian brik | piece
+Chakchouka tunisienne | red_pepper:100 tomato:100 egg:100 olive_oil:10 | tunisian shakshuka | plate
+Marka jelbana | peas:120 lamb:80 tomato_paste:10 | pea stew tunisia | bowl
+Kamounia | beef:140 cumin:2 tomato_paste:10 | cumin stew | bowl
+Bambalouni | flour:60 oil:15 sugar:10 | tunisian doughnut | piece
+Assida zgougou-style pudding | flour:30 sugar:20 milk:100 pistachio:5 | tunisian assida | bowl
+`);
+X('Egypt', 'Egyptian', AF, `
+Molokhia with chicken and rice | spinach:120 chicken_meat:100 garlic:5 rice:150 | molokhia chicken rice | plate
+Macarona béchamel | pasta:150 beef_mince:70 milk:80 butter:10 flour:10 | egyptian pasta bake | portion
+Kofta and rice (Egyptian) | beef_mince:120 rice:150 tomato:40 | kofta plate egypt | plate
+Fiteer meshaltet with honey and cream | flour:70 butter:25 honey:15 cream:20 | fiteer sweet | slice
+Bessara | fava:200 parsley:10 onion:20 oil:10 | egyptian bessara | bowl
+Fattah with lamb | rice:150 bread:40 lamb:100 garlic:5 vinegar:5 | eid fatta | plate
+Egyptian stuffed peppers | green_pepper:150 rice:60 tomato:40 onion:15 | egyptian stuffed peppers | serving (2)
+Sayadeya | fish:160 rice:180 onion:40 oil:10 | egyptian fish rice | plate
+Shakshuka masri | egg:100 tomato:100 onion:20 oil:10 | egyptian eggs | plate
+Liver sandwich (kebda) | liver:100 baguette:70 green_pepper:20 | alexandrian liver | sandwich
+Feteer with sugar | flour:70 butter:20 sugar:15 | sweet pie egypt | slice
+Kunafa (Egyptian) | phyllo:40 butter:15 sugar:20 cream:30 | egyptian kunafa | portion
+Qatayef | flour:40 walnuts:15 sugar:15 oil:10 | ramadan qatayef | serving (2)
+Sobia | rice:20 coconut_meat:15 milk:150 sugar:20 | ramadan sobia | glass
+Sahlab | milk:200 cornstarch:12 sugar:15 coconut_meat:5 | egyptian sahlab | cup
+`);
+X('Libya', 'Libyan', AF, `
+Couscous bil bosla | couscous:180 lamb:80 onion:40 chickpeas:30 | libyan couscous | plate
+Mbakbaka | pasta:150 lamb:80 tomato_paste:15 chickpeas:20 | libyan pasta | plate
+Rishda | pasta:150 chickpeas:40 lamb:60 tomato_paste:10 | libyan noodle stew | bowl
+Asida (Libyan) | flour:80 water:150 butter:10 molasses:15 | libyan asida | bowl
+`);
+X('Sudan', 'Sudanese', AF, `
+Kisra with waika | sorghum:80 okra:80 beef:50 | kisra okra | plate
+Mullah ahmar | beef:80 onion:30 tomato_paste:15 peanut_butter:10 | red sauce sudan | bowl
+Shaiyah | lamb:150 onion:20 | sudanese fried meat | portion
+Salata aswad | eggplant:150 peanut_butter:20 lemon:10 | eggplant peanut salad | portion
+Gourrassa with mullah | flour:90 water:60 beef:60 tomato:30 | gurasa stew | plate
+Basbousa (Sudanese) | semolina:40 sugar:25 butter:12 coconut_meat:8 | sudanese basbousa | piece
+Hilu mur-style drink | sorghum:20 sugar:20 sp_ginger:0.5 water:250 | ramadan drink | glass
+`);
+X('Somalia', 'Somali', AF, `
+Hilib ari | goat:160 onion:20 tomato:20 | somali goat | portion
+Maraq | goat:80 potato:60 carrots:30 tomato:30 water:200 | somali stew | bowl
+Baasto | pasta:200 beef_mince:70 tomato_paste:15 banana:60 | somali pasta with banana | plate
+Soor | cornmeal:80 milk:150 butter:10 sugar:10 | somali porridge | bowl
+Malawax | flour:40 milk:80 egg:25 sugar:10 | somali crepes | serving (2)
+Kac kac | flour:50 sugar:12 oil:15 sp_cardamom:0.5 | somali doughnut | serving (3)
+Bur | flour:50 sugar:10 oil:15 | somali fried bread | serving (2)
+`);
+X('Madagascar', 'Malagasy', AF, `
+Henakisoa sy ravitoto | pork_shoulder:120 spinach:150 coconut_milk:30 rice:150 | pork and cassava leaves | plate
+Akoho sy voanio | chicken_thigh:150 coconut_milk:80 tomato:30 rice:150 | chicken coconut madagascar | plate
+Lasary voatabia | tomato:120 onion:20 lemon:5 | malagasy tomato relish | portion
+Kitoza | beef:60 | smoked dried beef | portion
+Mofo anana | flour:40 spinach:40 oil:15 | greens fritters | serving (4)
+Vary sosoa | rice:80 water:300 | rice soup madagascar | bowl
+`);
+X('Mozambique', 'Mozambican', AF, `
+Galinha à zambeziana with rice | chicken_thigh:150 coconut_milk:60 lime:10 rice:150 | zambezia chicken | plate
+Camarão grelhado com piri-piri | shrimp:150 butter:10 chili:3 lemon:5 | piri piri prawns | plate
+Caril de caranguejo | crab:150 coconut_milk:80 tomato:30 | crab curry mozambique | bowl
+Mucapata | rice:150 coconut_milk:50 kidney:60 | rice beans coconut | plate
+Pãozinho | flour:70 | mozambican roll | roll
+`);
+X('Zambia', 'Zambian', AF, `
+Ifisashi with nshima | spinach:150 peanuts:30 tomato:30 cornmeal:110 water:220 | ifisashi nshima | plate
+Chibwabwa | spinach:150 peanuts:25 | pumpkin leaves zambia | portion
+Village chicken with nshima | chicken_leg:180 tomato:40 onion:20 cornmeal:110 water:220 | zambian chicken nshima | plate
+Kalembula with groundnuts | spinach:150 peanuts:25 tomato:20 | sweet potato leaves groundnuts | portion
+Munkoyo | cornmeal:40 water:250 sugar:10 | zambian maize drink | glass
+`);
+X('Zimbabwe', 'Zimbabwean', AF, `
+Muboora | spinach:150 peanut_butter:20 tomato:30 | pumpkin leaves zimbabwe | portion
+Nhedzi soup | mushrooms:150 peanut_butter:20 water:150 | wild mushroom soup | bowl
+Huku ne dovi | chicken_leg:180 peanut_butter:35 tomato:30 | chicken peanut butter | bowl
+Maputi with peanuts | corn:40 peanuts:20 | maputi nzungu | bowl
+`);
+X('Malawi', 'Malawian', AF, `
+Chambo with nsima and greens | fish:150 cornmeal:110 water:220 spinach:80 | chambo nsima | plate
+Kachumbari (Malawian) | tomato:100 onion:20 green_pepper:20 lemon:5 | malawi relish | portion
+Mbatata cookies | sweet_potato:50 flour:30 sugar:12 butter:10 | sweet potato biscuits | serving (3)
+`);
+X('Botswana', 'Batswana', AF, `
+Seswaa with morogo and pap | beef_brisket:120 spinach:80 cornmeal:100 water:200 | seswaa platter | plate
+Serobe | tripe:100 liver:30 water:100 | serobe | portion
+Mabele with milk | sorghum:60 water:200 milk:80 sugar:8 | sorghum porridge milk | bowl
+`);
+X('Namibia', 'Namibian', AF, `
+Kapana with fat cakes | beef:120 flour:60 oil:15 | kapana and vetkoek | plate
+Oshiwambo chicken | chicken_leg:180 onion:20 | ovambo chicken | portion
+Mahangu porridge with milk | millet:60 milk:150 sugar:8 | oshifima milk | bowl
+Namibian potato bake | potato:200 cream:40 cheddar:20 | potato bake | portion
+`);
+X('Mali', 'Malian', AF, `
+Riz au gras malien | rice:200 beef:80 tomato_paste:20 carrots:30 oil:15 | malian fat rice | plate
+Tô with baobab sauce | millet:200 spinach:60 okra:40 dried_shrimp:5 | to sauce feuille | plate
+Fakoye with rice | goat:100 spinach:60 rice:150 | fakoye rice | plate
+Capitaine sangha | fish:170 oil:15 ripe_plantain:100 | nile perch mali | plate
+`);
+X('Burkina Faso', 'Burkinabè', AF, `
+Riz sauce arachide | rice:180 peanut_butter:35 chicken_thigh:80 tomato:30 | burkina peanut rice | plate
+Haricots verts sauce tomate | green_beans:150 tomato:60 onion:15 oil:8 | burkina green beans | portion
+Soumbala rice | rice:200 soumbala:10 oil:12 onion:20 | riz au soumbala | plate
+Fonio salad (Burkina) | fonio:60 tomato:40 cucumber:40 peanuts:10 | burkina fonio salad | bowl
+`);
+X('Niger', 'Nigerien', AF, `
+Djerma stew with rice | beef:100 peanut_butter:25 tomato:40 rice:150 | djerma stew | plate
+Kilishi and fura plate | beef:40 millet:60 yogurt:150 | niger snack plate | plate
+Tuwo with okra sauce (Niger) | millet:200 okra:80 dried_shrimp:5 | niger tuwo | plate
+`);
+X('Guinea', 'Guinean', AF, `
+Riz gras guinéen | rice:200 beef:80 tomato_paste:20 oil:15 | guinean jollof | plate
+Sauce feuille de patate | spinach:150 palm_oil:20 fish:60 rice:150 | potato leaf sauce | plate
+Fouti with fish | rice:180 okra:60 fish:80 palm_oil:12 | fouti poisson | plate
+`);
+X('Sierra Leone', 'Sierra Leonean', AF, `
+Plasas with rice | spinach:150 palm_oil:20 fish:60 rice:180 | potato leaf plassas | plate
+Okra soup (Salone) | okra:150 palm_oil:15 fish:60 rice:150 | salone okra | plate
+Pepe chicken | chicken_leg:180 chili:5 onion:20 | sierra leone pepper chicken | portion
+Fry fry | cowpeas:100 oil:15 bread:60 | salone breakfast fry fry | plate
+`);
+X('Liberia', 'Liberian', AF, `
+Palm butter soup | palm_oil:40 chicken_thigh:100 fish:40 rice:150 | liberian palm butter | plate
+Jollof (Liberian) | rice:220 chicken_thigh:80 tomato_paste:20 oil:15 | liberian jollof | plate
+Torborgee | eggplant:100 palm_oil:20 fish:60 rice:150 | liberian bitter ball stew | plate
+Pepper soup (Liberian beef) | beef:120 chili:5 water:250 | liberian beef pepper soup | bowl
+`);
+X('Togo', 'Togolese', AF, `
+Gboma dessi | spinach:150 palm_oil:20 fish:60 | togolese spinach stew | bowl
+Ademe | spinach:150 palm_oil:15 crab:40 | jute leaves togo | bowl
+Abobo | cowpeas:150 oil:12 | togo beans | bowl
+`);
+X('Benin', 'Beninese', AF, `
+Pâte rouge | cornmeal:100 tomato_paste:20 palm_oil:15 chicken_thigh:80 | benin red paste | plate
+Dja | fish:120 tomato:60 onion:20 oil:10 | benin fish sauce | portion
+Télibo with sauce | cassava_cooked:200 okra:60 palm_oil:10 | benin yam flour paste | plate
+`);
+X('The Gambia', 'Gambian', AF, `
+Afra | beef:150 onion:30 mustard:5 | gambian grilled meat | portion
+Plasas (Gambian) | spinach:150 palm_oil:20 fish:50 rice:150 | gambian plasas | plate
+Chew of fish | fish:150 tomato:40 onion:20 rice:150 | gambian fish stew | plate
+`);
+X('Mauritania', 'Mauritanian', AF, `
+Thieboudienne mauritanien | rice:220 fish:120 tomato_paste:20 cabbage:30 carrots:30 oil:15 | mauritanian fish rice | plate
+Méchoui (Mauritanian) | lamb:180 | roast lamb mauritania | portion
+Bassi with lamb | millet:150 lamb:80 | mauritanian millet couscous | plate
+`);
+X('Eritrea', 'Eritrean', AF, `
+Tsebhi birsen | red_lentils:150 onion:30 oil:12 chili_powder:3 | eritrean lentil stew | bowl
+Alicha birsen | lentils:150 onion:20 turmeric:1 oil:10 | mild lentils eritrea | bowl
+Silsi | tomato:120 onion:30 oil:10 chili_powder:2 | eritrean tomato sauce | portion
+Tihlo | barley:80 beef:60 butter:10 | barley balls with stew | plate
+`);
+X('Djibouti', 'Djiboutian', AF, `
+Sabayad with stew | flour:70 oil:12 beef:60 tomato:30 | djibouti flatbread stew | plate
+Yemeni-style fish (Djibouti) | fish:170 tomato:30 chili:2 oil:10 | djibouti grilled fish | portion
+`);
+X('South Sudan', 'South Sudanese', AF, `
+Wal wal | sorghum:80 milk:80 sugar:8 | sorghum balls in milk | bowl
+Ful (South Sudan) | fava:180 oil:10 onion:15 | south sudan ful | bowl
+`);
+X('Lesotho', 'Basotho', AF, `
+Lesotho chicken stew with papa | chicken_leg:160 tomato:40 onion:20 cornmeal:100 water:200 | basotho chicken | plate
+Moroho with likhobe | spinach:120 sorghum:50 kidney:50 | greens and beans lesotho | plate
+`);
+X('Eswatini', 'Swazi', AF, `
+Umbhidvo wetintsanga | pumpkin:100 peanut_butter:20 spinach:60 | pumpkin leaves peanut | portion
+Swazi chicken stew | chicken_leg:170 tomato:40 onion:20 | eswatini chicken | bowl
+`);
+X('Angola', 'Angolan', AF, `
+Calulu de peixe seco with funge | fish:100 okra:50 spinach:60 palm_oil:15 cassava_cooked:200 | calulu and funge | plate
+Muamba de ginguba | peanut_butter:40 chicken_thigh:120 rice:150 | angolan peanut chicken | plate
+Kizaca with fish | spinach:150 peanut_butter:25 fish:60 | kizaca peixe | bowl
+`);
+X('Democratic Republic of the Congo', 'Congolese (DRC)', AF, `
+Liboke ya mbisi with chikwanga | fish:150 tomato:40 onion:20 cassava_cooked:200 | liboke fish | plate
+Ngai ngai | spinach:150 palm_oil:15 fish:40 | sorrel leaves congo | bowl
+Mbika with fish | melon_seed:60 fish:50 | pumpkin seed congo | portion
+`);
+X('Republic of the Congo', 'Congolese', AF, `
+Poulet moambé with rice | chicken_thigh:150 palm_oil:25 rice:150 | moambe chicken rice | plate
+Mbisi ya kalou | fish:150 spinach:80 palm_oil:12 | fish and greens brazzaville | bowl
+`);
+X('Gabon', 'Gabonese', AF, `
+Poulet au gnemboué | chicken_thigh:160 palm_oil:25 cassava_cooked:150 | gabon palm nut chicken | plate
+Feuilles de manioc au poisson | spinach:150 fish:60 peanut_butter:20 | gabon cassava leaves | bowl
+`);
+X('Equatorial Guinea', 'Equatoguinean', AF, `
+Pepesup with fish | fish:150 chili:4 onion:20 water:250 | equatoguinean pepper soup | bowl
+Bambucha with chicken | chicken_thigh:120 spinach:60 peanut_butter:20 rice:150 | equatorial chicken greens | plate
+`);
+X('Central African Republic', 'Central African', AF, `
+Kanda with cassava | beef_mince:100 peanut_butter:20 cassava_cooked:200 | car meatballs cassava | plate
+Ngunza stew with chicken | spinach:150 chicken_thigh:80 palm_oil:12 | cassava leaves chicken | bowl
+`);
+X('Chad', 'Chadian', AF, `
+Boule with gombo and meat | millet:200 okra:80 beef:60 | chad boule gombo | plate
+Chadian fish stew | fish:160 tomato:40 onion:20 rice:150 | lake chad fish | plate
+`);
+X('Burundi', 'Burundian', AF, `
+Ndagala with ugali | sardine:80 tomato:30 onion:15 oil:8 cassava_cooked:200 | ndagala and ugali | plate
+Burundian brochettes with fries | goat:150 fries:120 | brochettes frites | plate
+`);
+X('Comoros', 'Comorian', AF, `
+Mkatra siniya | rice_flour:60 coconut_milk:50 sugar:15 | comorian rice cake | slice
+Coconut fish, Comorian | fish:150 coconut_milk:80 | comoros coconut fish | portion
+`);
+X('Mauritius', 'Mauritian', AF, `
+Bol renversé | rice:180 chicken_meat:60 egg_fried:50 cabbage:30 soy:10 | magic bowl mauritius | bowl
+Mauritian biryani | rice:200 chicken_thigh:100 potato:60 yogurt:30 oil:12 | briani | plate
+Vindaye poisson | fish:150 mustard:5 turmeric:1 onion:20 vinegar:5 | fish vindaye | portion
+Gateau piment sandwich | baguette:60 split_peas:40 oil:10 | gato pima bread | sandwich
+`);
+X('Seychelles', 'Seychellois', AF, `
+Octopus curry (Seychelles) | squid:150 coconut_milk:80 curry:4 rice:150 | kari zourit | plate
+Fish chutney, Seychelles | fish:120 lemon:10 onion:15 | seychelles fish chutney | portion
+Bouyon bred | spinach:150 water:200 | seychelles greens soup | bowl
+`);
+X('Cabo Verde', 'Cape Verdean', AF, `
+Caldo de peixe | fish:150 potato:60 green_plantain:50 sweet_potato:50 water:200 | cape verde fish soup | bowl
+Feijoada cabo-verdiana | kidney:150 pork_shoulder:50 sausage:30 rice:150 | cape verde feijoada | plate
+`);
+X('São Tomé and Príncipe', 'Santomean', AF, `
+Calulu de galinha | chicken_thigh:150 okra:50 eggplant:50 palm_oil:12 | sao tome chicken calulu | bowl
+Molho no fogo | fish:150 palm_oil:15 spinach:60 | sao tome fish stew | bowl
+`);
+X('Guinea-Bissau', 'Bissau-Guinean', AF, `
+Caldo de chabéu | palm_oil:40 fish:100 rice:150 | bissau palm soup | plate
+Siga | okra:120 fish:60 palm_oil:12 rice:150 | bissau okra | plate
+`);
+X('Western Sahara', 'Sahrawi', TE, `
+Sahrawi couscous with vegetables | couscous:180 carrots:40 zucchini:40 chickpeas:40 | vegetable couscous sahrawi | plate
+Sahrawi grilled lamb with bread | lamb:150 flour:60 | sahrawi lamb bread | plate
+`);
+
 console.log(`everyday dishes left to real measured records: ${preferred.length}`);
 if (process.env.SHOW_PREFERRED) console.log(preferred.join('\n'));
 // ---- write out ----
