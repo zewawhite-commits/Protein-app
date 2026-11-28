@@ -102,7 +102,16 @@ export function usdaToFood(u: UsdaFood): ExtFood | null {
   };
 }
 
-const usdaKey = () => process.env.USDA_API_KEY || 'DEMO_KEY';
+/** The key as configured, without spaces, line breaks or quote marks that copying from an email can add. */
+export const usdaKeyRaw = () => process.env.USDA_API_KEY ?? '';
+const usdaKey = () => usdaKeyRaw().replace(/^[\s"'“”‘’]+|[\s"'“”‘’]+$/g, '').replace(/\s+/g, '') || 'DEMO_KEY';
+/** Setup check without revealing the key: is it set, how long, does it have stray characters. */
+export function usdaKeyCheck(): string {
+  const raw = usdaKeyRaw();
+  if (!raw) return 'missing (using shared demo key)';
+  const clean = usdaKey();
+  return `set, ${clean.length} characters${clean.length !== raw.length ? ` (removed ${raw.length - clean.length} stray spaces/quotes)` : ''}${clean.length !== 40 ? ' — a USDA key is 40 characters' : ''}`;
+}
 
 export async function usdaSearch(query: string, page: number, pageSize: number, f: typeof fetch = fetch): Promise<{ foods: ExtFood[]; total: number }> {
   const url = new URL('https://api.nal.usda.gov/fdc/v1/foods/search');

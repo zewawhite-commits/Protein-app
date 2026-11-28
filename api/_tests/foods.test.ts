@@ -107,3 +107,15 @@ describe('diet labels on packaged products', () => {
     expect(dietLabel({ name: 'Apples, raw', source: 'usda-sr' })).toBe('Vegan');
   });
 });
+
+describe('USDA key setup', () => {
+  it('ignores stray spaces, line breaks and quotes and reports only the length', async () => {
+    const { usdaKeyCheck } = await import('../_lib/foodSources');
+    process.env.USDA_API_KEY = ' "abcdefghijabcdefghijabcdefghijabcdefghij"\n';
+    expect(usdaKeyCheck()).toBe('set, 40 characters (removed 4 stray spaces/quotes)');
+    process.env.USDA_API_KEY = '28c37a41-27ab-4aa2-8636-84ea7deded1d';
+    expect(usdaKeyCheck()).toMatch(/36 characters — a USDA key is 40 characters/);
+    delete process.env.USDA_API_KEY;
+    expect(usdaKeyCheck()).toMatch(/missing/);
+  });
+});

@@ -10,7 +10,7 @@
  * Pages are 1-based; `hasMore` says whether to offer "Load more".
  */
 import { admin } from './accounts.js';
-import { dedupe, interleave, offByBarcode, offSearch, usdaByBarcode, usdaSearch, type ExtFood } from './foodSources.js';
+import { dedupe, interleave, offByBarcode, offSearch, usdaByBarcode, usdaKeyCheck, usdaSearch, type ExtFood } from './foodSources.js';
 
 const DAY = 86400;
 const reply = (d: unknown, status = 200, cache = `public, max-age=3600, s-maxage=${DAY}, stale-while-revalidate=${7 * DAY}`) =>
@@ -85,7 +85,7 @@ export async function foodsHandler(request: Request, f: typeof fetch = fetch): P
   const total = (u?.total ?? 0) + (o?.total ?? 0);
   // Why a source failed (status only, never the key) and whether a USDA key is configured: lets the owner check setup.
   const why = (x: PromiseSettledResult<unknown>) => (x.status === 'rejected' ? String((x.reason as Error)?.message ?? x.reason).slice(0, 60) : undefined);
-  const diagnostics = failed.length ? { usdaKey: process.env.USDA_API_KEY ? 'set' : 'missing (using shared demo key)', usda: why(usda), openFoodFacts: why(off) } : undefined;
+  const diagnostics = failed.length ? { usdaKey: usdaKeyCheck(), usda: why(usda), openFoodFacts: why(off) } : undefined;
   const body = { foods, page, size, hasMore: page * half < Math.max(u?.total ?? 0, o?.total ?? 0), total, unavailable: failed, ...(diagnostics && { diagnostics }), attribution: ATTRIBUTION };
   // Don't keep a page cached for long if a source was down: try it again soon.
   if (!failed.length) await remember(db, key, body, foods).catch(() => undefined);
