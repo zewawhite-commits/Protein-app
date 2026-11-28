@@ -83,7 +83,10 @@ export async function foodsHandler(request: Request, f: typeof fetch = fetch): P
   const failed = [!u && want.has('usda') && 'USDA', !o && want.has('off') && 'Open Food Facts'].filter(Boolean) as string[];
   if (!u && !o) foods = await fromStore(db, q, page, size).catch(() => []);
   const total = (u?.total ?? 0) + (o?.total ?? 0);
-  const body = { foods, page, size, hasMore: page * half < Math.max(u?.total ?? 0, o?.total ?? 0), total, unavailable: failed, attribution: ATTRIBUTION };
+  // Why a source failed (status only, never the key) and whether a USDA key is configured: lets the owner check setup.
+  const why = (x: PromiseSettledResult<unknown>) => (x.status === 'rejected' ? String((x.reason as Error)?.message ?? x.reason).slice(0, 60) : undefined);
+  const diagnostics = failed.length ? { usdaKey: process.env.USDA_API_KEY ? 'set' : 'missing (using shared demo key)', usda: why(usda), openFoodFacts: why(off) } : undefined;
+  const body = { foods, page, size, hasMore: page * half < Math.max(u?.total ?? 0, o?.total ?? 0), total, unavailable: failed, ...(diagnostics && { diagnostics }), attribution: ATTRIBUTION };
   // Don't keep a page cached for long if a source was down: try it again soon.
   if (!failed.length) await remember(db, key, body, foods).catch(() => undefined);
   return reply(body, 200, failed.length ? 'public, s-maxage=300' : undefined);
