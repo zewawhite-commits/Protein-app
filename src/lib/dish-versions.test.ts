@@ -38,6 +38,15 @@ describe('other versions of dishes (foods-more.json)', () => {
   });
 });
 
+describe('kidney beans', () => {
+  it('are a plant food, kidneys are meat', () => {
+    expect(fitsDiet({ name: 'Red kidney beans, boiled' }, 'vegan')).toBe(true);
+    expect(fitsDiet({ name: 'Rice and beans', sourceNote: 'standard recipe, per 300 g cooked: 150 g Beans, kidney, red, cooked' }, 'vegan')).toBe(true);
+    expect(fitsDiet({ name: 'Lamb kidneys, fried' }, 'vegetarian')).toBe(false);
+    expect(fitsDiet({ name: 'Steak and kidney pie' }, 'vegetarian')).toBe(false);
+  });
+});
+
 describe('world spice blends', () => {
   it('are in the database, measured by the teaspoon', () => {
     for (const n of ['Berbere spice blend', 'Jerk seasoning, dry', 'Suya spice', 'Ras el hanout spice blend', "Za'atar spice blend", 'Five-spice powder', 'Garam masala, Pakistani', 'Harissa paste']) {
