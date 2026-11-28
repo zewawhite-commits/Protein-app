@@ -401,11 +401,11 @@ function ColourDots() {
   const accent = useStore((s) => s.settings.accent ?? 'green');
   const updateSettings = useStore((s) => s.updateSettings);
   return (
-    <span role="radiogroup" aria-label="App colour" data-testid="home-colour" className="flex items-center gap-1 rounded-full border border-line px-1.5 py-1">
+    <span role="radiogroup" aria-label="App colour" data-testid="home-colour" className="flex items-center gap-0.5">
       {([['green', 'rgb(14 142 98)'], ['pink', 'rgb(214 51 132)']] as const).map(([v, bg]) => (
         <button key={v} role="radio" aria-checked={accent === v} aria-label={v === 'green' ? 'Green colour' : 'Pink colour'} onClick={() => { haptic(); updateSettings({ accent: v }); }}
-          className={cx('grid h-7 w-7 place-items-center rounded-full transition active:scale-90', accent === v && 'ring-2 ring-ink ring-offset-1 ring-offset-bg')}>
-          <span className="h-5 w-5 rounded-full" style={{ background: bg }} />
+          className="grid h-7 w-7 place-items-center rounded-full transition active:scale-90">
+          <span className={cx('rounded-full transition-all', accent === v ? 'h-4 w-4 ring-2 ring-ink/70 ring-offset-2 ring-offset-bg' : 'h-3.5 w-3.5 opacity-70')} style={{ background: bg }} />
         </button>
       ))}
     </span>

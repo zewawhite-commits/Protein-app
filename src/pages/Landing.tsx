@@ -51,7 +51,6 @@ export default function Landing() {
             <Link to="/start" className="btn-primary !h-12 !px-6">Start free</Link>
             <a href="#how" className="btn-ghost !h-12 !px-6">See how it works</a>
           </div>
-          <p className="mt-3 text-[13px] text-dim">Free for ever · No card needed · Works on any phone, in the browser</p>
 
         </section>
 
