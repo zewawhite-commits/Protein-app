@@ -43,6 +43,8 @@ export function dataQuality(food: Pick<Food, 'source' | 'per100'>): { level: 'me
   switch (food.source) {
     case 'recipe': return { level: 'calculated', text: 'Calculated from a standard recipe — home versions vary, especially oil', missing };
     case 'off': return { level: 'label', text: 'From the pack label (Open Food Facts) — check it matches yours', missing };
+    case 'usda-branded': return { level: 'label', text: 'From the manufacturer’s label (USDA Branded Foods) — check it matches yours', missing };
+    case 'usda-foundation': return { level: 'measured', text: 'Lab-analysed values (USDA Foundation Foods)', missing };
     case 'custom': return { level: 'yours', text: 'Your own numbers', missing };
     default: return { level: 'measured', text: 'From an official food composition table', missing };
   }
@@ -52,17 +54,19 @@ export function sourceInfo(food: Pick<Food, 'source' | 'fdcId' | 'ref' | 'source
   switch (food.source) {
     case 'usda-sr': return { label: `USDA SR Legacy · FDC ${food.fdcId}`, url: fdcUrl(food.fdcId!) };
     case 'usda-fndds': return { label: `USDA FNDDS · FDC ${food.fdcId}`, url: fdcUrl(food.fdcId!) };
+    case 'usda-branded': return { label: `USDA Branded Foods (label data) · FDC ${food.fdcId}`, url: fdcUrl(food.fdcId!) };
+    case 'usda-foundation': return { label: `USDA Foundation Foods · FDC ${food.fdcId}`, url: fdcUrl(food.fdcId!) };
     case 'fao-wafct': return { label: `FAO/INFOODS West Africa 2019 · ${food.ref}`, url: 'https://www.fao.org/infoods/infoods/tables-and-databases/faoinfoods-databases/en/' };
     case 'uk-cofid': return { label: `UK CoFID 2021 (McCance & Widdowson) · ${food.ref}`, url: 'https://www.gov.uk/government/publications/composition-of-foods-integrated-dataset-cofid' };
     case 'au-afcd': return { label: `Australian Food Composition Database · ${food.ref}`, url: 'https://www.foodstandards.gov.au/science-data/food-nutrient-databases/afcd' };
     case 'recipe': return { label: `Standard recipe from USDA/FAO ingredients · ${food.sourceNote ?? ''}` };
-    case 'off': return { label: `Open Food Facts · ${food.ref} (product label)`, url: `https://world.openfoodfacts.org/product/${food.ref}` };
+    case 'off': return { label: `Open Food Facts · ${food.ref} (product label) · ODbL`, url: `https://world.openfoodfacts.org/product/${food.ref}` };
     default: return { label: `Custom · ${food.sourceNote ?? ''}` };
   }
 }
 
 export const SOURCE_SHORT: Record<FoodSource, string> = {
-  'usda-sr': 'US', 'usda-fndds': 'US', 'fao-wafct': 'West Africa', 'uk-cofid': 'UK', 'au-afcd': 'Australia', recipe: 'Standard recipe', off: 'Product', custom: 'Mine',
+  'usda-sr': 'US', 'usda-fndds': 'US', 'usda-branded': 'Product', 'usda-foundation': 'US', 'fao-wafct': 'West Africa', 'uk-cofid': 'UK', 'au-afcd': 'Australia', recipe: 'Standard recipe', off: 'Product', custom: 'Mine',
 };
 
 interface Indexed {

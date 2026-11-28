@@ -3,15 +3,15 @@ import { useStore } from '@/store/useStore';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { ArrowLeft, Loader2, ScanBarcode } from 'lucide-react';
-import { productByBarcode } from '@/lib/openFoodFacts';
+import { lookupBarcode } from '@/lib/foodSearch';
 import { todayKey } from '@/lib/dates';
 import type { Food } from '@/lib/types';
 import { FoodSheet } from '@/components/FoodSheet';
 import { haptic } from '@/components/fx';
 
 /**
- * Scan a packaged food's barcode with the camera (or type the number). Nutrition comes
- * from the product's label data on Open Food Facts.
+ * Scan a packaged food's barcode with the camera (or type the number). Nutrition comes from the
+ * product's label data: Open Food Facts first, then USDA Branded Foods (through /api/foods, cached).
  */
 export default function Barcode() {
   const nav = useNavigate();
@@ -32,11 +32,11 @@ export default function Barcode() {
     busyRef.current = true;
     setState({ busy: true });
     // Scanned before: works offline from this phone's saved products.
-    const known = Object.values(useStore.getState().remoteFoods).find((f) => f.id === `off:${c}` || f.id === `off:${c.replace(/^0+/, '')}`);
+    const known = Object.values(useStore.getState().remoteFoods).find((f) => f.id === `off:${c}` || f.id === `off:${c.replace(/^0+/, '')}` || (!!f.ref && f.ref.replace(/^0+/, '') === c.replace(/^0+/, '')));
     if (known) { haptic([10, 30, 10]); setFood(known); setState({ busy: false }); busyRef.current = false; return; }
     if (!navigator.onLine) { setState({ busy: false, error: 'You’re offline. New barcodes need internet to look up. Search the food by name instead, or add it yourself: both work offline.' }); busyRef.current = false; return; }
     try {
-      const f = await productByBarcode(c);
+      const f = await lookupBarcode(c);
       if (f) { haptic([10, 30, 10]); setFood(f); setState({ busy: false }); }
       else setState({ busy: false, error: `No product found for ${c}. Try searching by name.` });
     } catch {
@@ -114,7 +114,7 @@ export default function Barcode() {
           <p className="mt-1 text-center text-[12px] text-dim">Type the numbers from the pack once; it’s saved in My foods for next time.</p>
         </div>
       )}
-      <p className="mt-4 text-xs text-dim">Product data from Open Food Facts (label values per 100 g).</p>
+      <p className="mt-4 text-xs text-dim">Product data from Open Food Facts (ODbL) and USDA FoodData Central (public domain): label values per 100 g.</p>
 
       <FoodSheet food={food} date={date} onClose={() => setFood(null)} onSaved={back} />
       <CreateFood open={creating} onClose={() => setCreating(false)} onSaved={(f) => setFood(f)} />

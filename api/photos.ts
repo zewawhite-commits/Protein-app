@@ -9,6 +9,7 @@
 import { admin, userFromToken } from './_lib/accounts.js';
 import { isAdmin } from './_lib/quota.js';
 import { PHOTO_QUERIES } from '../src/data/photoQueries.js';
+import { foodsHandler } from './_lib/foodSearch.js';
 
 interface Row { key: string; url: string | null; author: string | null; author_url: string | null; photo_page: string | null; blur_color: string | null; tried_at: string }
 const UTM = 'utm_source=nutivili_ai&utm_medium=referral';
@@ -63,6 +64,8 @@ async function review(request: Request, db: NonNullable<ReturnType<typeof admin>
 }
 
 export async function GET(request: Request): Promise<Response> {
+  // /api/foods is served here (vercel.json rewrite): the plan allows 12 functions.
+  if (new URL(request.url).searchParams.get('route') === 'foods') return foodsHandler(request);
   const db = admin();
   if (!db) return json({ photos: {} });
   const params = new URL(request.url).searchParams;

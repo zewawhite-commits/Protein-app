@@ -15,6 +15,9 @@ import { dayPartNow, type DayPart, type WaterDrink } from '@/lib/water';
 import type { Fast, StepDay } from '@/lib/activity';
 import { burnedKcal, type ExerciseEntry, type ExerciseType, type Routine } from '@/lib/exercise';
 import { guardWrite } from '@/lib/gate';
+
+/** Foods from the live sources (not in the bundled database) are kept on the phone once used, so they work offline and need no new lookup. */
+const isRemote = (food: { source: string; id: string }) => food.source === 'off' || food.source === 'usda-branded' || food.source === 'usda-foundation';
 import { elapsed, type ActiveWorkout, type CustomExercise, type LiveSet, type WorkoutLog } from '@/lib/liveWorkout';
 
 interface State {
@@ -313,7 +316,7 @@ export const useStore = create<State>()(
         set((s) => ({
           entries: [...s.entries, entry],
           recentFoodIds: [food.id, ...s.recentFoodIds.filter((id) => id !== food.id)].slice(0, 24),
-          remoteFoods: food.source === 'off' ? { ...s.remoteFoods, [food.id]: food } : s.remoteFoods,
+          remoteFoods: isRemote(food) ? { ...s.remoteFoods, [food.id]: food } : s.remoteFoods,
         }));
         return entry;
       },
@@ -332,7 +335,7 @@ export const useStore = create<State>()(
           return { entries: s.entries.filter((x) => x.id !== id), deleted: { ...s.deleted, [id]: Date.now() } };
         }),
 
-      rememberFood: (food) => set((s) => (food.source === 'off' ? { remoteFoods: { ...s.remoteFoods, [food.id]: food } } : {})),
+      rememberFood: (food) => set((s) => (isRemote(food) ? { remoteFoods: { ...s.remoteFoods, [food.id]: food } } : {})),
 
       toggleFavorite: (foodId) =>
         set((s) => ({

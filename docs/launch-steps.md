@@ -90,3 +90,13 @@ Photos only appear once you pick them, so a photo always shows exactly that food
 
 Profile → Owner dashboard → **AI costs**: real cost per feature, per subscriber, and your margin.
 Change credits, costs and limits there; they apply within a minute, no new release.
+
+## Worldwide food search (USDA + Open Food Facts)
+
+1. Get a free USDA FoodData Central key: https://fdc.nal.usda.gov/api-key-signup
+2. Vercel → Project → Settings → Environment Variables → add `USDA_API_KEY` (all environments) → redeploy.
+   Without it the shared demo key is used and USDA results will often be missing.
+3. Recommended: run `supabase/food-cache.sql` in the Supabase SQL editor (7-day result cache + indexed store).
+4. Weekly housekeeping: `delete from public.food_search_cache where expires_at < now();`
+
+Details, costs and licensing: `docs/food-database-architecture.md`.

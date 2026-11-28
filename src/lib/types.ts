@@ -46,7 +46,12 @@ export interface Portion {
  * never estimated: usda-sr / usda-fndds (USDA FoodData Central), fao-wafct (FAO/INFOODS
  * West African table), off (Open Food Facts product label data), custom (entered with a cited source).
  */
-export type FoodSource = 'usda-sr' | 'usda-fndds' | 'fao-wafct' | 'uk-cofid' | 'au-afcd' | 'recipe' | 'off' | 'custom';
+/**
+ * usda-branded / usda-foundation come live from FoodData Central through /api/foods (manufacturer label
+ * data and lab analyses). Nutrient values are never AI-generated: AI only ever estimates a portion
+ * weight from a photo, and that is marked on the logged entry.
+ */
+export type FoodSource = 'usda-sr' | 'usda-fndds' | 'usda-branded' | 'usda-foundation' | 'fao-wafct' | 'uk-cofid' | 'au-afcd' | 'recipe' | 'off' | 'custom';
 
 export interface Food {
   /** "usda:<fdcId>" or "custom:<uuid>" */

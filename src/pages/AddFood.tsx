@@ -9,7 +9,7 @@ import { ShareRecipeSheet } from '@/components/ShareRecipe';
 import { haptic, toast } from '@/components/fx';
 import { useFoodDb, useFoodLookup, usePhotoUrl } from '@/lib/hooks';
 import { SOURCE_SHORT, searchFoods, splitName, groupDuplicates, hasCoreNutrition } from '@/lib/foods';
-import { searchProducts } from '@/lib/openFoodFacts';
+import { searchExternal } from '@/lib/foodSearch';
 import { plateParts } from '@/lib/plate';
 import { varietiesFor } from '@/lib/varieties';
 import { deletePhoto } from '@/lib/photos';
@@ -271,7 +271,7 @@ export default function AddFood() {
 
       {db && (
         <p className="mt-6 text-center text-[12px] font-medium leading-relaxed text-dim">
-          {db.foods.length.toLocaleString()} foods from USDA, UK (McCance &amp; Widdowson), Australia (FSANZ) and FAO/INFOODS tables · millions of packaged products from Open Food Facts
+          {db.foods.length.toLocaleString()} foods from USDA, UK (McCance &amp; Widdowson), Australia (FSANZ) and FAO/INFOODS tables · millions of products, brands and restaurant foods from USDA FoodData Central and Open Food Facts
         </p>
       )}
 
@@ -288,10 +288,14 @@ export default function AddFood() {
   );
 }
 
-/** Live search of Open Food Facts (packaged products worldwide). Runs automatically when local results are thin. */
+/**
+ * Foods beyond the curated database: packaged, supermarket and restaurant products and extra
+ * ingredients from USDA FoodData Central and Open Food Facts (through /api/foods: cached, paged,
+ * de-duplicated). Runs automatically when local results are thin; "Load more" fetches the next page.
+ */
 function WorldProducts({ query, onPick, localCount }: { query: string; onPick: (f: Food) => void; localCount: number }) {
   const [requested, setRequested] = useState(false);
-  const [state, setState] = useState<{ q: string; foods: Food[]; error?: string; loading: boolean } | null>(null);
+  const [state, setState] = useState<{ q: string; foods: Food[]; page: number; hasMore: boolean; error?: string; loading: boolean; note?: string } | null>(null);
   const auto = localCount < 6;
   const active = requested || auto;
 
@@ -300,33 +304,56 @@ function WorldProducts({ query, onPick, localCount }: { query: string; onPick: (
     if (!active || query.trim().length < 3) return;
     const ctrl = new AbortController();
     const t = setTimeout(() => {
-      setState({ q: query, foods: [], loading: true });
-      searchProducts(query, ctrl.signal)
-        .then((foods) => setState({ q: query, foods, loading: false }))
-        .catch((e: Error) => e.name !== 'AbortError' && setState({ q: query, foods: [], loading: false, error: e.message }));
+      setState({ q: query, foods: [], page: 1, hasMore: false, loading: true });
+      searchExternal(query, 1, ctrl.signal)
+        .then((r) => setState({ q: query, foods: r.foods, page: 1, hasMore: r.hasMore, loading: false, note: r.unavailable.length ? `${r.unavailable.join(' and ')} didn’t answer — showing what we have.` : undefined }))
+        .catch((e: Error) => e.name !== 'AbortError' && setState({ q: query, foods: [], page: 1, hasMore: false, loading: false, error: e.message }));
     }, 650);
     return () => { clearTimeout(t); ctrl.abort(); };
   }, [query, active]);
+
+  async function more() {
+    if (!state || state.loading) return;
+    const next = state.page + 1;
+    setState({ ...state, loading: true });
+    try {
+      const r = await searchExternal(state.q, next);
+      const have = new Set(state.foods.map((f) => f.id));
+      setState({ ...state, foods: [...state.foods, ...r.foods.filter((f) => !have.has(f.id))], page: next, hasMore: r.hasMore, loading: false });
+    } catch {
+      setState({ ...state, loading: false, hasMore: false });
+    }
+  }
 
   if (query.trim().length < 3) return null;
   if (!active)
     return (
       <button onClick={() => setRequested(true)} className="mt-3 flex h-12 w-full items-center justify-center gap-2 rounded-full bg-surface text-sm font-semibold" style={{ boxShadow: 'var(--shadow)' }}>
-        <Globe2 size={16} /> Search packaged products worldwide
+        <Globe2 size={16} /> Search millions of products and brands
       </button>
     );
 
+  const first = !state || (state.loading && !state.foods.length);
   return (
-    <section className="mt-6">
-      <p className="mb-2 flex items-center gap-1.5 px-1 text-sm font-semibold text-silver"><Globe2 size={15} /> Packaged products worldwide</p>
-      {!state || state.loading ? (
-        <p className="flex items-center gap-2 px-1 py-4 text-sm text-silver"><Loader2 size={15} className="animate-spin" /> Searching Open Food Facts…</p>
+    <section className="mt-6" data-testid="world-results">
+      <p className="mb-2 flex items-center gap-1.5 px-1 text-sm font-semibold text-silver"><Globe2 size={15} /> Products, brands and restaurants worldwide</p>
+      {first ? (
+        <p className="flex items-center gap-2 px-1 py-4 text-sm text-silver"><Loader2 size={15} className="animate-spin" /> Searching USDA and Open Food Facts…</p>
       ) : state.error ? (
         <p className="px-1 py-3 text-sm text-silver">{state.error}</p>
       ) : state.foods.length === 0 ? (
         <p className="px-1 py-3 text-sm text-silver">No products with protein data found.</p>
       ) : (
-        <div className="card p-2">{state.foods.map((f) => <FoodRow key={f.id} food={f} onClick={() => onPick(f)} />)}</div>
+        <>
+          <div className="card p-2">{state.foods.map((f) => <FoodRow key={f.id} food={f} onClick={() => onPick(f)} />)}</div>
+          {state.note && <p className="mt-2 px-1 text-xs text-silver">{state.note}</p>}
+          {state.hasMore && (
+            <button onClick={more} disabled={state.loading} className="mt-3 flex h-11 w-full items-center justify-center gap-2 rounded-full bg-surface text-sm font-semibold" style={{ boxShadow: 'var(--shadow)' }}>
+              {state.loading ? <Loader2 size={15} className="animate-spin" /> : null} Load more
+            </button>
+          )}
+          <p className="mt-2 px-1 text-xs text-silver">Data: <a className="underline" href="https://fdc.nal.usda.gov/" target="_blank" rel="noreferrer">USDA FoodData Central</a> (public domain) and <a className="underline" href="https://world.openfoodfacts.org/" target="_blank" rel="noreferrer">Open Food Facts</a> (ODbL). Label values — check they match your pack.</p>
+        </>
       )}
     </section>
   );

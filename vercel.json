@@ -1,7 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "vite",
-  "rewrites": [{ "source": "/((?!api/|data/|assets/|icons/).*)", "destination": "/index.html" }],
+  "rewrites": [{ "source": "/api/foods", "destination": "/api/photos?route=foods" }, { "source": "/((?!api/|data/|assets/|icons/).*)", "destination": "/index.html" }],
   "headers": [
     { "source": "/assets/(.*)", "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }] },
     { "source": "/icons/(.*)", "headers": [{ "key": "Cache-Control", "value": "public, max-age=604800" }] },

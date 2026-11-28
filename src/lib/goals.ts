@@ -79,8 +79,12 @@ export function fitsPrefs(food: Pick<Food, 'name' | 'per100'>, p: { diet?: Diet;
  * (so egusi soup made with beef isn't called vegetarian). Used to tailor suggestions and the
  * Vegetarian / Vegan filter; it never hides anything from a plain search.
  */
-export function fitsDiet(food: Pick<Food, 'name'> & { sourceNote?: string; recipe?: { ingredients: { name: string }[] } }, diet: Diet | undefined): boolean {
+export function fitsDiet(food: Pick<Food, 'name'> & { source?: string; sourceNote?: string; recipe?: { ingredients: { name: string }[] } }, diet: Diet | undefined): boolean {
   if (!diet || diet === 'all') return true;
+  // Packaged products come without an ingredient list: only call them vegan / vegetarian when the maker says so.
+  if ((food.source === 'off' || food.source === 'usda-branded') && diet !== 'pescatarian') {
+    return diet === 'vegan' ? /\b(vegan|plant-based)\b/i.test(food.name) : /\b(vegan|vegetarian|veggie|plant-based|meatless)\b/i.test(food.name);
+  }
   const ingredients = food.recipe ? food.recipe.ingredients.map((i) => i.name).join('; ') : /standard recipe|^Your recipe/i.test(food.sourceNote ?? '') ? (food.sourceNote ?? '').replace(/\([^)]*version of [^)]*\)/, '') : ''; // "(vegan version of Goat pepper soup)" names the original dish, not an ingredient
   // Named as vegan / plant-based by its maker or recipe: trust that.
   if (/\b(vegan|plant-based|meatless)\b/i.test(food.name) && !ingredients) return true;
