@@ -114,9 +114,13 @@ export function usdaKeyCheck(): string {
 }
 
 export async function usdaSearch(query: string, page: number, pageSize: number, f: typeof fetch = fetch): Promise<{ foods: ExtFood[]; total: number }> {
-  const url = new URL('https://api.nal.usda.gov/fdc/v1/foods/search');
-  url.search = new URLSearchParams({ api_key: usdaKey(), query, pageNumber: String(page), pageSize: String(pageSize), dataType: 'Branded,Foundation,Survey (FNDDS),SR Legacy' }).toString();
-  const res = await f(url, { headers: { 'user-agent': USER_AGENT } });
+  // POST with a JSON body: USDA's server refuses some GET forms of the data-type list ("400 Bad Request").
+  const url = `https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${encodeURIComponent(usdaKey())}`;
+  const res = await f(url, {
+    method: 'POST',
+    headers: { 'user-agent': USER_AGENT, 'content-type': 'application/json' },
+    body: JSON.stringify({ query, pageNumber: page, pageSize, dataType: ['Branded', 'Foundation', 'Survey (FNDDS)', 'SR Legacy'] }),
+  });
   if (!res.ok) throw new Error(`USDA ${res.status}`);
   const d = (await res.json()) as { foods?: UsdaFood[]; totalHits?: number };
   return { foods: (d.foods ?? []).map(usdaToFood).filter((x): x is ExtFood => !!x), total: d.totalHits ?? 0 };

@@ -74,8 +74,10 @@ describe('GET /api/foods', () => {
     expect(d.hasMore).toBe(true);
     expect(d.attribution.map((a: { source: string }) => a.source)).toEqual(['USDA FoodData Central', 'Open Food Facts']);
     expect(res.headers.get('cache-control')).toMatch(/s-maxage=86400/);
-    // USDA called with a page number and page size.
-    expect(String((fakeFetch as unknown as { mock: { calls: string[][] } }).mock.calls[0][0])).toMatch(/pageNumber=1&pageSize=10/);
+    // USDA called (as a POST) with a page number and page size.
+    const call = (fakeFetch as unknown as { mock: { calls: [string, RequestInit][] } }).mock.calls.find(([u]) => String(u).includes('nal.usda.gov'))!;
+    expect(call[1].method).toBe('POST');
+    expect(JSON.parse(String(call[1].body))).toMatchObject({ query: 'greek yogurt', pageNumber: 1, pageSize: 10 });
   });
 
   it('still answers when one source is down, and does not cache that answer for long', async () => {
