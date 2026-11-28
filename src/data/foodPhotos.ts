@@ -233,7 +233,7 @@ export function photoKeyFor(name: string, category?: string): string | undefined
   return must.some((w) => new RegExp(`^${w}(e?s)?$`).test(head)) && onlyOk(art, n) ? art : undefined;
 }
 
-export interface FoodPhoto { url: string; author: string | null; authorUrl: string | null; page: string | null; color: string | null }
+export interface FoodPhoto { url: string; author: string | null; authorUrl: string | null; page: string | null; color: string | null; licence?: string | null; licenceUrl?: string | null }
 
 // Photos are asked for in small batches (all the foods on screen at once) and remembered on the
 // phone for a week, so scrolling a list costs one request, not one per food.

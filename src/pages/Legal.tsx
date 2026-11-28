@@ -223,13 +223,13 @@ export function Credits() {
   }, []);
   return (
     <Page title="Photo credits">
-      <p>Food photos are from <a className="text-accent underline" href="https://unsplash.com/?utm_source=nutivili_ai&utm_medium=referral" target="_blank" rel="noreferrer">Unsplash</a>, with some from Pexels and Wikimedia Commons (free licences shown). Thank you to the photographers below.</p>
+      <p>Food photos are from <a className="text-accent underline" href="https://unsplash.com/?utm_source=nutivili_ai&utm_medium=referral" target="_blank" rel="noreferrer">Unsplash</a>, with some from Wikimedia Commons, Flickr and Pexels under free licences (shown next to each photo). Thank you to the photographers below.</p>
       <p>Exercise photos and many exercise instructions: <a className="text-accent underline" href="https://github.com/yuhonas/free-exercise-db" target="_blank" rel="noreferrer">Free Exercise DB</a> (public domain, Unlicense).</p>
       {list === null ? <p className="text-sm text-silver">Loading…</p> : (
         <ul className="space-y-2">
           {list.map(([key, c]) => (
             <li key={key} className="text-sm">
-              <b className="text-ink">{key.replace(/_/g, ' ')}</b>: photo by <a className="text-accent underline" href={c.authorUrl ?? undefined} target="_blank" rel="noreferrer">{c.author ?? 'Unknown'}</a> on <a className="text-accent underline" href={c.page ?? 'https://unsplash.com/?utm_source=nutivili_ai&utm_medium=referral'} target="_blank" rel="noreferrer">{c.url?.includes('wikimedia') ? 'Wikimedia Commons' : c.url?.includes('pexels') ? 'Pexels' : 'Unsplash'}</a>
+              <b className="text-ink">{key.replace(/_/g, ' ')}</b>: photo by <a className="text-accent underline" href={c.authorUrl ?? undefined} target="_blank" rel="noreferrer">{c.author ?? 'Unknown'}</a> on <a className="text-accent underline" href={c.page ?? 'https://unsplash.com/?utm_source=nutivili_ai&utm_medium=referral'} target="_blank" rel="noreferrer">{c.url?.includes('wikimedia') ? 'Wikimedia Commons' : c.url?.includes('flickr') ? 'Flickr' : c.url?.includes('pexels') ? 'Pexels' : 'Unsplash'}</a>{c.licence && <> · {c.licenceUrl ? <a className="text-accent underline" href={c.licenceUrl} target="_blank" rel="noreferrer">{c.licence}</a> : c.licence}</>}
             </li>
           ))}
         </ul>

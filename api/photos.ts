@@ -11,13 +11,13 @@ import { isAdmin } from './_lib/quota.js';
 import { PHOTO_QUERIES } from '../src/data/photoQueries.js';
 import { foodsHandler } from './_lib/foodSearch.js';
 
-interface Row { key: string; url: string | null; author: string | null; author_url: string | null; photo_page: string | null; blur_color: string | null; tried_at: string }
+interface Row { key: string; url: string | null; author: string | null; author_url: string | null; photo_page: string | null; blur_color: string | null; licence?: string | null; licence_url?: string | null; tried_at: string }
 const UTM = 'utm_source=nutivili_ai&utm_medium=referral';
 
 const json = (d: unknown, s = 200, cache = 'public, max-age=300, s-maxage=3600') =>
   new Response(JSON.stringify(d), { status: s, headers: { 'content-type': 'application/json', 'cache-control': cache } });
 
-const out = (r: Row) => (r.url ? { url: r.url, author: r.author, authorUrl: r.author_url, page: r.photo_page, color: r.blur_color } : null);
+const out = (r: Row) => (r.url ? { url: r.url, author: r.author, authorUrl: r.author_url, page: r.photo_page, color: r.blur_color, licence: r.licence ?? null, licenceUrl: r.licence_url ?? null } : null);
 
 type UnsplashPhoto = { urls: { raw: string }; user: { name: string; links: { html: string } }; links: { html: string; download_location: string }; color?: string; alt_description?: string | null };
 

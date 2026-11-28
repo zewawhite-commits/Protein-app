@@ -14,3 +14,7 @@ create policy "food photos: anyone reads" on public.food_photos for select using
 
 -- Only photos a person picked in Owner dashboard → Food photos are shown.
 alter table public.food_photos add column if not exists verified boolean not null default false;
+
+-- Free-licence photos (e.g. Wikimedia Commons) need their licence shown on the credits page.
+alter table public.food_photos add column if not exists licence text;
+alter table public.food_photos add column if not exists licence_url text;
