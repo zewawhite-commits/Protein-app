@@ -12,7 +12,7 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { RECIPES, K, LATER } from './recipes-countries.mjs';
+import { RECIPES, K, LATER, coverage } from './recipes-countries.mjs';
 import { variantsOf } from './recipe-variants.mjs';
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
@@ -81,6 +81,25 @@ const more = variants.map((v) => {
 });
 writeFileSync(join(root, 'public', 'data', 'foods-more.json'), JSON.stringify({ foods: [...later, ...more] }));
 console.log(`Second file: ${later.length} newer dishes + ${more.length} versions.`);
+
+// Completion tracker (Owner page): per country, its dishes and the versions made from them.
+// Every dish counted here has a full ingredient list of measured USDA/FAO records (the build stops otherwise).
+const kindsOf = new Map();
+for (const v of variants) { const k = kindsOf.get(v.of) ?? { protein: 0, vegetarian: 0, vegan: 0 }; k[v.kind] += 1; kindsOf.set(v.of, k); }
+const recipeByShown = new Map(RECIPES.map((r) => [r.name.split(' (')[0], r]));
+const tracker = Object.entries(coverage).filter(([c]) => !c.startsWith('Worldwide')).map(([country, v]) => {
+  const dishes = [...new Set(v.dishes)];
+  const t = { country, region: v.region, dishes: dishes.length, protein: 0, vegetarian: 0, vegan: 0, plantDishes: 0 };
+  for (const d of dishes) {
+    const k = kindsOf.get(recipeByShown.get(d)?.name ?? d);
+    if (k) { t.protein += k.protein; t.vegetarian += k.vegetarian; t.vegan += k.vegan; }
+    if (/^(vegan|vegetarian)\b/i.test(d)) t.plantDishes += 1;
+  }
+  return t;
+}).sort((a, b) => a.country.localeCompare(b.country));
+const everyday = Object.entries(coverage).filter(([c]) => c.startsWith('Worldwide')).reduce((s, [, v]) => s + new Set(v.dishes).size, 0);
+writeFileSync(join(root, 'public', 'data', 'coverage.json'), JSON.stringify({ target: 1000, everyday, countries: tracker }));
+console.log(`Tracker: ${tracker.length} countries and territories, ${everyday} everyday dishes.`);
 console.log(`Added ${more.length} versions: ${['protein', 'vegetarian', 'vegan'].map((k) => `${variants.filter((v) => v.kind === k).length} ${k}`).join(', ')}.`);
 writeFileSync(dest, JSON.stringify(file));
 writeFileSync(REG_FILE, `${JSON.stringify(reg, null, 1)}\n`);

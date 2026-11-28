@@ -4,6 +4,7 @@ import { ArrowLeft } from 'lucide-react';
 import { OwnerStats } from '@/components/OwnerStats';
 import { AiCosts } from '@/components/AiCosts';
 import { PhotoReview } from '@/components/PhotoReview';
+import { DishCoverage } from '@/components/DishCoverage';
 import { fetchUsage } from '@/lib/premium';
 
 /** The owner's dashboard: sign-ups, retention, AI costs, revenue and margin. Only for emails in ADMIN_EMAILS (checked on the server). */
@@ -17,7 +18,7 @@ export default function Owner() {
         <h1 className="text-2xl font-extrabold tracking-tight">Owner dashboard</h1>
       </header>
       {admin === false && <p className="card p-5 text-sm leading-relaxed text-silver">This page is only for the app owner. Sign in with the email you put in <b className="text-ink">ADMIN_EMAILS</b> in Vercel (Settings → Environment Variables), then open it again.</p>}
-      {admin && <><OwnerStats /><AiCosts /><PhotoReview /></>}
+      {admin && <><OwnerStats /><AiCosts /><DishCoverage /><PhotoReview /></>}
       {admin === null && <p className="text-sm text-silver">Loading…</p>}
     </div>
   );
